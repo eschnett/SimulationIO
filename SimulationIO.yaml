@@ -1,0 +1,144 @@
+parameters:
+  ? resolution:
+    ? &h0.1:
+      h: 0.1
+      instances:
+        ? *I1
+        ? *I2
+        ? *I3
+    ? &h0.2:
+      h: 0.2
+    ? &h0.4:
+      h: 0.4
+  ? time:
+    ? &t0.0
+    ? &t0.7
+    ? &t1.4
+  ? atmosphere_density:
+    ? &rho1e-7
+    ? &rho1e-8
+    ? &rho1e-9
+
+instances:
+  ? &I1:
+    resolution: *h0.1
+    time: *t0.7
+    atmosphere_density: *rho1e-8
+    manifold_discretizations:
+      ? *D1
+    tangentspace_bases:
+      ? *B1
+  ? &I2:
+  ? &I3:
+
+
+
+manifolds:
+  ? &M1:
+    dimension: 3
+    discretizations:
+      ? &D1:
+        # manifold: *M1
+        instance: *I1
+        field_discretizations:
+          ? *FD1
+        blocks:
+          ? &DB1:
+            # manifold_discretization: *D1
+            # bounding box? in terms of coordinates?
+            # connectivity? neighbouring blocks?
+            # overlaps?
+          ? &DB2
+          ? &DB3
+      ? &D2:
+      ? &D3:
+    fields:
+      ? *F1
+      ? *F2
+      ? *F3
+  ? &M2:
+  ? &M3:
+
+tangentspaces:
+  ? &S1:
+    dimension: 3
+    bases:
+      ? &B1:
+        # tangentspace: *S1
+        instance: *I1
+        field_discretizations:
+          ? *FD1
+        directions:
+          - &BD1:
+              # tangentspace_basis: *B1
+          - &BD2:
+          - &BD2:
+      ? &B2:
+      ? &B3:
+  ? &S2:
+  ? &S3:
+
+fields:
+  ? &F1:
+    manifold: *M1
+    tangentspace: *S1
+    tensortype: *vector3d
+    discretizations:
+      ? &FD1: # HDF5 name according to *D1
+        # field: *F1
+        manifold_discretization: *D1
+        instance: *I1
+        representations:
+          ? &FR1: # HDF5 name according to *B1
+            tangentspace_basis: *B1
+            blocks:
+              ? &FB1:
+                # field_discretization: *FD1
+                manifold_discretization_block: *DB1
+                data:
+                  "1": [hdf5 dataset]
+                    stored_component: *vector3d_1
+                  "2": [hdf5 dataset]
+                    stored_component: *vector3d_2
+                  "3": [hdf5 dataset]
+                    stored_component: *vector3d_2
+              ? &FB2:
+              ? &FB3:
+          ? &FR2:
+          ? &FR3:
+      ? &FD2:
+      ? &FD3:
+  ? &F2:
+  ? &F3:
+
+# rho/t1.4/unigrid/cartesian/process-3/x
+
+tensortypes:
+  ? &scalar3d:
+    dimension: 3
+    rank: 0
+    stored_components:
+      - "scalar" &scalar3d_scalar
+  ? &vector3d:
+    dimension: 3
+    rank: 1
+    stored_components:
+      - "1" &vector3d_1
+      - "2" &vector3d_2
+      - "3" &vector3d_3
+  ? &symmetrictensor3d:
+    dimension: 3
+    rank: 2
+    stored_components:
+      - "11"
+      - "12"
+      - "13"
+      - "21"
+      - "22"
+      - "33"
+
+# discretizaiontypes:
+#   ? uniform:
+#   ? AMR:
+#   ? multiblock:
+#   ? particles:
