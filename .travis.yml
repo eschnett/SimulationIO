@@ -2,18 +2,18 @@ notifications:
   email: false
 os:
   - linux   # This is currently Ubuntu 12.04 LTS
-  # - osx
+  - osx
 sudo: false
-# install:
-#   - sudo apt-get update && sudo apt-get -y install g++-4.9 libhdf5-serial-dev
-#   # - brew update && brew install libhdf5
 addons:
   apt:
     packages:
       - libhdf5-serial-dev
+before_install:
+  - [ `uname` = Darwin ] && brew update
+  - [ `uname` = Darwin ] && brew install libhdf5
 language: cpp
 compiler:
-  # - clang
+  - clang
   - gcc
 script:
   - make
