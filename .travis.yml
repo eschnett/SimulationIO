@@ -1,6 +1,5 @@
 notifications:
   email: false
-language: cpp
 os:
   - linux
   # - osx
@@ -11,8 +10,9 @@ sudo: false
 addons:
   apt:
     packages:
-      - g++-4.8
+      - g++-4.7
       - libhdf5-serial-dev
+language: cpp
 compiler:
   # - clang
   - gcc
