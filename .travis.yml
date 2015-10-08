@@ -10,7 +10,7 @@ addons:
       - libhdf5-serial-dev
 before_install:
   - if [ `uname` = Darwin ]; then brew update; fi
-  - if [ `uname` = Darwin ]; then brew install homebrew/science/libhdf5; fi
+  - if [ `uname` = Darwin ]; then brew install homebrew/science/hdf5; fi
 language: cpp
 compiler:
   - clang
