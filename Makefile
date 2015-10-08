@@ -1,4 +1,4 @@
-CXX = gcc
+CXX = g++
 CPPFLAGS =
 CXXFLAGS = -g -Wall -std=c++0x
 LDFLAGS =
