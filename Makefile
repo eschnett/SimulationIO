@@ -1,6 +1,6 @@
 CXX = gcc
 CPPFLAGS =
-CXXFLAGS = -g -Wall -std=c++11
+CXXFLAGS = -g -Wall -std=c++0x
 LDFLAGS =
 
 HDF5_LIBS = -lhdf5_cpp -lhdf5

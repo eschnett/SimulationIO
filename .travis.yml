@@ -10,7 +10,6 @@ sudo: false
 addons:
   apt:
     packages:
-      - g++-4.7
       - libhdf5-serial-dev
 language: cpp
 compiler:
