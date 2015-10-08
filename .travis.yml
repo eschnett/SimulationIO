@@ -9,8 +9,8 @@ addons:
     packages:
       - libhdf5-serial-dev
 before_install:
-  - [ `uname` = Darwin ] && brew update
-  - [ `uname` = Darwin ] && brew install libhdf5
+  - test `uname` = Darwin && brew update
+  - test `uname` = Darwin && brew install libhdf5
 language: cpp
 compiler:
   - clang
