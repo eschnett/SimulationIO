@@ -17,6 +17,7 @@
 
 #include <cassert>
 #include <cstdlib>
+#include <iostream>
 #include <map>
 #include <string>
 #include <vector>
@@ -24,6 +25,7 @@
 namespace SimulationIO {
 
 using std::map;
+using std::ostream;
 using std::string;
 using std::vector;
 
@@ -37,12 +39,26 @@ inline int ipow(int base, int exp) {
 }
 }
 
+// Indented output
+const int indentsize = 2;
+const char indentchar = ' ';
+inline string indent(int level) {
+  return string(level * indentsize, indentchar);
+}
+
+// Type hierarchy
+struct Component {
+  virtual string getname() const = 0;
+  virtual ostream &output(ostream &os, int level = 0) const = 0;
+  virtual void write(hid_t loc) const = 0;
+};
+
 // Tensor types
 
 struct TensorType;
 struct TensorComponent;
 
-map<string, TensorType *> tensortypes;
+extern map<string, TensorType *> tensortypes;
 
 struct TensorType {
   string name;
@@ -68,6 +84,12 @@ struct TensorType {
   void push_back(TensorComponent *tensorcomponent) {
     storedcomponents.push_back(tensorcomponent);
   }
+  ostream &output(ostream &os, int level = 0) const;
+  friend ostream &operator<<(ostream &os, const TensorType &tensortype) {
+    return tensortype.output(os);
+  }
+  void write(hid_t loc) const {}
+  TensorType(hid_t loc, const string &name) { assert(0); }
 };
 
 struct TensorComponent {
@@ -88,6 +110,17 @@ struct TensorComponent {
     for (int i = 0; i < int(indexvalues.size()); ++i)
       inv &= indexvalues[i] >= 0 && indexvalues[i] < tensortype->dimension;
     inv &= tensortype->storedcomponents[storedcomponent] == this;
+    for (int c = 0; c < storedcomponent; ++c) {
+      const auto &other = tensortype->storedcomponents[c];
+      bool samesize = other->indexvalues.size() == indexvalues.size();
+      inv &= samesize;
+      if (samesize) {
+        bool isequal = true;
+        for (int i = 0; i < int(indexvalues.size()); ++i)
+          isequal &= other->indexvalues[i] == indexvalues[i];
+        inv &= !isequal;
+      }
+    }
     return inv;
   }
   TensorComponent() = delete;
@@ -103,25 +136,14 @@ struct TensorComponent {
     assert(invariant());
   }
   ~TensorComponent() = delete;
+  ostream &output(ostream &os, int level = 0) const;
+  friend ostream &operator<<(ostream &os,
+                             const TensorComponent &tensorcomponent) {
+    return tensorcomponent.output(os);
+  }
+  void write(hid_t loc) const {}
+  TensorComponent(hid_t loc, const string &name) { assert(0); }
 };
-
-namespace detail {
-auto S3D = new TensorType("Scalar3D", 3, 0);
-auto S3D_scalar = new TensorComponent("scalar", S3D, 0, {});
-
-auto V3D = new TensorType("Vector3D", 3, 1);
-auto V3D_0 = new TensorComponent("0", V3D, 0, {0});
-auto V3D_1 = new TensorComponent("1", V3D, 1, {1});
-auto V3D_2 = new TensorComponent("2", V3D, 2, {2});
-
-auto ST3D = new TensorType("SymmetricTensor3D", 3, 2);
-auto ST3D_00 = new TensorComponent("00", ST3D, 0, {0, 0});
-auto ST3D_01 = new TensorComponent("01", ST3D, 1, {0, 1});
-auto ST3D_02 = new TensorComponent("02", ST3D, 2, {0, 2});
-auto ST3D_11 = new TensorComponent("11", ST3D, 3, {1, 0});
-auto ST3D_12 = new TensorComponent("12", ST3D, 4, {1, 1});
-auto ST3D_22 = new TensorComponent("22", ST3D, 5, {2, 2});
-}
 
 // High-level continuum concepts
 
@@ -132,9 +154,9 @@ struct Discretization;
 struct Basis;
 struct DiscreteField;
 
-map<string, Manifold *> manifolds;
-map<string, TangentSpace *> tangentspaces;
-map<string, Field *> fields;
+extern map<string, Manifold *> manifolds;
+extern map<string, TangentSpace *> tangentspaces;
+extern map<string, Field *> fields;
 
 struct Manifold {
   string name;
@@ -306,7 +328,7 @@ struct DiscreteFieldBlockData {
 struct CoordinateSystem;
 struct CoordinateField;
 
-map<string, CoordinateSystem *> coordinates;
+extern map<string, CoordinateSystem *> coordinates;
 
 struct CoordinateSystem {
   string name;

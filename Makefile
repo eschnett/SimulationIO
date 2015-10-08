@@ -21,7 +21,8 @@ gtest-all.o: gtest
 	$(CXX) $(CPPFLAGS) $(GTEST_CPPFLAGS) $(CXXFLAGS) $(GTEST_CXXFLAGS) -c $(GTEST_DIR)/src/gtest-all.cc
 
 selftest.o: selftest.cpp SimulationIO.hpp
-selftest: selftest.o gtest-all.o
+SimulatinoIO.o: SimulationIO.cpp SimulationIO.hpp
+selftest: SimulationIO.cpp selftest.o gtest-all.o
 	$(CXX) $(CPPFLAGS) $(GTEST_CPPFLAGS) $(CXXFLAGS) $(GTEST_CXXFLAGS) $(LDFLAGS) -o $@ $^ $(HDF5_LIBS)
 test: selftest
 	./selftest
@@ -32,6 +33,7 @@ test: selftest
 clean:
 	$(RM) gtest gtest-all.o $(GTEST_DIR).tar.gz
 	$(RM) -r $(GTEST_DIR)
+	$(RM) SimulationIO.o
 	$(RM) selftest selftest.o
 
 .PHONY: all test clean

@@ -2,6 +2,10 @@
 
 #include <gtest/gtest.h>
 
+#include <sstream>
+
+using std::ostringstream;
+
 using namespace SimulationIO;
 
 TEST(ipow, ipow) {
@@ -25,6 +29,12 @@ TEST(TensorTypes, Scalar3D) {
   EXPECT_TRUE(tt->invariant());
   for (const auto &tc : tt->storedcomponents)
     EXPECT_TRUE(tc->invariant());
+  ostringstream buf;
+  buf << *tt;
+  EXPECT_EQ("TensorType \"Scalar3D\": dim=3 rank=0\n"
+            "  TensorComponent \"scalar\": tensortype=\"Scalar3D\" "
+            "storedcomponent=0 indices=[]\n",
+            buf.str());
 }
 
 TEST(TensorTypes, Vector3D) {
@@ -36,6 +46,16 @@ TEST(TensorTypes, Vector3D) {
   EXPECT_TRUE(tt->invariant());
   for (const auto &tc : tt->storedcomponents)
     EXPECT_TRUE(tc->invariant());
+  ostringstream buf;
+  buf << *tt;
+  EXPECT_EQ("TensorType \"Vector3D\": dim=3 rank=1\n"
+            "  TensorComponent \"0\": tensortype=\"Vector3D\" "
+            "storedcomponent=0 indices=[0]\n"
+            "  TensorComponent \"1\": tensortype=\"Vector3D\" "
+            "storedcomponent=1 indices=[1]\n"
+            "  TensorComponent \"2\": tensortype=\"Vector3D\" "
+            "storedcomponent=2 indices=[2]\n",
+            buf.str());
 }
 
 TEST(TensorTypes, SymmetricTensor3D) {
@@ -47,6 +67,28 @@ TEST(TensorTypes, SymmetricTensor3D) {
   EXPECT_TRUE(tt->invariant());
   for (const auto &tc : tt->storedcomponents)
     EXPECT_TRUE(tc->invariant());
+  ostringstream buf;
+  buf << *tt;
+  EXPECT_EQ("TensorType \"SymmetricTensor3D\": dim=3 rank=2\n"
+            "  TensorComponent \"00\": tensortype=\"SymmetricTensor3D\" "
+            "storedcomponent=0 "
+            "indices=[0,0]\n"
+            "  TensorComponent \"01\": tensortype=\"SymmetricTensor3D\" "
+            "storedcomponent=1 "
+            "indices=[0,1]\n"
+            "  TensorComponent \"02\": tensortype=\"SymmetricTensor3D\" "
+            "storedcomponent=2 "
+            "indices=[0,2]\n"
+            "  TensorComponent \"11\": tensortype=\"SymmetricTensor3D\" "
+            "storedcomponent=3 "
+            "indices=[1,1]\n"
+            "  TensorComponent \"12\": tensortype=\"SymmetricTensor3D\" "
+            "storedcomponent=4 "
+            "indices=[1,2]\n"
+            "  TensorComponent \"22\": tensortype=\"SymmetricTensor3D\" "
+            "storedcomponent=5 "
+            "indices=[2,2]\n",
+            buf.str());
 }
 
 TEST(Manifold, create) {
