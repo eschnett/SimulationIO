@@ -1,8 +1,10 @@
 language: cpp
 os:
   - linux
-  - osx
+  # - osx
+install:
+  - sudo apt-get update && sudo apt-get -y install hdf5
 compiler: gcc
-scripts:
+script:
   - make
   - make test
