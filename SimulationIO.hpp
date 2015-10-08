@@ -53,6 +53,11 @@ struct TensorType {
     return !name.empty() && dimension >= 0 && rank >= 0 &&
            int(storedcomponents.size()) <= ipow(dimension, rank);
   }
+  TensorType() = delete;
+  TensorType(const TensorType &) = delete;
+  TensorType(TensorType &&) = delete;
+  TensorType &operator=(const TensorType &) = delete;
+  TensorType &operator=(TensorType &&) = delete;
   TensorType(const string &name, int dimension, int rank)
       : name(name), dimension(dimension), rank(rank) {
     assert(invariant());
@@ -84,6 +89,11 @@ struct TensorComponent {
     inv &= tensortype->storedcomponents[storedcomponent] == this;
     return inv;
   }
+  TensorComponent() = delete;
+  TensorComponent(const TensorComponent &) = delete;
+  TensorComponent(TensorComponent &&) = delete;
+  TensorComponent &operator=(const TensorComponent &) = delete;
+  TensorComponent &operator=(TensorComponent &&) = delete;
   TensorComponent(const string &name, TensorType *tensortype,
                   int storedcomponent, const std::vector<int> &indexvalues)
       : name(name), tensortype(tensortype), storedcomponent(storedcomponent),
@@ -128,6 +138,11 @@ struct Manifold {
   map<string, Discretization *> discretizations;
   map<string, Field *> fields;
   bool invariant() const { return !name.empty() && dimension >= 0; }
+  Manifold() = delete;
+  Manifold(const Manifold &) = delete;
+  Manifold(Manifold &&) = delete;
+  Manifold &operator=(const Manifold &) = delete;
+  Manifold &operator=(Manifold &&) = delete;
   Manifold(const string &name, int dimension)
       : name(name), dimension(dimension) {
     assert(invariant());
@@ -146,6 +161,11 @@ struct TangentSpace {
   map<string, Basis *> bases;
   map<string, Field *> fields;
   bool invariant() const { return !name.empty() && dimension >= 0; }
+  TangentSpace() = delete;
+  TangentSpace(const TangentSpace &) = delete;
+  TangentSpace(TangentSpace &&) = delete;
+  TangentSpace &operator=(const TangentSpace &) = delete;
+  TangentSpace &operator=(TangentSpace &&) = delete;
   TangentSpace(const string &name, int dimension)
       : name(name), dimension(dimension) {
     assert(invariant());
@@ -169,6 +189,11 @@ struct Field {
            manifold->fields.at(name) == this &&
            tangentspace->fields.at(name) == this;
   }
+  Field() = delete;
+  Field(const Field &) = delete;
+  Field(Field &&) = delete;
+  Field &operator=(const Field &) = delete;
+  Field &operator=(Field &&) = delete;
   Field(const string &name, Manifold *manifold, TangentSpace *tangentspace,
         TensorType *tensortype)
       : name(name), manifold(manifold), tangentspace(tangentspace),
