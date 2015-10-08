@@ -16,27 +16,24 @@
 #include <hdf5.h>
 
 #include <cassert>
-#include <cmath>
 #include <cstdlib>
-#include <memory>
-#include <set>
+#include <map>
 #include <string>
 #include <vector>
 
 namespace SimulationIO {
 
-// using std::lrint;
-using std::pow;
-using std::set;
-using std::shared_ptr;
+using std::map;
 using std::string;
 using std::vector;
 
 namespace {
 inline int ipow(int base, int exp) {
-  if (exp == 0)
-    return 1;
-  return lrint(pow(base, exp));
+  assert(base >= 0 && exp >= 0);
+  int res = 1;
+  while (exp--)
+    res *= base;
+  return res;
 }
 }
 
@@ -45,7 +42,7 @@ inline int ipow(int base, int exp) {
 struct TensorType;
 struct TensorComponent;
 
-set<TensorType *> tensortypes;
+map<string, TensorType *> tensortypes;
 
 struct TensorType {
   string name;
@@ -53,13 +50,14 @@ struct TensorType {
   int rank;
   vector<TensorComponent *> storedcomponents;
   bool invariant() const {
-    return dimension >= 0 && rank >= 0 &&
+    return !name.empty() && dimension >= 0 && rank >= 0 &&
            int(storedcomponents.size()) <= ipow(dimension, rank);
   }
   TensorType(const string &name, int dimension, int rank)
       : name(name), dimension(dimension), rank(rank) {
     assert(invariant());
-    tensortypes.insert(this);
+    assert(tensortypes.find(name) == tensortypes.end());
+    tensortypes[name] = this;
   }
   void push_back(TensorComponent *tensorcomponent) {
     storedcomponents.push_back(tensorcomponent);
@@ -78,7 +76,7 @@ struct TensorComponent {
   int storedcomponent;
   vector<int> indexvalues;
   bool invariant() const {
-    bool inv = storedcomponent >= 0 &&
+    bool inv = !name.empty() && storedcomponent >= 0 &&
                storedcomponent < int(tensortype->storedcomponents.size()) &&
                int(indexvalues.size()) == tensortype->rank;
     for (int i = 0; i < int(indexvalues.size()); ++i)
@@ -120,24 +118,44 @@ struct Discretization;
 struct Basis;
 struct DiscreteField;
 
-set<Manifold *> manifolds;
-set<TangentSpace *> tangentspaces;
-set<Field *> Fields;
+map<string, Manifold *> manifolds;
+map<string, TangentSpace *> tangentspaces;
+map<string, Field *> fields;
 
 struct Manifold {
   string name;
   int dimension;
-  set<Discretization *> discretizations;
-  set<Field *> fields;
-  bool invariant() const { return dimension >= 0; }
+  map<string, Discretization *> discretizations;
+  map<string, Field *> fields;
+  bool invariant() const { return !name.empty() && dimension >= 0; }
+  Manifold(const string &name, int dimension)
+      : name(name), dimension(dimension) {
+    assert(invariant());
+    assert(manifolds.find(name) == manifolds.end());
+    manifolds[name] = this;
+  }
+  void insert(const string &name, Field *field) {
+    assert(fields.find(name) == fields.end());
+    fields[name] = field;
+  }
 };
 
 struct TangentSpace {
   string name;
   int dimension;
-  set<Basis *> bases;
-  set<Field *> fields;
-  bool invariant() const { return dimension >= 0; }
+  map<string, Basis *> bases;
+  map<string, Field *> fields;
+  bool invariant() const { return !name.empty() && dimension >= 0; }
+  TangentSpace(const string &name, int dimension)
+      : name(name), dimension(dimension) {
+    assert(invariant());
+    assert(tangentspaces.find(name) == tangentspaces.end());
+    tangentspaces[name] = this;
+  }
+  void insert(const string &name, Field *field) {
+    assert(fields.find(name) == fields.end());
+    fields[name] = field;
+  }
 };
 
 struct Field {
@@ -145,9 +163,22 @@ struct Field {
   Manifold *manifold;
   TangentSpace *tangentspace;
   TensorType *tensortype;
-  set<DiscreteField> discretefields;
+  map<string, DiscreteField *> discretefields;
   bool invariant() const {
-    return tangentspace->dimension == tensortype->dimension;
+    return !name.empty() && tangentspace->dimension == tensortype->dimension &&
+           manifold->fields.at(name) == this &&
+           tangentspace->fields.at(name) == this;
+  }
+  Field(const string &name, Manifold *manifold, TangentSpace *tangentspace,
+        TensorType *tensortype)
+      : name(name), manifold(manifold), tangentspace(tangentspace),
+        tensortype(tensortype) {
+    manifold->insert(name, this);
+    tangentspace->insert(name, this);
+    // tensortypes->insert(this);
+    assert(invariant());
+    assert(fields.find(name) == fields.end());
+    fields[name] = this;
   }
 };
 
@@ -158,7 +189,7 @@ struct DiscretizationBlock;
 struct Discretization {
   string name;
   Manifold *manifold;
-  set<DiscretizationBlock *> discretizationblocks;
+  map<string, DiscretizationBlock *> discretizationblocks;
   bool invariant() const { return true; }
 };
 
@@ -182,7 +213,7 @@ struct Basis {
   string name;
   TangentSpace *tangentspace;
   vector<BasisVector *> basisvectors;
-  set<CoordinateBasis *> coordinatebases;
+  map<string, CoordinateBasis *> coordinatebases;
   bool invariant() const {
     return int(basisvectors.size()) == tangentspace->dimension;
   }
@@ -196,7 +227,7 @@ struct BasisVector {
   // worthwhile. This essentially only gives names to directions; could use
   // vector<string> in TangentSpace for this instead.
   int direction;
-  set<CoordinateBasisElement *> coordinatebasiselements;
+  map<string, CoordinateBasisElement *> coordinatebasiselements;
   bool invariant() const {
     return direction >= 0 && direction < int(basis->basisvectors.size()) &&
            basis->basisvectors[direction] == this;
@@ -213,7 +244,7 @@ struct DiscreteField {
   Field *field;
   Discretization *discretization;
   Basis *basis;
-  set<DiscreteFieldBlock *> discretefieldblocks;
+  map<string, DiscreteFieldBlock *> discretefieldblocks;
   bool invariant() const {
     return field->manifold == discretization->manifold &&
            field->tangentspace == basis->tangentspace;
@@ -225,7 +256,7 @@ struct DiscreteFieldBlock {
   string name;
   DiscreteField *discretefield;
   DiscretizationBlock *discretizationblock;
-  set<DiscreteFieldBlockData *> discretefieldblockdata;
+  map<string, DiscreteFieldBlockData *> discretefieldblockdata;
   bool invariant() const { return true; }
 };
 
@@ -246,13 +277,13 @@ struct DiscreteFieldBlockData {
 struct CoordinateSystem;
 struct CoordinateField;
 
-set<CoordinateSystem *> coordinates;
+map<string, CoordinateSystem *> coordinates;
 
 struct CoordinateSystem {
   string name;
   Manifold *manifold;
   vector<CoordinateField *> coordinatefields;
-  set<CoordinateBasis *> coordinatebases;
+  map<string, CoordinateBasis *> coordinatebases;
   bool invariant() const { return true; }
 };
 
