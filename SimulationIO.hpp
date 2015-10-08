@@ -48,7 +48,7 @@ struct TensorType {
   string name;
   int dimension;
   int rank;
-  vector<TensorComponent *> storedcomponents;
+  vector<TensorComponent *> storedcomponents; // owned
   bool invariant() const {
     return !name.empty() && dimension >= 0 && rank >= 0 &&
            int(storedcomponents.size()) <= ipow(dimension, rank);
@@ -64,6 +64,7 @@ struct TensorType {
     assert(tensortypes.find(name) == tensortypes.end());
     tensortypes[name] = this;
   }
+  ~TensorType() = delete;
   void push_back(TensorComponent *tensorcomponent) {
     storedcomponents.push_back(tensorcomponent);
   }
@@ -101,23 +102,26 @@ struct TensorComponent {
     tensortype->push_back(this);
     assert(invariant());
   }
+  ~TensorComponent() = delete;
 };
 
-TensorType Scalar3D("Scalar3D", 3, 0);
-TensorComponent Scalar3D_scalar("scalar", &Scalar3D, 0, {});
+namespace detail {
+auto S3D = new TensorType("Scalar3D", 3, 0);
+auto S3D_scalar = new TensorComponent("scalar", S3D, 0, {});
 
-TensorType Vector3D("Vector3D", 3, 1);
-TensorComponent Vector3D_0("0", &Vector3D, 0, {0});
-TensorComponent Vector3D_1("1", &Vector3D, 1, {1});
-TensorComponent Vector3D_2("2", &Vector3D, 2, {2});
+auto V3D = new TensorType("Vector3D", 3, 1);
+auto V3D_0 = new TensorComponent("0", V3D, 0, {0});
+auto V3D_1 = new TensorComponent("1", V3D, 1, {1});
+auto V3D_2 = new TensorComponent("2", V3D, 2, {2});
 
-TensorType SymmetricTensor3D("SymmetricTensor3D", 3, 2);
-TensorComponent SymmetricTensor3D_00("00", &SymmetricTensor3D, 0, {0, 0});
-TensorComponent SymmetricTensor3D_01("01", &SymmetricTensor3D, 1, {0, 1});
-TensorComponent SymmetricTensor3D_02("02", &SymmetricTensor3D, 2, {0, 2});
-TensorComponent SymmetricTensor3D_11("11", &SymmetricTensor3D, 3, {1, 0});
-TensorComponent SymmetricTensor3D_12("12", &SymmetricTensor3D, 4, {1, 1});
-TensorComponent SymmetricTensor3D_22("22", &SymmetricTensor3D, 5, {2, 2});
+auto ST3D = new TensorType("SymmetricTensor3D", 3, 2);
+auto ST3D_00 = new TensorComponent("00", ST3D, 0, {0, 0});
+auto ST3D_01 = new TensorComponent("01", ST3D, 1, {0, 1});
+auto ST3D_02 = new TensorComponent("02", ST3D, 2, {0, 2});
+auto ST3D_11 = new TensorComponent("11", ST3D, 3, {1, 0});
+auto ST3D_12 = new TensorComponent("12", ST3D, 4, {1, 1});
+auto ST3D_22 = new TensorComponent("22", ST3D, 5, {2, 2});
+}
 
 // High-level continuum concepts
 
