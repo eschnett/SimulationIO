@@ -5,7 +5,7 @@ os:
   - linux
   # - osx
 install:
-  - sudo apt-get update && sudo apt-get -y install libhdf5-dev
+  - sudo apt-get update && sudo apt-get -y install libhdf5-serial-dev
   # - brew update && brew install libhdf5
 compiler: gcc
 script:
