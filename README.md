@@ -1,4 +1,6 @@
 # SimulationIO
+[![Build Status](https://travis-ci.org/eschnett/SimulationIO.svg?branch=master)](https://travis-ci.org/eschnett/SimulationIO)
+
 Efficient and convenient I/O for large PDE simulations
 
 ## Sketches
