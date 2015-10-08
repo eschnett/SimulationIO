@@ -54,7 +54,7 @@ struct TensorType {
   vector<TensorComponent *> storedcomponents;
   bool invariant() const {
     return dimension >= 0 && rank >= 0 &&
-           int(storedcomponents.size()) < ipow(dimension, rank);
+           int(storedcomponents.size()) <= ipow(dimension, rank);
   }
   TensorType(const string &name, int dimension, int rank)
       : name(name), dimension(dimension), rank(rank) {

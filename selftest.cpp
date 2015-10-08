@@ -1,11 +1,15 @@
 #include "SimulationIO.hpp"
 
-#include <iostream>
-using std::cout;
+#include <gtest/gtest.h>
 
-int main(int argc, char **argv) {
-  cout << "SimulationIO\n";
-  cout << "Running selftest...\n";
-  cout << "SUCCESS\n";
-  return 0;
+using namespace SimulationIO;
+
+TEST(TensorTypes, Scalar3D) {
+  EXPECT_EQ(3, Scalar3D.dimension);
+  EXPECT_EQ(0, Scalar3D.rank);
+  EXPECT_TRUE(Scalar3D.invariant());
+  for (const auto &tc : Scalar3D.storedcomponents)
+    EXPECT_TRUE(tc->invariant());
 }
+
+#include "src/gtest_main.cc"
