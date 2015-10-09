@@ -29,8 +29,7 @@ install:
       make -j2 install
       export PATH="$HOME/hdf5-1.8.15-patch1/bin:$PATH"
     fi
-  - g++ --version
-  - clang++ --version
+  - gem install coveralls-lcov
   - h5ls --version
   - lcov --version
 language: cpp
@@ -44,6 +43,6 @@ script:
 after_success:
   - cd "$TRAVIS_BUILD_DIR"
   - lcov --directory . --capture --output-file coverage.info
-  - lcov --remove coverage.info 'googletest-*' '/usr/*' '/opt/*' --output-file coverage.info
+  - lcov --remove coverage.info '/googletest-*' '/usr/*' '/opt/*' --output-file coverage.info
   - lcov --list coverage.info
   - coveralls-lcov --repo-token "$COVERALLS_TOKEN" coverage.info
