@@ -73,6 +73,12 @@ Attribute create_attribute(const H5Location &loc, const std::string &name,
   return attr;
 }
 
+template <typename T>
+Attribute create_attribute(const H5Location &loc, const char *name,
+                           const T &value) {
+  return create_attribute(loc, std::string(name), value);
+}
+
 // Read attributes
 template <typename T,
           typename std::enable_if<std::is_fundamental<T>::value> * = nullptr>
