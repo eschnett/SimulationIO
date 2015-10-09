@@ -20,6 +20,7 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 namespace SimulationIO {
@@ -90,10 +91,55 @@ inline H5::DataType h5type(const long double &) {
   return H5::FloatType(H5::PredType::NATIVE_LDOUBLE);
 }
 
-// Serialize a map (ignoring the keys)
+// Write attributes
+template <typename T,
+          typename std::enable_if<std::is_fundamental<T>::value> * = nullptr>
+H5::Attribute H5_create_attribute(const H5::H5Location &loc, const string &name,
+                                  const T &value) {
+  auto attr = loc.createAttribute(name, h5type(value), H5::DataSpace());
+  attr.write(h5type(value), &value);
+  return attr;
+}
+
+template <typename T>
+H5::Attribute H5_create_attribute(const H5::H5Location &loc, const string &name,
+                                  const vector<T> &values) {
+  const hsize_t dims = values.size();
+  T dummy;
+  auto attr = loc.createAttribute(name, h5type(dummy), H5::DataSpace(1, &dims));
+  const void *buf =
+      values.empty() ? &dummy : values.data(); // HDF5 is overly cautious
+  attr.write(h5type(dummy), buf);
+  return attr;
+}
+
+// Read attributes
+template <typename T,
+          typename std::enable_if<std::is_fundamental<T>::value> * = nullptr>
+void H5_read_attribute(H5::H5Location &loc, const string &name, T &value) {
+  auto attr = loc.openAttribute(name);
+  auto space = attr.getSpace();
+  assert(space.getSimpleExtentType() == H5S_SCALAR);
+  attr.read(h5type(value), &value);
+}
+
+template <typename T>
+void H5_read_attribute(H5::H5Location &loc, const string &name,
+                       vector<T> &values) {
+  auto attr = loc.openAttribute(name);
+  auto space = attr.getSpace();
+  auto npoints = space.getSimpleExtentNpoints();
+  values.resize(npoints);
+  T dummy;
+  void *buf =
+      values.empty() ? &dummy : values.data(); // HDF5 is overly cautious
+  attr.read(h5type(dummy), buf);
+}
+
+// Write a map (ignoring the keys)
 template <typename Key, typename T>
-H5::Group H5_write(const H5::CommonFG &loc, const string &name,
-                   const map<Key, T> &m) {
+H5::Group H5_create_group(const H5::CommonFG &loc, const string &name,
+                          const map<Key, T> &m) {
   // We assume that Key is string-like, and that T is a subtype of Common
   auto group = loc.createGroup(name);
   for (const auto &p : m)
