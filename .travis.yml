@@ -4,10 +4,11 @@ os:
   #TODO - linux   # This is currently Ubuntu 12.04 LTS
   - osx
 sudo: false
-# addons:
-#   apt:
-#     packages:
-#       - libhdf5-serial-dev   # This lacks the HDF5 C++ bindings
+addons:
+ apt:
+   packages:
+     - lcov
+     # - libhdf5-serial-dev   # This lacks the HDF5 C++ bindings
 install:
   - |
     if [ `uname` = Darwin ]; then
