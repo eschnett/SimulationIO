@@ -31,7 +31,7 @@ selftest: SimulationIO.cpp selftest.o gtest-all.o
 test: selftest
 	./selftest
 
-coverage: test
+coverage:
 	lcov --directory . --capture --output-file coverage.info
 	lcov --remove coverage.info '/googletest-*' '/usr/*' '/opt/*' --output-file coverage.info
 	lcov --list coverage.info
