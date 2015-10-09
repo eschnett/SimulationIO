@@ -92,21 +92,24 @@ inline H5::DataType h5type(const long double &) {
 
 // H5Literate
 namespace detail {
-template <typename Op> struct H5Literator {
-  Op op;
+template <typename Op> struct H5L_iterator {
+  Op &&op;
   static herr_t call(hid_t g_id, const char *name, const H5L_info_t *info,
                      void *data) {
-    return static_cast<H5Literator *>(data)->op(H5::Group(g_id), name, info);
+    return static_cast<H5L_iterator *>(data)->op(H5::Group(g_id), name, info);
+  }
+  herr_t operator()(const H5::Group &group, H5_index_t index_type,
+                    H5_iter_order_t order, hsize_t *idx) {
+    return H5Literate(group.getId(), index_type, order, idx, call, this);
   }
 };
 }
 
 template <typename Op>
 herr_t H5_iterate(const H5::Group &group, H5_index_t index_type,
-                  H5_iter_order_t order, hsize_t *idx, Op op) {
-  detail::H5Literator<Op> iter{op};
-  return H5Literate(group.getId(), index_type, order, idx,
-                    detail::H5Literator<Op>::call, &iter);
+                  H5_iter_order_t order, hsize_t *idx, Op &&op) {
+  return detail::H5L_iterator<Op>{std::forward<Op>(op)}(group.getId(),
+                                                        index_type, order, idx);
 }
 
 // Common to all file elements
