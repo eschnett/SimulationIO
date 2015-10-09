@@ -15,16 +15,6 @@ GTEST_DIR = googletest-release-1.7.0
 GTEST_CPPFLAGS = -isystem $(GTEST_DIR)/include -I$(GTEST_DIR)
 GTEST_CXXFLAGS = -pthread
 
-# Taken from <http://mad-scientist.net/make/autodep.html> as written by Paul D.
-# Smith <psmith@gnu.org>, originally developed by Tom Tromey <tromey@cygnus.com>
-PROCESS_DEPENDENCIES = \
-  { \
-  	perl -p -e 's{$*.o.tmp}{$*.o}g' < $*.o.d && \
-  	perl -p -e 's{\#.*}{};s{^[^:]*: *}{};s{ *\\$$}{};s{$$}{ :}' < $*.o.d; \
-  } > $*.d && \
-  $(RM) $*.o.d
--include $(SRCS:%.cpp=%.d)
-
 all: selftest
 
 gtest:
@@ -47,6 +37,16 @@ test: selftest
 	$(CXX) -MD $(CPPFLAGS) $(GTEST_CPPFLAGS) $(CXXFLAGS) $(GTEST_CXXFLAGS) -c -o $*.o.tmp $*.cpp
 	@$(PROCESS_DEPENDENCIES)
 	@mv $*.o.tmp $*.o
+
+# Taken from <http://mad-scientist.net/make/autodep.html> as written by Paul D.
+# Smith <psmith@gnu.org>, originally developed by Tom Tromey <tromey@cygnus.com>
+PROCESS_DEPENDENCIES = \
+  { \
+  	perl -p -e 's{$*.o.tmp}{$*.o}g' < $*.o.d && \
+  	perl -p -e 's{\#.*}{};s{^[^:]*: *}{};s{ *\\$$}{};s{$$}{ :}' < $*.o.d; \
+  } > $*.d && \
+  $(RM) $*.o.d
+-include $(SRCS:%.cpp=%.d)
 
 coverage:
 	lcov --directory . --capture --output-file coverage.info

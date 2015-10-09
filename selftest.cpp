@@ -27,13 +27,11 @@ TEST(ipow, ipow) {
 Project *project = nullptr;
 
 TEST(Project, create) {
-  project = new Project("p1");
+  project = createProject("p1");
   EXPECT_TRUE(project->invariant());
   ostringstream buf;
   buf << *project;
   EXPECT_EQ("Project \"p1\"\ntensortypes:\n", buf.str());
-  project->create_standard_tensortypes();
-  EXPECT_EQ(3, project->tensortypes.size());
 }
 
 TEST(Project, HDF5) {
@@ -48,12 +46,20 @@ TEST(Project, HDF5) {
   }
   {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);
-    auto p2 = new Project("p1", file);
+    auto p2 = createProject("p1", file);
     ostringstream buf;
     buf << *p2;
     EXPECT_EQ(orig, buf.str());
   }
-  remove(filename.c_str());
+  // remove(filename.c_str());
+}
+
+// This test sets up the global variable "project", which is necessary for most
+// of the following tests. It must be the last of the "Project" tests. TODO:
+// Avoid this dependency.
+TEST(Project, setup) {
+  project->createStandardTensortypes();
+  EXPECT_EQ(3, project->tensortypes.size());
 }
 
 TEST(TensorTypes, Scalar3D) {
@@ -120,9 +126,14 @@ TEST(TensorTypes, SymmetricTensor3D) {
 }
 
 TEST(TensorTypes, HDF5) {
-  const string filename = "tensortypes.h5";
-  auto tt_project = new Project("project_tensortypes");
+  auto tt_project = createProject("project_tensortypes");
   for (const auto &tt_name : {"Scalar3D", "Vector3D", "SymmetricTensor3D"}) {
+    string filename;
+    {
+      ostringstream buf;
+      buf << "tensortypes-" << tt_name << ".h5";
+      filename = buf.str();
+    }
     string orig;
     {
       auto file = H5::H5File(filename, H5F_ACC_TRUNC);
@@ -139,8 +150,8 @@ TEST(TensorTypes, HDF5) {
       buf << *sc;
       EXPECT_EQ(orig, buf.str());
     }
+    // remove(filename.c_str());
   }
-  remove(filename.c_str());
 }
 
 TEST(Manifold, create) {

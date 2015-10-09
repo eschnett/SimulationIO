@@ -61,6 +61,11 @@ struct Common {
 
 // Projects
 
+struct Project;
+
+Project *createProject(const string &name);
+Project *createProject(const string &name, const H5::CommonFG &loc);
+
 struct TensorType;
 struct Manifold;
 struct TangentSpace;
@@ -78,14 +83,17 @@ struct Project : Common {
   Project(Project &&) = delete;
   Project &operator=(const Project &) = delete;
   Project &operator=(Project &&) = delete;
+
+private:
+  friend Project *createProject(const string &name);
+  friend Project *createProject(const string &name, const H5::CommonFG &loc);
   Project(const string &name) : Common(name) {}
+  Project(const string &name, const H5::CommonFG &loc);
+
+public:
   virtual ~Project() override { assert(0); }
-  void create_standard_tensortypes();
-  void insert(const string &name, TensorType *tensortype) {
-    assert(!tensortypes.count(name));
-    // TODO: use emplace
-    tensortypes[name] = tensortype;
-  }
+  void createStandardTensortypes();
+  TensorType *createTensorType(const string &name, int dimension, int rank);
   void insert(const string &name, Manifold *manifold) {
     assert(!manifolds.count(name));
     manifolds[name] = manifold;
@@ -107,7 +115,6 @@ struct Project : Common {
     return project.output(os);
   }
   virtual void write(H5::CommonFG &loc) const override;
-  Project(const string &name, const H5::CommonFG &loc);
 };
 
 // Tensor types
@@ -134,11 +141,14 @@ struct TensorType : Common {
   TensorType(TensorType &&) = delete;
   TensorType &operator=(const TensorType &) = delete;
   TensorType &operator=(TensorType &&) = delete;
+
+private:
+  friend TensorType *Project::createTensorType(const string &name,
+                                               int dimension, int rank);
   TensorType(const string &name, Project *project, int dimension, int rank)
-      : Common(name), project(project), dimension(dimension), rank(rank) {
-    project->insert(name, this);
-    assert(invariant());
-  }
+      : Common(name), project(project), dimension(dimension), rank(rank) {}
+
+public:
   virtual ~TensorType() override { assert(0); }
   void insert(const string &name, TensorComponent *tensorcomponent) {
     assert(!tensorcomponents.count(name));
