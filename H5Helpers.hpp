@@ -104,6 +104,11 @@ Attribute read_attribute(H5Location &loc, const std::string &name,
   return attr;
 }
 
+template <typename T>
+Attribute read_attribute(H5Location &loc, const char *name, T &value) {
+  return read_attribute(loc, std::string(name), value);
+}
+
 // H5Literate
 namespace detail {
 template <typename Op> struct H5L_iterator {
