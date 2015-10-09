@@ -60,11 +60,12 @@ TEST(TensorTypes, Vector3D) {
     EXPECT_TRUE(tc.second->invariant());
   ostringstream buf;
   buf << *tt;
-  EXPECT_EQ("TensorType \"Vector3D\": dim=3 rank=1\n"
-            "  TensorComponent \"0\": tensortype=\"Vector3D\" indexvalues=[0]\n"
-            "  TensorComponent \"1\": tensortype=\"Vector3D\" indexvalues=[1]\n"
-            "  TensorComponent \"2\": tensortype=\"Vector3D\" indexvalues=[2]\n",
-            buf.str());
+  EXPECT_EQ(
+      "TensorType \"Vector3D\": dim=3 rank=1\n"
+      "  TensorComponent \"0\": tensortype=\"Vector3D\" indexvalues=[0]\n"
+      "  TensorComponent \"1\": tensortype=\"Vector3D\" indexvalues=[1]\n"
+      "  TensorComponent \"2\": tensortype=\"Vector3D\" indexvalues=[2]\n",
+      buf.str());
 }
 
 TEST(TensorTypes, SymmetricTensor3D) {
@@ -94,6 +95,7 @@ TEST(TensorTypes, SymmetricTensor3D) {
             buf.str());
 }
 
+#warning "TODO: test all tensor types"
 TEST(TensorTypes, HDF5) {
   const string filename = "tensortypes.h5";
   string orig;

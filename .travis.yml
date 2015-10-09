@@ -30,9 +30,6 @@ language: cpp
 compiler:
   #TODO - clang
   - gcc
-env:
-  - CPPFLAGS=-I$HOME/hdf5-1.8.15-patch1/include
-  - LDFLAGS=-L$HOME/hdf5-1.8.15-patch1/lib
 script:
-  - make
+  - make "CPPFLAGS=-I$HOME/hdf5-1.8.15-patch1/include" "LDFLAGS=-L$HOME/hdf5-1.8.15-patch1/lib -Wl,-rpath,$HOME/hdf5-1.8.15-patch1/lib"
   - make test
