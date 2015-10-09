@@ -18,6 +18,7 @@ before_install:
     fi
   - |
     if [ `uname` = Linux ]; then
+      export HDF5_DIR="$HOME/hdf5-1.8.15-patch1"
       (
         mkdir external
         cd external
@@ -25,13 +26,11 @@ before_install:
         tar xjf hdf5-1.8.15-patch1.tar.bz2
         mkdir hdf5-1.8.15-patch1-build
         cd hdf5-1.8.15-patch1-build
-        `pwd`/../hdf5-1.8.15-patch1/configure --prefix="$HOME/hdf5-1.8.15-patch1" --enable-cxx
+        `pwd`/../hdf5-1.8.15-patch1/configure --prefix="$HDF5_DIR" --enable-cxx
         make -j2
         make -j2 install
       )
-      export PATH="$HOME/hdf5-1.8.15-patch1/bin:$PATH"
-      export CPPFLAGS="-I$HOME/hdf5-1.8.15-patch1/include"
-      export LDFLAGS="-L$HOME/hdf5-1.8.15-patch1/lib -Wl,-rpath,$HOME/hdf5-1.8.15-patch1/lib"
+      export PATH="$HDF5_DIR/bin:$PATH"
     fi
   - gem install coveralls-lcov
   - h5ls --version
@@ -41,7 +40,7 @@ compiler:
   - clang
   - gcc
 script:
-  - make -j2 COVERAGE=1
+  - make -j2 COVERAGE=1 CPPFLAGS="-I$HDF5_DIR/include" LDFLAGS="-L$HDF5_DIR/lib -Wl,-rpath,$HDF5_DIR/lib"
   - make -j2 test
 after_success:
   - make -j2 coverage
