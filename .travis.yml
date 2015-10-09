@@ -9,7 +9,7 @@ addons:
    packages:
      - lcov
      # - libhdf5-serial-dev   # This lacks the HDF5 C++ bindings
-install:
+before_install:
   - |
     if [ `uname` = Darwin ]; then
       brew update
