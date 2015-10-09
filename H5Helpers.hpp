@@ -52,8 +52,7 @@ inline DataType getType(const long double &) {
 }
 
 // Write attributes
-template <typename T,
-          typename std::enable_if<std::is_fundamental<T>::value> * = nullptr>
+template <typename T>
 Attribute create_attribute(const H5Location &loc, const std::string &name,
                            const T &value) {
   auto attr = loc.createAttribute(name, getType(value), DataSpace());
@@ -73,15 +72,8 @@ Attribute create_attribute(const H5Location &loc, const std::string &name,
   return attr;
 }
 
-template <typename T>
-Attribute create_attribute(const H5Location &loc, const char *name,
-                           const T &value) {
-  return create_attribute(loc, std::string(name), value);
-}
-
 // Read attributes
-template <typename T,
-          typename std::enable_if<std::is_fundamental<T>::value> * = nullptr>
+template <typename T>
 Attribute read_attribute(H5Location &loc, const std::string &name, T &value) {
   auto attr = loc.openAttribute(name);
   auto space = attr.getSpace();
@@ -102,11 +94,6 @@ Attribute read_attribute(H5Location &loc, const std::string &name,
       values.empty() ? &dummy : values.data(); // HDF5 is overly cautious
   attr.read(getType(dummy), buf);
   return attr;
-}
-
-template <typename T>
-Attribute read_attribute(H5Location &loc, const char *name, T &value) {
-  return read_attribute(loc, std::string(name), value);
 }
 
 // H5Literate
