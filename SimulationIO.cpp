@@ -17,26 +17,36 @@ Project *createProject(const string &name, const H5::CommonFG &loc) {
 
 void Project::createStandardTensortypes() {
   auto s3d = createTensorType("Scalar3D", 3, 0);
-  new TensorComponent("scalar", s3d, (vector<int>){});
+  s3d->createTensorComponent("scalar", vector<int>{});
 
   auto v3d = createTensorType("Vector3D", 3, 1);
-  new TensorComponent("0", v3d, {0});
-  new TensorComponent("1", v3d, {1});
-  new TensorComponent("2", v3d, {2});
+  v3d->createTensorComponent("0", {0});
+  v3d->createTensorComponent("1", {1});
+  v3d->createTensorComponent("2", {2});
 
   auto st3d = createTensorType("SymmetricTensor3D", 3, 2);
-  new TensorComponent("00", st3d, {0, 0});
-  new TensorComponent("01", st3d, {0, 1});
-  new TensorComponent("02", st3d, {0, 2});
-  new TensorComponent("11", st3d, {1, 1});
-  new TensorComponent("12", st3d, {1, 2});
-  new TensorComponent("22", st3d, {2, 2});
+  st3d->createTensorComponent("00", {0, 0});
+  st3d->createTensorComponent("01", {0, 1});
+  st3d->createTensorComponent("02", {0, 2});
+  st3d->createTensorComponent("11", {1, 1});
+  st3d->createTensorComponent("12", {1, 2});
+  st3d->createTensorComponent("22", {2, 2});
 }
 
 TensorType *Project::createTensorType(const string &name, int dimension,
                                       int rank) {
   assert(!tensortypes.count(name));
   auto tensortype = new TensorType(name, this, dimension, rank);
+  // TODO: use emplace
+  tensortypes[name] = tensortype;
+  assert(tensortype->invariant());
+  return tensortype;
+}
+
+TensorType *Project::createTensorType(const string &name,
+                                      const H5::CommonFG &loc) {
+  assert(!tensortypes.count(name));
+  auto tensortype = new TensorType(name, this, loc);
   // TODO: use emplace
   tensortypes[name] = tensortype;
   assert(tensortype->invariant());
@@ -77,7 +87,10 @@ void Project::write(H5::CommonFG &loc) const {
 
 Project::Project(const string &name, const H5::CommonFG &loc) : Common(name) {
   assert(invariant());
-  H5::read_group(loc, "tensortypes", this, tensortypes);
+  H5::read_group(
+      loc, "tensortypes", [&](const string &name, const H5::Group &group) {
+        createTensorType(name, group);
+      }, tensortypes);
 #warning "TODO"
   // H5::read_group(loc, "manifolds", this, manifolds);
   // H5::read_group(loc, "tangentspaces", this, tangentspaces);
@@ -88,6 +101,23 @@ Project::Project(const string &name, const H5::CommonFG &loc) : Common(name) {
 // Tensor types
 
 // TensorType
+
+TensorComponent *
+TensorType::createTensorComponent(const string &name,
+                                  const std::vector<int> &indexvalues) {
+  assert(!tensorcomponents.count(name));
+  auto tensorcomponent = new TensorComponent(name, this, indexvalues);
+  tensorcomponents[name] = tensorcomponent;
+  return tensorcomponent;
+}
+
+TensorComponent *TensorType::createTensorComponent(const string &name,
+                                                   const H5::CommonFG &loc) {
+  assert(!tensorcomponents.count(name));
+  auto tensorcomponent = new TensorComponent(name, this, loc);
+  tensorcomponents[name] = tensorcomponent;
+  return tensorcomponent;
+}
 
 ostream &TensorType::output(ostream &os, int level) const {
   os << indent(level) << "TensorType \"" << name << "\": dim=" << dimension
@@ -110,7 +140,11 @@ TensorType::TensorType(const string &name, Project *project,
   auto group = loc.openGroup(name);
   H5::read_attribute(group, "dimension", dimension);
   H5::read_attribute(group, "rank", rank);
-  H5::read_group(group, "tensorcomponents", this, tensorcomponents);
+  H5::read_group(group, "tensorcomponents",
+                 [&](const string &name, const H5::Group &group) {
+                   createTensorComponent(name, group);
+                 },
+                 tensorcomponents);
 }
 
 // TensorComponent
@@ -137,8 +171,6 @@ TensorComponent::TensorComponent(const string &name, TensorType *tensortype,
     : Common(name), tensortype(tensortype) {
   auto group = loc.openGroup(name);
   H5::read_attribute(group, "indexvalues", indexvalues);
-  tensortype->insert(name, this);
-  assert(invariant());
 }
 
 // High-level continuum concepts

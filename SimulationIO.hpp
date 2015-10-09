@@ -94,6 +94,7 @@ public:
   virtual ~Project() override { assert(0); }
   void createStandardTensortypes();
   TensorType *createTensorType(const string &name, int dimension, int rank);
+  TensorType *createTensorType(const string &name, const H5::CommonFG &loc);
   void insert(const string &name, Manifold *manifold) {
     assert(!manifolds.count(name));
     manifolds[name] = manifold;
@@ -143,23 +144,22 @@ struct TensorType : Common {
   TensorType &operator=(TensorType &&) = delete;
 
 private:
-  friend TensorType *Project::createTensorType(const string &name,
-                                               int dimension, int rank);
+  friend class Project;
   TensorType(const string &name, Project *project, int dimension, int rank)
       : Common(name), project(project), dimension(dimension), rank(rank) {}
+  TensorType(const string &name, Project *project, const H5::CommonFG &loc);
 
 public:
   virtual ~TensorType() override { assert(0); }
-  void insert(const string &name, TensorComponent *tensorcomponent) {
-    assert(!tensorcomponents.count(name));
-    tensorcomponents[name] = tensorcomponent;
-  }
+  TensorComponent *createTensorComponent(const string &name,
+                                         const std::vector<int> &indexvalues);
+  TensorComponent *createTensorComponent(const string &name,
+                                         const H5::CommonFG &loc);
   virtual ostream &output(ostream &os, int level = 0) const override;
   friend ostream &operator<<(ostream &os, const TensorType &tensortype) {
     return tensortype.output(os);
   }
   virtual void write(H5::CommonFG &loc) const override;
-  TensorType(const string &name, Project *project, const H5::CommonFG &loc);
 };
 
 struct TensorComponent : Common {
@@ -198,12 +198,16 @@ struct TensorComponent : Common {
   TensorComponent(TensorComponent &&) = delete;
   TensorComponent &operator=(const TensorComponent &) = delete;
   TensorComponent &operator=(TensorComponent &&) = delete;
+
+private:
+  friend class TensorType;
   TensorComponent(const string &name, TensorType *tensortype,
                   const std::vector<int> &indexvalues)
-      : Common(name), tensortype(tensortype), indexvalues(indexvalues) {
-    tensortype->insert(name, this);
-    assert(invariant());
-  }
+      : Common(name), tensortype(tensortype), indexvalues(indexvalues) {}
+  TensorComponent(const string &name, TensorType *tensortype,
+                  const H5::CommonFG &loc);
+
+public:
   virtual ~TensorComponent() override { assert(0); }
   virtual ostream &output(ostream &os, int level = 0) const override;
   friend ostream &operator<<(ostream &os,
@@ -211,8 +215,6 @@ struct TensorComponent : Common {
     return tensorcomponent.output(os);
   }
   virtual void write(H5::CommonFG &loc) const override;
-  TensorComponent(const string &name, TensorType *tensortype,
-                  const H5::CommonFG &loc);
 };
 
 // High-level continuum concepts

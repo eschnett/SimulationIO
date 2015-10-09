@@ -51,7 +51,7 @@ TEST(Project, HDF5) {
     buf << *p2;
     EXPECT_EQ(orig, buf.str());
   }
-  // remove(filename.c_str());
+  remove(filename.c_str());
 }
 
 // This test sets up the global variable "project", which is necessary for most
@@ -126,18 +126,18 @@ TEST(TensorTypes, SymmetricTensor3D) {
 }
 
 TEST(TensorTypes, HDF5) {
-  auto tt_project = createProject("project_tensortypes");
-  for (const auto &tt_name : {"Scalar3D", "Vector3D", "SymmetricTensor3D"}) {
+  auto p = createProject("project_tensortypes");
+  for (const auto &name : {"Scalar3D", "Vector3D", "SymmetricTensor3D"}) {
     string filename;
     {
       ostringstream buf;
-      buf << "tensortypes-" << tt_name << ".h5";
+      buf << "tensortypes-" << name << ".h5";
       filename = buf.str();
     }
     string orig;
     {
       auto file = H5::H5File(filename, H5F_ACC_TRUNC);
-      const auto &sc = project->tensortypes.at(tt_name);
+      const auto &sc = project->tensortypes.at(name);
       sc->write(file);
       ostringstream buf;
       buf << *sc;
@@ -145,12 +145,12 @@ TEST(TensorTypes, HDF5) {
     }
     {
       auto file = H5::H5File(filename, H5F_ACC_RDONLY);
-      auto sc = new TensorType(tt_name, tt_project, file);
+      auto sc = p->createTensorType(name, file);
       ostringstream buf;
       buf << *sc;
       EXPECT_EQ(orig, buf.str());
     }
-    // remove(filename.c_str());
+    remove(filename.c_str());
   }
 }
 

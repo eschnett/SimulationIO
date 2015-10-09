@@ -132,8 +132,8 @@ Group create_group(const CommonFG &loc, const std::string &name,
 }
 
 // Read a map
-template <typename S, typename Key, typename T>
-Group read_group(const CommonFG &loc, const std::string &name, S *super,
+template <typename R, typename Key, typename T>
+Group read_group(const CommonFG &loc, const std::string &name, R read_object,
                  std::map<Key, T *> &m) {
   // We assume that Key is string-like, and that T is a subtype of Common
   auto group = loc.openGroup(name);
@@ -141,9 +141,7 @@ Group read_group(const CommonFG &loc, const std::string &name, S *super,
   iterateElems(
       group, H5_INDEX_NAME, H5_ITER_NATIVE, &idx,
       [&](Group group, const std::string &name, const H5L_info_t *info) {
-        // We assume that the objects self-insert them into the map by
-        // calling an appropriate routine in "super"
-        new T(name, super, group);
+        read_object(name, group);
         return 0;
       });
   return group;
