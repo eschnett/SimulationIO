@@ -13,6 +13,8 @@
 // - other vectors become objects inside a subgroup the group, sorted
 //   alphabetically
 
+#include "H5Helpers.hpp"
+
 #include <H5Cpp.h>
 
 #include <cassert>
@@ -44,149 +46,6 @@ const int indentsize = 2;
 const char indentchar = ' ';
 inline string indent(int level) {
   return string(level * indentsize, indentchar);
-}
-
-// HDF5 helpers
-
-inline H5::DataType H5type(const char &) {
-  return H5::IntType(H5::PredType::NATIVE_CHAR);
-}
-inline H5::DataType h5type(const signed char &) {
-  return H5::IntType(H5::PredType::NATIVE_SCHAR);
-}
-inline H5::DataType h5type(const unsigned char &) {
-  return H5::IntType(H5::PredType::NATIVE_UCHAR);
-}
-inline H5::DataType h5type(const short &) {
-  return H5::IntType(H5::PredType::NATIVE_SHORT);
-}
-inline H5::DataType h5type(const unsigned short &) {
-  return H5::IntType(H5::PredType::NATIVE_USHORT);
-}
-inline H5::DataType h5type(const int &) {
-  return H5::IntType(H5::PredType::NATIVE_INT);
-}
-inline H5::DataType h5type(const unsigned int &) {
-  return H5::IntType(H5::PredType::NATIVE_UINT);
-}
-inline H5::DataType h5type(const long &) {
-  return H5::IntType(H5::PredType::NATIVE_LONG);
-}
-inline H5::DataType h5type(const unsigned long &) {
-  return H5::IntType(H5::PredType::NATIVE_ULONG);
-}
-inline H5::DataType h5type(const long long &) {
-  return H5::IntType(H5::PredType::NATIVE_LLONG);
-}
-inline H5::DataType h5type(const unsigned long long &) {
-  return H5::IntType(H5::PredType::NATIVE_ULLONG);
-}
-inline H5::DataType h5type(const float &) {
-  return H5::FloatType(H5::PredType::NATIVE_FLOAT);
-}
-inline H5::DataType h5type(const double &) {
-  return H5::FloatType(H5::PredType::NATIVE_DOUBLE);
-}
-inline H5::DataType h5type(const long double &) {
-  return H5::FloatType(H5::PredType::NATIVE_LDOUBLE);
-}
-
-// Write attributes
-template <typename T,
-          typename std::enable_if<std::is_fundamental<T>::value> * = nullptr>
-H5::Attribute H5_create_attribute(const H5::H5Location &loc, const string &name,
-                                  const T &value) {
-  auto attr = loc.createAttribute(name, h5type(value), H5::DataSpace());
-  attr.write(h5type(value), &value);
-  return attr;
-}
-
-template <typename T>
-H5::Attribute H5_create_attribute(const H5::H5Location &loc, const string &name,
-                                  const vector<T> &values) {
-  const hsize_t dims = values.size();
-  T dummy;
-  auto attr = loc.createAttribute(name, h5type(dummy), H5::DataSpace(1, &dims));
-  const void *buf =
-      values.empty() ? &dummy : values.data(); // HDF5 is overly cautious
-  attr.write(h5type(dummy), buf);
-  return attr;
-}
-
-// Read attributes
-template <typename T,
-          typename std::enable_if<std::is_fundamental<T>::value> * = nullptr>
-H5::Attribute H5_read_attribute(H5::H5Location &loc, const string &name,
-                                T &value) {
-  auto attr = loc.openAttribute(name);
-  auto space = attr.getSpace();
-  assert(space.getSimpleExtentType() == H5S_SCALAR);
-  attr.read(h5type(value), &value);
-  return attr;
-}
-
-template <typename T>
-H5::Attribute H5_read_attribute(H5::H5Location &loc, const string &name,
-                                vector<T> &values) {
-  auto attr = loc.openAttribute(name);
-  auto space = attr.getSpace();
-  auto npoints = space.getSimpleExtentNpoints();
-  values.resize(npoints);
-  T dummy;
-  void *buf =
-      values.empty() ? &dummy : values.data(); // HDF5 is overly cautious
-  attr.read(h5type(dummy), buf);
-  return attr;
-}
-
-// H5Literate
-namespace detail {
-template <typename Op> struct H5L_iterator {
-  Op &&op;
-  static herr_t call(hid_t g_id, const char *name, const H5L_info_t *info,
-                     void *data) {
-    return static_cast<H5L_iterator *>(data)->op(H5::Group(g_id), name, info);
-  }
-  herr_t operator()(const H5::Group &group, H5_index_t index_type,
-                    H5_iter_order_t order, hsize_t *idx) {
-    return H5Literate(group.getId(), index_type, order, idx, call, this);
-  }
-};
-}
-
-template <typename Op>
-herr_t H5_iterate(const H5::Group &group, H5_index_t index_type,
-                  H5_iter_order_t order, hsize_t *idx, Op &&op) {
-  return detail::H5L_iterator<Op>{std::forward<Op>(op)}(group.getId(),
-                                                        index_type, order, idx);
-}
-
-// Write a map (ignoring the keys)
-template <typename Key, typename T>
-H5::Group H5_create_group(const H5::CommonFG &loc, const string &name,
-                          const map<Key, T *> &m) {
-  // We assume that Key is string-like, and that T is a subtype of Common
-  auto group = loc.createGroup(name);
-  for (const auto &p : m)
-    p.second->write(group);
-  return group;
-}
-
-// Read a map
-template <typename S, typename Key, typename T>
-H5::Group H5_read_group(const H5::CommonFG &loc, const string &name, S *super,
-                        map<Key, T *> &m) {
-  // We assume that Key is string-like, and that T is a subtype of Common
-  auto group = loc.openGroup(name);
-  hsize_t idx = 0;
-  H5_iterate(group, H5_INDEX_NAME, H5_ITER_NATIVE, &idx,
-             [&](H5::Group group, const string &name, const H5L_info_t *info) {
-               // We assume that the objects self-insert them into the map by
-               // calling an appropriate routine in "super"
-               new T(name, super, group);
-               return 0;
-             });
-  return group;
 }
 
 // Common to all file elements

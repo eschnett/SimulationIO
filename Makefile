@@ -20,8 +20,8 @@ gtest:
 gtest-all.o: gtest
 	$(CXX) $(CPPFLAGS) $(GTEST_CPPFLAGS) $(CXXFLAGS) $(GTEST_CXXFLAGS) -c $(GTEST_DIR)/src/gtest-all.cc
 
-selftest.o: selftest.cpp SimulationIO.hpp
-SimulatinoIO.o: SimulationIO.cpp SimulationIO.hpp
+selftest.o: selftest.cpp SimulationIO.hpp H5Helpers.hpp
+SimulatinoIO.o: SimulationIO.cpp SimulationIO.hpp H5Helpers.hpp
 selftest: SimulationIO.cpp selftest.o gtest-all.o
 	$(CXX) $(CPPFLAGS) $(GTEST_CPPFLAGS) $(CXXFLAGS) $(GTEST_CXXFLAGS) $(LDFLAGS) -o $@ $^ $(HDF5_LIBS)
 test: selftest

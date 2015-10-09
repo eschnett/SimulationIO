@@ -46,22 +46,22 @@ ostream &Project::output(ostream &os, int level) const {
 void Project::write(H5::CommonFG &loc) const {
   // Note: We don't create a group for the project. We assume that "loc" may be
   // a file, and we then generate top-level entries for this file.
-  H5_create_group(loc, "tensortypes", tensortypes);
-  H5_create_group(loc, "manifolds", manifolds);
-  H5_create_group(loc, "tangentspaces", tangentspaces);
-  H5_create_group(loc, "fields", fields);
+  H5::create_group(loc, "tensortypes", tensortypes);
+  H5::create_group(loc, "manifolds", manifolds);
+  H5::create_group(loc, "tangentspaces", tangentspaces);
+  H5::create_group(loc, "fields", fields);
 #warning "TODO"
-  // H5_create_group(loc, "coordiantesystems", coordinatesystems);
+  // H5::create_group(loc, "coordiantesystems", coordinatesystems);
 }
 
 Project::Project(const string &name, const H5::CommonFG &loc) : Common(name) {
   assert(invariant());
-  H5_read_group(loc, "tensortypes", this, tensortypes);
+  H5::read_group(loc, "tensortypes", this, tensortypes);
 #warning "TODO"
-  // H5_read_group(loc, "manifolds", this, manifolds);
-  // H5_read_group(loc, "tangentspaces", this, tangentspaces);
-  // H5_read_group(loc, "fields", this, fields);
-  // H5_read_group(loc, "coordinatesystems", this, coordinatesystems);
+  // H5::read_group(loc, "manifolds", this, manifolds);
+  // H5::read_group(loc, "tangentspaces", this, tangentspaces);
+  // H5::read_group(loc, "fields", this, fields);
+  // H5::read_group(loc, "coordinatesystems", this, coordinatesystems);
 }
 
 // Tensor types
@@ -78,20 +78,20 @@ ostream &TensorType::output(ostream &os, int level) const {
 
 void TensorType::write(H5::CommonFG &loc) const {
   auto group = loc.createGroup(name);
-  H5_create_attribute(group, "dimension", dimension);
-  H5_create_attribute(group, "rank", rank);
-  H5_create_group(group, "tensorcomponents", tensorcomponents);
+  H5::create_attribute(group, "dimension", dimension);
+  H5::create_attribute(group, "rank", rank);
+  H5::create_group(group, "tensorcomponents", tensorcomponents);
 }
 
 TensorType::TensorType(const string &name, Project *project,
                        const H5::CommonFG &loc)
     : Common(name), project(project) {
   auto group = loc.openGroup(name);
-  H5_read_attribute(group, "dimension", dimension);
-  H5_read_attribute(group, "rank", rank);
+  H5::read_attribute(group, "dimension", dimension);
+  H5::read_attribute(group, "rank", rank);
   project->insert(name, this);
   assert(invariant());
-  H5_read_group(group, "tensorcomponents", this, tensorcomponents);
+  H5::read_group(group, "tensorcomponents", this, tensorcomponents);
 }
 
 // TensorComponent
@@ -110,14 +110,14 @@ ostream &TensorComponent::output(ostream &os, int level) const {
 
 void TensorComponent::write(H5::CommonFG &loc) const {
   auto group = loc.createGroup(name);
-  H5_create_attribute(group, "indexvalues", indexvalues);
+  H5::create_attribute(group, "indexvalues", indexvalues);
 }
 
 TensorComponent::TensorComponent(const string &name, TensorType *tensortype,
                                  const H5::CommonFG &loc)
     : Common(name), tensortype(tensortype) {
   auto group = loc.openGroup(name);
-  H5_read_attribute(group, "indexvalues", indexvalues);
+  H5::read_attribute(group, "indexvalues", indexvalues);
   tensortype->insert(name, this);
   assert(invariant());
 }
