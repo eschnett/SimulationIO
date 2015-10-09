@@ -2,19 +2,37 @@ notifications:
   email: false
 os:
   - linux   # This is currently Ubuntu 12.04 LTS
-  - osx
+  #TODO - osx
 sudo: false
-addons:
-  apt:
-    packages:
-      - libhdf5-serial-dev
+# addons:
+#   apt:
+#     packages:
+#       - libhdf5-serial-dev
 before_install:
-  - if [ `uname` = Darwin ]; then brew update; fi
-  - if [ `uname` = Darwin ]; then brew install homebrew/science/hdf5; fi
+  - |
+    if [ `uname` = Darwin ]; then
+      brew update; fi
+      brew install homebrew/science/hdf5
+    fi
+  - |
+    if [ `uname` = Linux ]; then
+      mkdir external
+      cd external
+      wget http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.15-patch1.tar.bz2
+      tar xjf hdf5-1.8.15-patch1.tar.bz2
+      mkdir hdf5-1.8.15-patch1-build
+      cd hdf5-1.8.15-patch1-build
+      `pwd`/../hdf5-1.8.15-patch1/configure --prefix=$HOME/hdf5-1.8.15-patch1
+      make
+      make install
+    fi
 language: cpp
 compiler:
-  - clang
+  #TODO - clang
   - gcc
+env:
+  - CPPFLAGS=-I$HOME/hdf5-1.8.15-patch1/include
+  - LDFLAGS=-L$HOME/hdf5-1.8.15-patch1/lib
 script:
   - make
   - make test
