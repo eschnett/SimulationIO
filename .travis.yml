@@ -22,7 +22,7 @@ before_install:
       tar xjf hdf5-1.8.15-patch1.tar.bz2
       mkdir hdf5-1.8.15-patch1-build
       cd hdf5-1.8.15-patch1-build
-      `pwd`/../hdf5-1.8.15-patch1/configure --prefix=$HOME/hdf5-1.8.15-patch1
+      `pwd`/../hdf5-1.8.15-patch1/configure --prefix="$HOME/hdf5-1.8.15-patch1" --enable-cxx
       make
       make install
     fi
@@ -31,5 +31,5 @@ compiler:
   #TODO - clang
   - gcc
 script:
-  - make "CPPFLAGS=-I$HOME/hdf5-1.8.15-patch1/include" "LDFLAGS=-L$HOME/hdf5-1.8.15-patch1/lib -Wl,-rpath,$HOME/hdf5-1.8.15-patch1/lib"
+  - make CPPFLAGS="-I$HOME/hdf5-1.8.15-patch1/include" LDFLAGS="-L$HOME/hdf5-1.8.15-patch1/lib -Wl,-rpath,$HOME/hdf5-1.8.15-patch1/lib"
   - make test
