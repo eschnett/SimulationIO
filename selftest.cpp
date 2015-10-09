@@ -2,9 +2,13 @@
 
 #include <gtest/gtest.h>
 
+#include <cstdio>
 #include <sstream>
+#include <string>
 
 using std::ostringstream;
+using std::remove;
+using std::string;
 
 using namespace SimulationIO;
 
@@ -115,6 +119,7 @@ TEST(TensorTypes, HDF5) {
     buf << *sc;
     EXPECT_EQ(orig, buf.str());
   }
+  remove(filename.c_str());
 }
 
 TEST(Manifold, create) {
