@@ -2,12 +2,12 @@ notifications:
   email: false
 os:
   - linux   # This is currently Ubuntu 12.04 LTS
-  #TODO - osx
+  - osx
 sudo: false
 # addons:
 #   apt:
 #     packages:
-#       - libhdf5-serial-dev
+#       - libhdf5-serial-dev   # This lacks the HDF5 C++ bindings
 before_install:
   - |
     if [ `uname` = Darwin ]; then
@@ -23,14 +23,14 @@ before_install:
       mkdir hdf5-1.8.15-patch1-build
       cd hdf5-1.8.15-patch1-build
       `pwd`/../hdf5-1.8.15-patch1/configure --prefix="$HOME/hdf5-1.8.15-patch1" --enable-cxx
-      make >/dev/null
-      make install >/dev/null
+      make -j2
+      make -j2 install
     fi
 language: cpp
 compiler:
-  #TODO - clang
+  - clang
   - gcc
 script:
   # - make
-  - make CPPFLAGS="-I$HOME/hdf5-1.8.15-patch1/include" LDFLAGS="-L$HOME/hdf5-1.8.15-patch1/lib -Wl,-rpath,$HOME/hdf5-1.8.15-patch1/lib"
-  - make test
+  - make -j2 CPPFLAGS="-I$HOME/hdf5-1.8.15-patch1/include" LDFLAGS="-L$HOME/hdf5-1.8.15-patch1/lib -Wl,-rpath,$HOME/hdf5-1.8.15-patch1/lib"
+  - make -j2 test
