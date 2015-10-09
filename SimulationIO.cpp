@@ -43,7 +43,16 @@ ostream &Project::output(ostream &os, int level) const {
   return os;
 }
 
-void Project::write(H5::CommonFG &loc) const { assert(0); }
+void Project::write(H5::CommonFG &loc) const {
+  // Note: We don't create a group for the project. We assume that "loc" may be
+  // a file, and we then generate top-level entries for this file.
+  H5_write(loc, "tensortypes", tensortypes);
+  H5_write(loc, "manifolds", manifolds);
+  H5_write(loc, "tangentspaces", tangentspaces);
+  H5_write(loc, "fields", fields);
+#warning "TODO"
+  // H5_write(loc, "coordiantesystems", coordinatesystems);
+}
 
 // Tensor types
 
@@ -64,9 +73,7 @@ void TensorType::write(H5::CommonFG &loc) const {
   attr_dim.write(h5type(dimension), &dimension);
   auto attr_rank = group.createAttribute("rank", h5type(rank), H5::DataSpace());
   attr_rank.write(h5type(rank), &rank);
-  auto tc_group = group.createGroup("tensorcomponents");
-  for (const auto &tc : tensorcomponents)
-    tc.second->write(tc_group);
+  H5_write(group, "tensorcomponents", tensorcomponents);
 }
 
 TensorType::TensorType(const string &name, Project *project,

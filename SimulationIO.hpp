@@ -90,6 +90,17 @@ inline H5::DataType h5type(const long double &) {
   return H5::FloatType(H5::PredType::NATIVE_LDOUBLE);
 }
 
+// Serialize a map (ignoring the keys)
+template <typename Key, typename T>
+H5::Group H5_write(const H5::CommonFG &loc, const string &name,
+                   const map<Key, T> &m) {
+  // We assume that Key is string-like, and that T is a subtype of Common
+  auto group = loc.createGroup(name);
+  for (const auto &p : m)
+    p.second->write(group);
+  return group;
+}
+
 // H5Literate
 namespace detail {
 template <typename Op> struct H5L_iterator {
