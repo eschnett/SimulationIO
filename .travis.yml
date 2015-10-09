@@ -4,36 +4,33 @@ os:
   - linux   # This is currently Ubuntu 12.04 LTS
   #TODO - osx
 sudo: false
-addons:
-  sources:
-    # - debian-sid
-  apt:
-    packages:
-      - libhdf5-serial-dev
-      - libhdf5-cpp
+# addons:
+#   apt:
+#     packages:
+#       - libhdf5-serial-dev
 before_install:
   - |
     if [ `uname` = Darwin ]; then
       brew update
       brew install homebrew/science/hdf5
     fi
-  # - |
-  #   if [ `uname` = Linux ]; then
-  #     mkdir external
-  #     cd external
-  #     wget http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.15-patch1.tar.bz2
-  #     tar xjf hdf5-1.8.15-patch1.tar.bz2
-  #     mkdir hdf5-1.8.15-patch1-build
-  #     cd hdf5-1.8.15-patch1-build
-  #     `pwd`/../hdf5-1.8.15-patch1/configure --prefix="$HOME/hdf5-1.8.15-patch1" --enable-cxx
-  #     make
-  #     make install
-  #   fi
+  - |
+    if [ `uname` = Linux ]; then
+      mkdir external
+      cd external
+      wget http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.15-patch1.tar.bz2
+      tar xjf hdf5-1.8.15-patch1.tar.bz2
+      mkdir hdf5-1.8.15-patch1-build
+      cd hdf5-1.8.15-patch1-build
+      `pwd`/../hdf5-1.8.15-patch1/configure --prefix="$HOME/hdf5-1.8.15-patch1" --enable-cxx
+      make >/dev/null
+      make install >/dev/null
+    fi
 language: cpp
 compiler:
   #TODO - clang
   - gcc
 script:
-  # - make CPPFLAGS="-I$HOME/hdf5-1.8.15-patch1/include" LDFLAGS="-L$HOME/hdf5-1.8.15-patch1/lib -Wl,-rpath,$HOME/hdf5-1.8.15-patch1/lib"
-  - make
+  # - make
+  - make CPPFLAGS="-I$HOME/hdf5-1.8.15-patch1/include" LDFLAGS="-L$HOME/hdf5-1.8.15-patch1/lib -Wl,-rpath,$HOME/hdf5-1.8.15-patch1/lib"
   - make test
