@@ -1,7 +1,11 @@
 CXX = g++
-CPPFLAGS =
+CPPFLAGS = -I/opt/local/include
 CXXFLAGS = -g -Wall -std=c++0x
-LDFLAGS =
+LDFLAGS = -L/opt/local/lib -Wl,-rpath,/opt/local/lib
+
+ifneq ($(COVERAGE),)
+CXXFLAGS += --coverage
+endif
 
 SRCS = SimulationIO.cpp selftest.cpp
 
@@ -44,10 +48,21 @@ test: selftest
 	@$(PROCESS_DEPENDENCIES)
 	@mv $*.o.tmp $*.o
 
+coverage:
+	lcov --directory . --capture --output-file coverage.info
+	lcov --remove coverage.info '/googletest-*' '/usr/*' '/opt/*' --output-file coverage.info
+	lcov --list coverage.info
+
 clean:
-	$(RM) gtest gtest-all.o $(GTEST_DIR).tar.gz
-	$(RM) -r $(GTEST_DIR)
+	$(RM) -r *.dSYM
+	$(RM) *.gcda *.gcno coverage.info
+	$(RM) gtest-all.o
 	$(RM) $(SRCS:%.cpp=%.o) $(SRCS:%.cpp=%.d)
 	$(RM) selftest
 
-.PHONY: all test clean
+distclean: clean
+	$(RM) $(GTEST_DIR).tar.gz
+	$(RM) -r $(GTEST_DIR)
+	$(RM) gtest
+
+.PHONY: all test coverage clean distclean

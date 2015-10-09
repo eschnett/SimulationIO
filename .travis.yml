@@ -4,33 +4,45 @@ os:
   - linux   # This is currently Ubuntu 12.04 LTS
   - osx
 sudo: false
-# addons:
-#   apt:
-#     packages:
-#       - libhdf5-serial-dev   # This lacks the HDF5 C++ bindings
+addons:
+ apt:
+   packages:
+     - lcov
+     # - libhdf5-serial-dev   # This lacks the HDF5 C++ bindings
 before_install:
   - |
     if [ `uname` = Darwin ]; then
       brew update
       brew install homebrew/science/hdf5
+      brew install lcov
     fi
   - |
     if [ `uname` = Linux ]; then
-      mkdir external
-      cd external
-      wget http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.15-patch1.tar.bz2
-      tar xjf hdf5-1.8.15-patch1.tar.bz2
-      mkdir hdf5-1.8.15-patch1-build
-      cd hdf5-1.8.15-patch1-build
-      `pwd`/../hdf5-1.8.15-patch1/configure --prefix="$HOME/hdf5-1.8.15-patch1" --enable-cxx
-      make -j2
-      make -j2 install
+      (
+        mkdir external
+        cd external
+        wget http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.15-patch1.tar.bz2
+        tar xjf hdf5-1.8.15-patch1.tar.bz2
+        mkdir hdf5-1.8.15-patch1-build
+        cd hdf5-1.8.15-patch1-build
+        `pwd`/../hdf5-1.8.15-patch1/configure --prefix="$HOME/hdf5-1.8.15-patch1" --enable-cxx
+        make -j2
+        make -j2 install
+      )
+      export PATH="$HOME/hdf5-1.8.15-patch1/bin:$PATH"
+      export CPPFLAGS="-I$HOME/hdf5-1.8.15-patch1/include"
+      export LDFLAGS="-L$HOME/hdf5-1.8.15-patch1/lib -Wl,-rpath,$HOME/hdf5-1.8.15-patch1/lib"
     fi
+  - gem install coveralls-lcov
+  - h5ls --version
+  - lcov --version
 language: cpp
 compiler:
   - clang
   - gcc
 script:
-  # - make
-  - make -j2 CPPFLAGS="-I$HOME/hdf5-1.8.15-patch1/include" LDFLAGS="-L$HOME/hdf5-1.8.15-patch1/lib -Wl,-rpath,$HOME/hdf5-1.8.15-patch1/lib"
+  - make -j2 COVERAGE=1
   - make -j2 test
+after_success:
+  - make -j2 coverage
+  - coveralls-lcov --repo-token "$COVERALLS_TOKEN" coverage.info
