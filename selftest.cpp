@@ -99,25 +99,26 @@ TEST(TensorTypes, SymmetricTensor3D) {
             buf.str());
 }
 
-#warning "TODO: test all tensor types"
 TEST(TensorTypes, HDF5) {
   const string filename = "tensortypes.h5";
-  string orig;
-  {
-    auto file = H5::H5File(filename, H5F_ACC_TRUNC);
-    const auto &sc = project->tensortypes.at("Scalar3D");
-    sc->write(file);
-    ostringstream buf;
-    buf << *sc;
-    orig = buf.str();
-  }
-  {
-    auto file = H5::H5File(filename, H5F_ACC_RDONLY);
-    auto p2 = new Project("p2");
-    auto sc = new TensorType("Scalar3D", p2, file);
-    ostringstream buf;
-    buf << *sc;
-    EXPECT_EQ(orig, buf.str());
+  auto tt_project = new Project("project_tensortypes");
+  for (const auto &tt_name : {"Scalar3D", "Vector3D", "SymmetricTensor3D"}) {
+    string orig;
+    {
+      auto file = H5::H5File(filename, H5F_ACC_TRUNC);
+      const auto &sc = project->tensortypes.at(tt_name);
+      sc->write(file);
+      ostringstream buf;
+      buf << *sc;
+      orig = buf.str();
+    }
+    {
+      auto file = H5::H5File(filename, H5F_ACC_RDONLY);
+      auto sc = new TensorType(tt_name, tt_project, file);
+      ostringstream buf;
+      buf << *sc;
+      EXPECT_EQ(orig, buf.str());
+    }
   }
   remove(filename.c_str());
 }
