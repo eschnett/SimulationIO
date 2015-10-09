@@ -11,7 +11,7 @@ sudo: false
 before_install:
   - |
     if [ `uname` = Darwin ]; then
-      brew update; fi
+      brew update
       brew install homebrew/science/hdf5
     fi
   - |
