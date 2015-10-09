@@ -90,6 +90,25 @@ inline H5::DataType h5type(const long double &) {
   return H5::FloatType(H5::PredType::NATIVE_LDOUBLE);
 }
 
+// H5Literate
+namespace detail {
+template <typename Op> struct H5Literator {
+  Op op;
+  static herr_t call(hid_t g_id, const char *name, const H5L_info_t *info,
+                     void *data) {
+    return static_cast<H5Literator *>(data)->op(H5::Group(g_id), name, info);
+  }
+};
+}
+
+template <typename Op>
+herr_t H5_iterate(const H5::Group &group, H5_index_t index_type,
+                  H5_iter_order_t order, hsize_t *idx, Op op) {
+  detail::H5Literator<Op> iter{op};
+  return H5Literate(group.getId(), index_type, order, idx,
+                    detail::H5Literator<Op>::call, &iter);
+}
+
 // Common to all file elements
 
 struct Common {
@@ -115,14 +134,14 @@ struct Project : Common {
   map<string, TangentSpace *> tangentspaces;
   map<string, Field *> fields;
   map<string, CoordinateSystem *> coordinatesystems;
-  void create_tensortypes();
   virtual bool invariant() const override { return Common::invariant(); }
   Project(const Project &) = delete;
   Project(Project &&) = delete;
   Project &operator=(const Project &) = delete;
   Project &operator=(Project &&) = delete;
-  Project(const string &name) : Common(name) { create_tensortypes(); }
+  Project(const string &name) : Common(name) {}
   virtual ~Project() override { assert(0); }
+  void create_standard_tensortypes();
   void insert(const string &name, TensorType *tensortype) {
     assert(!tensortypes.count(name));
     // TODO: use emplace
@@ -160,15 +179,15 @@ struct TensorType : Common {
   Project *project;
   int dimension;
   int rank;
-  vector<TensorComponent *> storedcomponents; // owned
+  map<string, TensorComponent *> tensorcomponents; // owned
   virtual bool invariant() const override {
     bool inv = Common::invariant() && bool(project) &&
                project->tensortypes.count(name) &&
                project->tensortypes.at(name) == this && dimension >= 0 &&
                rank >= 0 &&
-               int(storedcomponents.size()) <= ipow(dimension, rank);
-    for (const auto &tc : storedcomponents)
-      inv &= bool(tc);
+               int(tensorcomponents.size()) <= ipow(dimension, rank);
+    for (const auto &tc : tensorcomponents)
+      inv &= !tc.first.empty() && bool(tc.second);
     return inv;
   }
   TensorType() = delete;
@@ -182,15 +201,16 @@ struct TensorType : Common {
     assert(invariant());
   }
   virtual ~TensorType() override { assert(0); }
-  void push_back(TensorComponent *tensorcomponent) {
-    storedcomponents.push_back(tensorcomponent);
+  void insert(const string &name, TensorComponent *tensorcomponent) {
+    assert(!tensorcomponents.count(name));
+    tensorcomponents[name] = tensorcomponent;
   }
   virtual ostream &output(ostream &os, int level = 0) const override;
   friend ostream &operator<<(ostream &os, const TensorType &tensortype) {
     return tensortype.output(os);
   }
   virtual void write(H5::CommonFG &loc) const override;
-  TensorType(const string &name, Project *project, const H5::H5Location &loc);
+  TensorType(const string &name, Project *project, const H5::CommonFG &loc);
 };
 
 struct TensorComponent : Common {
@@ -201,18 +221,18 @@ struct TensorComponent : Common {
   // the representation, and it introduces a canonical order (e.g. x,
   // y, z) among the tangent space directions that people are
   // expecting.
-  int storedcomponent;
   vector<int> indexvalues;
   virtual bool invariant() const override {
     bool inv = Common::invariant() && bool(tensortype) &&
-               storedcomponent >= 0 &&
-               storedcomponent < int(tensortype->storedcomponents.size()) &&
+               tensortype->tensorcomponents[name] == this &&
                int(indexvalues.size()) == tensortype->rank;
     for (int i = 0; i < int(indexvalues.size()); ++i)
       inv &= indexvalues[i] >= 0 && indexvalues[i] < tensortype->dimension;
-    inv &= tensortype->storedcomponents[storedcomponent] == this;
-    for (int c = 0; c < storedcomponent; ++c) {
-      const auto &other = tensortype->storedcomponents[c];
+    // Ensure all tensor components are distinct
+    for (const auto &tc : tensortype->tensorcomponents) {
+      const auto &other = tc.second;
+      if (other == this)
+        continue;
       bool samesize = other->indexvalues.size() == indexvalues.size();
       inv &= samesize;
       if (samesize) {
@@ -230,10 +250,9 @@ struct TensorComponent : Common {
   TensorComponent &operator=(const TensorComponent &) = delete;
   TensorComponent &operator=(TensorComponent &&) = delete;
   TensorComponent(const string &name, TensorType *tensortype,
-                  int storedcomponent, const std::vector<int> &indexvalues)
-      : Common(name), tensortype(tensortype), storedcomponent(storedcomponent),
-        indexvalues(indexvalues) {
-    tensortype->push_back(this);
+                  const std::vector<int> &indexvalues)
+      : Common(name), tensortype(tensortype), indexvalues(indexvalues) {
+    tensortype->insert(name, this);
     assert(invariant());
   }
   virtual ~TensorComponent() override { assert(0); }
@@ -243,10 +262,11 @@ struct TensorComponent : Common {
     return tensorcomponent.output(os);
   }
   virtual void write(H5::CommonFG &loc) const override;
-  TensorComponent(const string &name, H5::CommonFG &loc);
+  TensorComponent(const string &name, TensorType *tensortype,
+                  const H5::CommonFG &loc);
 };
 
-// High-level continuum Commons
+// High-level continuum concepts
 
 struct Discretization;
 struct Basis;

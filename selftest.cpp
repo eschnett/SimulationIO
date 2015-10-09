@@ -27,11 +27,9 @@ TEST(Project, create) {
   EXPECT_TRUE(project->invariant());
   ostringstream buf;
   buf << *project;
-  auto str = buf.str();
-  auto pos = str.find('\n');
-  EXPECT_NE(string::npos, pos);
-  str = str.substr(0, pos + 1);
-  EXPECT_EQ("Project \"p1\"\n", str);
+  EXPECT_EQ("Project \"p1\"\ntensortypes:\n", buf.str());
+  project->create_standard_tensortypes();
+  EXPECT_EQ(3, project->tensortypes.size());
 }
 
 TEST(TensorTypes, Scalar3D) {
@@ -39,16 +37,16 @@ TEST(TensorTypes, Scalar3D) {
   EXPECT_TRUE(tt);
   EXPECT_EQ(3, tt->dimension);
   EXPECT_EQ(0, tt->rank);
-  EXPECT_EQ(1, tt->storedcomponents.size());
+  EXPECT_EQ(1, tt->tensorcomponents.size());
   EXPECT_TRUE(tt->invariant());
-  for (const auto &tc : tt->storedcomponents)
-    EXPECT_TRUE(tc->invariant());
+  for (const auto &tc : tt->tensorcomponents)
+    EXPECT_TRUE(tc.second->invariant());
   ostringstream buf;
   buf << *tt;
-  EXPECT_EQ("TensorType \"Scalar3D\": dim=3 rank=0\n"
-            "  TensorComponent \"scalar\": tensortype=\"Scalar3D\" "
-            "storedcomponent=0 indices=[]\n",
-            buf.str());
+  EXPECT_EQ(
+      "TensorType \"Scalar3D\": dim=3 rank=0\n"
+      "  TensorComponent \"scalar\": tensortype=\"Scalar3D\" indexvalues=[]\n",
+      buf.str());
 }
 
 TEST(TensorTypes, Vector3D) {
@@ -56,19 +54,16 @@ TEST(TensorTypes, Vector3D) {
   EXPECT_TRUE(tt);
   EXPECT_EQ(3, tt->dimension);
   EXPECT_EQ(1, tt->rank);
-  EXPECT_EQ(3, tt->storedcomponents.size());
+  EXPECT_EQ(3, tt->tensorcomponents.size());
   EXPECT_TRUE(tt->invariant());
-  for (const auto &tc : tt->storedcomponents)
-    EXPECT_TRUE(tc->invariant());
+  for (const auto &tc : tt->tensorcomponents)
+    EXPECT_TRUE(tc.second->invariant());
   ostringstream buf;
   buf << *tt;
   EXPECT_EQ("TensorType \"Vector3D\": dim=3 rank=1\n"
-            "  TensorComponent \"0\": tensortype=\"Vector3D\" "
-            "storedcomponent=0 indices=[0]\n"
-            "  TensorComponent \"1\": tensortype=\"Vector3D\" "
-            "storedcomponent=1 indices=[1]\n"
-            "  TensorComponent \"2\": tensortype=\"Vector3D\" "
-            "storedcomponent=2 indices=[2]\n",
+            "  TensorComponent \"0\": tensortype=\"Vector3D\" indexvalues=[0]\n"
+            "  TensorComponent \"1\": tensortype=\"Vector3D\" indexvalues=[1]\n"
+            "  TensorComponent \"2\": tensortype=\"Vector3D\" indexvalues=[2]\n",
             buf.str());
 }
 
@@ -77,39 +72,47 @@ TEST(TensorTypes, SymmetricTensor3D) {
   EXPECT_TRUE(tt);
   EXPECT_EQ(3, tt->dimension);
   EXPECT_EQ(2, tt->rank);
-  EXPECT_EQ(6, tt->storedcomponents.size());
+  EXPECT_EQ(6, tt->tensorcomponents.size());
   EXPECT_TRUE(tt->invariant());
-  for (const auto &tc : tt->storedcomponents)
-    EXPECT_TRUE(tc->invariant());
+  for (const auto &tc : tt->tensorcomponents)
+    EXPECT_TRUE(tc.second->invariant());
   ostringstream buf;
   buf << *tt;
   EXPECT_EQ("TensorType \"SymmetricTensor3D\": dim=3 rank=2\n"
             "  TensorComponent \"00\": tensortype=\"SymmetricTensor3D\" "
-            "storedcomponent=0 "
-            "indices=[0,0]\n"
+            "indexvalues=[0,0]\n"
             "  TensorComponent \"01\": tensortype=\"SymmetricTensor3D\" "
-            "storedcomponent=1 "
-            "indices=[0,1]\n"
+            "indexvalues=[0,1]\n"
             "  TensorComponent \"02\": tensortype=\"SymmetricTensor3D\" "
-            "storedcomponent=2 "
-            "indices=[0,2]\n"
+            "indexvalues=[0,2]\n"
             "  TensorComponent \"11\": tensortype=\"SymmetricTensor3D\" "
-            "storedcomponent=3 "
-            "indices=[1,1]\n"
+            "indexvalues=[1,1]\n"
             "  TensorComponent \"12\": tensortype=\"SymmetricTensor3D\" "
-            "storedcomponent=4 "
-            "indices=[1,2]\n"
+            "indexvalues=[1,2]\n"
             "  TensorComponent \"22\": tensortype=\"SymmetricTensor3D\" "
-            "storedcomponent=5 "
-            "indices=[2,2]\n",
+            "indexvalues=[2,2]\n",
             buf.str());
 }
 
 TEST(TensorTypes, HDF5) {
-  auto file = H5::H5File("tensortypes.h5", H5F_ACC_TRUNC);
-  const auto &sc = project->tensortypes.at("Scalar3D");
-  sc->write(file);
-  file.close();
+  const string filename = "tensortypes.h5";
+  string orig;
+  {
+    auto file = H5::H5File(filename, H5F_ACC_TRUNC);
+    const auto &sc = project->tensortypes.at("Scalar3D");
+    sc->write(file);
+    ostringstream buf;
+    buf << *sc;
+    orig = buf.str();
+  }
+  {
+    auto file = H5::H5File(filename, H5F_ACC_RDONLY);
+    auto p2 = new Project("p2");
+    auto sc = new TensorType("Scalar3D", p2, file);
+    ostringstream buf;
+    buf << *sc;
+    EXPECT_EQ(orig, buf.str());
+  }
 }
 
 TEST(Manifold, create) {
