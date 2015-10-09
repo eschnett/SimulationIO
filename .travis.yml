@@ -1,14 +1,14 @@
 notifications:
   email: false
 os:
-  - linux   # This is currently Ubuntu 12.04 LTS
+  #TODO - linux   # This is currently Ubuntu 12.04 LTS
   - osx
 sudo: false
 # addons:
 #   apt:
 #     packages:
 #       - libhdf5-serial-dev   # This lacks the HDF5 C++ bindings
-before_install:
+install:
   - |
     if [ `uname` = Darwin ]; then
       brew update
@@ -25,12 +25,23 @@ before_install:
       `pwd`/../hdf5-1.8.15-patch1/configure --prefix="$HOME/hdf5-1.8.15-patch1" --enable-cxx
       make -j2
       make -j2 install
+      export PATH="$HOME/hdf5-1.8.15-patch1/bin:$PATH"
     fi
+  - g++ --version
+  - clang++ --version
+  - h5ls --version
+  - lcov --version
 language: cpp
 compiler:
-  - clang
+  #TODO - clang
   - gcc
 script:
   # - make
   - make -j2 CPPFLAGS="-I$HOME/hdf5-1.8.15-patch1/include" LDFLAGS="-L$HOME/hdf5-1.8.15-patch1/lib -Wl,-rpath,$HOME/hdf5-1.8.15-patch1/lib"
   - make -j2 test
+after_success:
+  - cd "$TRAVIS_BUILD_DIR"
+  - lcov --directory . --capture --output-file coverage.info
+  - lcov --remove coverage.info 'googletest-*' '/usr/*' '/opt/*' --output-file coverage.info
+  - lcov --list coverage.info
+  - coveralls-lcov --repo-token "$COVERALLS_TOKEN" coverage.info
