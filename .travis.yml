@@ -37,10 +37,8 @@ compiler:
   - clang
   - gcc
 script:
-  # - make
   - make -j2 CPPFLAGS="-I$HOME/hdf5-1.8.15-patch1/include" LDFLAGS="-L$HOME/hdf5-1.8.15-patch1/lib -Wl,-rpath,$HOME/hdf5-1.8.15-patch1/lib" COVERAGE=1
   - make -j2 test
 after_success:
-  - cd "$TRAVIS_BUILD_DIR"
   - make -j2 coverage
   - coveralls-lcov --repo-token "$COVERALLS_TOKEN" coverage.info
