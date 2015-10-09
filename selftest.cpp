@@ -36,6 +36,26 @@ TEST(Project, create) {
   EXPECT_EQ(3, project->tensortypes.size());
 }
 
+TEST(Project, HDF5) {
+  const string filename = "project.h5";
+  string orig;
+  {
+    auto file = H5::H5File(filename, H5F_ACC_TRUNC);
+    project->write(file);
+    ostringstream buf;
+    buf << *project;
+    orig = buf.str();
+  }
+  {
+    auto file = H5::H5File(filename, H5F_ACC_RDONLY);
+    auto p2 = new Project("p1", file);
+    ostringstream buf;
+    buf << *p2;
+    EXPECT_EQ(orig, buf.str());
+  }
+  remove(filename.c_str());
+}
+
 TEST(TensorTypes, Scalar3D) {
   const auto &tt = project->tensortypes.at("Scalar3D");
   EXPECT_TRUE(tt);

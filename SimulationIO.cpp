@@ -54,6 +54,16 @@ void Project::write(H5::CommonFG &loc) const {
   // H5_create_group(loc, "coordiantesystems", coordinatesystems);
 }
 
+Project::Project(const string &name, const H5::CommonFG &loc) : Common(name) {
+  assert(invariant());
+  H5_read_group(loc, "tensortypes", this, tensortypes);
+#warning "TODO"
+  // H5_read_group(loc, "manifolds", this, manifolds);
+  // H5_read_group(loc, "tangentspaces", this, tangentspaces);
+  // H5_read_group(loc, "fields", this, fields);
+  // H5_read_group(loc, "coordinatesystems", this, coordinatesystems);
+}
+
 // Tensor types
 
 // TensorType
@@ -81,13 +91,7 @@ TensorType::TensorType(const string &name, Project *project,
   H5_read_attribute(group, "rank", rank);
   project->insert(name, this);
   assert(invariant());
-  auto tc_group = group.openGroup("tensorcomponents");
-  hsize_t idx = 0;
-  H5_iterate(tc_group, H5_INDEX_NAME, H5_ITER_NATIVE, &idx,
-             [&](H5::Group group, const string &name, const H5L_info_t *info) {
-               new TensorComponent(name, this, group);
-               return 0;
-             });
+  H5_read_group(group, "tensorcomponents", this, tensorcomponents);
 }
 
 // TensorComponent
