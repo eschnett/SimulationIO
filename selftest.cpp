@@ -20,8 +20,22 @@ TEST(ipow, ipow) {
   EXPECT_EQ(4, ipow(2, 2));
 }
 
+Project *project = nullptr;
+
+TEST(Project, create) {
+  project = new Project("p1");
+  EXPECT_TRUE(project->invariant());
+  ostringstream buf;
+  buf << *project;
+  auto str = buf.str();
+  auto pos = str.find('\n');
+  EXPECT_NE(string::npos, pos);
+  str = str.substr(0, pos + 1);
+  EXPECT_EQ("Project \"p1\"\n", str);
+}
+
 TEST(TensorTypes, Scalar3D) {
-  const auto &tt = tensortypes.at("Scalar3D");
+  const auto &tt = project->tensortypes.at("Scalar3D");
   EXPECT_TRUE(tt);
   EXPECT_EQ(3, tt->dimension);
   EXPECT_EQ(0, tt->rank);
@@ -38,7 +52,7 @@ TEST(TensorTypes, Scalar3D) {
 }
 
 TEST(TensorTypes, Vector3D) {
-  const auto &tt = tensortypes.at("Vector3D");
+  const auto &tt = project->tensortypes.at("Vector3D");
   EXPECT_TRUE(tt);
   EXPECT_EQ(3, tt->dimension);
   EXPECT_EQ(1, tt->rank);
@@ -59,7 +73,7 @@ TEST(TensorTypes, Vector3D) {
 }
 
 TEST(TensorTypes, SymmetricTensor3D) {
-  const auto &tt = tensortypes.at("SymmetricTensor3D");
+  const auto &tt = project->tensortypes.at("SymmetricTensor3D");
   EXPECT_TRUE(tt);
   EXPECT_EQ(3, tt->dimension);
   EXPECT_EQ(2, tt->rank);
@@ -91,26 +105,35 @@ TEST(TensorTypes, SymmetricTensor3D) {
             buf.str());
 }
 
+TEST(TensorTypes, HDF5) {
+  auto file = H5::H5File("tensortypes.h5", H5F_ACC_TRUNC);
+  const auto &sc = project->tensortypes.at("Scalar3D");
+  sc->write(file);
+  file.close();
+}
+
 TEST(Manifold, create) {
-  EXPECT_TRUE(manifolds.empty());
-  auto m1 = new Manifold("m1", 3);
-  EXPECT_EQ(1, manifolds.size());
-  EXPECT_EQ(m1, manifolds.at("m1"));
+  EXPECT_TRUE(project->manifolds.empty());
+  auto m1 = new Manifold("m1", project, 3);
+  EXPECT_EQ(1, project->manifolds.size());
+  EXPECT_EQ(m1, project->manifolds.at("m1"));
 }
 
 TEST(TangentSpace, create) {
-  EXPECT_TRUE(tangentspaces.empty());
-  auto s1 = new TangentSpace("s1", 3);
-  EXPECT_EQ(1, tangentspaces.size());
-  EXPECT_EQ(s1, tangentspaces.at("s1"));
+  EXPECT_TRUE(project->tangentspaces.empty());
+  auto s1 = new TangentSpace("s1", project, 3);
+  EXPECT_EQ(1, project->tangentspaces.size());
+  EXPECT_EQ(s1, project->tangentspaces.at("s1"));
 }
 
 TEST(Field, create) {
-  EXPECT_TRUE(fields.empty());
-  auto f1 = new Field("f1", manifolds.at("m1"), tangentspaces.at("s1"),
-                      tensortypes.at("Scalar3D"));
-  EXPECT_EQ(1, fields.size());
-  EXPECT_EQ(f1, fields.at("f1"));
+  EXPECT_TRUE(project->fields.empty());
+  auto m1 = project->manifolds.at("m1");
+  auto s1 = project->tangentspaces.at("s1");
+  auto s3d = project->tensortypes.at("Scalar3D");
+  auto f1 = new Field("f1", project, m1, s1, s3d);
+  EXPECT_EQ(1, project->fields.size());
+  EXPECT_EQ(f1, project->fields.at("f1"));
 }
 
 #include "src/gtest_main.cc"

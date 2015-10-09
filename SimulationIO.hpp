@@ -13,7 +13,7 @@
 // - other vectors become objects inside a subgroup the group, sorted
 //   alphabetically
 
-#include <hdf5.h>
+#include <H5Cpp.h>
 
 #include <cassert>
 #include <cstdlib>
@@ -29,14 +29,13 @@ using std::ostream;
 using std::string;
 using std::vector;
 
-namespace {
+// Integer exponentiation
 inline int ipow(int base, int exp) {
   assert(base >= 0 && exp >= 0);
   int res = 1;
   while (exp--)
     res *= base;
   return res;
-}
 }
 
 // Indented output
@@ -46,56 +45,157 @@ inline string indent(int level) {
   return string(level * indentsize, indentchar);
 }
 
-// Type hierarchy
-struct Component {
-  virtual string getname() const = 0;
+// HDF5 helpers
+
+inline H5::DataType H5type(const char &) {
+  return H5::IntType(H5::PredType::NATIVE_CHAR);
+}
+inline H5::DataType h5type(const signed char &) {
+  return H5::IntType(H5::PredType::NATIVE_SCHAR);
+}
+inline H5::DataType h5type(const unsigned char &) {
+  return H5::IntType(H5::PredType::NATIVE_UCHAR);
+}
+inline H5::DataType h5type(const short &) {
+  return H5::IntType(H5::PredType::NATIVE_SHORT);
+}
+inline H5::DataType h5type(const unsigned short &) {
+  return H5::IntType(H5::PredType::NATIVE_USHORT);
+}
+inline H5::DataType h5type(const int &) {
+  return H5::IntType(H5::PredType::NATIVE_INT);
+}
+inline H5::DataType h5type(const unsigned int &) {
+  return H5::IntType(H5::PredType::NATIVE_UINT);
+}
+inline H5::DataType h5type(const long &) {
+  return H5::IntType(H5::PredType::NATIVE_LONG);
+}
+inline H5::DataType h5type(const unsigned long &) {
+  return H5::IntType(H5::PredType::NATIVE_ULONG);
+}
+inline H5::DataType h5type(const long long &) {
+  return H5::IntType(H5::PredType::NATIVE_LLONG);
+}
+inline H5::DataType h5type(const unsigned long long &) {
+  return H5::IntType(H5::PredType::NATIVE_ULLONG);
+}
+inline H5::DataType h5type(const float &) {
+  return H5::FloatType(H5::PredType::NATIVE_FLOAT);
+}
+inline H5::DataType h5type(const double &) {
+  return H5::FloatType(H5::PredType::NATIVE_DOUBLE);
+}
+inline H5::DataType h5type(const long double &) {
+  return H5::FloatType(H5::PredType::NATIVE_LDOUBLE);
+}
+
+// Common to all file elements
+
+struct Common {
+  string name;
+  Common(const string &name) : name(name) {}
+  virtual ~Common() {}
+  virtual bool invariant() const { return !name.empty(); }
   virtual ostream &output(ostream &os, int level = 0) const = 0;
-  virtual void write(hid_t loc) const = 0;
+  virtual void write(H5::CommonFG &loc) const = 0;
+};
+
+// Projects
+
+struct TensorType;
+struct Manifold;
+struct TangentSpace;
+struct Field;
+struct CoordinateSystem;
+
+struct Project : Common {
+  map<string, TensorType *> tensortypes;
+  map<string, Manifold *> manifolds;
+  map<string, TangentSpace *> tangentspaces;
+  map<string, Field *> fields;
+  map<string, CoordinateSystem *> coordinatesystems;
+  void create_tensortypes();
+  virtual bool invariant() const override { return Common::invariant(); }
+  Project(const Project &) = delete;
+  Project(Project &&) = delete;
+  Project &operator=(const Project &) = delete;
+  Project &operator=(Project &&) = delete;
+  Project(const string &name) : Common(name) { create_tensortypes(); }
+  virtual ~Project() override { assert(0); }
+  void insert(const string &name, TensorType *tensortype) {
+    assert(!tensortypes.count(name));
+    // TODO: use emplace
+    tensortypes[name] = tensortype;
+  }
+  void insert(const string &name, Manifold *manifold) {
+    assert(!manifolds.count(name));
+    manifolds[name] = manifold;
+  }
+  void insert(const string &name, TangentSpace *tangentspace) {
+    assert(!tangentspaces.count(name));
+    tangentspaces[name] = tangentspace;
+  }
+  void insert(const string &name, Field *field) {
+    assert(!fields.count(name));
+    fields[name] = field;
+  }
+  void insert(const string &name, CoordinateSystem *coordinatesystem) {
+    assert(!coordinatesystems.count(name));
+    coordinatesystems[name] = coordinatesystem;
+  }
+  virtual ostream &output(ostream &os, int level = 0) const override;
+  friend ostream &operator<<(ostream &os, const Project &project) {
+    return project.output(os);
+  }
+  virtual void write(H5::CommonFG &loc) const override;
+  Project(const string &name, const H5::CommonFG &loc);
 };
 
 // Tensor types
 
-struct TensorType;
 struct TensorComponent;
 
-extern map<string, TensorType *> tensortypes;
-
-struct TensorType {
-  string name;
+struct TensorType : Common {
+  Project *project;
   int dimension;
   int rank;
   vector<TensorComponent *> storedcomponents; // owned
-  bool invariant() const {
-    return !name.empty() && dimension >= 0 && rank >= 0 &&
-           int(storedcomponents.size()) <= ipow(dimension, rank);
+  virtual bool invariant() const override {
+    bool inv = Common::invariant() && bool(project) &&
+               project->tensortypes.count(name) &&
+               project->tensortypes.at(name) == this && dimension >= 0 &&
+               rank >= 0 &&
+               int(storedcomponents.size()) <= ipow(dimension, rank);
+    for (const auto &tc : storedcomponents)
+      inv &= bool(tc);
+    return inv;
   }
   TensorType() = delete;
   TensorType(const TensorType &) = delete;
   TensorType(TensorType &&) = delete;
   TensorType &operator=(const TensorType &) = delete;
   TensorType &operator=(TensorType &&) = delete;
-  TensorType(const string &name, int dimension, int rank)
-      : name(name), dimension(dimension), rank(rank) {
+  TensorType(const string &name, Project *project, int dimension, int rank)
+      : Common(name), project(project), dimension(dimension), rank(rank) {
+    project->insert(name, this);
     assert(invariant());
-    assert(tensortypes.find(name) == tensortypes.end());
-    tensortypes[name] = this;
   }
-  ~TensorType() = delete;
+  virtual ~TensorType() override { assert(0); }
   void push_back(TensorComponent *tensorcomponent) {
     storedcomponents.push_back(tensorcomponent);
   }
-  ostream &output(ostream &os, int level = 0) const;
+  virtual ostream &output(ostream &os, int level = 0) const override;
   friend ostream &operator<<(ostream &os, const TensorType &tensortype) {
     return tensortype.output(os);
   }
-  void write(hid_t loc) const {}
-  TensorType(hid_t loc, const string &name) { assert(0); }
+  virtual void write(H5::CommonFG &loc) const override;
+  TensorType(const string &name, Project *project, const H5::H5Location &loc);
 };
 
-struct TensorComponent {
-  string name;
+struct TensorComponent : Common {
   TensorType *tensortype;
-  // We use objects to denote most concepts, but we make an exception
+  // We use objects to denote most Commons, but we make an exception
   // for tensor component indices and tangent space basis vectors,
   // which we number consecutively starting from zero. This simplifies
   // the representation, and it introduces a canonical order (e.g. x,
@@ -103,8 +203,9 @@ struct TensorComponent {
   // expecting.
   int storedcomponent;
   vector<int> indexvalues;
-  bool invariant() const {
-    bool inv = !name.empty() && storedcomponent >= 0 &&
+  virtual bool invariant() const override {
+    bool inv = Common::invariant() && bool(tensortype) &&
+               storedcomponent >= 0 &&
                storedcomponent < int(tensortype->storedcomponents.size()) &&
                int(indexvalues.size()) == tensortype->rank;
     for (int i = 0; i < int(indexvalues.size()); ++i)
@@ -130,107 +231,143 @@ struct TensorComponent {
   TensorComponent &operator=(TensorComponent &&) = delete;
   TensorComponent(const string &name, TensorType *tensortype,
                   int storedcomponent, const std::vector<int> &indexvalues)
-      : name(name), tensortype(tensortype), storedcomponent(storedcomponent),
+      : Common(name), tensortype(tensortype), storedcomponent(storedcomponent),
         indexvalues(indexvalues) {
     tensortype->push_back(this);
     assert(invariant());
   }
-  ~TensorComponent() = delete;
-  ostream &output(ostream &os, int level = 0) const;
+  virtual ~TensorComponent() override { assert(0); }
+  virtual ostream &output(ostream &os, int level = 0) const override;
   friend ostream &operator<<(ostream &os,
                              const TensorComponent &tensorcomponent) {
     return tensorcomponent.output(os);
   }
-  void write(hid_t loc) const {}
-  TensorComponent(hid_t loc, const string &name) { assert(0); }
+  virtual void write(H5::CommonFG &loc) const override;
+  TensorComponent(const string &name, H5::CommonFG &loc);
 };
 
-// High-level continuum concepts
+// High-level continuum Commons
 
-struct Manifold;
-struct TangentSpace;
-struct Field;
 struct Discretization;
 struct Basis;
 struct DiscreteField;
 
-extern map<string, Manifold *> manifolds;
-extern map<string, TangentSpace *> tangentspaces;
-extern map<string, Field *> fields;
-
-struct Manifold {
-  string name;
+struct Manifold : Common {
+  Project *project;
   int dimension;
   map<string, Discretization *> discretizations;
   map<string, Field *> fields;
-  bool invariant() const { return !name.empty() && dimension >= 0; }
+  virtual bool invariant() const override {
+    bool inv = Common::invariant() && bool(project) &&
+               project->manifolds.count(name) &&
+               project->manifolds.at(name) == this && dimension >= 0;
+    for (const auto &d : discretizations)
+      inv &= !d.first.empty() && bool(d.second);
+    for (const auto &f : fields)
+      inv &= !f.first.empty() && bool(f.second);
+    return inv;
+  }
   Manifold() = delete;
   Manifold(const Manifold &) = delete;
   Manifold(Manifold &&) = delete;
   Manifold &operator=(const Manifold &) = delete;
   Manifold &operator=(Manifold &&) = delete;
-  Manifold(const string &name, int dimension)
-      : name(name), dimension(dimension) {
+  Manifold(const string &name, Project *project, int dimension)
+      : Common(name), project(project), dimension(dimension) {
+    project->insert(name, this);
     assert(invariant());
-    assert(manifolds.find(name) == manifolds.end());
-    manifolds[name] = this;
   }
+  virtual ~Manifold() override { assert(0); }
   void insert(const string &name, Field *field) {
-    assert(fields.find(name) == fields.end());
+    assert(!fields.count(name));
     fields[name] = field;
   }
+  virtual ostream &output(ostream &os, int level = 0) const override;
+  friend ostream &operator<<(ostream &os, const Manifold &manifold) {
+    return manifold.output(os);
+  }
+  virtual void write(H5::CommonFG &loc) const override;
+  Manifold(const string &name, H5::CommonFG &loc);
 };
 
-struct TangentSpace {
-  string name;
+struct TangentSpace : Common {
+  Project *project;
   int dimension;
   map<string, Basis *> bases;
   map<string, Field *> fields;
-  bool invariant() const { return !name.empty() && dimension >= 0; }
+  virtual bool invariant() const override {
+    bool inv = Common::invariant() && bool(project) &&
+               project->tangentspaces.count(name) &&
+               project->tangentspaces.at(name) == this && dimension >= 0;
+    for (const auto &b : bases)
+      inv &= !b.first.empty() && bool(b.second);
+    for (const auto &f : fields)
+      inv &= !f.first.empty() && bool(f.second);
+    return inv;
+  }
   TangentSpace() = delete;
   TangentSpace(const TangentSpace &) = delete;
   TangentSpace(TangentSpace &&) = delete;
   TangentSpace &operator=(const TangentSpace &) = delete;
   TangentSpace &operator=(TangentSpace &&) = delete;
-  TangentSpace(const string &name, int dimension)
-      : name(name), dimension(dimension) {
+  TangentSpace(const string &name, Project *project, int dimension)
+      : Common(name), project(project), dimension(dimension) {
+    project->insert(name, this);
     assert(invariant());
-    assert(tangentspaces.find(name) == tangentspaces.end());
-    tangentspaces[name] = this;
   }
+  virtual ~TangentSpace() override { assert(0); }
   void insert(const string &name, Field *field) {
-    assert(fields.find(name) == fields.end());
+    assert(!fields.count(name));
     fields[name] = field;
   }
+  virtual ostream &output(ostream &os, int level = 0) const override;
+  friend ostream &operator<<(ostream &os, const TangentSpace &tangentspace) {
+    return tangentspace.output(os);
+  }
+  virtual void write(H5::CommonFG &loc) const override;
+  TangentSpace(const string &name, H5::CommonFG &loc);
 };
 
-struct Field {
-  string name;
+struct Field : Common {
+  Project *project;
   Manifold *manifold;
   TangentSpace *tangentspace;
   TensorType *tensortype;
   map<string, DiscreteField *> discretefields;
-  bool invariant() const {
-    return !name.empty() && tangentspace->dimension == tensortype->dimension &&
-           manifold->fields.at(name) == this &&
-           tangentspace->fields.at(name) == this;
+  virtual bool invariant() const override {
+    bool inv = Common::invariant() && bool(project) &&
+               project->fields.count(name) &&
+               project->fields.at(name) == this && bool(manifold) &&
+               bool(tangentspace) && bool(tensortype) &&
+               tangentspace->dimension == tensortype->dimension &&
+               manifold->fields.at(name) == this &&
+               tangentspace->fields.at(name) == this;
+    for (const auto &df : discretefields)
+      inv &= !df.first.empty() && bool(df.second);
+    return inv;
   }
   Field() = delete;
   Field(const Field &) = delete;
   Field(Field &&) = delete;
   Field &operator=(const Field &) = delete;
   Field &operator=(Field &&) = delete;
-  Field(const string &name, Manifold *manifold, TangentSpace *tangentspace,
-        TensorType *tensortype)
-      : name(name), manifold(manifold), tangentspace(tangentspace),
-        tensortype(tensortype) {
+  Field(const string &name, Project *project, Manifold *manifold,
+        TangentSpace *tangentspace, TensorType *tensortype)
+      : Common(name), project(project), manifold(manifold),
+        tangentspace(tangentspace), tensortype(tensortype) {
+    project->insert(name, this);
     manifold->insert(name, this);
     tangentspace->insert(name, this);
     // tensortypes->insert(this);
     assert(invariant());
-    assert(fields.find(name) == fields.end());
-    fields[name] = this;
   }
+  virtual ~Field() override { assert(0); }
+  virtual ostream &output(ostream &os, int level = 0) const override;
+  friend ostream &operator<<(ostream &os, const Field &field) {
+    return field.output(os);
+  }
+  virtual void write(H5::CommonFG &loc) const override;
+  Field(const string &name, H5::CommonFG &loc);
 };
 
 // Manifold discretizations
@@ -325,10 +462,7 @@ struct DiscreteFieldBlockData {
 
 // Coordinates
 
-struct CoordinateSystem;
 struct CoordinateField;
-
-extern map<string, CoordinateSystem *> coordinates;
 
 struct CoordinateSystem {
   string name;
