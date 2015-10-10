@@ -49,9 +49,9 @@ PROCESS_DEPENDENCIES = \
 -include $(SRCS:%.cpp=%.d)
 
 coverage:
-	lcov --directory . --capture --output-file coverage.info
-	lcov --remove coverage.info '/googletest-*' '/hdf5-*' '/usr/*' '/opt/*' --output-file coverage.info
-	lcov --list coverage.info
+	-lcov --directory . --capture --output-file coverage.info
+	-lcov --remove coverage.info '/googletest-*' '/hdf5-*' '/usr/*' '/opt/*' '/Xcode.app/*' --output-file coverage.info
+	-lcov --list coverage.info
 
 clean:
 	$(RM) -r *.dSYM
