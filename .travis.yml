@@ -44,4 +44,4 @@ script:
   - make -j2 test
 after_success:
   - make -j2 coverage
-  - coveralls-lcov --repo-token "$COVERALLS_TOKEN" coverage.info
+  - coveralls-lcov coverage.info
