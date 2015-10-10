@@ -95,22 +95,17 @@ public:
   void createStandardTensortypes();
   TensorType *createTensorType(const string &name, int dimension, int rank);
   TensorType *createTensorType(const string &name, const H5::CommonFG &loc);
-  void insert(const string &name, Manifold *manifold) {
-    assert(!manifolds.count(name));
-    manifolds[name] = manifold;
-  }
-  void insert(const string &name, TangentSpace *tangentspace) {
-    assert(!tangentspaces.count(name));
-    tangentspaces[name] = tangentspace;
-  }
-  void insert(const string &name, Field *field) {
-    assert(!fields.count(name));
-    fields[name] = field;
-  }
-  void insert(const string &name, CoordinateSystem *coordinatesystem) {
-    assert(!coordinatesystems.count(name));
-    coordinatesystems[name] = coordinatesystem;
-  }
+  Manifold *createManifold(const string &name, int dimension);
+  Manifold *createManifold(const string &name, const H5::CommonFG &loc);
+  TangentSpace *createTangentSpace(const string &name, int dimension);
+  TangentSpace *createTangentSpace(const string &name, const H5::CommonFG &loc);
+  Field *createField(const string &name, Manifold *manifold,
+                     TangentSpace *tangentspace, TensorType *tensortype);
+  Field *createField(const string &name, const H5::CommonFG &loc);
+  CoordinateSystem *createCoordinateSystem(const string &name,
+                                           Manifold *manifold);
+  CoordinateSystem *createCoordinateSystem(const string &name,
+                                           const H5::CommonFG &loc);
   virtual ostream &output(ostream &os, int level = 0) const;
   friend ostream &operator<<(ostream &os, const Project &project) {
     return project.output(os);
@@ -243,11 +238,14 @@ struct Manifold : Common {
   Manifold(Manifold &&) = delete;
   Manifold &operator=(const Manifold &) = delete;
   Manifold &operator=(Manifold &&) = delete;
+
+private:
+  friend class Project;
   Manifold(const string &name, Project *project, int dimension)
-      : Common(name), project(project), dimension(dimension) {
-    project->insert(name, this);
-    assert(invariant());
-  }
+      : Common(name), project(project), dimension(dimension) {}
+  Manifold(const string &name, Project *project, const H5::CommonFG &loc);
+
+public:
   virtual ~Manifold() { assert(0); }
   void insert(const string &name, Field *field) {
     assert(!fields.count(name));
@@ -258,7 +256,6 @@ struct Manifold : Common {
     return manifold.output(os);
   }
   virtual void write(H5::CommonFG &loc) const;
-  Manifold(const string &name, Project *project, H5::CommonFG &loc);
 };
 
 struct TangentSpace : Common {
@@ -281,11 +278,14 @@ struct TangentSpace : Common {
   TangentSpace(TangentSpace &&) = delete;
   TangentSpace &operator=(const TangentSpace &) = delete;
   TangentSpace &operator=(TangentSpace &&) = delete;
+
+private:
+  friend class Project;
   TangentSpace(const string &name, Project *project, int dimension)
-      : Common(name), project(project), dimension(dimension) {
-    project->insert(name, this);
-    assert(invariant());
-  }
+      : Common(name), project(project), dimension(dimension) {}
+  TangentSpace(const string &name, Project *project, const H5::CommonFG &loc);
+
+public:
   virtual ~TangentSpace() { assert(0); }
   void insert(const string &name, Field *field) {
     assert(!fields.count(name));
@@ -296,7 +296,6 @@ struct TangentSpace : Common {
     return tangentspace.output(os);
   }
   virtual void write(H5::CommonFG &loc) const;
-  TangentSpace(const string &name, Project *project, H5::CommonFG &loc);
 };
 
 struct Field : Common {
@@ -322,23 +321,26 @@ struct Field : Common {
   Field(Field &&) = delete;
   Field &operator=(const Field &) = delete;
   Field &operator=(Field &&) = delete;
+
+private:
+  friend class Project;
   Field(const string &name, Project *project, Manifold *manifold,
         TangentSpace *tangentspace, TensorType *tensortype)
       : Common(name), project(project), manifold(manifold),
         tangentspace(tangentspace), tensortype(tensortype) {
-    project->insert(name, this);
     manifold->insert(name, this);
     tangentspace->insert(name, this);
     // tensortypes->insert(this);
-    assert(invariant());
   }
+  Field(const string &name, Project *project, const H5::CommonFG &loc);
+
+public:
   virtual ~Field() { assert(0); }
   virtual ostream &output(ostream &os, int level = 0) const;
   friend ostream &operator<<(ostream &os, const Field &field) {
     return field.output(os);
   }
   virtual void write(H5::CommonFG &loc) const;
-  Field(const string &name, Project *project, H5::CommonFG &loc);
 };
 
 // Manifold discretizations

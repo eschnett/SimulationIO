@@ -156,14 +156,14 @@ TEST(TensorTypes, HDF5) {
 
 TEST(Manifold, create) {
   EXPECT_TRUE(project->manifolds.empty());
-  auto m1 = new Manifold("m1", project, 3);
+  auto m1 = project->createManifold("m1", 3);
   EXPECT_EQ(1, project->manifolds.size());
   EXPECT_EQ(m1, project->manifolds.at("m1"));
 }
 
 TEST(TangentSpace, create) {
   EXPECT_TRUE(project->tangentspaces.empty());
-  auto s1 = new TangentSpace("s1", project, 3);
+  auto s1 = project->createTangentSpace("s1", 3);
   EXPECT_EQ(1, project->tangentspaces.size());
   EXPECT_EQ(s1, project->tangentspaces.at("s1"));
 }
@@ -173,7 +173,7 @@ TEST(Field, create) {
   auto m1 = project->manifolds.at("m1");
   auto s1 = project->tangentspaces.at("s1");
   auto s3d = project->tensortypes.at("Scalar3D");
-  auto f1 = new Field("f1", project, m1, s1, s3d);
+  auto f1 = project->createField("f1", m1, s1, s3d);
   EXPECT_EQ(1, project->fields.size());
   EXPECT_EQ(f1, project->fields.at("f1"));
 }

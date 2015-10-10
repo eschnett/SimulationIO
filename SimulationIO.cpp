@@ -53,6 +53,76 @@ TensorType *Project::createTensorType(const string &name,
   return tensortype;
 }
 
+Manifold *Project::createManifold(const string &name, int dimension) {
+  assert(!manifolds.count(name));
+  auto manifold = new Manifold(name, this, dimension);
+  manifolds[name] = manifold;
+  assert(manifold->invariant());
+  return manifold;
+}
+
+Manifold *Project::createManifold(const string &name, const H5::CommonFG &loc) {
+  assert(!manifolds.count(name));
+  auto manifold = new Manifold(name, this, loc);
+  manifolds[name] = manifold;
+  assert(manifold->invariant());
+  return manifold;
+}
+
+TangentSpace *Project::createTangentSpace(const string &name, int dimension) {
+  assert(!tangentspaces.count(name));
+  auto tangentspace = new TangentSpace(name, this, dimension);
+  tangentspaces[name] = tangentspace;
+  assert(tangentspace->invariant());
+  return tangentspace;
+}
+
+TangentSpace *Project::createTangentSpace(const string &name,
+                                          const H5::CommonFG &loc) {
+  assert(!tangentspaces.count(name));
+  auto tangentspace = new TangentSpace(name, this, loc);
+  tangentspaces[name] = tangentspace;
+  assert(tangentspace->invariant());
+  return tangentspace;
+}
+
+Field *Project::createField(const string &name, Manifold *manifold,
+                            TangentSpace *tangentspace,
+                            TensorType *tensortype) {
+  assert(!fields.count(name));
+  auto field = new Field(name, this, manifold, tangentspace, tensortype);
+  fields[name] = field;
+  assert(field->invariant());
+  return field;
+}
+
+Field *Project::createField(const string &name, const H5::CommonFG &loc) {
+  assert(!fields.count(name));
+  auto field = new Field(name, this, loc);
+  fields[name] = field;
+  assert(field->invariant());
+  return field;
+}
+
+#warning "TODO"
+// CoordinateSystem *Project::createCoordinateSystem(const string &name,
+//                                                   Manifold *manifold) {
+//   assert(!coordinatesystems.count(name));
+//   auto coordinatesystem = new CoordinateSystem(name, this, manifold);
+//   coordinatesystems[name] = coordinatesystem;
+//   assert(coordinatesystem->invariant());
+//   return coordinatesystem;
+// }
+//
+// CoordinateSystem *Project::createCoordinateSystem(const string &name,
+//                                                   const H5::CommonFG &loc) {
+//   assert(!coordinatesystems.count(name));
+//   auto coordinatesystem = new CoordinateSystem(name, this, loc);
+//   coordinatesystems[name] = coordinatesystem;
+//   assert(coordinatesystem->invariant());
+//   return coordinatesystem;
+// }
+
 ostream &Project::output(ostream &os, int level) const {
   os << indent(level) << "Project \"" << name << "\"\n";
   os << indent(level) << "tensortypes:\n";
@@ -178,17 +248,58 @@ TensorComponent::TensorComponent(const string &name, TensorType *tensortype,
 // Manifold
 
 ostream &Manifold::output(ostream &os, int level) const { assert(0); }
+
 void Manifold::write(H5::CommonFG &loc) const { assert(0); }
+
+Manifold::Manifold(const string &name, Project *project,
+                   const H5::CommonFG &loc)
+    : Common(name), project(project) {
+  auto group = loc.openGroup(name);
+  H5::read_attribute(group, "dimension", dimension);
+#warning "TODO"
+  // H5::read_group(group, "discretizations",
+  //                [&](const string &name, const H5::Group &group) {
+  //                  createDiscretization(name, group);
+  //                },
+  //                discretizations);
+}
 
 // TangentSpace
 
 ostream &TangentSpace::output(ostream &os, int level) const { assert(0); }
+
 void TangentSpace::write(H5::CommonFG &loc) const { assert(0); }
+
+TangentSpace::TangentSpace(const string &name, Project *project,
+                           const H5::CommonFG &loc)
+    : Common(name), project(project) {
+  auto group = loc.openGroup(name);
+  H5::read_attribute(group, "dimension", dimension);
+#warning "TODO"
+  // H5::read_group(group, "bases",
+  //                [&](const string &name, const H5::Group &group) {
+  //                  createBasis(name, group);
+  //                },
+  //                bases);
+}
 
 // Field
 
 ostream &Field::output(ostream &os, int level) const { assert(0); }
+
 void Field::write(H5::CommonFG &loc) const { assert(0); }
+
+Field::Field(const string &name, Project *project, const H5::CommonFG &loc)
+    : Common(name), project(project) {
+  auto group = loc.openGroup(name);
+#warning "TODO: manifold, tangentspace, tensortype"
+#warning "TODO"
+  // H5::read_group(group, "discretefields",
+  //                [&](const string &name, const H5::Group &group) {
+  //                  createDiscreteField(name, group);
+  //                },
+  //                discretefields);
+}
 
 // Coordinates
 }
