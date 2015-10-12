@@ -44,16 +44,14 @@ TensorType *Project::createTensorType(const string &name, int dimension,
 TensorType *Project::createTensorType(const H5::CommonFG &loc,
                                       const string &entry) {
   auto tensortype = new TensorType(loc, entry, this);
-  assert(!tensortypes.count(tensortype->name));
-  tensortypes.emplace(tensortype->name, tensortype);
+  checked_insert(tensortypes, tensortype->name, tensortype);
   assert(tensortype->invariant());
   return tensortype;
 }
 
 Manifold *Project::createManifold(const string &name, int dimension) {
-  assert(!manifolds.count(name));
   auto manifold = new Manifold(name, this, dimension);
-  manifolds.emplace(manifold->name, manifold);
+  checked_insert(manifolds, manifold->name, manifold);
   assert(manifold->invariant());
   return manifold;
 }
@@ -61,16 +59,14 @@ Manifold *Project::createManifold(const string &name, int dimension) {
 Manifold *Project::createManifold(const H5::CommonFG &loc,
                                   const string &entry) {
   auto manifold = new Manifold(loc, entry, this);
-  assert(!manifolds.count(manifold->name));
-  manifolds.emplace(manifold->name, manifold);
+  checked_insert(manifolds, manifold->name, manifold);
   assert(manifold->invariant());
   return manifold;
 }
 
 TangentSpace *Project::createTangentSpace(const string &name, int dimension) {
-  assert(!tangentspaces.count(name));
   auto tangentspace = new TangentSpace(name, this, dimension);
-  tangentspaces.emplace(tangentspace->name, tangentspace);
+  checked_insert(tangentspaces, tangentspace->name, tangentspace);
   assert(tangentspace->invariant());
   return tangentspace;
 }
@@ -78,8 +74,7 @@ TangentSpace *Project::createTangentSpace(const string &name, int dimension) {
 TangentSpace *Project::createTangentSpace(const H5::CommonFG &loc,
                                           const string &entry) {
   auto tangentspace = new TangentSpace(loc, entry, this);
-  assert(!tangentspaces.count(tangentspace->name));
-  tangentspaces.emplace(tangentspace->name, tangentspace);
+  checked_insert(tangentspaces, tangentspace->name, tangentspace);
   assert(tangentspace->invariant());
   return tangentspace;
 }
@@ -87,17 +82,15 @@ TangentSpace *Project::createTangentSpace(const H5::CommonFG &loc,
 Field *Project::createField(const string &name, Manifold *manifold,
                             TangentSpace *tangentspace,
                             TensorType *tensortype) {
-  assert(!fields.count(name));
   auto field = new Field(name, this, manifold, tangentspace, tensortype);
-  fields.emplace(field->name, field);
+  checked_insert(fields, field->name, field);
   assert(field->invariant());
   return field;
 }
 
 Field *Project::createField(const H5::CommonFG &loc, const string &entry) {
   auto field = new Field(loc, entry, this);
-  assert(!fields.count(field->name));
-  fields.emplace(field->name, field);
+  checked_insert(fields, field->name, field);
   assert(field->invariant());
   return field;
 }
@@ -105,9 +98,8 @@ Field *Project::createField(const H5::CommonFG &loc, const string &entry) {
 #warning "TODO"
 // CoordinateSystem *Project::createCoordinateSystem(const string &name,
 //                                                   Manifold *manifold) {
-//   assert(!coordinatesystems.count(name));
 //   auto coordinatesystem = new CoordinateSystem(name, this, manifold);
-//   coordinatesystems.emplace(coordinatesystem->name, coordinatesystem);
+//   checked_insert(coordinatesystems,coordinatesystem->name, coordinatesystem);
 //   assert(coordinatesystem->invariant());
 //   return coordinatesystem;
 // }
@@ -115,9 +107,9 @@ Field *Project::createField(const H5::CommonFG &loc, const string &entry) {
 // CoordinateSystem *Project::createCoordinateSystem(const string &name,
 //                                                   const H5::CommonFG &loc)
 //                                                   {
-//   assert(!coordinatesystems.count(name));
 //   auto coordinatesystem = new CoordinateSystem(name, this, loc);
-//   coordinatesystems.emplace(coordinatesystem->name, coordinatesystem);
+//   checked_insert(coordinatesystems, coordinatesystem->name,
+//   coordinatesystem);
 //   assert(coordinatesystem->invariant());
 //   return coordinatesystem;
 // }
@@ -194,17 +186,15 @@ Project::Project(const H5::CommonFG &loc, const string &entry) : Common("") {
 TensorComponent *
 TensorType::createTensorComponent(const string &name,
                                   const std::vector<int> &indexvalues) {
-  assert(!tensorcomponents.count(name));
   auto tensorcomponent = new TensorComponent(name, this, indexvalues);
-  tensorcomponents.emplace(tensorcomponent->name, tensorcomponent);
+  checked_insert(tensorcomponents, tensorcomponent->name, tensorcomponent);
   return tensorcomponent;
 }
 
 TensorComponent *TensorType::createTensorComponent(const H5::CommonFG &loc,
                                                    const string &entry) {
-  assert(!tensorcomponents.count(name));
   auto tensorcomponent = new TensorComponent(loc, entry, this);
-  tensorcomponents.emplace(tensorcomponent->name, tensorcomponent);
+  checked_insert(tensorcomponents, tensorcomponent->name, tensorcomponent);
   return tensorcomponent;
 }
 
