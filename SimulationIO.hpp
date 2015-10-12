@@ -56,7 +56,8 @@ struct Common {
   virtual ~Common() {}
   virtual bool invariant() const { return !name.empty(); }
   virtual ostream &output(ostream &os, int level = 0) const = 0;
-  virtual void write(H5::CommonFG &loc) const = 0;
+  virtual void write(const H5::CommonFG &loc,
+                     const H5::H5Location &parent) const = 0;
 };
 
 // Projects
@@ -64,20 +65,22 @@ struct Common {
 struct Project;
 
 Project *createProject(const string &name);
-Project *createProject(const string &name, const H5::CommonFG &loc);
+Project *createProject(const H5::CommonFG &loc, const string &entry);
 
 struct TensorType;
 struct Manifold;
 struct TangentSpace;
 struct Field;
 struct CoordinateSystem;
+struct CoordinateBasis;
 
 struct Project : Common {
-  map<string, TensorType *> tensortypes;
-  map<string, Manifold *> manifolds;
-  map<string, TangentSpace *> tangentspaces;
-  map<string, Field *> fields;
-  map<string, CoordinateSystem *> coordinatesystems;
+  map<string, TensorType *> tensortypes;             // owned
+  map<string, Manifold *> manifolds;                 // owned
+  map<string, TangentSpace *> tangentspaces;         // owned
+  map<string, Field *> fields;                       // owned
+  map<string, CoordinateSystem *> coordinatesystems; // owned
+  // TODO: coordinatebasis
   virtual bool invariant() const { return Common::invariant(); }
   Project(const Project &) = delete;
   Project(Project &&) = delete;
@@ -86,31 +89,33 @@ struct Project : Common {
 
 private:
   friend Project *createProject(const string &name);
-  friend Project *createProject(const string &name, const H5::CommonFG &loc);
+  friend Project *createProject(const H5::CommonFG &loc, const string &entry);
   Project(const string &name) : Common(name) {}
-  Project(const string &name, const H5::CommonFG &loc);
+  Project(const H5::CommonFG &loc, const string &entry);
 
 public:
   virtual ~Project() { assert(0); }
   void createStandardTensortypes();
   TensorType *createTensorType(const string &name, int dimension, int rank);
-  TensorType *createTensorType(const string &name, const H5::CommonFG &loc);
+  TensorType *createTensorType(const H5::CommonFG &loc, const string &entry);
   Manifold *createManifold(const string &name, int dimension);
-  Manifold *createManifold(const string &name, const H5::CommonFG &loc);
+  Manifold *createManifold(const H5::CommonFG &loc, const string &entry);
   TangentSpace *createTangentSpace(const string &name, int dimension);
-  TangentSpace *createTangentSpace(const string &name, const H5::CommonFG &loc);
+  TangentSpace *createTangentSpace(const H5::CommonFG &loc,
+                                   const string &entry);
   Field *createField(const string &name, Manifold *manifold,
                      TangentSpace *tangentspace, TensorType *tensortype);
-  Field *createField(const string &name, const H5::CommonFG &loc);
+  Field *createField(const H5::CommonFG &loc, const string &entry);
   CoordinateSystem *createCoordinateSystem(const string &name,
                                            Manifold *manifold);
-  CoordinateSystem *createCoordinateSystem(const string &name,
-                                           const H5::CommonFG &loc);
+  CoordinateSystem *createCoordinateSystem(const H5::CommonFG &loc,
+                                           const string &entry);
   virtual ostream &output(ostream &os, int level = 0) const;
   friend ostream &operator<<(ostream &os, const Project &project) {
     return project.output(os);
   }
-  virtual void write(H5::CommonFG &loc) const;
+  virtual void write(const H5::CommonFG &loc,
+                     const H5::H5Location &parent) const;
 };
 
 // Tensor types
@@ -142,19 +147,20 @@ private:
   friend class Project;
   TensorType(const string &name, Project *project, int dimension, int rank)
       : Common(name), project(project), dimension(dimension), rank(rank) {}
-  TensorType(const string &name, Project *project, const H5::CommonFG &loc);
+  TensorType(const H5::CommonFG &loc, const string &entry, Project *project);
 
 public:
   virtual ~TensorType() { assert(0); }
   TensorComponent *createTensorComponent(const string &name,
                                          const std::vector<int> &indexvalues);
-  TensorComponent *createTensorComponent(const string &name,
-                                         const H5::CommonFG &loc);
+  TensorComponent *createTensorComponent(const H5::CommonFG &loc,
+                                         const string &entry);
   virtual ostream &output(ostream &os, int level = 0) const;
   friend ostream &operator<<(ostream &os, const TensorType &tensortype) {
     return tensortype.output(os);
   }
-  virtual void write(H5::CommonFG &loc) const;
+  virtual void write(const H5::CommonFG &loc,
+                     const H5::H5Location &parent) const;
 };
 
 struct TensorComponent : Common {
@@ -199,8 +205,8 @@ private:
   TensorComponent(const string &name, TensorType *tensortype,
                   const std::vector<int> &indexvalues)
       : Common(name), tensortype(tensortype), indexvalues(indexvalues) {}
-  TensorComponent(const string &name, TensorType *tensortype,
-                  const H5::CommonFG &loc);
+  TensorComponent(const H5::CommonFG &loc, const string &entry,
+                  TensorType *tensortype);
 
 public:
   virtual ~TensorComponent() { assert(0); }
@@ -209,7 +215,8 @@ public:
                              const TensorComponent &tensorcomponent) {
     return tensorcomponent.output(os);
   }
-  virtual void write(H5::CommonFG &loc) const;
+  virtual void write(const H5::CommonFG &loc,
+                     const H5::H5Location &parent) const;
 };
 
 // High-level continuum concepts
@@ -221,7 +228,7 @@ struct DiscreteField;
 struct Manifold : Common {
   Project *project;
   int dimension;
-  map<string, Discretization *> discretizations;
+  map<string, Discretization *> discretizations; // owned
   map<string, Field *> fields;
   virtual bool invariant() const {
     bool inv = Common::invariant() && bool(project) &&
@@ -243,7 +250,7 @@ private:
   friend class Project;
   Manifold(const string &name, Project *project, int dimension)
       : Common(name), project(project), dimension(dimension) {}
-  Manifold(const string &name, Project *project, const H5::CommonFG &loc);
+  Manifold(const H5::CommonFG &loc, const string &entry, Project *project);
 
 public:
   virtual ~Manifold() { assert(0); }
@@ -255,13 +262,14 @@ public:
   friend ostream &operator<<(ostream &os, const Manifold &manifold) {
     return manifold.output(os);
   }
-  virtual void write(H5::CommonFG &loc) const;
+  virtual void write(const H5::CommonFG &loc,
+                     const H5::H5Location &parent) const;
 };
 
 struct TangentSpace : Common {
   Project *project;
   int dimension;
-  map<string, Basis *> bases;
+  map<string, Basis *> bases; // owned
   map<string, Field *> fields;
   virtual bool invariant() const {
     bool inv = Common::invariant() && bool(project) &&
@@ -283,7 +291,7 @@ private:
   friend class Project;
   TangentSpace(const string &name, Project *project, int dimension)
       : Common(name), project(project), dimension(dimension) {}
-  TangentSpace(const string &name, Project *project, const H5::CommonFG &loc);
+  TangentSpace(const H5::CommonFG &loc, const string &entry, Project *project);
 
 public:
   virtual ~TangentSpace() { assert(0); }
@@ -295,7 +303,8 @@ public:
   friend ostream &operator<<(ostream &os, const TangentSpace &tangentspace) {
     return tangentspace.output(os);
   }
-  virtual void write(H5::CommonFG &loc) const;
+  virtual void write(const H5::CommonFG &loc,
+                     const H5::H5Location &parent) const;
 };
 
 struct Field : Common {
@@ -303,15 +312,15 @@ struct Field : Common {
   Manifold *manifold;
   TangentSpace *tangentspace;
   TensorType *tensortype;
-  map<string, DiscreteField *> discretefields;
+  map<string, DiscreteField *> discretefields; // owned
   virtual bool invariant() const {
-    bool inv = Common::invariant() && bool(project) &&
-               project->fields.count(name) &&
-               project->fields.at(name) == this && bool(manifold) &&
-               bool(tangentspace) && bool(tensortype) &&
-               tangentspace->dimension == tensortype->dimension &&
-               manifold->fields.at(name) == this &&
-               tangentspace->fields.at(name) == this;
+    bool inv =
+        Common::invariant() && bool(project) && project->fields.count(name) &&
+        project->fields.at(name) == this && bool(manifold) &&
+        manifold->fields.count(name) && manifold->fields.at(name) == this &&
+        bool(tangentspace) && tangentspace->fields.count(name) &&
+        tangentspace->fields.at(name) == this && bool(tensortype) &&
+        tangentspace->dimension == tensortype->dimension;
     for (const auto &df : discretefields)
       inv &= !df.first.empty() && bool(df.second);
     return inv;
@@ -332,7 +341,7 @@ private:
     tangentspace->insert(name, this);
     // tensortypes->insert(this);
   }
-  Field(const string &name, Project *project, const H5::CommonFG &loc);
+  Field(const H5::CommonFG &loc, const string &entry, Project *project);
 
 public:
   virtual ~Field() { assert(0); }
@@ -340,7 +349,8 @@ public:
   friend ostream &operator<<(ostream &os, const Field &field) {
     return field.output(os);
   }
-  virtual void write(H5::CommonFG &loc) const;
+  virtual void write(const H5::CommonFG &loc,
+                     const H5::H5Location &parent) const;
 };
 
 // Manifold discretizations
@@ -350,7 +360,7 @@ struct DiscretizationBlock;
 struct Discretization {
   string name;
   Manifold *manifold;
-  map<string, DiscretizationBlock *> discretizationblocks;
+  map<string, DiscretizationBlock *> discretizationblocks; // owned
   bool invariant() const { return true; }
 };
 
@@ -373,7 +383,7 @@ struct CoordinateBasisElement;
 struct Basis {
   string name;
   TangentSpace *tangentspace;
-  vector<BasisVector *> basisvectors;
+  vector<BasisVector *> basisvectors; // owned
   map<string, CoordinateBasis *> coordinatebases;
   bool invariant() const {
     return int(basisvectors.size()) == tangentspace->dimension;
@@ -405,7 +415,7 @@ struct DiscreteField {
   Field *field;
   Discretization *discretization;
   Basis *basis;
-  map<string, DiscreteFieldBlock *> discretefieldblocks;
+  map<string, DiscreteFieldBlock *> discretefieldblocks; // owned
   bool invariant() const {
     return field->manifold == discretization->manifold &&
            field->tangentspace == basis->tangentspace;
@@ -417,7 +427,7 @@ struct DiscreteFieldBlock {
   string name;
   DiscreteField *discretefield;
   DiscretizationBlock *discretizationblock;
-  map<string, DiscreteFieldBlockData *> discretefieldblockdata;
+  map<string, DiscreteFieldBlockData *> discretefieldblockdata; // owned
   bool invariant() const { return true; }
 };
 
@@ -440,7 +450,7 @@ struct CoordinateField;
 struct CoordinateSystem {
   string name;
   Manifold *manifold;
-  vector<CoordinateField *> coordinatefields;
+  vector<CoordinateField *> coordinatefields; // owned
   map<string, CoordinateBasis *> coordinatebases;
   bool invariant() const { return true; }
 };
@@ -459,7 +469,7 @@ struct CoordinateField {
 struct CoordinateBasis {
   CoordinateSystem *coordinatesystem;
   Basis *basis;
-  vector<CoordinateBasisElement *> coordinatebasiselements;
+  vector<CoordinateBasisElement *> coordinatebasiselements; // owned
 };
 
 struct CoordinateBasisElement {

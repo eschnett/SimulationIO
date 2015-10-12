@@ -7,10 +7,45 @@
 
 #include <cassert>
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
 namespace H5 {
+
+// Convert CommonFG to H5Location
+namespace detail {
+struct H5LocationDeleter {
+  void operator()(H5Location *loc) const {
+    auto objtype = H5Iget_type(loc->getId());
+    switch (objtype) {
+    case H5I_FILE:
+      delete static_cast<H5File *>(loc);
+      break;
+    case H5I_GROUP:
+      delete static_cast<Group *>(loc);
+      break;
+    default:
+      assert(0);
+    }
+  }
+};
+};
+inline std::unique_ptr<H5Location, detail::H5LocationDeleter>
+getLocation(const CommonFG &fg) {
+  auto locid = fg.getLocId();
+  assert(locid >= 0);
+  auto objtype = H5Iget_type(locid);
+  switch (objtype) {
+  case H5I_FILE: {
+    return {new H5File(locid), detail::H5LocationDeleter()};
+  }
+  case H5I_GROUP:
+    return {new Group(locid), detail::H5LocationDeleter()};
+  default:
+    assert(0);
+  }
+}
 
 // Get HDF5 datatype from C++ types
 
@@ -51,7 +86,8 @@ inline DataType getType(const long double &) {
   return FloatType(PredType::NATIVE_LDOUBLE);
 }
 
-// Write attributes
+// Create attributes
+
 template <typename T>
 Attribute create_attribute(const H5Location &loc, const std::string &name,
                            const T &value) {
@@ -66,15 +102,31 @@ Attribute create_attribute(const H5Location &loc, const std::string &name,
   const hsize_t dims = values.size();
   T dummy;
   auto attr = loc.createAttribute(name, getType(dummy), DataSpace(1, &dims));
-  const void *buf =
-      values.empty() ? &dummy : values.data(); // HDF5 is overly cautious
-  attr.write(getType(dummy), buf);
+  // HDF5 is overly cautious
+  if (!values.empty())
+    attr.write(getType(dummy), values.data());
   return attr;
 }
 
+inline Attribute create_attribute(const H5Location &loc,
+                                  const std::string &name,
+                                  const std::string &value) {
+  auto type = StrType(PredType::C_S1, H5T_VARIABLE);
+  auto attr = loc.createAttribute(name, type, DataSpace());
+  attr.write(type, H5std_string(value));
+  return attr;
+}
+
+inline Attribute create_attribute(const H5Location &loc,
+                                  const std::string &name, const char *value) {
+  return create_attribute(loc, name, std::string(value));
+}
+
 // Read attributes
+
 template <typename T>
-Attribute read_attribute(H5Location &loc, const std::string &name, T &value) {
+Attribute read_attribute(const H5Location &loc, const std::string &name,
+                         T &value) {
   auto attr = loc.openAttribute(name);
   auto space = attr.getSpace();
   assert(space.getSimpleExtentType() == H5S_SCALAR);
@@ -83,20 +135,32 @@ Attribute read_attribute(H5Location &loc, const std::string &name, T &value) {
 }
 
 template <typename T>
-Attribute read_attribute(H5Location &loc, const std::string &name,
+Attribute read_attribute(const H5Location &loc, const std::string &name,
                          std::vector<T> &values) {
   auto attr = loc.openAttribute(name);
   auto space = attr.getSpace();
   auto npoints = space.getSimpleExtentNpoints();
   values.resize(npoints);
-  T dummy;
-  void *buf =
-      values.empty() ? &dummy : values.data(); // HDF5 is overly cautious
-  attr.read(getType(dummy), buf);
+  // HDF5 is overly cautious
+  if (!values.empty())
+    attr.read(getType(values[0]), values.data());
+  return attr;
+}
+
+inline Attribute read_attribute(const H5Location &loc, const std::string &name,
+                                std::string &value) {
+  auto attr = loc.openAttribute(name);
+  auto space = attr.getSpace();
+  assert(space.getSimpleExtentType() == H5S_SCALAR);
+  auto type = StrType(PredType::C_S1, H5T_VARIABLE);
+  H5std_string buf;
+  attr.read(type, buf);
+  value = buf;
   return attr;
 }
 
 // H5Literate
+
 namespace detail {
 template <typename Op> struct H5L_iterator {
   Op &&op;
@@ -104,18 +168,22 @@ template <typename Op> struct H5L_iterator {
                      void *data) {
     return static_cast<H5L_iterator *>(data)->op(Group(g_id), name, info);
   }
-  herr_t operator()(const Group &group, H5_index_t index_type,
+  herr_t operator()(const H5Location &loc, H5_index_t index_type,
                     H5_iter_order_t order, hsize_t *idx) {
-    return H5Literate(group.getId(), index_type, order, idx, call, this);
+    auto iret = H5Literate(loc.getId(), index_type, order, idx, call, this);
+    assert(iret >= 0);
+    return iret;
   }
 };
 }
 
 template <typename Op>
-herr_t iterateElems(const Group &group, H5_index_t index_type,
+herr_t iterateElems(const H5Location &loc, H5_index_t index_type,
                     H5_iter_order_t order, hsize_t *idx, Op &&op) {
-  return detail::H5L_iterator<Op>{std::forward<Op>(op)}(group.getId(),
-                                                        index_type, order, idx);
+  auto iret = detail::H5L_iterator<Op>{std::forward<Op>(op)}(loc, index_type,
+                                                             order, idx);
+  assert(iret >= 0);
+  return iret;
 }
 
 // Write a map (ignoring the keys)
@@ -125,7 +193,7 @@ Group create_group(const CommonFG &loc, const std::string &name,
   // We assume that Key is string-like, and that T is a subtype of Common
   auto group = loc.createGroup(name);
   for (const auto &p : m)
-    p.second->write(group);
+    p.second->write(group, *getLocation(loc));
   return group;
 }
 
@@ -143,6 +211,26 @@ Group read_group(const CommonFG &loc, const std::string &name, R read_object,
         return 0;
       });
   return group;
+}
+
+// Create a hard link
+inline herr_t createHardLink(const H5Location &obj_loc,
+                             const std::string &obj_name,
+                             const CommonFG &link_loc,
+                             const std::string &link_name) {
+  auto lcpl = H5Pcreate(H5P_LINK_CREATE);
+  assert(lcpl >= 0);
+  auto lapl = H5Pcreate(H5P_LINK_ACCESS);
+  assert(lapl >= 0);
+  auto herr =
+      H5Lcreate_hard(obj_loc.getId(), obj_name.c_str(), link_loc.getLocId(),
+                     link_name.c_str(), lcpl, lapl);
+  assert(herr >= 0);
+  auto lcpl_herr = H5Pclose(lcpl);
+  assert(!lcpl_herr);
+  auto lapl_herr = H5Pclose(lapl);
+  assert(!lapl_herr);
+  return herr;
 }
 }
 
