@@ -35,9 +35,8 @@ void Project::createStandardTensortypes() {
 
 TensorType *Project::createTensorType(const string &name, int dimension,
                                       int rank) {
-  assert(!tensortypes.count(name));
   auto tensortype = new TensorType(name, this, dimension, rank);
-  tensortypes.emplace(tensortype->name, tensortype);
+  checked_insert(tensortypes, tensortype->name, tensortype);
   assert(tensortype->invariant());
   return tensortype;
 }
