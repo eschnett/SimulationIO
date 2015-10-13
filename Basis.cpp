@@ -19,12 +19,13 @@ Basis::Basis(const H5::CommonFG &loc, const string &entry,
       group, "basisvectors", [&](const string &name, const H5::Group &group) {
         createBasisVector(group, name);
       }, basisvectors);
+  // TODO: check "directions"
 }
 
 ostream &Basis::output(ostream &os, int level) const {
   os << indent(level) << "Basis \"" << name << "\": tangentspace=\""
      << tangentspace->name << "\"\n";
-  for (const auto &db : basisvectors)
+  for (const auto &db : directions)
     db.second->output(os, level + 1);
   return os;
 }
@@ -35,6 +36,7 @@ void Basis::write(const H5::CommonFG &loc, const H5::H5Location &parent) const {
   H5::createAttribute(group, "name", name);
   H5::createAttribute(group, "tangentspace", parent, ".");
   H5::createGroup(group, "basisvectors", basisvectors);
+#warning "TODO: output directions"
 }
 
 BasisVector *Basis::createBasisVector(const string &name, int direction) {
