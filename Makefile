@@ -7,7 +7,9 @@ ifneq ($(COVERAGE),)
 CXXFLAGS += --coverage
 endif
 
-SRCS = SimulationIO.cpp selftest.cpp
+SIO_SRCS = Discretization.cpp Field.cpp Manifold.cpp Project.cpp \
+	TangentSpace.cpp TensorComponent.cpp TensorType.cpp
+ALL_SRCS = $(SIO_SRCS) selftest.cpp
 
 HDF5_LIBS = -lhdf5_cpp -lhdf5
 
@@ -27,7 +29,7 @@ gtest-all.o: gtest
 	$(CXX) $(CPPFLAGS) $(GTEST_CPPFLAGS) $(CXXFLAGS) $(GTEST_CXXFLAGS) -c $(GTEST_DIR)/src/gtest-all.cc
 
 selftest.o: gtest
-selftest: SimulationIO.o selftest.o gtest-all.o
+selftest: $(SIO_SRCS:%.cpp=%.o) selftest.o gtest-all.o
 	$(CXX) $(CPPFLAGS) $(GTEST_CPPFLAGS) $(CXXFLAGS) $(GTEST_CXXFLAGS) $(LDFLAGS) -o $@ $^ $(HDF5_LIBS)
 test: selftest
 	./selftest
@@ -57,7 +59,7 @@ clean:
 	$(RM) -r *.dSYM
 	$(RM) *.gcda *.gcno coverage.info
 	$(RM) gtest-all.o
-	$(RM) $(SRCS:%.cpp=%.o) $(SRCS:%.cpp=%.d)
+	$(RM) $(ALL_SRCS:%.cpp=%.o) $(ALL_SRCS:%.cpp=%.d)
 	$(RM) selftest
 
 distclean: clean

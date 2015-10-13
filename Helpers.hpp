@@ -1,0 +1,44 @@
+#ifndef HELPERS_HPP
+#define HELPERS_HPP
+
+#include <cassert>
+#include <map>
+#include <string>
+#include <utility>
+
+namespace SimulationIO {
+
+// Integer exponentiation
+inline int ipow(int base, int exp) {
+  assert(base >= 0 && exp >= 0);
+  int res = 1;
+  while (exp--)
+    res *= base;
+  return res;
+}
+
+// Insert an element into a map, ensuring that the key does not yet exist
+template <typename Key, typename Value, typename Key1, typename Value1>
+typename std::map<Key, Value>::iterator
+checked_emplace(std::map<Key, Value> &m, Key1 &&key, Value1 &&value) {
+  typename std::map<Key, Value>::iterator iter;
+  bool did_insert;
+  std::tie(iter, did_insert) =
+      m.insert(make_pair(std::forward<Key1>(key), std::forward<Value1>(value)));
+  assert(did_insert);
+  return iter;
+}
+
+// Indented output
+const int indentsize = 2;
+const char indentchar = ' ';
+inline std::string indent(int level) {
+  return std::string(level * indentsize, indentchar);
+}
+}
+
+#define HELPERS_HPP_DONE
+#endif // #ifndef HELPERS_HPP
+#ifndef HELPERS_HPP_DONE
+#error "Cyclic include depencency"
+#endif
