@@ -276,12 +276,26 @@ TensorComponent::TensorComponent(const H5::CommonFG &loc, const string &entry,
 
 // Manifold
 
+Discretization *Manifold::createDiscretization(const string &name) {
+  auto discretization = new Discretization(name, this);
+  checked_emplace(discretizations, discretization->name, discretization);
+  assert(discretization->invariant());
+  return discretization;
+}
+
+Discretization *Manifold::createDiscretization(const H5::CommonFG &loc,
+                                               const string &entry) {
+  auto discretization = new Discretization(loc, entry, this);
+  checked_emplace(discretizations, discretization->name, discretization);
+  assert(discretization->invariant());
+  return discretization;
+}
+
 ostream &Manifold::output(ostream &os, int level) const {
   os << indent(level) << "Manifold \"" << name << "\": dim=" << dimension
      << "\n";
-#warning "TODO"
-  // for (const auto &d : discretizations)
-  //   d.second->output(os, level + 1);
+  for (const auto &d : discretizations)
+    d.second->output(os, level + 1);
   return os;
 }
 
@@ -292,8 +306,7 @@ void Manifold::write(const H5::CommonFG &loc,
   H5::createAttribute(group, "name", name);
   H5::createAttribute(group, "project", parent, ".");
   H5::createAttribute(group, "dimension", dimension);
-#warning "TODO"
-  // H5::createGroup(group, "discretizations", discretizations);
+  H5::createGroup(group, "discretizations", discretizations);
 }
 
 Manifold::Manifold(const H5::CommonFG &loc, const string &entry,
@@ -306,12 +319,11 @@ Manifold::Manifold(const H5::CommonFG &loc, const string &entry,
   H5::readAttribute(group, "name", name);
   // TODO: check link "project"
   H5::readAttribute(group, "dimension", dimension);
-#warning "TODO"
-  // H5::readGroup(group, "discretizations",
-  //                [&](const string &name, const H5::Group &group) {
-  //                  createDiscretization(name, group);
-  //                },
-  //                discretizations);
+  H5::readGroup(group, "discretizations",
+                [&](const string &name, const H5::Group &group) {
+                  createDiscretization(group, name);
+                },
+                discretizations);
 }
 
 // TangentSpace
@@ -421,6 +433,44 @@ Field::Field(const H5::CommonFG &loc, const string &entry, Project *project)
   manifold->insert(name, this);
   tangentspace->insert(name, this);
   // tensortypes->insert(this);
+}
+
+// Manifold discretizations
+
+ostream &Discretization::output(ostream &os, int level) const {
+  os << indent(level) << "Discretization \"" << name << "\": manifold=\""
+     << manifold->name << "\"\n";
+#warning "TODO"
+  // for (const auto &db : discretizationblocks)
+  //   db.second->output(os, level + 1);
+  return os;
+}
+
+void Discretization::write(const H5::CommonFG &loc,
+                           const H5::H5Location &parent) const {
+  auto group = loc.createGroup(name);
+  H5::createAttribute(group, "type", "Discretization");
+  H5::createAttribute(group, "name", name);
+  H5::createAttribute(group, "manifold", parent, ".");
+#warning "TODO"
+  // H5::createGroup(group, "discretizationblocks", discretizationblocks);
+}
+
+Discretization::Discretization(const H5::CommonFG &loc, const string &entry,
+                               Manifold *manifold)
+    : Common(""), manifold(manifold) {
+  auto group = loc.openGroup(entry);
+  string type;
+  H5::readAttribute(group, "type", type);
+  assert(type == "Discretization");
+  H5::readAttribute(group, "name", name);
+// TODO: check link "manifold"
+#warning "TODO"
+  // H5::readGroup(group, "discretizationblocks",
+  //                [&](const string &name, const H5::Group &group) {
+  //                  createDiscretizationBlock(name, group);
+  //                },
+  //                discretizationblocks);
 }
 
 // Coordinates

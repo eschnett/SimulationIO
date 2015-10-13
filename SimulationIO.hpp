@@ -267,6 +267,9 @@ private:
 
 public:
   virtual ~Manifold() { assert(0); }
+  Discretization *createDiscretization(const string &name);
+  Discretization *createDiscretization(const H5::CommonFG &loc,
+                                       const string &entry);
   void insert(const string &name, Field *field) {
     checked_emplace(fields, name, field);
   }
@@ -368,11 +371,36 @@ public:
 
 struct DiscretizationBlock;
 
-struct Discretization {
-  string name;
+struct Discretization : Common {
   Manifold *manifold;
   map<string, DiscretizationBlock *> discretizationblocks; // owned
-  bool invariant() const { return true; }
+  virtual bool invariant() const {
+    return Common::invariant() && bool(manifold) &&
+           manifold->discretizations.count(name) &&
+           manifold->discretizations.at(name) == this;
+  }
+  Discretization() = delete;
+  Discretization(const Discretization &) = delete;
+  Discretization(Discretization &&) = delete;
+  Discretization &operator=(const Discretization &) = delete;
+  Discretization &operator=(Discretization &&) = delete;
+
+private:
+  friend class Manifold;
+  Discretization(const string &name, Manifold *manifold)
+      : Common(name), manifold(manifold) {}
+  Discretization(const H5::CommonFG &loc, const string &entry,
+                 Manifold *manifold);
+
+public:
+  virtual ~Discretization() { assert(0); }
+  virtual ostream &output(ostream &os, int level = 0) const;
+  friend ostream &operator<<(ostream &os,
+                             const Discretization &discretization) {
+    return discretization.output(os);
+  }
+  virtual void write(const H5::CommonFG &loc,
+                     const H5::H5Location &parent) const;
 };
 
 struct DiscretizationBlock {
