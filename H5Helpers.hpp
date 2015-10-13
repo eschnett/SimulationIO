@@ -89,16 +89,16 @@ inline DataType getType(const long double &) {
 // Create attributes
 
 template <typename T>
-Attribute create_attribute(const H5Location &loc, const std::string &name,
-                           const T &value) {
+Attribute createAttribute(const H5Location &loc, const std::string &name,
+                          const T &value) {
   auto attr = loc.createAttribute(name, getType(value), DataSpace());
   attr.write(getType(value), &value);
   return attr;
 }
 
 template <typename T>
-Attribute create_attribute(const H5Location &loc, const std::string &name,
-                           const std::vector<T> &values) {
+Attribute createAttribute(const H5Location &loc, const std::string &name,
+                          const std::vector<T> &values) {
   const hsize_t dims = values.size();
   T dummy;
   auto attr = loc.createAttribute(name, getType(dummy), DataSpace(1, &dims));
@@ -108,25 +108,24 @@ Attribute create_attribute(const H5Location &loc, const std::string &name,
   return attr;
 }
 
-inline Attribute create_attribute(const H5Location &loc,
-                                  const std::string &name,
-                                  const std::string &value) {
+inline Attribute createAttribute(const H5Location &loc, const std::string &name,
+                                 const std::string &value) {
   auto type = StrType(PredType::C_S1, H5T_VARIABLE);
   auto attr = loc.createAttribute(name, type, DataSpace());
   attr.write(type, H5std_string(value));
   return attr;
 }
 
-inline Attribute create_attribute(const H5Location &loc,
-                                  const std::string &name, const char *value) {
-  return create_attribute(loc, name, std::string(value));
+inline Attribute createAttribute(const H5Location &loc, const std::string &name,
+                                 const char *value) {
+  return createAttribute(loc, name, std::string(value));
 }
 
 // Read attributes
 
 template <typename T>
-Attribute read_attribute(const H5Location &loc, const std::string &name,
-                         T &value) {
+Attribute readAttribute(const H5Location &loc, const std::string &name,
+                        T &value) {
   auto attr = loc.openAttribute(name);
   auto space = attr.getSpace();
   assert(space.getSimpleExtentType() == H5S_SCALAR);
@@ -135,8 +134,8 @@ Attribute read_attribute(const H5Location &loc, const std::string &name,
 }
 
 template <typename T>
-Attribute read_attribute(const H5Location &loc, const std::string &name,
-                         std::vector<T> &values) {
+Attribute readAttribute(const H5Location &loc, const std::string &name,
+                        std::vector<T> &values) {
   auto attr = loc.openAttribute(name);
   auto space = attr.getSpace();
   auto npoints = space.getSimpleExtentNpoints();
@@ -147,8 +146,8 @@ Attribute read_attribute(const H5Location &loc, const std::string &name,
   return attr;
 }
 
-inline Attribute read_attribute(const H5Location &loc, const std::string &name,
-                                std::string &value) {
+inline Attribute readAttribute(const H5Location &loc, const std::string &name,
+                               std::string &value) {
   auto attr = loc.openAttribute(name);
   auto space = attr.getSpace();
   assert(space.getSimpleExtentType() == H5S_SCALAR);
@@ -188,8 +187,8 @@ herr_t iterateElems(const H5Location &loc, H5_index_t index_type,
 
 // Write a map (ignoring the keys)
 template <typename Key, typename T>
-Group create_group(const CommonFG &loc, const std::string &name,
-                   const std::map<Key, T *> &m) {
+Group createGroup(const CommonFG &loc, const std::string &name,
+                  const std::map<Key, T *> &m) {
   // We assume that Key is string-like, and that T is a subtype of Common
   auto group = loc.createGroup(name);
   for (const auto &p : m)
@@ -199,8 +198,8 @@ Group create_group(const CommonFG &loc, const std::string &name,
 
 // Read a map
 template <typename R, typename Key, typename T>
-Group read_group(const CommonFG &loc, const std::string &name, R read_object,
-                 std::map<Key, T *> &m) {
+Group readGroup(const CommonFG &loc, const std::string &name, R read_object,
+                std::map<Key, T *> &m) {
   // We assume that Key is string-like, and that T is a subtype of Common
   auto group = loc.openGroup(name);
   hsize_t idx = 0;

@@ -44,8 +44,8 @@ inline int ipow(int base, int exp) {
 
 // Insert an element into a map; ensure that the key does not yet exist
 template <typename Key, typename Value, typename Key1, typename Value1>
-typename map<Key, Value>::iterator checked_insert(map<Key, Value> &m,
-                                                  Key1 &&key, Value1 &&value) {
+typename map<Key, Value>::iterator checked_emplace(map<Key, Value> &m,
+                                                   Key1 &&key, Value1 &&value) {
   typename map<Key, Value>::iterator iter;
   bool did_insert;
   std::tie(iter, did_insert) =

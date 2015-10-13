@@ -36,7 +36,7 @@ void Project::createStandardTensortypes() {
 TensorType *Project::createTensorType(const string &name, int dimension,
                                       int rank) {
   auto tensortype = new TensorType(name, this, dimension, rank);
-  checked_insert(tensortypes, tensortype->name, tensortype);
+  checked_emplace(tensortypes, tensortype->name, tensortype);
   assert(tensortype->invariant());
   return tensortype;
 }
@@ -44,14 +44,14 @@ TensorType *Project::createTensorType(const string &name, int dimension,
 TensorType *Project::createTensorType(const H5::CommonFG &loc,
                                       const string &entry) {
   auto tensortype = new TensorType(loc, entry, this);
-  checked_insert(tensortypes, tensortype->name, tensortype);
+  checked_emplace(tensortypes, tensortype->name, tensortype);
   assert(tensortype->invariant());
   return tensortype;
 }
 
 Manifold *Project::createManifold(const string &name, int dimension) {
   auto manifold = new Manifold(name, this, dimension);
-  checked_insert(manifolds, manifold->name, manifold);
+  checked_emplace(manifolds, manifold->name, manifold);
   assert(manifold->invariant());
   return manifold;
 }
@@ -59,14 +59,14 @@ Manifold *Project::createManifold(const string &name, int dimension) {
 Manifold *Project::createManifold(const H5::CommonFG &loc,
                                   const string &entry) {
   auto manifold = new Manifold(loc, entry, this);
-  checked_insert(manifolds, manifold->name, manifold);
+  checked_emplace(manifolds, manifold->name, manifold);
   assert(manifold->invariant());
   return manifold;
 }
 
 TangentSpace *Project::createTangentSpace(const string &name, int dimension) {
   auto tangentspace = new TangentSpace(name, this, dimension);
-  checked_insert(tangentspaces, tangentspace->name, tangentspace);
+  checked_emplace(tangentspaces, tangentspace->name, tangentspace);
   assert(tangentspace->invariant());
   return tangentspace;
 }
@@ -74,7 +74,7 @@ TangentSpace *Project::createTangentSpace(const string &name, int dimension) {
 TangentSpace *Project::createTangentSpace(const H5::CommonFG &loc,
                                           const string &entry) {
   auto tangentspace = new TangentSpace(loc, entry, this);
-  checked_insert(tangentspaces, tangentspace->name, tangentspace);
+  checked_emplace(tangentspaces, tangentspace->name, tangentspace);
   assert(tangentspace->invariant());
   return tangentspace;
 }
@@ -83,14 +83,14 @@ Field *Project::createField(const string &name, Manifold *manifold,
                             TangentSpace *tangentspace,
                             TensorType *tensortype) {
   auto field = new Field(name, this, manifold, tangentspace, tensortype);
-  checked_insert(fields, field->name, field);
+  checked_emplace(fields, field->name, field);
   assert(field->invariant());
   return field;
 }
 
 Field *Project::createField(const H5::CommonFG &loc, const string &entry) {
   auto field = new Field(loc, entry, this);
-  checked_insert(fields, field->name, field);
+  checked_emplace(fields, field->name, field);
   assert(field->invariant());
   return field;
 }
@@ -99,7 +99,8 @@ Field *Project::createField(const H5::CommonFG &loc, const string &entry) {
 // CoordinateSystem *Project::createCoordinateSystem(const string &name,
 //                                                   Manifold *manifold) {
 //   auto coordinatesystem = new CoordinateSystem(name, this, manifold);
-//   checked_insert(coordinatesystems,coordinatesystem->name, coordinatesystem);
+//   checked_emplace(coordinatesystems,coordinatesystem->name,
+//   coordinatesystem);
 //   assert(coordinatesystem->invariant());
 //   return coordinatesystem;
 // }
@@ -108,7 +109,7 @@ Field *Project::createField(const H5::CommonFG &loc, const string &entry) {
 //                                                   const H5::CommonFG &loc)
 //                                                   {
 //   auto coordinatesystem = new CoordinateSystem(name, this, loc);
-//   checked_insert(coordinatesystems, coordinatesystem->name,
+//   checked_emplace(coordinatesystems, coordinatesystem->name,
 //   coordinatesystem);
 //   assert(coordinatesystem->invariant());
 //   return coordinatesystem;
@@ -138,41 +139,41 @@ ostream &Project::output(ostream &os, int level) const {
 void Project::write(const H5::CommonFG &loc,
                     const H5::H5Location &parent) const {
   auto group = loc.createGroup(name);
-  H5::create_attribute(group, "type", "Project");
-  H5::create_attribute(group, "name", name);
+  H5::createAttribute(group, "type", "Project");
+  H5::createAttribute(group, "name", name);
   // no link for parent
-  H5::create_group(group, "tensortypes", tensortypes);
-  H5::create_group(group, "manifolds", manifolds);
-  H5::create_group(group, "tangentspaces", tangentspaces);
-  H5::create_group(group, "fields", fields);
+  H5::createGroup(group, "tensortypes", tensortypes);
+  H5::createGroup(group, "manifolds", manifolds);
+  H5::createGroup(group, "tangentspaces", tangentspaces);
+  H5::createGroup(group, "fields", fields);
 #warning "TODO"
-  // H5::create_group(group, "coordiantesystems", coordinatesystems);
+  // H5::createGroup(group, "coordiantesystems", coordinatesystems);
 }
 
 Project::Project(const H5::CommonFG &loc, const string &entry) : Common("") {
   auto group = loc.openGroup(entry);
   string type;
-  H5::read_attribute(group, "type", type);
+  H5::readAttribute(group, "type", type);
   assert(type == "Project");
-  H5::read_attribute(group, "name", name);
-  H5::read_group(
-      group, "tensortypes", [&](const string &name, const H5::Group &group) {
-        createTensorType(group, name);
-      }, tensortypes);
-  H5::read_group(group,
-                 "manifolds", [&](const string &name, const H5::Group &group) {
-                   createManifold(group, name);
-                 }, manifolds);
-  H5::read_group(
+  H5::readAttribute(group, "name", name);
+  H5::readGroup(group,
+                "tensortypes", [&](const string &name, const H5::Group &group) {
+                  createTensorType(group, name);
+                }, tensortypes);
+  H5::readGroup(group,
+                "manifolds", [&](const string &name, const H5::Group &group) {
+                  createManifold(group, name);
+                }, manifolds);
+  H5::readGroup(
       group, "tangentspaces", [&](const string &name, const H5::Group &group) {
         createTangentSpace(group, name);
       }, tangentspaces);
-  H5::read_group(group,
-                 "fields", [&](const string &name, const H5::Group &group) {
-                   createField(group, name);
-                 }, fields);
+  H5::readGroup(group,
+                "fields", [&](const string &name, const H5::Group &group) {
+                  createField(group, name);
+                }, fields);
 #warning "TODO"
-  // H5::read_group(group, "coordinatesystems",
+  // H5::readGroup(group, "coordinatesystems",
   //                [&](const string &name, const H5::Group &group) {
   //                  createCoordinateSystem(name, group);
   //                },
@@ -187,14 +188,14 @@ TensorComponent *
 TensorType::createTensorComponent(const string &name,
                                   const std::vector<int> &indexvalues) {
   auto tensorcomponent = new TensorComponent(name, this, indexvalues);
-  checked_insert(tensorcomponents, tensorcomponent->name, tensorcomponent);
+  checked_emplace(tensorcomponents, tensorcomponent->name, tensorcomponent);
   return tensorcomponent;
 }
 
 TensorComponent *TensorType::createTensorComponent(const H5::CommonFG &loc,
                                                    const string &entry) {
   auto tensorcomponent = new TensorComponent(loc, entry, this);
-  checked_insert(tensorcomponents, tensorcomponent->name, tensorcomponent);
+  checked_emplace(tensorcomponents, tensorcomponent->name, tensorcomponent);
   return tensorcomponent;
 }
 
@@ -209,13 +210,13 @@ ostream &TensorType::output(ostream &os, int level) const {
 void TensorType::write(const H5::CommonFG &loc,
                        const H5::H5Location &parent) const {
   auto group = loc.createGroup(name);
-  H5::create_attribute(group, "type", "TensorType");
-  H5::create_attribute(group, "name", name);
+  H5::createAttribute(group, "type", "TensorType");
+  H5::createAttribute(group, "name", name);
   H5::createHardLink(parent, ".", group, "project");
-  H5::create_attribute(group, "dimension", dimension);
-  H5::create_attribute(group, "rank", rank);
+  H5::createAttribute(group, "dimension", dimension);
+  H5::createAttribute(group, "rank", rank);
 #warning "TODO create link to project"
-  H5::create_group(group, "tensorcomponents", tensorcomponents);
+  H5::createGroup(group, "tensorcomponents", tensorcomponents);
 }
 
 TensorType::TensorType(const H5::CommonFG &loc, const string &entry,
@@ -223,17 +224,17 @@ TensorType::TensorType(const H5::CommonFG &loc, const string &entry,
     : Common(""), project(project) {
   auto group = loc.openGroup(entry);
   string type;
-  H5::read_attribute(group, "type", type);
+  H5::readAttribute(group, "type", type);
   assert(type == "TensorType");
-  H5::read_attribute(group, "name", name);
+  H5::readAttribute(group, "name", name);
   // TODO: check link "project"
-  H5::read_attribute(group, "dimension", dimension);
-  H5::read_attribute(group, "rank", rank);
-  H5::read_group(group, "tensorcomponents",
-                 [&](const string &name, const H5::Group &group) {
-                   createTensorComponent(group, name);
-                 },
-                 tensorcomponents);
+  H5::readAttribute(group, "dimension", dimension);
+  H5::readAttribute(group, "rank", rank);
+  H5::readGroup(group, "tensorcomponents",
+                [&](const string &name, const H5::Group &group) {
+                  createTensorComponent(group, name);
+                },
+                tensorcomponents);
 }
 
 // TensorComponent
@@ -253,10 +254,10 @@ ostream &TensorComponent::output(ostream &os, int level) const {
 void TensorComponent::write(const H5::CommonFG &loc,
                             const H5::H5Location &parent) const {
   auto group = loc.createGroup(name);
-  H5::create_attribute(group, "type", "TensorComponent");
-  H5::create_attribute(group, "name", name);
+  H5::createAttribute(group, "type", "TensorComponent");
+  H5::createAttribute(group, "name", name);
   H5::createHardLink(parent, ".", group, "tensortype");
-  H5::create_attribute(group, "indexvalues", indexvalues);
+  H5::createAttribute(group, "indexvalues", indexvalues);
 }
 
 TensorComponent::TensorComponent(const H5::CommonFG &loc, const string &entry,
@@ -264,11 +265,11 @@ TensorComponent::TensorComponent(const H5::CommonFG &loc, const string &entry,
     : Common(""), tensortype(tensortype) {
   auto group = loc.openGroup(entry);
   string type;
-  H5::read_attribute(group, "type", type);
+  H5::readAttribute(group, "type", type);
   assert(type == "TensorComponent");
-  H5::read_attribute(group, "name", name);
+  H5::readAttribute(group, "name", name);
   // TODO: check link "tensortype"
-  H5::read_attribute(group, "indexvalues", indexvalues);
+  H5::readAttribute(group, "indexvalues", indexvalues);
 }
 
 // High-level continuum concepts
@@ -287,12 +288,12 @@ ostream &Manifold::output(ostream &os, int level) const {
 void Manifold::write(const H5::CommonFG &loc,
                      const H5::H5Location &parent) const {
   auto group = loc.createGroup(name);
-  H5::create_attribute(group, "type", "Manifold");
-  H5::create_attribute(group, "name", name);
+  H5::createAttribute(group, "type", "Manifold");
+  H5::createAttribute(group, "name", name);
   H5::createHardLink(parent, ".", group, "project");
-  H5::create_attribute(group, "dimension", dimension);
+  H5::createAttribute(group, "dimension", dimension);
 #warning "TODO"
-  // H5::create_group(group, "discretizations", discretizations);
+  // H5::createGroup(group, "discretizations", discretizations);
 }
 
 Manifold::Manifold(const H5::CommonFG &loc, const string &entry,
@@ -300,13 +301,13 @@ Manifold::Manifold(const H5::CommonFG &loc, const string &entry,
     : Common(""), project(project) {
   auto group = loc.openGroup(entry);
   string type;
-  H5::read_attribute(group, "type", type);
+  H5::readAttribute(group, "type", type);
   assert(type == "Manifold");
-  H5::read_attribute(group, "name", name);
+  H5::readAttribute(group, "name", name);
   // TODO: check link "project"
-  H5::read_attribute(group, "dimension", dimension);
+  H5::readAttribute(group, "dimension", dimension);
 #warning "TODO"
-  // H5::read_group(group, "discretizations",
+  // H5::readGroup(group, "discretizations",
   //                [&](const string &name, const H5::Group &group) {
   //                  createDiscretization(name, group);
   //                },
@@ -327,12 +328,12 @@ ostream &TangentSpace::output(ostream &os, int level) const {
 void TangentSpace::write(const H5::CommonFG &loc,
                          const H5::H5Location &parent) const {
   auto group = loc.createGroup(name);
-  H5::create_attribute(group, "type", "TangentSpace");
-  H5::create_attribute(group, "name", name);
+  H5::createAttribute(group, "type", "TangentSpace");
+  H5::createAttribute(group, "name", name);
   H5::createHardLink(parent, ".", group, "project");
-  H5::create_attribute(group, "dimension", dimension);
+  H5::createAttribute(group, "dimension", dimension);
 #warning "TODO"
-  // H5::create_group(group, "bases", bases);
+  // H5::createGroup(group, "bases", bases);
 }
 
 TangentSpace::TangentSpace(const H5::CommonFG &loc, const string &entry,
@@ -340,13 +341,13 @@ TangentSpace::TangentSpace(const H5::CommonFG &loc, const string &entry,
     : Common(""), project(project) {
   auto group = loc.openGroup(entry);
   string type;
-  H5::read_attribute(group, "type", type);
+  H5::readAttribute(group, "type", type);
   assert(type == "TangentSpace");
-  H5::read_attribute(group, "name", name);
+  H5::readAttribute(group, "name", name);
   // TODO: check link "project"
-  H5::read_attribute(group, "dimension", dimension);
+  H5::readAttribute(group, "dimension", dimension);
 #warning "TODO"
-  // H5::read_group(group, "bases",
+  // H5::readGroup(group, "bases",
   //                [&](const string &name, const H5::Group &group) {
   //                  createBasis(name, group);
   //                },
@@ -367,8 +368,8 @@ ostream &Field::output(ostream &os, int level) const {
 
 void Field::write(const H5::CommonFG &loc, const H5::H5Location &parent) const {
   auto group = loc.createGroup(name);
-  H5::create_attribute(group, "type", "Field");
-  H5::create_attribute(group, "name", name);
+  H5::createAttribute(group, "type", "Field");
+  H5::createAttribute(group, "name", name);
   H5::createHardLink(parent, ".", group, "project");
   H5::createHardLink(parent, string("manifolds/") + manifold->name, group,
                      "manifold");
@@ -377,39 +378,39 @@ void Field::write(const H5::CommonFG &loc, const H5::H5Location &parent) const {
   H5::createHardLink(parent, string("tensortypes/") + tensortype->name, group,
                      "tensortype");
 #warning "TODO"
-  // H5::create_group(group, "discretefields", discretefields);
+  // H5::createGroup(group, "discretefields", discretefields);
 }
 
 Field::Field(const H5::CommonFG &loc, const string &entry, Project *project)
     : Common(""), project(project) {
   auto group = loc.openGroup(entry);
   string type;
-  H5::read_attribute(group, "type", type);
+  H5::readAttribute(group, "type", type);
   assert(type == "Field");
-  H5::read_attribute(group, "name", name);
+  H5::readAttribute(group, "name", name);
   // TODO: check link "project"
   // TODO: Read and interpret objects (shallowly) instead of naively only
   // looking at their names
   {
     auto obj = group.openGroup("manifold");
     string name;
-    auto attr = H5::read_attribute(obj, "name", name);
+    auto attr = H5::readAttribute(obj, "name", name);
     manifold = project->manifolds.at(name);
   }
   {
     auto obj = group.openGroup("tangentspace");
     string name;
-    auto attr = H5::read_attribute(obj, "name", name);
+    auto attr = H5::readAttribute(obj, "name", name);
     tangentspace = project->tangentspaces.at(name);
   }
   {
     auto obj = group.openGroup("tensortype");
     string name;
-    auto attr = H5::read_attribute(obj, "name", name);
+    auto attr = H5::readAttribute(obj, "name", name);
     tensortype = project->tensortypes.at(name);
   }
 #warning "TODO"
-  // H5::read_group(group, "discretefields",
+  // H5::readGroup(group, "discretefields",
   //                [&](const string &name, const H5::Group &group) {
   //                  createDiscreteField(name, group);
   //                },
