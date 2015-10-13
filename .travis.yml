@@ -40,7 +40,7 @@ compiler:
   - clang
   - gcc
 script:
-  - make -j2 COVERAGE=1
+  - make -j2 COVERAGE=1 HDF5_DIR="$HDF5_DIR"
   - make -j2 test
 after_success:
   - make -j2 coverage
