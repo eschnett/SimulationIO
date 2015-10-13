@@ -72,6 +72,12 @@ public:
   }
   virtual void write(const H5::CommonFG &loc,
                      const H5::H5Location &parent) const;
+
+  DiscreteField *createDiscreteField(const string &name,
+                                     Discretization *discretization,
+                                     Basis *basis);
+  DiscreteField *createDiscreteField(const H5::CommonFG &loc,
+                                     const string &entry);
 };
 }
 

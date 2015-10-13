@@ -38,7 +38,8 @@ void TensorType::write(const H5::CommonFG &loc,
   auto group = loc.createGroup(name);
   H5::createAttribute(group, "type", "TensorType");
   H5::createAttribute(group, "name", name);
-  H5::createAttribute(group, "project", parent, ".");
+  H5::createHardLink(group, "project", parent, ".");
+  // H5::createAttribute(group, "project", parent, ".");
   H5::createAttribute(group, "dimension", dimension);
   H5::createAttribute(group, "rank", rank);
   H5::createGroup(group, "tensorcomponents", tensorcomponents);

@@ -34,7 +34,8 @@ void Basis::write(const H5::CommonFG &loc, const H5::H5Location &parent) const {
   auto group = loc.createGroup(name);
   H5::createAttribute(group, "type", "Basis");
   H5::createAttribute(group, "name", name);
-  H5::createAttribute(group, "tangentspace", parent, ".");
+  H5::createHardLink(group, "tangentspace", parent, ".");
+  // H5::createAttribute(group, "tangentspace", parent, ".");
   H5::createGroup(group, "basisvectors", basisvectors);
 #warning "TODO: output directions"
 }

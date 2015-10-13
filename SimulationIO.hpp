@@ -16,6 +16,9 @@
 #include "Basis.hpp"
 #include "BasisVector.hpp"
 #include "Common.hpp"
+#include "DiscreteField.hpp"
+#include "DiscreteFieldBlock.hpp"
+#include "DiscreteFieldBlockData.hpp"
 #include "Discretization.hpp"
 #include "DiscretizationBlock.hpp"
 #include "Field.hpp"
@@ -44,44 +47,6 @@ using std::map;
 using std::ostream;
 using std::string;
 using std::vector;
-
-// Discrete fields
-
-struct DiscreteFieldBlock;
-struct DiscreteFieldBlockData;
-
-struct DiscreteField {
-  string name;
-  Field *field;
-  Discretization *discretization;
-  Basis *basis;
-  map<string, DiscreteFieldBlock *> discretefieldblocks; // owned
-  bool invariant() const {
-    return field->manifold == discretization->manifold &&
-           field->tangentspace == basis->tangentspace;
-  }
-};
-
-struct DiscreteFieldBlock {
-  // Discrete field on a particular region (discretization block)
-  string name;
-  DiscreteField *discretefield;
-  DiscretizationBlock *discretizationblock;
-  map<string, DiscreteFieldBlockData *> discretefieldblockdata; // owned
-  bool invariant() const { return true; }
-};
-
-struct DiscreteFieldBlockData {
-  // Tensor component for a discrete field on a particular region
-  string name;
-  DiscreteFieldBlock *discretefieldblock;
-  TensorComponent *tensorcomponent;
-  hid_t hdf5_dataset;
-  bool invariant() const {
-    return discretefieldblock->discretefield->field->tensortype ==
-           tensorcomponent->tensortype;
-  }
-};
 
 // Coordinates
 

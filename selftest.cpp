@@ -40,7 +40,7 @@ TEST(Project, create) {
 }
 
 TEST(Project, HDF5) {
-  const string filename = "project.h5";
+  auto filename = "project.h5";
   string orig;
   {
     auto file = H5::H5File(filename, H5F_ACC_TRUNC);
@@ -56,7 +56,7 @@ TEST(Project, HDF5) {
     buf << *p2;
     EXPECT_EQ(orig, buf.str());
   }
-  // remove(filename.c_str());
+  remove(filename);
 }
 
 // This test sets up the global variable "project", which is necessary for most
@@ -173,7 +173,7 @@ TEST(TensorTypes, HDF5) {
               "fields:\n",
               buf.str());
   }
-  // remove(filename.c_str());
+  remove(filename);
 }
 
 TEST(Manifold, create) {
@@ -196,7 +196,7 @@ TEST(Manifold, HDF5) {
     buf << *p1->manifolds.at("m1");
     EXPECT_EQ("Manifold \"m1\": dim=3\n", buf.str());
   }
-  // remove(filename.c_str());
+  remove(filename);
 }
 
 TEST(TangentSpace, create) {
@@ -219,7 +219,7 @@ TEST(TangentSpace, HDF5) {
     buf << *p1->tangentspaces.at("s1");
     EXPECT_EQ("TangentSpace \"s1\": dim=3\n", buf.str());
   }
-  // remove(filename.c_str());
+  remove(filename);
 }
 
 TEST(Field, create) {
@@ -247,7 +247,7 @@ TEST(Field, HDF5) {
               "tensortype=\"Scalar3D\"\n",
               buf.str());
   }
-  // remove(filename.c_str());
+  remove(filename);
 }
 
 TEST(Discretization, create) {
@@ -271,7 +271,7 @@ TEST(Discretization, HDF5) {
     buf << *p1->manifolds.at("m1")->discretizations.at("d1");
     EXPECT_EQ("Discretization \"d1\": manifold=\"m1\"\n", buf.str());
   }
-  // remove(filename.c_str());
+  remove(filename);
 }
 
 TEST(DiscretizationBlock, create) {
@@ -299,7 +299,7 @@ TEST(DiscretizationBlock, HDF5) {
     EXPECT_EQ("DiscretizationBlock \"db1\": discretization=\"d1\"\n",
               buf.str());
   }
-  // remove(filename.c_str());
+  remove(filename);
 }
 
 TEST(Basis, create) {
@@ -323,7 +323,7 @@ TEST(Basis, HDF5) {
     buf << *p1->tangentspaces.at("s1")->bases.at("b1");
     EXPECT_EQ("Basis \"b1\": tangentspace=\"s1\"\n", buf.str());
   }
-  // remove(filename.c_str());
+  remove(filename);
 }
 
 TEST(BasisVector, create) {
@@ -358,7 +358,101 @@ TEST(BasisVector, HDF5) {
               "direction=1\n  BasisVector \"z\": basis=\"b1\" direction=2\n",
               buf.str());
   }
-  // remove(filename.c_str());
+  remove(filename);
+}
+
+TEST(DiscreteField, create) {
+  const auto &f1 = project->fields.at("f1");
+  const auto &m1 = f1->manifold;
+  const auto &d1 = m1->discretizations.at("d1");
+  const auto &s1 = f1->tangentspace;
+  const auto &b1 = s1->bases.at("b1");
+  EXPECT_TRUE(f1->discretefields.empty());
+  auto df1 = f1->createDiscreteField("df1", d1, b1);
+  EXPECT_EQ(1, f1->discretefields.size());
+  EXPECT_EQ(df1, f1->discretefields.at("df1"));
+}
+
+TEST(DiscreteField, HDF5) {
+  auto filename = "discretefield.h5";
+  {
+    auto file = H5::H5File(filename, H5F_ACC_TRUNC);
+    project->write(file, file);
+  }
+  {
+    auto file = H5::H5File(filename, H5F_ACC_RDONLY);
+    auto p1 = createProject(file, "p1");
+    ostringstream buf;
+    buf << *p1->fields.at("f1")->discretefields.at("df1");
+    EXPECT_EQ("DiscreteField \"df1\": field=\"f1\" discretization=\"d1\" "
+              "basis=\"b1\"\n",
+              buf.str());
+  }
+  remove(filename);
+}
+
+TEST(DiscreteFieldBlock, create) {
+  const auto &f1 = project->fields.at("f1");
+  const auto &df1 = f1->discretefields.at("df1");
+  const auto &d1 = df1->discretization;
+  const auto &db1 = d1->discretizationblocks.at("db1");
+  EXPECT_TRUE(df1->discretefieldblocks.empty());
+  auto dfb1 = df1->createDiscreteFieldBlock("dfb1", db1);
+  EXPECT_EQ(1, df1->discretefieldblocks.size());
+  EXPECT_EQ(dfb1, df1->discretefieldblocks.at("dfb1"));
+}
+
+TEST(DiscreteFieldBlock, HDF5) {
+  auto filename = "discretefieldblock.h5";
+  {
+    auto file = H5::H5File(filename, H5F_ACC_TRUNC);
+    project->write(file, file);
+  }
+  {
+    auto file = H5::H5File(filename, H5F_ACC_RDONLY);
+    auto p1 = createProject(file, "p1");
+    ostringstream buf;
+    buf << *p1->fields.at("f1")
+                ->discretefields.at("df1")
+                ->discretefieldblocks.at("dfb1");
+    EXPECT_EQ("DiscreteFieldBlock \"dfb1\": discretefield=\"df1\" "
+              "discretizationblock=\"db1\"\n",
+              buf.str());
+  }
+  remove(filename);
+}
+
+TEST(DiscreteFieldBlockData, create) {
+  const auto &f1 = project->fields.at("f1");
+  const auto &df1 = f1->discretefields.at("df1");
+  const auto &dfb1 = df1->discretefieldblocks.at("dfb1");
+  const auto &tt1 = f1->tensortype;
+  const auto &sc1 = tt1->tensorcomponents.at("scalar");
+  EXPECT_TRUE(dfb1->discretefieldblockdata.empty());
+  auto dfbd1 = dfb1->createDiscreteFieldBlockData("dfbd1", sc1);
+  EXPECT_EQ(1, dfb1->discretefieldblockdata.size());
+  EXPECT_EQ(dfbd1, dfb1->discretefieldblockdata.at("dfbd1"));
+}
+
+TEST(DiscreteFieldBlockData, HDF5) {
+  auto filename = "discretizationfieldblockdata.h5";
+  {
+    auto file = H5::H5File(filename, H5F_ACC_TRUNC);
+    project->write(file, file);
+  }
+  {
+    auto file = H5::H5File(filename, H5F_ACC_RDONLY);
+    auto p1 = createProject(file, "p1");
+    ostringstream buf;
+    buf << *p1->fields.at("f1")
+                ->discretefields.at("df1")
+                ->discretefieldblocks.at("dfb1")
+                ->discretefieldblockdata.at("dfbd1");
+    EXPECT_EQ("DiscreteFieldBlockData \"dfbd1\": discretefieldblock=\"dfb1\" "
+              "tensorcomponent=\"scalar\"\n",
+              buf.str());
+  }
+  remove(filename);
 }
 
 #include "src/gtest_main.cc"

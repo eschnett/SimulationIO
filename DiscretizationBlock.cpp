@@ -27,6 +27,7 @@ void DiscretizationBlock::write(const H5::CommonFG &loc,
   auto group = loc.createGroup(name);
   H5::createAttribute(group, "type", "DiscretizationBlock");
   H5::createAttribute(group, "name", name);
-  H5::createAttribute(group, "discretization", parent, ".");
+  H5::createHardLink(group, "discretization", parent, ".");
+  // H5::createAttribute(group, "discretization", parent, ".");
 }
 }

@@ -47,6 +47,43 @@ getLocation(const CommonFG &fg) {
   }
 }
 
+// H5Literate
+namespace detail {
+template <typename Op> struct H5L_iterator {
+  Op &&op;
+  static herr_t call(hid_t g_id, const char *name, const H5L_info_t *info,
+                     void *data) {
+    return static_cast<H5L_iterator *>(data)->op(Group(g_id), name, info);
+  }
+  herr_t operator()(const H5Location &loc, H5_index_t index_type,
+                    H5_iter_order_t order, hsize_t *idx) {
+    auto iret = H5Literate(loc.getId(), index_type, order, idx, call, this);
+    assert(iret >= 0);
+    return iret;
+  }
+};
+}
+
+template <typename Op>
+herr_t iterateElems(const H5Location &loc, H5_index_t index_type,
+                    H5_iter_order_t order, hsize_t *idx, Op &&op) {
+  auto iret = detail::H5L_iterator<Op>{std::forward<Op>(op)}(loc, index_type,
+                                                             order, idx);
+  assert(iret >= 0);
+  return iret;
+}
+
+// Write a map (ignoring the keys)
+template <typename K, typename T>
+Group createGroup(const CommonFG &loc, const std::string &name,
+                  const std::map<K, T *> &m) {
+  // We assume that Key is string-like, and that T is a subtype of Common
+  auto group = loc.createGroup(name);
+  for (const auto &p : m)
+    p.second->write(group, *getLocation(loc));
+  return group;
+}
+
 // Get HDF5 datatype from C++ type
 
 inline DataType getType(const char &) { return IntType(PredType::NATIVE_CHAR); }
@@ -200,44 +237,6 @@ inline Attribute readAttribute(const H5Location &loc, const std::string &name,
   return attr;
 }
 
-// H5Literate
-
-namespace detail {
-template <typename Op> struct H5L_iterator {
-  Op &&op;
-  static herr_t call(hid_t g_id, const char *name, const H5L_info_t *info,
-                     void *data) {
-    return static_cast<H5L_iterator *>(data)->op(Group(g_id), name, info);
-  }
-  herr_t operator()(const H5Location &loc, H5_index_t index_type,
-                    H5_iter_order_t order, hsize_t *idx) {
-    auto iret = H5Literate(loc.getId(), index_type, order, idx, call, this);
-    assert(iret >= 0);
-    return iret;
-  }
-};
-}
-
-template <typename Op>
-herr_t iterateElems(const H5Location &loc, H5_index_t index_type,
-                    H5_iter_order_t order, hsize_t *idx, Op &&op) {
-  auto iret = detail::H5L_iterator<Op>{std::forward<Op>(op)}(loc, index_type,
-                                                             order, idx);
-  assert(iret >= 0);
-  return iret;
-}
-
-// Write a map (ignoring the keys)
-template <typename K, typename T>
-Group createGroup(const CommonFG &loc, const std::string &name,
-                  const std::map<K, T *> &m) {
-  // We assume that Key is string-like, and that T is a subtype of Common
-  auto group = loc.createGroup(name);
-  for (const auto &p : m)
-    p.second->write(group, *getLocation(loc));
-  return group;
-}
-
 // Read a map
 template <typename R, typename K, typename T>
 Group readGroup(const CommonFG &loc, const std::string &name, R read_object,
@@ -255,10 +254,11 @@ Group readGroup(const CommonFG &loc, const std::string &name, R read_object,
 }
 
 // Create a hard link
-inline herr_t createHardLink(const H5Location &obj_loc,
-                             const std::string &obj_name,
-                             const CommonFG &link_loc,
-                             const std::string &link_name) {
+// Note argument order: first link location, then link target
+inline herr_t createHardLink(const CommonFG &link_loc,
+                             const std::string &link_name,
+                             const H5Location &obj_loc,
+                             const std::string &obj_name) {
   auto lcpl = H5Pcreate(H5P_LINK_CREATE);
   assert(lcpl >= 0);
   auto lapl = H5Pcreate(H5P_LINK_ACCESS);

@@ -27,7 +27,8 @@ void BasisVector::write(const H5::CommonFG &loc,
   auto group = loc.createGroup(name);
   H5::createAttribute(group, "type", "BasisVector");
   H5::createAttribute(group, "name", name);
-  H5::createAttribute(group, "basis", parent, ".");
+  H5::createHardLink(group, "basis", parent, ".");
+  // H5::createAttribute(group, "basis", parent, ".");
   H5::createAttribute(group, "direction", direction);
 }
 }

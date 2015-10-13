@@ -11,6 +11,9 @@ endif
 SIO_SRCS = \
 	Basis.cpp \
 	BasisVector.cpp \
+	DiscreteField.cpp \
+	DiscreteFieldBlock.cpp \
+	DiscreteFieldBlockData.cpp \
 	Discretization.cpp \
 	DiscretizationBlock.cpp \
 	Field.cpp \

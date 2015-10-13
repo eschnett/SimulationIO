@@ -35,7 +35,8 @@ void TangentSpace::write(const H5::CommonFG &loc,
   auto group = loc.createGroup(name);
   H5::createAttribute(group, "type", "TangentSpace");
   H5::createAttribute(group, "name", name);
-  H5::createAttribute(group, "project", parent, ".");
+  H5::createHardLink(group, "project", parent, ".");
+  // H5::createAttribute(group, "project", parent, ".");
   H5::createAttribute(group, "dimension", dimension);
   H5::createGroup(group, "bases", bases);
 }
