@@ -46,7 +46,7 @@ selftest: $(SIO_SRCS:%.cpp=%.o) selftest.o gtest-all.o
 test: selftest
 	./selftest
 
-%.o: %.cpp
+%.o: %.cpp Makefile
 	@$(RM) $*.o
 	$(CXX) -MD $(CPPFLAGS) $(CXXFLAGS) -c -o $*.o.tmp $*.cpp
 	@$(PROCESS_DEPENDENCIES)
