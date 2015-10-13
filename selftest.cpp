@@ -302,4 +302,63 @@ TEST(DiscretizationBlock, HDF5) {
   // remove(filename.c_str());
 }
 
+TEST(Basis, create) {
+  const auto &s1 = project->tangentspaces.at("s1");
+  EXPECT_TRUE(s1->bases.empty());
+  auto b1 = s1->createBasis("b1");
+  EXPECT_EQ(1, s1->bases.size());
+  EXPECT_EQ(b1, s1->bases.at("b1"));
+}
+
+TEST(Basis, HDF5) {
+  auto filename = "basis.h5";
+  {
+    auto file = H5::H5File(filename, H5F_ACC_TRUNC);
+    project->write(file, file);
+  }
+  {
+    auto file = H5::H5File(filename, H5F_ACC_RDONLY);
+    auto p1 = createProject(file, "p1");
+    ostringstream buf;
+    buf << *p1->tangentspaces.at("s1")->bases.at("b1");
+    EXPECT_EQ("Basis \"b1\": tangentspace=\"s1\"\n", buf.str());
+  }
+  // remove(filename.c_str());
+}
+
+TEST(BasisVector, create) {
+  const auto &s1 = project->tangentspaces.at("s1");
+  const auto &b1 = s1->bases.at("b1");
+  EXPECT_TRUE(b1->basisvectors.empty());
+  auto bx1 = b1->createBasisVector("x", 0);
+  auto by1 = b1->createBasisVector("y", 1);
+  auto bz1 = b1->createBasisVector("z", 2);
+  EXPECT_EQ(0, bx1->direction);
+  EXPECT_EQ(1, by1->direction);
+  EXPECT_EQ(2, bz1->direction);
+  EXPECT_EQ(3, b1->basisvectors.size());
+  EXPECT_EQ(bx1, b1->basisvectors.at("x"));
+  EXPECT_EQ(by1, b1->basisvectors.at("y"));
+  EXPECT_EQ(bz1, b1->basisvectors.at("z"));
+}
+
+TEST(BasisVector, HDF5) {
+  auto filename = "basisvector.h5";
+  {
+    auto file = H5::H5File(filename, H5F_ACC_TRUNC);
+    project->write(file, file);
+  }
+  {
+    auto file = H5::H5File(filename, H5F_ACC_RDONLY);
+    auto p1 = createProject(file, "p1");
+    ostringstream buf;
+    buf << *p1->tangentspaces.at("s1")->bases.at("b1");
+    EXPECT_EQ("Basis \"b1\": tangentspace=\"s1\"\n  BasisVector \"x\": "
+              "basis=\"b1\" direction=0\n  BasisVector \"y\": basis=\"b1\" "
+              "direction=1\n  BasisVector \"z\": basis=\"b1\" direction=2\n",
+              buf.str());
+  }
+  // remove(filename.c_str());
+}
+
 #include "src/gtest_main.cc"

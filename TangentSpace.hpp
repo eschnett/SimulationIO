@@ -59,6 +59,9 @@ public:
   virtual void write(const H5::CommonFG &loc,
                      const H5::H5Location &parent) const;
 
+  Basis *createBasis(const string &name);
+  Basis *createBasis(const H5::CommonFG &loc, const string &entry);
+
   void insert(const string &name, Field *field) {
     checked_emplace(fields, name, field);
   }

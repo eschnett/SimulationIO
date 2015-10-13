@@ -9,6 +9,8 @@ CXXFLAGS += --coverage
 endif
 
 SIO_SRCS = \
+	Basis.cpp \
+	BasisVector.cpp \
 	Discretization.cpp \
 	DiscretizationBlock.cpp \
 	Field.cpp \

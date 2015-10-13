@@ -62,6 +62,7 @@ public:
   Discretization *createDiscretization(const string &name);
   Discretization *createDiscretization(const H5::CommonFG &loc,
                                        const string &entry);
+
   void insert(const string &name, Field *field) {
     checked_emplace(fields, name, field);
   }

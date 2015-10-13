@@ -13,6 +13,8 @@
 // - other vectors become objects inside a subgroup the group, sorted
 //   alphabetically
 
+#include "Basis.hpp"
+#include "BasisVector.hpp"
 #include "Common.hpp"
 #include "Discretization.hpp"
 #include "DiscretizationBlock.hpp"
@@ -42,37 +44,6 @@ using std::map;
 using std::ostream;
 using std::string;
 using std::vector;
-
-// Tangent space bases
-
-struct BasisVector;
-struct CoordinateBasis;
-struct CoordinateBasisElement;
-
-struct Basis {
-  string name;
-  TangentSpace *tangentspace;
-  vector<BasisVector *> basisvectors; // owned
-  map<string, CoordinateBasis *> coordinatebases;
-  bool invariant() const {
-    return int(basisvectors.size()) == tangentspace->dimension;
-  }
-};
-
-struct BasisVector {
-  string name;
-  Basis *basis;
-  // Since a BasisVector denotes essentially only an integer, we
-  // should be able to replace it by an integer. Not sure this is
-  // worthwhile. This essentially only gives names to directions; could use
-  // vector<string> in TangentSpace for this instead.
-  int direction;
-  map<string, CoordinateBasisElement *> coordinatebasiselements;
-  bool invariant() const {
-    return direction >= 0 && direction < int(basis->basisvectors.size()) &&
-           basis->basisvectors[direction] == this;
-  }
-};
 
 // Discrete fields
 
@@ -134,6 +105,8 @@ struct CoordinateField {
            coordinatesystem->coordinatefields[direction] == this;
   }
 };
+
+struct CoordinateBasisElement;
 
 struct CoordinateBasis {
   CoordinateSystem *coordinatesystem;
