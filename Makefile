@@ -1,7 +1,8 @@
 CXX = g++
-CPPFLAGS = -I/opt/local/include
-CXXFLAGS = -g -Wall -std=c++0x
-LDFLAGS = -L/opt/local/lib -Wl,-rpath,/opt/local/lib
+CPPFLAGS = $(GTEST_CPPFLAGS) $(HDF5_CPPFLAGS)
+CXXFLAGS = $(GTEST_CXXFLAGS) $(HDF5_CXXFLAGS) -g -Wall -std=c++0x
+LDFLAGS = $(GTEST_LDFLAGS) $(HDF5_LDFLAGS)
+LIBS = $(GTEST_LIBS) $(HDF5_LIBS)
 
 ifneq ($(COVERAGE),)
 CXXFLAGS += --coverage
@@ -18,11 +19,15 @@ SIO_SRCS = \
 	TensorType.cpp
 ALL_SRCS = $(SIO_SRCS) selftest.cpp
 
+HDF5_CPPFLAGS = -I/opt/local/include
+HDF5_CXXFLAGS =
+HDF5_LDFLAGS = -L/opt/local/lib -Wl,-rpath,/opt/local/lib
 HDF5_LIBS = -lhdf5_cpp -lhdf5
 
 GTEST_DIR = googletest-release-1.7.0
 GTEST_CPPFLAGS = -isystem $(GTEST_DIR)/include -I$(GTEST_DIR)
 GTEST_CXXFLAGS = -pthread
+GTEST_LIBS =
 
 all: selftest
 
@@ -33,17 +38,17 @@ gtest:
 	tar xzf $(GTEST_DIR).tar.gz
 	:> $@
 gtest-all.o: gtest
-	$(CXX) $(CPPFLAGS) $(GTEST_CPPFLAGS) $(CXXFLAGS) $(GTEST_CXXFLAGS) -c $(GTEST_DIR)/src/gtest-all.cc
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(GTEST_DIR)/src/gtest-all.cc
 
 selftest.o: gtest
 selftest: $(SIO_SRCS:%.cpp=%.o) selftest.o gtest-all.o
-	$(CXX) $(CPPFLAGS) $(GTEST_CPPFLAGS) $(CXXFLAGS) $(GTEST_CXXFLAGS) $(LDFLAGS) -o $@ $^ $(HDF5_LIBS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 test: selftest
 	./selftest
 
 %.o: %.cpp
 	@$(RM) $*.o
-	$(CXX) -MD $(CPPFLAGS) $(GTEST_CPPFLAGS) $(CXXFLAGS) $(GTEST_CXXFLAGS) -c -o $*.o.tmp $*.cpp
+	$(CXX) -MD $(CPPFLAGS) $(CXXFLAGS) -c -o $*.o.tmp $*.cpp
 	@$(PROCESS_DEPENDENCIES)
 	@mv $*.o.tmp $*.o
 
