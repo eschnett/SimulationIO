@@ -21,10 +21,10 @@ inline int ipow(int base, int exp) {
 template <typename Key, typename Value, typename Key1, typename Value1>
 typename std::map<Key, Value>::iterator
 checked_emplace(std::map<Key, Value> &m, Key1 &&key, Value1 &&value) {
-  typename std::map<Key, Value>::iterator iter;
-  bool did_insert;
-  std::tie(iter, did_insert) =
+  auto res =
       m.insert(make_pair(std::forward<Key1>(key), std::forward<Value1>(value)));
+  auto iter = std::move(res.first);
+  auto did_insert = std::move(res.second);
   assert(did_insert);
   return iter;
 }
