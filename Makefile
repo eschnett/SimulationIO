@@ -7,8 +7,15 @@ ifneq ($(COVERAGE),)
 CXXFLAGS += --coverage
 endif
 
-SIO_SRCS = Discretization.cpp Field.cpp Manifold.cpp Project.cpp \
-	TangentSpace.cpp TensorComponent.cpp TensorType.cpp
+SIO_SRCS = \
+	Discretization.cpp \
+	DiscretizationBlock.cpp \
+	Field.cpp \
+	Manifold.cpp \
+	Project.cpp \
+	TangentSpace.cpp \
+	TensorComponent.cpp \
+	TensorType.cpp
 ALL_SRCS = $(SIO_SRCS) selftest.cpp
 
 HDF5_LIBS = -lhdf5_cpp -lhdf5

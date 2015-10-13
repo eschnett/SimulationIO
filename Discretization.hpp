@@ -52,6 +52,10 @@ public:
   }
   virtual void write(const H5::CommonFG &loc,
                      const H5::H5Location &parent) const;
+
+  DiscretizationBlock *createDiscretizationBlock(const string &name);
+  DiscretizationBlock *createDiscretizationBlock(const H5::CommonFG &loc,
+                                                 const string &entry);
 };
 }
 

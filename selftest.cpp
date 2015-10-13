@@ -270,4 +270,32 @@ TEST(Discretization, HDF5) {
   // remove(filename.c_str());
 }
 
+TEST(DiscretizationBlock, create) {
+  const auto &m1 = project->manifolds.at("m1");
+  const auto &d1 = m1->discretizations.at("d1");
+  EXPECT_TRUE(d1->discretizationblocks.empty());
+  auto db1 = d1->createDiscretizationBlock("db1");
+  EXPECT_EQ(1, d1->discretizationblocks.size());
+  EXPECT_EQ(db1, d1->discretizationblocks.at("db1"));
+}
+
+TEST(DiscretizationBlock, HDF5) {
+  auto filename = "discretizationblock.h5";
+  {
+    auto file = H5::H5File(filename, H5F_ACC_TRUNC);
+    project->write(file, file);
+  }
+  {
+    auto file = H5::H5File(filename, H5F_ACC_RDONLY);
+    auto p1 = createProject(file, "p1");
+    ostringstream buf;
+    buf << *p1->manifolds.at("m1")
+                ->discretizations.at("d1")
+                ->discretizationblocks.at("db1");
+    EXPECT_EQ("DiscretizationBlock \"db1\": discretization=\"d1\"\n",
+              buf.str());
+  }
+  // remove(filename.c_str());
+}
+
 #include "src/gtest_main.cc"

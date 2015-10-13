@@ -1,5 +1,7 @@
 #include "Discretization.hpp"
 
+#include "DiscretizationBlock.hpp"
+
 #include "H5Helpers.hpp"
 
 namespace SimulationIO {
@@ -12,21 +14,19 @@ Discretization::Discretization(const H5::CommonFG &loc, const string &entry,
   H5::readAttribute(group, "type", type);
   assert(type == "Discretization");
   H5::readAttribute(group, "name", name);
-// TODO: check link "manifold"
-#warning "TODO"
-  // H5::readGroup(group, "discretizationblocks",
-  //                [&](const string &name, const H5::Group &group) {
-  //                  createDiscretizationBlock(name, group);
-  //                },
-  //                discretizationblocks);
+  // TODO: check link "manifold"
+  H5::readGroup(group, "discretizationblocks",
+                [&](const string &name, const H5::Group &group) {
+                  createDiscretizationBlock(group, name);
+                },
+                discretizationblocks);
 }
 
 ostream &Discretization::output(ostream &os, int level) const {
   os << indent(level) << "Discretization \"" << name << "\": manifold=\""
      << manifold->name << "\"\n";
-#warning "TODO"
-  // for (const auto &db : discretizationblocks)
-  //   db.second->output(os, level + 1);
+  for (const auto &db : discretizationblocks)
+    db.second->output(os, level + 1);
   return os;
 }
 
@@ -36,7 +36,25 @@ void Discretization::write(const H5::CommonFG &loc,
   H5::createAttribute(group, "type", "Discretization");
   H5::createAttribute(group, "name", name);
   H5::createAttribute(group, "manifold", parent, ".");
-#warning "TODO"
-  // H5::createGroup(group, "discretizationblocks", discretizationblocks);
+  H5::createGroup(group, "discretizationblocks", discretizationblocks);
+}
+
+DiscretizationBlock *
+Discretization::createDiscretizationBlock(const string &name) {
+  auto discretizationblock = new DiscretizationBlock(name, this);
+  checked_emplace(discretizationblocks, discretizationblock->name,
+                  discretizationblock);
+  assert(discretizationblock->invariant());
+  return discretizationblock;
+}
+
+DiscretizationBlock *
+Discretization::createDiscretizationBlock(const H5::CommonFG &loc,
+                                          const string &entry) {
+  auto discretizationblock = new DiscretizationBlock(loc, entry, this);
+  checked_emplace(discretizationblocks, discretizationblock->name,
+                  discretizationblock);
+  assert(discretizationblock->invariant());
+  return discretizationblock;
 }
 }

@@ -15,6 +15,7 @@
 
 #include "Common.hpp"
 #include "Discretization.hpp"
+#include "DiscretizationBlock.hpp"
 #include "Field.hpp"
 #include "Manifold.hpp"
 #include "Project.hpp"
@@ -41,16 +42,6 @@ using std::map;
 using std::ostream;
 using std::string;
 using std::vector;
-
-struct DiscretizationBlock {
-  // Discretization of a certain region, represented by contiguous data
-  string name;
-  Discretization *discretization;
-  // bounding box? in terms of coordinates?
-  // connectivity? neighbouring blocks?
-  // overlaps?
-  bool invariant() const { return true; }
-};
 
 // Tangent space bases
 
