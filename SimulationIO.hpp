@@ -268,8 +268,7 @@ private:
 public:
   virtual ~Manifold() { assert(0); }
   void insert(const string &name, Field *field) {
-    assert(!fields.count(name));
-    fields[name] = field;
+    checked_emplace(fields, name, field);
   }
   virtual ostream &output(ostream &os, int level = 0) const;
   friend ostream &operator<<(ostream &os, const Manifold &manifold) {
@@ -309,8 +308,7 @@ private:
 public:
   virtual ~TangentSpace() { assert(0); }
   void insert(const string &name, Field *field) {
-    assert(!fields.count(name));
-    fields[name] = field;
+    checked_emplace(fields, name, field);
   }
   virtual ostream &output(ostream &os, int level = 0) const;
   friend ostream &operator<<(ostream &os, const TangentSpace &tangentspace) {
