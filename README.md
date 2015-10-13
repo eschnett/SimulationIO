@@ -13,6 +13,5 @@ results in various forms in the subdirectory `sketches`:
 - `SimulationIO.jl`: Begin of an implementation in Julia
 
 ## Ideas
-- Use attributes with a reference type instead of hard links to represent pointers; this should avoid one level of "groups" for objects
 - Define datatypes instead of groups with attributes to represent the various objects; avoid the "type" attributes
 - Add a UUID to every object

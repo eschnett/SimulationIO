@@ -212,7 +212,7 @@ void TensorType::write(const H5::CommonFG &loc,
   auto group = loc.createGroup(name);
   H5::createAttribute(group, "type", "TensorType");
   H5::createAttribute(group, "name", name);
-  H5::createHardLink(parent, ".", group, "project");
+  H5::createAttribute(group, "project", parent, ".");
   H5::createAttribute(group, "dimension", dimension);
   H5::createAttribute(group, "rank", rank);
 #warning "TODO create link to project"
@@ -256,7 +256,7 @@ void TensorComponent::write(const H5::CommonFG &loc,
   auto group = loc.createGroup(name);
   H5::createAttribute(group, "type", "TensorComponent");
   H5::createAttribute(group, "name", name);
-  H5::createHardLink(parent, ".", group, "tensortype");
+  H5::createAttribute(group, "tensortype", parent, ".");
   H5::createAttribute(group, "indexvalues", indexvalues);
 }
 
@@ -290,7 +290,7 @@ void Manifold::write(const H5::CommonFG &loc,
   auto group = loc.createGroup(name);
   H5::createAttribute(group, "type", "Manifold");
   H5::createAttribute(group, "name", name);
-  H5::createHardLink(parent, ".", group, "project");
+  H5::createAttribute(group, "project", parent, ".");
   H5::createAttribute(group, "dimension", dimension);
 #warning "TODO"
   // H5::createGroup(group, "discretizations", discretizations);
@@ -330,7 +330,7 @@ void TangentSpace::write(const H5::CommonFG &loc,
   auto group = loc.createGroup(name);
   H5::createAttribute(group, "type", "TangentSpace");
   H5::createAttribute(group, "name", name);
-  H5::createHardLink(parent, ".", group, "project");
+  H5::createAttribute(group, "project", parent, ".");
   H5::createAttribute(group, "dimension", dimension);
 #warning "TODO"
   // H5::createGroup(group, "bases", bases);
@@ -370,13 +370,13 @@ void Field::write(const H5::CommonFG &loc, const H5::H5Location &parent) const {
   auto group = loc.createGroup(name);
   H5::createAttribute(group, "type", "Field");
   H5::createAttribute(group, "name", name);
-  H5::createHardLink(parent, ".", group, "project");
-  H5::createHardLink(parent, string("manifolds/") + manifold->name, group,
-                     "manifold");
-  H5::createHardLink(parent, string("tangentspaces/") + tangentspace->name,
-                     group, "tangentspace");
-  H5::createHardLink(parent, string("tensortypes/") + tensortype->name, group,
-                     "tensortype");
+  H5::createAttribute(group, "project", parent, ".");
+  H5::createAttribute(group, "manifold", parent,
+                      string("manifolds/") + manifold->name);
+  H5::createAttribute(group, "tangentspace", parent,
+                      string("tangentspaces/") + tangentspace->name);
+  H5::createAttribute(group, "tensortype", parent,
+                      string("tensortypes/") + tensortype->name);
 #warning "TODO"
   // H5::createGroup(group, "discretefields", discretefields);
 }
@@ -392,19 +392,22 @@ Field::Field(const H5::CommonFG &loc, const string &entry, Project *project)
   // TODO: Read and interpret objects (shallowly) instead of naively only
   // looking at their names
   {
-    auto obj = group.openGroup("manifold");
+    H5::Group obj;
+    H5::readAttribute(group, "manifold", obj);
     string name;
     auto attr = H5::readAttribute(obj, "name", name);
     manifold = project->manifolds.at(name);
   }
   {
-    auto obj = group.openGroup("tangentspace");
+    H5::Group obj;
+    H5::readAttribute(group, "tangentspace", obj);
     string name;
     auto attr = H5::readAttribute(obj, "name", name);
     tangentspace = project->tangentspaces.at(name);
   }
   {
-    auto obj = group.openGroup("tensortype");
+    H5::Group obj;
+    H5::readAttribute(group, "tensortype", obj);
     string name;
     auto attr = H5::readAttribute(obj, "name", name);
     tensortype = project->tensortypes.at(name);

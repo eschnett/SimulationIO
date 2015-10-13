@@ -30,7 +30,7 @@ struct H5LocationDeleter {
     }
   }
 };
-};
+}
 inline std::unique_ptr<H5Location, detail::H5LocationDeleter>
 getLocation(const CommonFG &fg) {
   auto locid = fg.getLocId();
@@ -47,7 +47,7 @@ getLocation(const CommonFG &fg) {
   }
 }
 
-// Get HDF5 datatype from C++ types
+// Get HDF5 datatype from C++ type
 
 inline DataType getType(const char &) { return IntType(PredType::NATIVE_CHAR); }
 inline DataType getType(const signed char &) {
@@ -86,7 +86,7 @@ inline DataType getType(const long double &) {
   return FloatType(PredType::NATIVE_LDOUBLE);
 }
 
-// Create attributes
+// Create attribute
 
 template <typename T>
 Attribute createAttribute(const H5Location &loc, const std::string &name,
@@ -121,7 +121,20 @@ inline Attribute createAttribute(const H5Location &loc, const std::string &name,
   return createAttribute(loc, name, std::string(value));
 }
 
-// Read attributes
+inline Attribute createAttribute(const H5Location &loc, const std::string &name,
+                                 const H5Location &obj_loc,
+                                 const std::string &obj_name) {
+  auto type = DataType(PredType::STD_REF_OBJ);
+  auto attr = loc.createAttribute(name, type, DataSpace());
+  hobj_ref_t reference;
+  auto herr =
+      H5Rcreate(&reference, obj_loc.getId(), obj_name.c_str(), H5R_OBJECT, -1);
+  assert(!herr);
+  attr.write(type, &reference);
+  return attr;
+}
+
+// Read attribute
 
 template <typename T>
 Attribute readAttribute(const H5Location &loc, const std::string &name,
@@ -155,6 +168,35 @@ inline Attribute readAttribute(const H5Location &loc, const std::string &name,
   H5std_string buf;
   attr.read(type, buf);
   value = buf;
+  return attr;
+}
+
+inline Attribute readAttribute(const H5Location &loc, const std::string &name,
+                               /*H5Location &ob*/ Group &obj) {
+  auto attr = loc.openAttribute(name);
+  auto space = attr.getSpace();
+  assert(space.getSimpleExtentType() == H5S_SCALAR);
+  auto type = DataType(PredType::STD_REF_OBJ);
+  hobj_ref_t reference;
+  attr.read(type, &reference);
+  auto hid = H5Rdereference(loc.getId(), H5R_OBJECT, &reference);
+  assert(hid >= 0);
+  H5O_type_t obj_type;
+  auto herr = H5Rget_obj_type(loc.getId(), H5R_OBJECT, &reference, &obj_type);
+  assert(!herr);
+  switch (obj_type) {
+  case H5O_TYPE_GROUP:
+    obj = Group(hid);
+    break;
+  // case H5O_TYPE_DATASET:
+  //   obj = DataSet(hid);
+  //   break;
+  // case H5O_TYPE_NAMED_DATATYPE:
+  //   obj = DataType(hid);
+  //   break;
+  default:
+    assert(0);
+  }
   return attr;
 }
 
