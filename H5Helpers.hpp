@@ -205,7 +205,7 @@ Group readGroup(const CommonFG &loc, const std::string &name, R read_object,
   hsize_t idx = 0;
   iterateElems(
       group, H5_INDEX_NAME, H5_ITER_NATIVE, &idx,
-      [&](Group group, const std::string &name, const H5L_info_t *info) {
+      [&](const Group &group, const std::string &name, const H5L_info_t *info) {
         read_object(name, group);
         return 0;
       });
