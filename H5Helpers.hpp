@@ -228,9 +228,9 @@ herr_t iterateElems(const H5Location &loc, H5_index_t index_type,
 }
 
 // Write a map (ignoring the keys)
-template <typename Key, typename T>
+template <typename K, typename T>
 Group createGroup(const CommonFG &loc, const std::string &name,
-                  const std::map<Key, T *> &m) {
+                  const std::map<K, T *> &m) {
   // We assume that Key is string-like, and that T is a subtype of Common
   auto group = loc.createGroup(name);
   for (const auto &p : m)
@@ -239,9 +239,9 @@ Group createGroup(const CommonFG &loc, const std::string &name,
 }
 
 // Read a map
-template <typename R, typename Key, typename T>
+template <typename R, typename K, typename T>
 Group readGroup(const CommonFG &loc, const std::string &name, R read_object,
-                std::map<Key, T *> &m) {
+                std::map<K, T *> &m) {
   // We assume that Key is string-like, and that T is a subtype of Common
   auto group = loc.openGroup(name);
   hsize_t idx = 0;
