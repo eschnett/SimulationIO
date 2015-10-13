@@ -28,17 +28,10 @@
 #include "TensorComponent.hpp"
 #include "TensorType.hpp"
 
-#include "H5Helpers.hpp"
-
-#include <H5Cpp.h>
-
 #include <cassert>
-#include <cstdlib>
 #include <iostream>
 #include <map>
 #include <string>
-#include <type_traits>
-#include <utility>
 #include <vector>
 
 namespace SimulationIO {

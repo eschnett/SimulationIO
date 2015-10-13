@@ -60,6 +60,7 @@ public:
   }
   virtual void write(const H5::CommonFG &loc,
                      const H5::H5Location &parent) const;
+  void write(const H5::CommonFG &loc) const { write(loc, H5::H5File()); }
 
   TensorType *createTensorType(const string &name, int dimension, int rank);
   TensorType *createTensorType(const H5::CommonFG &loc, const string &entry);

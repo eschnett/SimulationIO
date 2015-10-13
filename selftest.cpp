@@ -34,7 +34,7 @@ TEST(Project, create) {
   EXPECT_EQ("Project \"p1\"\n"
             "tensortypes:\n"
             "manifolds:\n"
-            "tangenspaces:\n"
+            "tangentspaces:\n"
             "fields:\n",
             buf.str());
 }
@@ -44,7 +44,7 @@ TEST(Project, HDF5) {
   string orig;
   {
     auto file = H5::H5File(filename, H5F_ACC_TRUNC);
-    project->write(file, file);
+    project->write(file);
     ostringstream buf;
     buf << *project;
     orig = buf.str();
@@ -136,7 +136,7 @@ TEST(TensorTypes, HDF5) {
   auto filename = "tensortypes.h5";
   {
     auto file = H5::H5File(filename, H5F_ACC_TRUNC);
-    project->write(file, file);
+    project->write(file);
   }
   {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);
@@ -169,7 +169,7 @@ TEST(TensorTypes, HDF5) {
               "    TensorComponent \"2\": tensortype=\"Vector3D\" "
               "storage_index=2 indexvalues=[2]\n"
               "manifolds:\n"
-              "tangenspaces:\n"
+              "tangentspaces:\n"
               "fields:\n",
               buf.str());
   }
@@ -187,7 +187,7 @@ TEST(Manifold, HDF5) {
   auto filename = "manifold.h5";
   {
     auto file = H5::H5File(filename, H5F_ACC_TRUNC);
-    project->write(file, file);
+    project->write(file);
   }
   {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);
@@ -210,7 +210,7 @@ TEST(TangentSpace, HDF5) {
   auto filename = "tangentspace.h5";
   {
     auto file = H5::H5File(filename, H5F_ACC_TRUNC);
-    project->write(file, file);
+    project->write(file);
   }
   {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);
@@ -236,7 +236,7 @@ TEST(Field, HDF5) {
   auto filename = "field.h5";
   {
     auto file = H5::H5File(filename, H5F_ACC_TRUNC);
-    project->write(file, file);
+    project->write(file);
   }
   {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);
@@ -262,7 +262,7 @@ TEST(Discretization, HDF5) {
   auto filename = "discretization.h5";
   {
     auto file = H5::H5File(filename, H5F_ACC_TRUNC);
-    project->write(file, file);
+    project->write(file);
   }
   {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);
@@ -287,7 +287,7 @@ TEST(DiscretizationBlock, HDF5) {
   auto filename = "discretizationblock.h5";
   {
     auto file = H5::H5File(filename, H5F_ACC_TRUNC);
-    project->write(file, file);
+    project->write(file);
   }
   {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);
@@ -314,7 +314,7 @@ TEST(Basis, HDF5) {
   auto filename = "basis.h5";
   {
     auto file = H5::H5File(filename, H5F_ACC_TRUNC);
-    project->write(file, file);
+    project->write(file);
   }
   {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);
@@ -346,7 +346,7 @@ TEST(BasisVector, HDF5) {
   auto filename = "basisvector.h5";
   {
     auto file = H5::H5File(filename, H5F_ACC_TRUNC);
-    project->write(file, file);
+    project->write(file);
   }
   {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);
@@ -377,7 +377,7 @@ TEST(DiscreteField, HDF5) {
   auto filename = "discretefield.h5";
   {
     auto file = H5::H5File(filename, H5F_ACC_TRUNC);
-    project->write(file, file);
+    project->write(file);
   }
   {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);
@@ -406,7 +406,7 @@ TEST(DiscreteFieldBlock, HDF5) {
   auto filename = "discretefieldblock.h5";
   {
     auto file = H5::H5File(filename, H5F_ACC_TRUNC);
-    project->write(file, file);
+    project->write(file);
   }
   {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);
@@ -438,7 +438,7 @@ TEST(DiscreteFieldBlockData, HDF5) {
   auto filename = "discretizationfieldblockdata.h5";
   {
     auto file = H5::H5File(filename, H5F_ACC_TRUNC);
-    project->write(file, file);
+    project->write(file);
   }
   {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);

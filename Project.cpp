@@ -76,7 +76,7 @@ ostream &Project::output(ostream &os, int level) const {
   os << indent(level) << "manifolds:\n";
   for (const auto &m : manifolds)
     m.second->output(os, level + 1);
-  os << indent(level) << "tangenspaces:\n";
+  os << indent(level) << "tangentspaces:\n";
   for (const auto &ts : tangentspaces)
     ts.second->output(os, level + 1);
   os << indent(level) << "fields:\n";

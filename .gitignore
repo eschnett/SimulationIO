@@ -37,3 +37,5 @@ coverage.info
 *.gcda
 *.gcno
 *.d
+example
+example.h5

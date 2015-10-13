@@ -22,7 +22,8 @@ SIO_SRCS = \
 	TangentSpace.cpp \
 	TensorComponent.cpp \
 	TensorType.cpp
-ALL_SRCS = $(SIO_SRCS) selftest.cpp
+ALL_SRCS = $(SIO_SRCS) example.cpp selftest.cpp
+ALL_EXE = example selftest
 
 HDF5_DIR = /opt/local
 HDF5_CPPFLAGS = -I$(HDF5_DIR)/include
@@ -35,7 +36,7 @@ GTEST_CPPFLAGS = -isystem $(GTEST_DIR)/include -I$(GTEST_DIR)
 GTEST_CXXFLAGS = -pthread
 GTEST_LIBS =
 
-all: selftest
+all: example selftest
 
 gtest:
 	$(RM) $@
@@ -51,6 +52,9 @@ selftest: $(SIO_SRCS:%.cpp=%.o) selftest.o gtest-all.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 test: selftest
 	./selftest
+
+example: $(SIO_SRCS:%.cpp=%.o) example.o
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 %.o: %.cpp Makefile
 	@$(RM) $*.o
@@ -78,7 +82,7 @@ clean:
 	$(RM) *.gcda *.gcno coverage.info
 	$(RM) gtest-all.o
 	$(RM) $(ALL_SRCS:%.cpp=%.o) $(ALL_SRCS:%.cpp=%.d)
-	$(RM) selftest
+	$(RM) $(ALL_EXE)
 
 distclean: clean
 	$(RM) $(GTEST_DIR).tar.gz
