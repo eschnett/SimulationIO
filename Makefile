@@ -19,9 +19,10 @@ SIO_SRCS = \
 	TensorType.cpp
 ALL_SRCS = $(SIO_SRCS) selftest.cpp
 
-HDF5_CPPFLAGS = -I/opt/local/include
+HDF5_DIR = /opt/local
+HDF5_CPPFLAGS = -I$(HDF5_DIR)/include
 HDF5_CXXFLAGS =
-HDF5_LDFLAGS = -L/opt/local/lib -Wl,-rpath,/opt/local/lib
+HDF5_LDFLAGS = -L$(HDF5_DIR)/lib -Wl,-rpath,$(HDF5_DIR)/lib
 HDF5_LIBS = -lhdf5_cpp -lhdf5
 
 GTEST_DIR = googletest-release-1.7.0
