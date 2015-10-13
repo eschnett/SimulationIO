@@ -22,12 +22,13 @@ TensorType::TensorType(const H5::CommonFG &loc, const string &entry,
                   createTensorComponent(group, name);
                 },
                 tensorcomponents);
+  //  TODO: check "storage_indices"
 }
 
 ostream &TensorType::output(ostream &os, int level) const {
   os << indent(level) << "TensorType \"" << name << "\": dim=" << dimension
      << " rank=" << rank << "\n";
-  for (const auto &tc : tensorcomponents)
+  for (const auto &tc : storage_indices)
     tc.second->output(os, level + 1);
   return os;
 }
@@ -41,13 +42,17 @@ void TensorType::write(const H5::CommonFG &loc,
   H5::createAttribute(group, "dimension", dimension);
   H5::createAttribute(group, "rank", rank);
   H5::createGroup(group, "tensorcomponents", tensorcomponents);
+#warning "TODO: output storage_indices"
 }
 
 TensorComponent *
-TensorType::createTensorComponent(const string &name,
+TensorType::createTensorComponent(const string &name, int stored_component,
                                   const vector<int> &indexvalues) {
-  auto tensorcomponent = new TensorComponent(name, this, indexvalues);
+  auto tensorcomponent =
+      new TensorComponent(name, this, stored_component, indexvalues);
   checked_emplace(tensorcomponents, tensorcomponent->name, tensorcomponent);
+  checked_emplace(storage_indices, tensorcomponent->storage_index,
+                  tensorcomponent);
   return tensorcomponent;
 }
 
@@ -55,6 +60,8 @@ TensorComponent *TensorType::createTensorComponent(const H5::CommonFG &loc,
                                                    const string &entry) {
   auto tensorcomponent = new TensorComponent(loc, entry, this);
   checked_emplace(tensorcomponents, tensorcomponent->name, tensorcomponent);
+  checked_emplace(storage_indices, tensorcomponent->storage_index,
+                  tensorcomponent);
   return tensorcomponent;
 }
 }

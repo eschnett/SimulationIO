@@ -52,20 +52,20 @@ Project::Project(const H5::CommonFG &loc, const string &entry) {
 
 void Project::createStandardTensortypes() {
   auto s3d = createTensorType("Scalar3D", 3, 0);
-  s3d->createTensorComponent("scalar", vector<int>{});
+  s3d->createTensorComponent("scalar", 0, vector<int>{});
 
   auto v3d = createTensorType("Vector3D", 3, 1);
-  v3d->createTensorComponent("0", {0});
-  v3d->createTensorComponent("1", {1});
-  v3d->createTensorComponent("2", {2});
+  v3d->createTensorComponent("0", 0, {0});
+  v3d->createTensorComponent("1", 1, {1});
+  v3d->createTensorComponent("2", 2, {2});
 
   auto st3d = createTensorType("SymmetricTensor3D", 3, 2);
-  st3d->createTensorComponent("00", {0, 0});
-  st3d->createTensorComponent("01", {0, 1});
-  st3d->createTensorComponent("02", {0, 2});
-  st3d->createTensorComponent("11", {1, 1});
-  st3d->createTensorComponent("12", {1, 2});
-  st3d->createTensorComponent("22", {2, 2});
+  st3d->createTensorComponent("00", 0, {0, 0});
+  st3d->createTensorComponent("01", 1, {0, 1});
+  st3d->createTensorComponent("02", 2, {0, 2});
+  st3d->createTensorComponent("11", 3, {1, 1});
+  st3d->createTensorComponent("12", 4, {1, 2});
+  st3d->createTensorComponent("22", 5, {2, 2});
 }
 
 ostream &Project::output(ostream &os, int level) const {

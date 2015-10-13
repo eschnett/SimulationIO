@@ -19,17 +19,16 @@ using std::vector;
 
 struct TensorComponent : Common {
   TensorType *tensortype;
-  // We use objects to denote most Commons, but we make an exception
-  // for tensor component indices and tangent space basis vectors,
-  // which we number consecutively starting from zero. This simplifies
-  // the representation, and it introduces a canonical order (e.g. x,
-  // y, z) among the tangent space directions that people are
-  // expecting.
+  int storage_index;
   vector<int> indexvalues;
 
   virtual bool invariant() const {
     bool inv = Common::invariant() && bool(tensortype) &&
                tensortype->tensorcomponents[name] == this &&
+               storage_index >= 0 &&
+               storage_index < ipow(tensortype->dimension, tensortype->rank) &&
+               tensortype->storage_indices.count(storage_index) &&
+               tensortype->storage_indices.at(storage_index) == this &&
                int(indexvalues.size()) == tensortype->rank;
     for (int i = 0; i < int(indexvalues.size()); ++i)
       inv &= indexvalues[i] >= 0 && indexvalues[i] < tensortype->dimension;
@@ -58,9 +57,10 @@ struct TensorComponent : Common {
 
 private:
   friend class TensorType;
-  TensorComponent(const string &name, TensorType *tensortype,
+  TensorComponent(const string &name, TensorType *tensortype, int storage_index,
                   const vector<int> &indexvalues)
-      : Common(name), tensortype(tensortype), indexvalues(indexvalues) {}
+      : Common(name), tensortype(tensortype), storage_index(storage_index),
+        indexvalues(indexvalues) {}
   TensorComponent(const H5::CommonFG &loc, const string &entry,
                   TensorType *tensortype);
 

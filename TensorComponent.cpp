@@ -13,12 +13,14 @@ TensorComponent::TensorComponent(const H5::CommonFG &loc, const string &entry,
   assert(type == "TensorComponent");
   H5::readAttribute(group, "name", name);
   // TODO: check link "tensortype"
+  H5::readAttribute(group, "storage_index", storage_index);
   H5::readAttribute(group, "indexvalues", indexvalues);
 }
 
 ostream &TensorComponent::output(ostream &os, int level) const {
   os << indent(level) << "TensorComponent \"" << name << "\": tensortype=\""
-     << tensortype->name << "\" indexvalues=[";
+     << tensortype->name << "\" storage_index=" << storage_index
+     << " indexvalues=[";
   for (int i = 0; i < int(indexvalues.size()); ++i) {
     if (i > 0)
       os << ",";
@@ -34,6 +36,7 @@ void TensorComponent::write(const H5::CommonFG &loc,
   H5::createAttribute(group, "type", "TensorComponent");
   H5::createAttribute(group, "name", name);
   H5::createAttribute(group, "tensortype", parent, ".");
+  H5::createAttribute(group, "storage_index", storage_index);
   H5::createAttribute(group, "indexvalues", indexvalues);
 }
 }

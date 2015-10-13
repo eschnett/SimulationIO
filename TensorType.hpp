@@ -25,6 +25,7 @@ struct TensorType : Common {
   int dimension;
   int rank;
   map<string, TensorComponent *> tensorcomponents; // owned
+  map<int, TensorComponent *> storage_indices;
 
   virtual bool invariant() const {
     bool inv = Common::invariant() && bool(project) &&
@@ -59,7 +60,7 @@ public:
   virtual void write(const H5::CommonFG &loc,
                      const H5::H5Location &parent) const;
 
-  TensorComponent *createTensorComponent(const string &name,
+  TensorComponent *createTensorComponent(const string &name, int storage_index,
                                          const vector<int> &indexvalues);
   TensorComponent *createTensorComponent(const H5::CommonFG &loc,
                                          const string &entry);

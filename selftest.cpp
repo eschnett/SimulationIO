@@ -78,10 +78,10 @@ TEST(TensorTypes, Scalar3D) {
     EXPECT_TRUE(tc.second->invariant());
   ostringstream buf;
   buf << *tt;
-  EXPECT_EQ(
-      "TensorType \"Scalar3D\": dim=3 rank=0\n"
-      "  TensorComponent \"scalar\": tensortype=\"Scalar3D\" indexvalues=[]\n",
-      buf.str());
+  EXPECT_EQ("TensorType \"Scalar3D\": dim=3 rank=0\n"
+            "  TensorComponent \"scalar\": tensortype=\"Scalar3D\" "
+            "storage_index=0 indexvalues=[]\n",
+            buf.str());
 }
 
 TEST(TensorTypes, Vector3D) {
@@ -95,12 +95,14 @@ TEST(TensorTypes, Vector3D) {
     EXPECT_TRUE(tc.second->invariant());
   ostringstream buf;
   buf << *tt;
-  EXPECT_EQ(
-      "TensorType \"Vector3D\": dim=3 rank=1\n"
-      "  TensorComponent \"0\": tensortype=\"Vector3D\" indexvalues=[0]\n"
-      "  TensorComponent \"1\": tensortype=\"Vector3D\" indexvalues=[1]\n"
-      "  TensorComponent \"2\": tensortype=\"Vector3D\" indexvalues=[2]\n",
-      buf.str());
+  EXPECT_EQ("TensorType \"Vector3D\": dim=3 rank=1\n"
+            "  TensorComponent \"0\": tensortype=\"Vector3D\" storage_index=0 "
+            "indexvalues=[0]\n"
+            "  TensorComponent \"1\": tensortype=\"Vector3D\" storage_index=1 "
+            "indexvalues=[1]\n"
+            "  TensorComponent \"2\": tensortype=\"Vector3D\" storage_index=2 "
+            "indexvalues=[2]\n",
+            buf.str());
 }
 
 TEST(TensorTypes, SymmetricTensor3D) {
@@ -116,17 +118,17 @@ TEST(TensorTypes, SymmetricTensor3D) {
   buf << *tt;
   EXPECT_EQ("TensorType \"SymmetricTensor3D\": dim=3 rank=2\n"
             "  TensorComponent \"00\": tensortype=\"SymmetricTensor3D\" "
-            "indexvalues=[0,0]\n"
+            "storage_index=0 indexvalues=[0,0]\n"
             "  TensorComponent \"01\": tensortype=\"SymmetricTensor3D\" "
-            "indexvalues=[0,1]\n"
+            "storage_index=1 indexvalues=[0,1]\n"
             "  TensorComponent \"02\": tensortype=\"SymmetricTensor3D\" "
-            "indexvalues=[0,2]\n"
+            "storage_index=2 indexvalues=[0,2]\n"
             "  TensorComponent \"11\": tensortype=\"SymmetricTensor3D\" "
-            "indexvalues=[1,1]\n"
+            "storage_index=3 indexvalues=[1,1]\n"
             "  TensorComponent \"12\": tensortype=\"SymmetricTensor3D\" "
-            "indexvalues=[1,2]\n"
+            "storage_index=4 indexvalues=[1,2]\n"
             "  TensorComponent \"22\": tensortype=\"SymmetricTensor3D\" "
-            "indexvalues=[2,2]\n",
+            "storage_index=5 indexvalues=[2,2]\n",
             buf.str());
 }
 
@@ -141,33 +143,35 @@ TEST(TensorTypes, HDF5) {
     auto p1 = createProject(file, "p1");
     ostringstream buf;
     buf << *p1;
-    EXPECT_EQ(
-        "Project \"p1\"\n"
-        "tensortypes:\n"
-        "  TensorType \"Scalar3D\": dim=3 rank=0\n"
-        "    TensorComponent \"scalar\": tensortype=\"Scalar3D\" "
-        "indexvalues=[]\n"
-        "  TensorType \"SymmetricTensor3D\": dim=3 rank=2\n"
-        "    TensorComponent \"00\": tensortype=\"SymmetricTensor3D\" "
-        "indexvalues=[0,0]\n"
-        "    TensorComponent \"01\": tensortype=\"SymmetricTensor3D\" "
-        "indexvalues=[0,1]\n"
-        "    TensorComponent \"02\": tensortype=\"SymmetricTensor3D\" "
-        "indexvalues=[0,2]\n"
-        "    TensorComponent \"11\": tensortype=\"SymmetricTensor3D\" "
-        "indexvalues=[1,1]\n"
-        "    TensorComponent \"12\": tensortype=\"SymmetricTensor3D\" "
-        "indexvalues=[1,2]\n"
-        "    TensorComponent \"22\": tensortype=\"SymmetricTensor3D\" "
-        "indexvalues=[2,2]\n"
-        "  TensorType \"Vector3D\": dim=3 rank=1\n"
-        "    TensorComponent \"0\": tensortype=\"Vector3D\" indexvalues=[0]\n"
-        "    TensorComponent \"1\": tensortype=\"Vector3D\" indexvalues=[1]\n"
-        "    TensorComponent \"2\": tensortype=\"Vector3D\" indexvalues=[2]\n"
-        "manifolds:\n"
-        "tangenspaces:\n"
-        "fields:\n",
-        buf.str());
+    EXPECT_EQ("Project \"p1\"\n"
+              "tensortypes:\n"
+              "  TensorType \"Scalar3D\": dim=3 rank=0\n"
+              "    TensorComponent \"scalar\": tensortype=\"Scalar3D\" "
+              "storage_index=0 indexvalues=[]\n"
+              "  TensorType \"SymmetricTensor3D\": dim=3 rank=2\n"
+              "    TensorComponent \"00\": tensortype=\"SymmetricTensor3D\" "
+              "storage_index=0 indexvalues=[0,0]\n"
+              "    TensorComponent \"01\": tensortype=\"SymmetricTensor3D\" "
+              "storage_index=1 indexvalues=[0,1]\n"
+              "    TensorComponent \"02\": tensortype=\"SymmetricTensor3D\" "
+              "storage_index=2 indexvalues=[0,2]\n"
+              "    TensorComponent \"11\": tensortype=\"SymmetricTensor3D\" "
+              "storage_index=3 indexvalues=[1,1]\n"
+              "    TensorComponent \"12\": tensortype=\"SymmetricTensor3D\" "
+              "storage_index=4 indexvalues=[1,2]\n"
+              "    TensorComponent \"22\": tensortype=\"SymmetricTensor3D\" "
+              "storage_index=5 indexvalues=[2,2]\n"
+              "  TensorType \"Vector3D\": dim=3 rank=1\n"
+              "    TensorComponent \"0\": tensortype=\"Vector3D\" "
+              "storage_index=0 indexvalues=[0]\n"
+              "    TensorComponent \"1\": tensortype=\"Vector3D\" "
+              "storage_index=1 indexvalues=[1]\n"
+              "    TensorComponent \"2\": tensortype=\"Vector3D\" "
+              "storage_index=2 indexvalues=[2]\n"
+              "manifolds:\n"
+              "tangenspaces:\n"
+              "fields:\n",
+              buf.str());
   }
   // remove(filename.c_str());
 }
