@@ -70,7 +70,7 @@ PROCESS_DEPENDENCIES = \
   	perl -p -e 's{\#.*}{};s{^[^:]*: *}{};s{ *\\$$}{};s{$$}{ :}' < $*.o.d; \
   } > $*.d && \
   $(RM) $*.o.d
--include $(SRCS:%.cpp=%.d)
+-include $(ALL_SRCS:%.cpp=%.d)
 
 coverage:
 	-lcov --directory . --capture --output-file coverage.info

@@ -7,7 +7,7 @@ namespace SimulationIO {
 DiscreteFieldBlockData::DiscreteFieldBlockData(
     const H5::CommonFG &loc, const string &entry,
     DiscreteFieldBlock *discretefieldblock)
-    : discretefieldblock(discretefieldblock) {
+    : discretefieldblock(discretefieldblock), have_extlink(false) {
   auto group = loc.openGroup(entry);
   string type;
   H5::readAttribute(group, "type", type);
@@ -25,21 +25,31 @@ DiscreteFieldBlockData::DiscreteFieldBlockData(
     tensorcomponent = discretefieldblock->discretefield->field->tensortype
                           ->tensorcomponents.at(name);
   }
+  H5::readExternalLink(group, "data", have_extlink, extlink_file_name,
+                       extlink_obj_name);
   // tensorcomponent->insert(this);
+}
+
+void DiscreteFieldBlockData::setExternalLink(const string &file_name,
+                                             const string &obj_name) {
+  have_extlink = true;
+  extlink_file_name = file_name;
+  extlink_obj_name = obj_name;
 }
 
 ostream &DiscreteFieldBlockData::output(ostream &os, int level) const {
   os << indent(level) << "DiscreteFieldBlockData \"" << name
      << "\": discretefieldblock=\"" << discretefieldblock->name
      << "\" tensorcomponent=\"" << tensorcomponent->name << "\"\n";
-  // TODO: output information about the group, e.g. type and shape
+  if (have_extlink)
+    os << indent(level) << "data: external link \"" << extlink_file_name
+       << "\", \"" << extlink_file_name << "\"\n";
+  // TODO: output information about the dataset, e.g. type and shape
   return os;
 }
 
 void DiscreteFieldBlockData::write(const H5::CommonFG &loc,
                                    const H5::H5Location &parent) const {
-// TODO: Choose type and shape
-#warning "TODO: create DataSet instead"
   auto group = loc.createGroup(name);
   H5::createAttribute(group, "type", "DiscreteFieldBlockData");
   H5::createAttribute(group, "name", name);
@@ -52,5 +62,7 @@ void DiscreteFieldBlockData::write(const H5::CommonFG &loc,
   // H5::createAttribute(group, "tensorcomponent", parent,
   //                     string("discretefield/field/tensortype/") +
   //                         tensorcomponent->name);
+  if (have_extlink)
+    H5::createExternalLink(group, "data", extlink_file_name, extlink_obj_name);
 }
 }

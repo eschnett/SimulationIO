@@ -273,6 +273,58 @@ inline herr_t createHardLink(const CommonFG &link_loc,
   assert(!lapl_herr);
   return herr;
 }
+
+// Create an external link
+// Note argument order: first link location, then link target
+inline herr_t createExternalLink(const CommonFG &link_loc,
+                                 const std::string &link_name,
+                                 const std::string &file_name,
+                                 const std::string &obj_name) {
+  auto lcpl = H5Pcreate(H5P_LINK_CREATE);
+  assert(lcpl >= 0);
+  auto lapl = H5Pcreate(H5P_LINK_ACCESS);
+  assert(lapl >= 0);
+  auto herr =
+      H5Lcreate_external(file_name.c_str(), obj_name.c_str(),
+                         link_loc.getLocId(), link_name.c_str(), lcpl, lapl);
+  assert(herr >= 0);
+  auto lcpl_herr = H5Pclose(lcpl);
+  assert(!lcpl_herr);
+  auto lapl_herr = H5Pclose(lapl);
+  assert(!lapl_herr);
+  return herr;
+}
+
+// Read external link
+inline void readExternalLink(const CommonFG &link_loc,
+                             const std::string &link_name, bool &link_exists,
+                             std::string &file_name, std::string &obj_name) {
+  auto lapl = H5Pcreate(H5P_LINK_ACCESS);
+  assert(lapl >= 0);
+  auto exists = H5Lexists(link_loc.getLocId(), link_name.c_str(), lapl);
+  assert(exists >= 0);
+  link_exists = bool(exists);
+  if (link_exists) {
+    herr_t herr;
+    H5L_info_t info;
+    herr = H5Lget_info(link_loc.getLocId(), link_name.c_str(), &info, lapl);
+    assert(!herr);
+    assert(info.type == H5L_TYPE_EXTERNAL);
+    std::vector<char> buf(info.u.val_size);
+    herr = H5Lget_val(link_loc.getLocId(), link_name.c_str(), buf.data(),
+                      buf.size(), lapl);
+    assert(!herr);
+    const char *file_name_ptr, *obj_name_ptr;
+    unsigned flags;
+    herr = H5Lunpack_elink_val(buf.data(), buf.size(), &flags, &file_name_ptr,
+                               &obj_name_ptr);
+    assert(!herr);
+    file_name = file_name_ptr;
+    obj_name = obj_name_ptr;
+  }
+  auto lapl_herr = H5Pclose(lapl);
+  assert(!lapl_herr);
+}
 }
 
 #endif // #ifndef HDF5HELPERS_HPP

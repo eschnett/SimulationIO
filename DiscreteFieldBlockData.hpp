@@ -22,14 +22,19 @@ struct DiscreteFieldBlockData : Common {
   // Tensor component for a discrete field on a particular region
   DiscreteFieldBlock *discretefieldblock;
   TensorComponent *tensorcomponent;
+  bool have_extlink;
+  string extlink_file_name, extlink_obj_name;
 
   virtual bool invariant() const {
-    return Common::invariant() && bool(discretefieldblock) &&
-           discretefieldblock->discretefieldblockdata.count(name) &&
-           discretefieldblock->discretefieldblockdata.at(name) == this &&
-           bool(tensorcomponent) &&
-           discretefieldblock->discretefield->field->tensortype ==
-               tensorcomponent->tensortype;
+    bool inv = Common::invariant() && bool(discretefieldblock) &&
+               discretefieldblock->discretefieldblockdata.count(name) &&
+               discretefieldblock->discretefieldblockdata.at(name) == this &&
+               bool(tensorcomponent) &&
+               discretefieldblock->discretefield->field->tensortype ==
+                   tensorcomponent->tensortype;
+    if (have_extlink)
+      inv &= !extlink_file_name.empty() && !extlink_obj_name.empty();
+    return inv;
   }
 
   DiscreteFieldBlockData() = delete;
@@ -44,12 +49,14 @@ private:
                          DiscreteFieldBlock *discretefieldblock,
                          TensorComponent *tensorcomponent)
       : Common(name), discretefieldblock(discretefieldblock),
-        tensorcomponent(tensorcomponent) {}
+        tensorcomponent(tensorcomponent), have_extlink(false) {}
   DiscreteFieldBlockData(const H5::CommonFG &loc, const string &entry,
                          DiscreteFieldBlock *discretefieldblock);
 
 public:
   virtual ~DiscreteFieldBlockData() { assert(0); }
+
+  void setExternalLink(const string &file_name, const string &obj_name);
 
   virtual ostream &output(ostream &os, int level = 0) const;
   friend ostream &

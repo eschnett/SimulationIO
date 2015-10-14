@@ -432,6 +432,8 @@ TEST(DiscreteFieldBlockData, create) {
   auto dfbd1 = dfb1->createDiscreteFieldBlockData("dfbd1", sc1);
   EXPECT_EQ(1, dfb1->discretefieldblockdata.size());
   EXPECT_EQ(dfbd1, dfb1->discretefieldblockdata.at("dfbd1"));
+  dfbd1->setExternalLink("discretizationfieldblockdata.h5",
+                         project->name + "/tensortypes/Scalar3D");
 }
 
 TEST(DiscreteFieldBlockData, HDF5) {
@@ -449,7 +451,9 @@ TEST(DiscreteFieldBlockData, HDF5) {
                 ->discretefieldblocks.at("dfb1")
                 ->discretefieldblockdata.at("dfbd1");
     EXPECT_EQ("DiscreteFieldBlockData \"dfbd1\": discretefieldblock=\"dfb1\" "
-              "tensorcomponent=\"scalar\"\n",
+              "tensorcomponent=\"scalar\"\ndata: external link "
+              "\"discretizationfieldblockdata.h5\", "
+              "\"discretizationfieldblockdata.h5\"\n",
               buf.str());
   }
   remove(filename);
