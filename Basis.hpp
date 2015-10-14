@@ -29,8 +29,9 @@ struct Basis : Common {
   virtual bool invariant() const {
     return Common::invariant() && bool(tangentspace) &&
            tangentspace->bases.count(name) &&
-           tangentspace->bases.at(name) == this &&
-           int(basisvectors.size()) == tangentspace->dimension;
+           tangentspace->bases.at(name) == this;
+    // int(basisvectors.size()) == tangentspace->dimension
+    // int(directions.size()) == tangentspace->dimension
   }
 
   Basis() = delete;

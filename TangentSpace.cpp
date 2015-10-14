@@ -44,12 +44,14 @@ void TangentSpace::write(const H5::CommonFG &loc,
 Basis *TangentSpace::createBasis(const string &name) {
   auto basis = new Basis(name, this);
   checked_emplace(bases, basis->name, basis);
+  assert(basis->invariant());
   return basis;
 }
 
 Basis *TangentSpace::createBasis(const H5::CommonFG &loc, const string &entry) {
   auto basis = new Basis(loc, entry, this);
   checked_emplace(bases, basis->name, basis);
+  assert(basis->invariant());
   return basis;
 }
 }

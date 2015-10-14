@@ -54,6 +54,7 @@ TensorType::createTensorComponent(const string &name, int stored_component,
   checked_emplace(tensorcomponents, tensorcomponent->name, tensorcomponent);
   checked_emplace(storage_indices, tensorcomponent->storage_index,
                   tensorcomponent);
+  assert(tensorcomponent->invariant());
   return tensorcomponent;
 }
 
@@ -63,6 +64,7 @@ TensorComponent *TensorType::createTensorComponent(const H5::CommonFG &loc,
   checked_emplace(tensorcomponents, tensorcomponent->name, tensorcomponent);
   checked_emplace(storage_indices, tensorcomponent->storage_index,
                   tensorcomponent);
+  assert(tensorcomponent->invariant());
   return tensorcomponent;
 }
 }
