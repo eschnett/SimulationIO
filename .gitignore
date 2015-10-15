@@ -39,3 +39,4 @@ coverage.info
 *.d
 example
 example.h5
+convert-carpet-output
