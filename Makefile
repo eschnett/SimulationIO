@@ -36,7 +36,7 @@ GTEST_CPPFLAGS = -isystem $(GTEST_DIR)/include -I$(GTEST_DIR)
 GTEST_CXXFLAGS = -pthread
 GTEST_LIBS =
 
-all: example selftest
+all: convert-carpet-output example selftest
 
 gtest:
 	$(RM) $@
