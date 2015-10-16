@@ -19,7 +19,7 @@ using std::string;
 
 struct Parameter : Common {
   Project *project;
-  // type
+  // type, range?, description?
 
   virtual bool invariant() const {
     return Common::invariant() && bool(project) &&

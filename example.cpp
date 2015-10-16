@@ -19,6 +19,9 @@ int main(int argc, char **argv) {
   // Project
   auto project = createProject("simulation");
 
+  // Configuration
+  auto configuration = project->createConfiguration("global");
+
   // TensorTypes
   project->createStandardTensortypes();
   auto scalar3d = project->tensortypes.at("Scalar3D");

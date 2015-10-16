@@ -24,8 +24,8 @@ Configuration::Configuration(const H5::CommonFG &loc, const string &entry,
 
 ostream &Configuration::output(ostream &os, int level) const {
   os << indent(level) << "Configuration \"" << name << "\"\n";
-  // TODO for (const auto &b : parameters)
-  // TODO   b.second->output(os, level + 1);
+  for (const auto &val : parametervalues)
+    val.second->output(os, level + 1);
   return os;
 }
 

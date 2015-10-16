@@ -16,16 +16,21 @@ namespace SimulationIO {
 using std::ostream;
 using std::map;
 using std::string;
+using std::tuple;
 
 struct ParameterValue : Common {
   Configuration *configuration;
   Parameter *parameter;
-  // value
+  enum { type_empty, type_int, type_double, type_string } value_type;
+  int value_int;
+  double value_double;
+  string value_string;
 
   virtual bool invariant() const {
     return Common::invariant() && bool(configuration) &&
            configuration->parametervalues.count(name) &&
-           configuration->parametervalues.at(name) == this;
+           configuration->parametervalues.at(name) == this && bool(parameter) &&
+           value_type >= type_empty && value_type <= type_string;
   }
 
   ParameterValue() = delete;
@@ -38,12 +43,18 @@ private:
   friend class Configuration;
   ParameterValue(const string &name, Configuration *configuration,
                  Parameter *parameter)
-      : Common(name), configuration(configuration), parameter(parameter) {}
+      : Common(name), configuration(configuration), parameter(parameter),
+        value_type(type_empty) {}
   ParameterValue(const H5::CommonFG &loc, const string &entry,
                  Configuration *configuration);
 
 public:
   virtual ~ParameterValue() { assert(0); }
+
+  void setValue();
+  void setValue(int i);
+  void setValue(double d);
+  void setValue(const string &s);
 
   virtual ostream &output(ostream &os, int level = 0) const;
   friend ostream &operator<<(ostream &os, const ParameterValue &basis) {

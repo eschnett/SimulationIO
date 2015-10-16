@@ -41,6 +41,11 @@ int main(int argc, char **argv) {
   // Project
   const string projectname = basename;
   auto project = createProject(projectname);
+  // Parameters
+  auto parameter_iteration = project->createParameter("iteration");
+  auto parameter_timelevel = project->createParameter("timelevel");
+  // Configuration
+  auto configuration = project->createConfiguration("global");
   // TensorTypes
   project->createStandardTensortypes();
   // Manifold and TangentSpace, both 3D
@@ -140,6 +145,25 @@ int main(int argc, char **argv) {
           cout << "    map: " << mapindex << "\n";
           cout << "    refinement level: " << refinementlevel << "\n";
 
+          // Get configuration
+          string configurationname;
+          {
+            ostringstream buf;
+            buf << "it." << iteration << "-tl." << timelevel;
+            configurationname = buf.str();
+          }
+          if (!project->configurations.count(configurationname)) {
+            auto configuration =
+                project->createConfiguration(configurationname);
+            auto value_iteration = configuration->createParameterValue(
+                parameter_iteration->name, parameter_iteration);
+            value_iteration->setValue(iteration);
+            auto value_timelevel = configuration->createParameterValue(
+                parameter_timelevel->name, parameter_timelevel);
+            value_timelevel->setValue(timelevel);
+          }
+          auto configuration = project->configurations.at(configurationname);
+
           // Get tensor type
           auto tensortype = project->tensortypes.at(tensortypename);
           assert(tensortype->rank == tensorrank);
@@ -156,8 +180,8 @@ int main(int argc, char **argv) {
           string blockname;
           {
             ostringstream buf;
-            buf << "m." << mapindex << "-rl." << refinementlevel << "-it."
-                << iteration << "-tl." << timelevel;
+            buf << configuration->name << "-m." << mapindex << "-rl."
+                << refinementlevel;
             blockname = buf.str();
           }
           if (!discretization->discretizationblocks.count(blockname)) {

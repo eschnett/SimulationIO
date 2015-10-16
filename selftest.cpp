@@ -134,6 +134,8 @@ TEST(ParameterValue, create) {
   EXPECT_TRUE(conf2->parametervalues.empty());
   const auto &val1 = conf2->createParameterValue("val1", par1);
   const auto &val2 = conf2->createParameterValue("val2", par2);
+  val1->setValue(1);
+  val2->setValue(2.0);
   EXPECT_TRUE(conf1->parametervalues.empty());
   EXPECT_EQ(2, conf2->parametervalues.size());
   EXPECT_EQ(val1, conf2->parametervalues.at("val1"));
@@ -153,7 +155,13 @@ TEST(ParameterValue, HDF5) {
     buf << *p1->configurations.at("conf1");
     buf << *p1->configurations.at("conf2");
     EXPECT_EQ("Configuration \"conf1\"\n"
-              "Configuration \"conf2\"\n",
+              "Configuration \"conf2\"\n"
+              "  ParameterValue \"val1\": configuration=\"conf2\" "
+              "parameter=\"par1\"\n"
+              "    value=int(1)\n"
+              "  ParameterValue \"val2\": configuration=\"conf2\" "
+              "parameter=\"par2\"\n"
+              "    value=double(2)\n",
               buf.str());
   }
   remove(filename);
