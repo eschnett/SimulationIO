@@ -11,6 +11,7 @@ endif
 SIO_SRCS = \
 	Basis.cpp \
 	BasisVector.cpp \
+	Configuration.cpp \
 	DiscreteField.cpp \
 	DiscreteFieldBlock.cpp \
 	DiscreteFieldBlockData.cpp \
@@ -18,6 +19,8 @@ SIO_SRCS = \
 	DiscretizationBlock.cpp \
 	Field.cpp \
 	Manifold.cpp \
+	Parameter.cpp \
+	ParameterValue.cpp \
 	Project.cpp \
 	TangentSpace.cpp \
 	TensorComponent.cpp \

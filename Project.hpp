@@ -21,6 +21,8 @@ struct Project;
 Project *createProject(const string &name);
 Project *createProject(const H5::CommonFG &loc, const string &entry);
 
+struct Parameter;
+struct Configuration;
 struct TensorType;
 struct Manifold;
 struct TangentSpace;
@@ -29,6 +31,8 @@ struct CoordinateSystem;
 struct CoordinateBasis;
 
 struct Project : Common {
+  map<string, Parameter *> parameters;               // owned
+  map<string, Configuration *> configurations;       // owned
   map<string, TensorType *> tensortypes;             // owned
   map<string, Manifold *> manifolds;                 // owned
   map<string, TangentSpace *> tangentspaces;         // owned
@@ -71,6 +75,11 @@ public:
                      const H5::H5Location &parent) const;
   void write(const H5::CommonFG &loc) const { write(loc, H5::H5File()); }
 
+  Parameter *createParameter(const string &name);
+  Parameter *createParameter(const H5::CommonFG &loc, const string &entry);
+  Configuration *createConfiguration(const string &name);
+  Configuration *createConfiguration(const H5::CommonFG &loc,
+                                     const string &entry);
   TensorType *createTensorType(const string &name, int dimension, int rank);
   TensorType *createTensorType(const H5::CommonFG &loc, const string &entry);
   Manifold *createManifold(const string &name, int dimension);

@@ -40,7 +40,10 @@ struct Common {
     type_Project = 10,
     type_TangentSpace = 11,
     type_TensorComponent = 12,
-    type_TensorType = 13
+    type_TensorType = 13,
+    type_Configuration = 14,
+    type_Parameter = 15,
+    type_ParameterValue = 16,
   };
 };
 }

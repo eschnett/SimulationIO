@@ -1,7 +1,9 @@
 #include "Project.hpp"
 
+#include "Configuration.hpp"
 #include "Field.hpp"
 #include "Manifold.hpp"
+#include "Parameter.hpp"
 #include "TangentSpace.hpp"
 #include "TensorType.hpp"
 
@@ -28,6 +30,14 @@ Project::Project(const H5::CommonFG &loc, const string &entry) {
   H5::readAttribute(group, "type", enumtype, type);
   assert(type == "Project");
   H5::readAttribute(group, "name", name);
+  H5::readGroup(group,
+                "parameters", [&](const string &name, const H5::Group &group) {
+                  createParameter(group, name);
+                }, parameters);
+  H5::readGroup(
+      group, "configurations", [&](const string &name, const H5::Group &group) {
+        createConfiguration(group, name);
+      }, configurations);
   H5::readGroup(group,
                 "tensortypes", [&](const string &name, const H5::Group &group) {
                   createTensorType(group, name);
@@ -72,6 +82,12 @@ void Project::createStandardTensortypes() {
 
 ostream &Project::output(ostream &os, int level) const {
   os << indent(level) << "Project \"" << name << "\"\n";
+  os << indent(level) << "parameters:\n";
+  for (const auto &par : parameters)
+    par.second->output(os, level + 1);
+  os << indent(level) << "configurations:\n";
+  for (const auto &conf : configurations)
+    conf.second->output(os, level + 1);
   os << indent(level) << "tensortypes:\n";
   for (const auto &tt : tensortypes)
     tt.second->output(os, level + 1);
@@ -99,6 +115,7 @@ void Project::createTypes() const {
   enumtype = H5::EnumType(H5::getType(0));
   insertEnumField(enumtype, "Basis", type_Basis);
   insertEnumField(enumtype, "BasisVector", type_BasisVector);
+  insertEnumField(enumtype, "Configuration", type_Configuration);
   insertEnumField(enumtype, "DiscreteField", type_DiscreteField);
   insertEnumField(enumtype, "DiscreteFieldBlock", type_DiscreteFieldBlock);
   insertEnumField(enumtype, "DiscreteFieldBlockData",
@@ -107,6 +124,8 @@ void Project::createTypes() const {
   insertEnumField(enumtype, "DiscretizationBlock", type_DiscretizationBlock);
   insertEnumField(enumtype, "Field", type_Field);
   insertEnumField(enumtype, "Manifold", type_Manifold);
+  insertEnumField(enumtype, "Parameter", type_Parameter);
+  insertEnumField(enumtype, "ParameterValue", type_ParameterValue);
   insertEnumField(enumtype, "Project", type_Project);
   insertEnumField(enumtype, "TangentSpace", type_TangentSpace);
   insertEnumField(enumtype, "TensorComponent", type_TensorComponent);
@@ -123,7 +142,9 @@ void Project::write(const H5::CommonFG &loc,
   enumtype.commit(typegroup, "SimulationIO");
   H5::createAttribute(group, "type", enumtype, "Project");
   H5::createAttribute(group, "name", name);
-  // no link for parent
+  // no link to parent
+  H5::createGroup(group, "parameters", parameters);
+  H5::createGroup(group, "configurations", configurations);
   H5::createGroup(group, "tensortypes", tensortypes);
   H5::createGroup(group, "manifolds", manifolds);
   H5::createGroup(group, "tangentspaces", tangentspaces);
@@ -131,6 +152,36 @@ void Project::write(const H5::CommonFG &loc,
 #warning "TODO"
   // H5::createGroup(group, "coordiantesystems", coordinatesystems);
   enumtype = H5::EnumType();
+}
+
+Parameter *Project::createParameter(const string &name) {
+  auto parameter = new Parameter(name, this);
+  checked_emplace(parameters, parameter->name, parameter);
+  assert(parameter->invariant());
+  return parameter;
+}
+
+Parameter *Project::createParameter(const H5::CommonFG &loc,
+                                    const string &entry) {
+  auto parameter = new Parameter(loc, entry, this);
+  checked_emplace(parameters, parameter->name, parameter);
+  assert(parameter->invariant());
+  return parameter;
+}
+
+Configuration *Project::createConfiguration(const string &name) {
+  auto configuration = new Configuration(name, this);
+  checked_emplace(configurations, configuration->name, configuration);
+  assert(configuration->invariant());
+  return configuration;
+}
+
+Configuration *Project::createConfiguration(const H5::CommonFG &loc,
+                                            const string &entry) {
+  auto configuration = new Configuration(loc, entry, this);
+  checked_emplace(configurations, configuration->name, configuration);
+  assert(configuration->invariant());
+  return configuration;
 }
 
 TensorType *Project::createTensorType(const string &name, int dimension,

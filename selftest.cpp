@@ -32,6 +32,8 @@ TEST(Project, create) {
   ostringstream buf;
   buf << *project;
   EXPECT_EQ("Project \"p1\"\n"
+            "parameters:\n"
+            "configurations:\n"
             "tensortypes:\n"
             "manifolds:\n"
             "tangentspaces:\n"
@@ -65,6 +67,96 @@ TEST(Project, HDF5) {
 TEST(Project, setup) {
   project->createStandardTensortypes();
   EXPECT_EQ(3, project->tensortypes.size());
+}
+
+TEST(Parameter, create) {
+  EXPECT_TRUE(project->parameters.empty());
+  const auto &par1 = project->createParameter("par1");
+  const auto &par2 = project->createParameter("par2");
+  EXPECT_EQ(2, project->parameters.size());
+  EXPECT_EQ(par1, project->parameters.at("par1"));
+  EXPECT_EQ(par2, project->parameters.at("par2"));
+}
+
+TEST(Parameter, HDF5) {
+  auto filename = "parameter.h5";
+  {
+    auto file = H5::H5File(filename, H5F_ACC_TRUNC);
+    project->write(file);
+  }
+  {
+    auto file = H5::H5File(filename, H5F_ACC_RDONLY);
+    auto p1 = createProject(file, "p1");
+    ostringstream buf;
+    buf << *p1->parameters.at("par1");
+    buf << *p1->parameters.at("par2");
+    EXPECT_EQ("Parameter \"par1\"\n"
+              "Parameter \"par2\"\n",
+              buf.str());
+  }
+  remove(filename);
+}
+
+TEST(Configuration, create) {
+  EXPECT_TRUE(project->configurations.empty());
+  const auto &conf1 = project->createConfiguration("conf1");
+  const auto &conf2 = project->createConfiguration("conf2");
+  EXPECT_EQ(2, project->configurations.size());
+  EXPECT_EQ(conf1, project->configurations.at("conf1"));
+  EXPECT_EQ(conf2, project->configurations.at("conf2"));
+}
+
+TEST(Configuration, HDF5) {
+  auto filename = "configuration.h5";
+  {
+    auto file = H5::H5File(filename, H5F_ACC_TRUNC);
+    project->write(file);
+  }
+  {
+    auto file = H5::H5File(filename, H5F_ACC_RDONLY);
+    auto p1 = createProject(file, "p1");
+    ostringstream buf;
+    buf << *p1->configurations.at("conf1");
+    buf << *p1->configurations.at("conf2");
+    EXPECT_EQ("Configuration \"conf1\"\n"
+              "Configuration \"conf2\"\n",
+              buf.str());
+  }
+  remove(filename);
+}
+
+TEST(ParameterValue, create) {
+  const auto &par1 = project->parameters.at("par1");
+  const auto &par2 = project->parameters.at("par2");
+  const auto &conf1 = project->configurations.at("conf1");
+  const auto &conf2 = project->configurations.at("conf2");
+  EXPECT_TRUE(conf1->parametervalues.empty());
+  EXPECT_TRUE(conf2->parametervalues.empty());
+  const auto &val1 = conf2->createParameterValue("val1", par1);
+  const auto &val2 = conf2->createParameterValue("val2", par2);
+  EXPECT_TRUE(conf1->parametervalues.empty());
+  EXPECT_EQ(2, conf2->parametervalues.size());
+  EXPECT_EQ(val1, conf2->parametervalues.at("val1"));
+  EXPECT_EQ(val2, conf2->parametervalues.at("val2"));
+}
+
+TEST(ParameterValue, HDF5) {
+  auto filename = "parametervalue.h5";
+  {
+    auto file = H5::H5File(filename, H5F_ACC_TRUNC);
+    project->write(file);
+  }
+  {
+    auto file = H5::H5File(filename, H5F_ACC_RDONLY);
+    auto p1 = createProject(file, "p1");
+    ostringstream buf;
+    buf << *p1->configurations.at("conf1");
+    buf << *p1->configurations.at("conf2");
+    EXPECT_EQ("Configuration \"conf1\"\n"
+              "Configuration \"conf2\"\n",
+              buf.str());
+  }
+  remove(filename);
 }
 
 TEST(TensorTypes, Scalar3D) {
@@ -142,35 +234,31 @@ TEST(TensorTypes, HDF5) {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);
     auto p1 = createProject(file, "p1");
     ostringstream buf;
-    buf << *p1;
-    EXPECT_EQ("Project \"p1\"\n"
-              "tensortypes:\n"
-              "  TensorType \"Scalar3D\": dim=3 rank=0\n"
-              "    TensorComponent \"scalar\": tensortype=\"Scalar3D\" "
+    for (const auto &tt : p1->tensortypes)
+      buf << *tt.second;
+    EXPECT_EQ("TensorType \"Scalar3D\": dim=3 rank=0\n"
+              "  TensorComponent \"scalar\": tensortype=\"Scalar3D\" "
               "storage_index=0 indexvalues=[]\n"
-              "  TensorType \"SymmetricTensor3D\": dim=3 rank=2\n"
-              "    TensorComponent \"00\": tensortype=\"SymmetricTensor3D\" "
+              "TensorType \"SymmetricTensor3D\": dim=3 rank=2\n"
+              "  TensorComponent \"00\": tensortype=\"SymmetricTensor3D\" "
               "storage_index=0 indexvalues=[0,0]\n"
-              "    TensorComponent \"01\": tensortype=\"SymmetricTensor3D\" "
+              "  TensorComponent \"01\": tensortype=\"SymmetricTensor3D\" "
               "storage_index=1 indexvalues=[0,1]\n"
-              "    TensorComponent \"02\": tensortype=\"SymmetricTensor3D\" "
+              "  TensorComponent \"02\": tensortype=\"SymmetricTensor3D\" "
               "storage_index=2 indexvalues=[0,2]\n"
-              "    TensorComponent \"11\": tensortype=\"SymmetricTensor3D\" "
+              "  TensorComponent \"11\": tensortype=\"SymmetricTensor3D\" "
               "storage_index=3 indexvalues=[1,1]\n"
-              "    TensorComponent \"12\": tensortype=\"SymmetricTensor3D\" "
+              "  TensorComponent \"12\": tensortype=\"SymmetricTensor3D\" "
               "storage_index=4 indexvalues=[1,2]\n"
-              "    TensorComponent \"22\": tensortype=\"SymmetricTensor3D\" "
+              "  TensorComponent \"22\": tensortype=\"SymmetricTensor3D\" "
               "storage_index=5 indexvalues=[2,2]\n"
-              "  TensorType \"Vector3D\": dim=3 rank=1\n"
-              "    TensorComponent \"0\": tensortype=\"Vector3D\" "
+              "TensorType \"Vector3D\": dim=3 rank=1\n"
+              "  TensorComponent \"0\": tensortype=\"Vector3D\" "
               "storage_index=0 indexvalues=[0]\n"
-              "    TensorComponent \"1\": tensortype=\"Vector3D\" "
+              "  TensorComponent \"1\": tensortype=\"Vector3D\" "
               "storage_index=1 indexvalues=[1]\n"
-              "    TensorComponent \"2\": tensortype=\"Vector3D\" "
-              "storage_index=2 indexvalues=[2]\n"
-              "manifolds:\n"
-              "tangentspaces:\n"
-              "fields:\n",
+              "  TensorComponent \"2\": tensortype=\"Vector3D\" "
+              "storage_index=2 indexvalues=[2]\n",
               buf.str());
   }
   remove(filename);
