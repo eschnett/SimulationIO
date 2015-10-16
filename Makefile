@@ -36,7 +36,7 @@ GTEST_CPPFLAGS = -isystem $(GTEST_DIR)/include -I$(GTEST_DIR)
 GTEST_CXXFLAGS = -pthread
 GTEST_LIBS =
 
-all: convert-carpet-output example selftest
+all: convert-carpet-output example list selftest
 
 gtest:
 	$(RM) $@
@@ -54,6 +54,9 @@ test: selftest
 	./selftest
 
 example: $(SIO_SRCS:%.cpp=%.o) example.o
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
+
+list: $(SIO_SRCS:%.cpp=%.o) list.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 convert-carpet-output: $(SIO_SRCS:%.cpp=%.o) convert-carpet-output.o
