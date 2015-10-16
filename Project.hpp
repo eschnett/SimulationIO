@@ -36,6 +36,8 @@ struct Project : Common {
   map<string, CoordinateSystem *> coordinatesystems; // owned
   // TODO: coordinatebasis
 
+  mutable H5::EnumType enumtype;
+
   virtual bool invariant() const { return Common::invariant(); }
 
   Project(const Project &) = delete;
@@ -46,7 +48,7 @@ struct Project : Common {
 private:
   friend Project *createProject(const string &name);
   friend Project *createProject(const H5::CommonFG &loc, const string &entry);
-  Project(const string &name) : Common(name) {}
+  Project(const string &name) : Common(name) { createTypes(); }
   Project(const H5::CommonFG &loc, const string &entry);
 
 public:
@@ -58,6 +60,13 @@ public:
   friend ostream &operator<<(ostream &os, const Project &project) {
     return project.output(os);
   }
+
+private:
+  static void insertEnumField(const H5::EnumType &type, const string &name,
+                              int value);
+  void createTypes() const;
+
+public:
   virtual void write(const H5::CommonFG &loc,
                      const H5::H5Location &parent) const;
   void write(const H5::CommonFG &loc) const { write(loc, H5::H5File()); }

@@ -21,9 +21,11 @@ Project *createProject(const H5::CommonFG &loc, const string &entry) {
 }
 
 Project::Project(const H5::CommonFG &loc, const string &entry) {
-  auto group = loc.openGroup(entry);
+  // auto group = loc.openGroup(entry);
+  auto group = loc.openGroup(".");
+  createTypes(); // TODO: read from file
   string type;
-  H5::readAttribute(group, "type", type);
+  H5::readAttribute(group, "type", enumtype, type);
   assert(type == "Project");
   H5::readAttribute(group, "name", name);
   H5::readGroup(group,
@@ -89,10 +91,37 @@ ostream &Project::output(ostream &os, int level) const {
   return os;
 }
 
+void Project::insertEnumField(const H5::EnumType &type, const string &name,
+                              int value) {
+  type.insert(name, &value);
+}
+void Project::createTypes() const {
+  enumtype = H5::EnumType(H5::getType(0));
+  insertEnumField(enumtype, "Basis", type_Basis);
+  insertEnumField(enumtype, "BasisVector", type_BasisVector);
+  insertEnumField(enumtype, "DiscreteField", type_DiscreteField);
+  insertEnumField(enumtype, "DiscreteFieldBlock", type_DiscreteFieldBlock);
+  insertEnumField(enumtype, "DiscreteFieldBlockData",
+                  type_DiscreteFieldBlockData);
+  insertEnumField(enumtype, "Discretization", type_Discretization);
+  insertEnumField(enumtype, "DiscretizationBlock", type_DiscretizationBlock);
+  insertEnumField(enumtype, "Field", type_Field);
+  insertEnumField(enumtype, "Manifold", type_Manifold);
+  insertEnumField(enumtype, "Project", type_Project);
+  insertEnumField(enumtype, "TangentSpace", type_TangentSpace);
+  insertEnumField(enumtype, "TensorComponent", type_TensorComponent);
+  insertEnumField(enumtype, "TensorType", type_TensorType);
+}
+
 void Project::write(const H5::CommonFG &loc,
                     const H5::H5Location &parent) const {
-  auto group = loc.createGroup(name);
-  H5::createAttribute(group, "type", "Project");
+  // auto group = loc.createGroup(name);
+  auto group = loc.openGroup(".");
+  createTypes();
+  H5::Group typegroup;
+  typegroup = group.createGroup("types");
+  enumtype.commit(typegroup, "SimulationIO");
+  H5::createAttribute(group, "type", enumtype, "Project");
   H5::createAttribute(group, "name", name);
   // no link for parent
   H5::createGroup(group, "tensortypes", tensortypes);
@@ -101,6 +130,7 @@ void Project::write(const H5::CommonFG &loc,
   H5::createGroup(group, "fields", fields);
 #warning "TODO"
   // H5::createGroup(group, "coordiantesystems", coordinatesystems);
+  enumtype = H5::EnumType();
 }
 
 TensorType *Project::createTensorType(const string &name, int dimension,

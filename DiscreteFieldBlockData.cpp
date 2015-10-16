@@ -10,7 +10,9 @@ DiscreteFieldBlockData::DiscreteFieldBlockData(
     : discretefieldblock(discretefieldblock), have_extlink(false) {
   auto group = loc.openGroup(entry);
   string type;
-  H5::readAttribute(group, "type", type);
+  H5::readAttribute(group, "type",
+                    discretefieldblock->discretefield->field->project->enumtype,
+                    type);
   assert(type == "DiscreteFieldBlockData");
   H5::readAttribute(group, "name", name);
   // TODO: check link "discretefieldblock"
@@ -51,7 +53,10 @@ ostream &DiscreteFieldBlockData::output(ostream &os, int level) const {
 void DiscreteFieldBlockData::write(const H5::CommonFG &loc,
                                    const H5::H5Location &parent) const {
   auto group = loc.createGroup(name);
-  H5::createAttribute(group, "type", "DiscreteFieldBlockData");
+  H5::createAttribute(
+      group, "type",
+      discretefieldblock->discretefield->field->project->enumtype,
+      "DiscreteFieldBlockData");
   H5::createAttribute(group, "name", name);
   H5::createHardLink(group, "discretefieldblock", parent, ".");
   H5::createHardLink(

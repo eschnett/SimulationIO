@@ -11,7 +11,7 @@ Basis::Basis(const H5::CommonFG &loc, const string &entry,
     : tangentspace(tangentspace) {
   auto group = loc.openGroup(entry);
   string type;
-  H5::readAttribute(group, "type", type);
+  H5::readAttribute(group, "type", tangentspace->project->enumtype, type);
   assert(type == "Basis");
   H5::readAttribute(group, "name", name);
   // TODO: check link "tangentspace"
@@ -32,7 +32,7 @@ ostream &Basis::output(ostream &os, int level) const {
 
 void Basis::write(const H5::CommonFG &loc, const H5::H5Location &parent) const {
   auto group = loc.createGroup(name);
-  H5::createAttribute(group, "type", "Basis");
+  H5::createAttribute(group, "type", tangentspace->project->enumtype, "Basis");
   H5::createAttribute(group, "name", name);
   H5::createHardLink(group, "tangentspace", parent, ".");
   // H5::createAttribute(group, "tangentspace", parent, ".");

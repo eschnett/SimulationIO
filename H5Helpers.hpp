@@ -86,40 +86,40 @@ Group createGroup(const CommonFG &loc, const std::string &name,
 
 // Get HDF5 datatype from C++ type
 
-inline DataType getType(const char &) { return IntType(PredType::NATIVE_CHAR); }
-inline DataType getType(const signed char &) {
+inline IntType getType(const char &) { return IntType(PredType::NATIVE_CHAR); }
+inline IntType getType(const signed char &) {
   return IntType(PredType::NATIVE_SCHAR);
 }
-inline DataType getType(const unsigned char &) {
+inline IntType getType(const unsigned char &) {
   return IntType(PredType::NATIVE_UCHAR);
 }
-inline DataType getType(const short &) {
+inline IntType getType(const short &) {
   return IntType(PredType::NATIVE_SHORT);
 }
-inline DataType getType(const unsigned short &) {
+inline IntType getType(const unsigned short &) {
   return IntType(PredType::NATIVE_USHORT);
 }
-inline DataType getType(const int &) { return IntType(PredType::NATIVE_INT); }
-inline DataType getType(const unsigned int &) {
+inline IntType getType(const int &) { return IntType(PredType::NATIVE_INT); }
+inline IntType getType(const unsigned int &) {
   return IntType(PredType::NATIVE_UINT);
 }
-inline DataType getType(const long &) { return IntType(PredType::NATIVE_LONG); }
-inline DataType getType(const unsigned long &) {
+inline IntType getType(const long &) { return IntType(PredType::NATIVE_LONG); }
+inline IntType getType(const unsigned long &) {
   return IntType(PredType::NATIVE_ULONG);
 }
-inline DataType getType(const long long &) {
+inline IntType getType(const long long &) {
   return IntType(PredType::NATIVE_LLONG);
 }
-inline DataType getType(const unsigned long long &) {
+inline IntType getType(const unsigned long long &) {
   return IntType(PredType::NATIVE_ULLONG);
 }
-inline DataType getType(const float &) {
+inline FloatType getType(const float &) {
   return FloatType(PredType::NATIVE_FLOAT);
 }
-inline DataType getType(const double &) {
+inline FloatType getType(const double &) {
   return FloatType(PredType::NATIVE_DOUBLE);
 }
-inline DataType getType(const long double &) {
+inline FloatType getType(const long double &) {
   return FloatType(PredType::NATIVE_LDOUBLE);
 }
 
@@ -168,6 +168,17 @@ inline Attribute createAttribute(const H5Location &loc, const std::string &name,
       H5Rcreate(&reference, obj_loc.getId(), obj_name.c_str(), H5R_OBJECT, -1);
   assert(!herr);
   attr.write(type, &reference);
+  return attr;
+}
+
+inline Attribute createAttribute(const H5Location &loc, const std::string &name,
+                                 const H5::EnumType &type,
+                                 const std::string &valuename) {
+  auto attr = loc.createAttribute(name, type, DataSpace());
+  int value;
+  assert(type.getSize() == sizeof value);
+  type.valueOf(valuename, &value);
+  attr.write(type, &value);
   return attr;
 }
 
@@ -234,6 +245,19 @@ inline Attribute readAttribute(const H5Location &loc, const std::string &name,
   default:
     assert(0);
   }
+  return attr;
+}
+
+inline Attribute readAttribute(const H5Location &loc, const std::string &name,
+                               const H5::EnumType &type,
+                               std::string &valuename) {
+  auto attr = loc.openAttribute(name);
+  auto space = attr.getSpace();
+  assert(space.getSimpleExtentType() == H5S_SCALAR);
+  int value;
+  assert(type.getSize() == sizeof value);
+  attr.read(type, &value);
+  valuename = type.nameOf(&value, 100);
   return attr;
 }
 

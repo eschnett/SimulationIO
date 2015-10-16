@@ -38,7 +38,22 @@ int main(int argc, char **argv) {
   }
   assert(!basename.empty());
 
-  map<string, Project *> projects;
+  // Project
+  const string projectname = basename;
+  auto project = createProject(projectname);
+  // TensorTypes
+  project->createStandardTensortypes();
+  // Manifold and TangentSpace, both 3D
+  const int dim = 3;
+  auto manifold = project->createManifold("domain", dim);
+  auto tangentspace = project->createTangentSpace("space", dim);
+  // Discretization for Manifold
+  auto discretization = manifold->createDiscretization("grid");
+  // Basis for TangentSpace
+  auto basis = tangentspace->createBasis("Cartesian");
+  for (int d = 0; d < dim; ++d) {
+    basis->createBasisVector(dirnames[d], d);
+  }
 
   for (int argi = 2; argi < argc; ++argi) {
     auto inputfilename = argv[argi];
@@ -62,6 +77,7 @@ int main(int argc, char **argv) {
           copy(istream_iterator<string>(namestream), istream_iterator<string>(),
                back_inserter(tokens));
           const string varname = tokens.at(0);
+          tokens.erase(tokens.begin());
           // Determine field name and tensor type
           string fieldname(varname);
           vector<int> tensorindices;
@@ -88,8 +104,7 @@ int main(int argc, char **argv) {
           }
           // Determine iteration, time level, map index, refinement level
           int iteration = 0, timelevel = 0, mapindex = 0, refinementlevel = 0;
-          for (auto i = tokens.begin() + 1, e = tokens.end(); i != e; ++i) {
-            const auto &token = *i;
+          for (const auto &token : tokens) {
             auto eqpos = token.find('=');
             string id = token.substr(0, eqpos);
             string val = token.substr(eqpos + 1);
@@ -125,46 +140,13 @@ int main(int argc, char **argv) {
           cout << "    map: " << mapindex << "\n";
           cout << "    refinement level: " << refinementlevel << "\n";
 
-          // Project
-          string projectname;
-          {
-            ostringstream buf;
-            buf << basename << "-it." << iteration << "-tl." << timelevel;
-            projectname = buf.str();
-          }
-          if (!projects.count(projectname)) {
-            auto project = createProject(projectname);
-            projects[projectname] = project;
-            // TensorTypes
-            project->createStandardTensortypes();
-            // Manifold and TangentSpace, both 3D
-            const int dim = 3;
-            auto manifold = project->createManifold("domain", dim);
-            auto tangentspace = project->createTangentSpace("space", dim);
-            // Discretization for Manifold
-            manifold->createDiscretization("grid");
-            // Basis for TangentSpace
-            auto basis = tangentspace->createBasis("Cartesian");
-            for (int d = 0; d < dim; ++d) {
-              basis->createBasisVector(dirnames[d], d);
-            }
-          }
-          auto project = projects.at(projectname);
-          auto manifold = project->manifolds.at("domain");
-          auto discretization = manifold->discretizations.at("grid");
-          auto tangentspace = project->tangentspaces.at("space");
-          auto basis = tangentspace->bases.at("Cartesian");
-
           // Get tensor type
           auto tensortype = project->tensortypes.at(tensortypename);
           assert(tensortype->rank == tensorrank);
           TensorComponent *tensorcomponent = 0;
-          for (auto i = tensortype->tensorcomponents.begin(),
-                    e = tensortype->tensorcomponents.end();
-               i != e; ++i) {
-            const auto &tc = i->second;
-            if (tc->indexvalues == tensorindices) {
-              tensorcomponent = tc;
+          for (const auto &tc : tensortype->tensorcomponents) {
+            if (tc.second->indexvalues == tensorindices) {
+              tensorcomponent = tc.second;
               break;
             }
           }
@@ -174,7 +156,8 @@ int main(int argc, char **argv) {
           string blockname;
           {
             ostringstream buf;
-            buf << "m." << mapindex << "-rl." << refinementlevel;
+            buf << "m." << mapindex << "-rl." << refinementlevel << "-it."
+                << iteration << "-tl." << timelevel;
             blockname = buf.str();
           }
           if (!discretization->discretizationblocks.count(blockname)) {
@@ -215,10 +198,7 @@ int main(int argc, char **argv) {
 
   // Write file
   auto file = H5::H5File(outputfilename, H5F_ACC_TRUNC);
-  for (auto i = projects.begin(), e = projects.end(); i != e; ++i) {
-    const auto &p = i->second;
-    p->write(file);
-  }
+  project->write(file);
 
   return 0;
 }

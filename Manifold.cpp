@@ -11,7 +11,7 @@ Manifold::Manifold(const H5::CommonFG &loc, const string &entry,
     : project(project) {
   auto group = loc.openGroup(entry);
   string type;
-  H5::readAttribute(group, "type", type);
+  H5::readAttribute(group, "type", project->enumtype, type);
   assert(type == "Manifold");
   H5::readAttribute(group, "name", name);
   // TODO: check link "project"
@@ -34,7 +34,7 @@ ostream &Manifold::output(ostream &os, int level) const {
 void Manifold::write(const H5::CommonFG &loc,
                      const H5::H5Location &parent) const {
   auto group = loc.createGroup(name);
-  H5::createAttribute(group, "type", "Manifold");
+  H5::createAttribute(group, "type", project->enumtype, "Manifold");
   H5::createAttribute(group, "name", name);
   H5::createHardLink(group, "project", parent, ".");
   // H5::createAttribute(group, "project", parent, ".");
