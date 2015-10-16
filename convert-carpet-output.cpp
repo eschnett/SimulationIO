@@ -18,27 +18,29 @@ const char *const dirnames[] = {"x", "y", "z"};
 
 int main(int argc, char **argv) {
 
-  // Project
-  auto project = createProject("simulation");
-
-  // TensorTypes
-  project->createStandardTensortypes();
-
-  // Manifold and TangentSpace, both 3D
-  const int dim = 3;
-  auto manifold = project->createManifold("domain", dim);
-  auto tangentspace = project->createTangentSpace("space", dim);
-
-  // Discretization for Manifold
-  auto discretization = manifold->createDiscretization("uniform");
-
-  // Basis for TangentSpace
-  auto basis = tangentspace->createBasis("Cartesian");
-  for (int d = 0; d < dim; ++d) {
-    basis->createBasisVector(dirnames[d], d);
+  if (argc < 3) {
+    cerr << "Synposis:\n" << argv[0]
+         << " <output file name> {<input file name>}+\n";
+    return 1;
   }
 
-  for (int argi = 1; argi < argc; ++argi) {
+  const string outputfilename = argv[1];
+  string basename = outputfilename;
+  {
+    auto dotpos = basename.rfind('.');
+    if (dotpos != string::npos)
+      basename = basename.substr(0, dotpos);
+  }
+  {
+    auto slashpos = basename.rfind('/');
+    if (slashpos != string::npos)
+      basename = basename.substr(slashpos + 1);
+  }
+  assert(!basename.empty());
+
+  map<string, Project *> projects;
+
+  for (int argi = 2; argi < argc; ++argi) {
     auto inputfilename = argv[argi];
     cout << "Reading file " << inputfilename << "...\n";
 
@@ -59,11 +61,7 @@ int main(int argc, char **argv) {
           vector<string> tokens;
           copy(istream_iterator<string>(namestream), istream_iterator<string>(),
                back_inserter(tokens));
-          assert(tokens.size() == 4);
           const string varname = tokens.at(0);
-          const string itstring = tokens.at(1);
-          const string tlstring = tokens.at(2);
-          const string rlstring = tokens.at(3);
           // Determine field name and tensor type
           string fieldname(varname);
           vector<int> tensorindices;
@@ -88,19 +86,29 @@ int main(int argc, char **argv) {
           } else {
             assert(0);
           }
-          // Determine iteration, time level, refinement level
-          assert(itstring.substr(0, 3) == "it=");
-          istringstream itstream(itstring.substr(4));
-          int iteration;
-          itstream >> iteration;
-          assert(tlstring.substr(0, 3) == "tl=");
-          istringstream tlstream(tlstring.substr(4));
-          int timelevel;
-          itstream >> timelevel;
-          assert(rlstring.substr(0, 3) == "rl=");
-          istringstream rltstream(rlstring.substr(4));
-          int refinementlevel;
-          itstream >> refinementlevel;
+          // Determine iteration, time level, map index, refinement level
+          int iteration = 0, timelevel = 0, mapindex = 0, refinementlevel = 0;
+          for (auto i = tokens.begin() + 1, e = tokens.end(); i != e; ++i) {
+            const auto &token = *i;
+            auto eqpos = token.find('=');
+            string id = token.substr(0, eqpos);
+            string val = token.substr(eqpos + 1);
+            int *variable = 0;
+            if (id == "it")
+              variable = &iteration;
+            else if (id == "tl")
+              variable = &timelevel;
+            else if (id == "m")
+              variable = &mapindex;
+            else if (id == "rl")
+              variable = &refinementlevel;
+            else
+              assert(0);
+            istringstream buf(val);
+            assert(!buf.eof());
+            buf >> *variable;
+            assert(buf.eof());
+          }
           // Output information
           cout << "    field name: " << fieldname << "\n";
           cout << "    tensor rank: " << tensorrank << "\n";
@@ -114,14 +122,45 @@ int main(int argc, char **argv) {
           cout << "]\n";
           cout << "    iteration: " << iteration << "\n";
           cout << "    time level: " << timelevel << "\n";
+          cout << "    map: " << mapindex << "\n";
           cout << "    refinement level: " << refinementlevel << "\n";
+
+          // Project
+          string projectname;
+          {
+            ostringstream buf;
+            buf << basename << "-it." << iteration << "-tl." << timelevel;
+            projectname = buf.str();
+          }
+          if (!projects.count(projectname)) {
+            auto project = createProject(projectname);
+            projects[projectname] = project;
+            // TensorTypes
+            project->createStandardTensortypes();
+            // Manifold and TangentSpace, both 3D
+            const int dim = 3;
+            auto manifold = project->createManifold("domain", dim);
+            auto tangentspace = project->createTangentSpace("space", dim);
+            // Discretization for Manifold
+            manifold->createDiscretization("grid");
+            // Basis for TangentSpace
+            auto basis = tangentspace->createBasis("Cartesian");
+            for (int d = 0; d < dim; ++d) {
+              basis->createBasisVector(dirnames[d], d);
+            }
+          }
+          auto project = projects.at(projectname);
+          auto manifold = project->manifolds.at("domain");
+          auto discretization = manifold->discretizations.at("grid");
+          auto tangentspace = project->tangentspaces.at("space");
+          auto basis = tangentspace->bases.at("Cartesian");
+
           // Get tensor type
           auto tensortype = project->tensortypes.at(tensortypename);
           assert(tensortype->rank == tensorrank);
           TensorComponent *tensorcomponent = 0;
-          for (map<string, TensorComponent *>::const_iterator
-                   i = tensortype->tensorcomponents.begin(),
-                   e = tensortype->tensorcomponents.end();
+          for (auto i = tensortype->tensorcomponents.begin(),
+                    e = tensortype->tensorcomponents.end();
                i != e; ++i) {
             const auto &tc = i->second;
             if (tc->indexvalues == tensorindices) {
@@ -130,12 +169,19 @@ int main(int argc, char **argv) {
             }
           }
           assert(tensorcomponent);
+
           // Get discretization block
-          if (!discretization->discretizationblocks.count("uniform")) {
-            discretization->createDiscretizationBlock("uniform");
+          string blockname;
+          {
+            ostringstream buf;
+            buf << "m." << mapindex << "-rl." << refinementlevel;
+            blockname = buf.str();
+          }
+          if (!discretization->discretizationblocks.count(blockname)) {
+            discretization->createDiscretizationBlock(blockname);
           }
           auto discretizationblock =
-              discretization->discretizationblocks.at("uniform");
+              discretization->discretizationblocks.at(blockname);
           // Get field
           if (!project->fields.count(fieldname)) {
             auto field = project->createField(fieldname, manifold, tangentspace,
@@ -167,13 +213,12 @@ int main(int argc, char **argv) {
         });
   }
 
-  // output
-  cout << *project;
-
   // Write file
-  auto filename = "simulation.h5";
-  auto file = H5::H5File(filename, H5F_ACC_TRUNC);
-  project->write(file);
+  auto file = H5::H5File(outputfilename, H5F_ACC_TRUNC);
+  for (auto i = projects.begin(), e = projects.end(); i != e; ++i) {
+    const auto &p = i->second;
+    p->write(file);
+  }
 
   return 0;
 }
