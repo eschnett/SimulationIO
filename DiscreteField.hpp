@@ -22,16 +22,18 @@ using std::string;
 struct DiscreteFieldBlock;
 
 struct DiscreteField : Common {
-  Field *field;
-  Discretization *discretization;
-  Basis *basis;
-  map<string, DiscreteFieldBlock *> discretefieldblocks; // owned
+  Field *field;                                          // parent
+  Discretization *discretization;                        // with backlink
+  Basis *basis;                                          // with backlink
+  map<string, DiscreteFieldBlock *> discretefieldblocks; // children
 
   virtual bool invariant() const {
     return Common::invariant() && bool(field) &&
            field->discretefields.count(name) &&
            field->discretefields.at(name) == this && bool(discretization) &&
+           discretization->discretefields.nobacklink() &&
            field->manifold == discretization->manifold && bool(basis) &&
+           basis->discretefields.nobacklink() &&
            field->tangentspace == basis->tangentspace;
   }
 

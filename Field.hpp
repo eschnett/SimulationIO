@@ -26,11 +26,11 @@ struct TensorType;
 struct DiscreteField;
 
 struct Field : Common {
-  Project *project;
-  Manifold *manifold;
-  TangentSpace *tangentspace;
-  TensorType *tensortype;
-  map<string, DiscreteField *> discretefields; // owned
+  Project *project;                            // parent
+  Manifold *manifold;                          // with backlink
+  TangentSpace *tangentspace;                  // with backlink
+  TensorType *tensortype;                      // without backlink
+  map<string, DiscreteField *> discretefields; // children
 
   virtual bool invariant() const {
     bool inv =
@@ -39,7 +39,8 @@ struct Field : Common {
         manifold->fields.count(name) && manifold->fields.at(name) == this &&
         bool(tangentspace) && tangentspace->fields.count(name) &&
         tangentspace->fields.at(name) == this && bool(tensortype) &&
-        tangentspace->dimension == tensortype->dimension;
+        tangentspace->dimension == tensortype->dimension &&
+        tensortype->fields.nobacklink();
     for (const auto &df : discretefields)
       inv &= !df.first.empty() && bool(df.second);
     return inv;
@@ -59,7 +60,7 @@ private:
         tangentspace(tangentspace), tensortype(tensortype) {
     manifold->insert(name, this);
     tangentspace->insert(name, this);
-    // tensortypes->insert(this);
+    tensortype->noinsert(this);
   }
   Field(const H5::CommonFG &loc, const string &entry, Project *project);
 

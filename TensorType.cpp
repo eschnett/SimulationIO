@@ -14,15 +14,14 @@ TensorType::TensorType(const H5::CommonFG &loc, const string &entry,
   H5::readAttribute(group, "type", project->enumtype, type);
   assert(type == "TensorType");
   H5::readAttribute(group, "name", name);
-  // TODO: check link "project"
+#warning "TODO: check link project"
   H5::readAttribute(group, "dimension", dimension);
   H5::readAttribute(group, "rank", rank);
   H5::readGroup(group, "tensorcomponents",
-                [&](const string &name, const H5::Group &group) {
+                [&](const H5::Group &group, const string &name) {
                   createTensorComponent(group, name);
-                },
-                tensorcomponents);
-  //  TODO: check "storage_indices"
+                });
+#warning "TODO: check storage_indices"
 }
 
 ostream &TensorType::output(ostream &os, int level) const {
@@ -43,7 +42,7 @@ void TensorType::write(const H5::CommonFG &loc,
   H5::createAttribute(group, "dimension", dimension);
   H5::createAttribute(group, "rank", rank);
   H5::createGroup(group, "tensorcomponents", tensorcomponents);
-#warning "TODO: output storage_indices"
+#warning "TODO: write storage_indices"
 }
 
 TensorComponent *

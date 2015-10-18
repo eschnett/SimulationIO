@@ -21,10 +21,10 @@ struct Field;
 struct Basis;
 
 struct TangentSpace : Common {
-  Project *project;
+  Project *project; // parent
   int dimension;
-  map<string, Basis *> bases; // owned
-  map<string, Field *> fields;
+  map<string, Basis *> bases;  // children
+  map<string, Field *> fields; // backlinks
 
   virtual bool invariant() const {
     bool inv = Common::invariant() && bool(project) &&

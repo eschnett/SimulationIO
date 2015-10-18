@@ -14,7 +14,7 @@ DiscreteField::DiscreteField(const H5::CommonFG &loc, const string &entry,
   H5::readAttribute(group, "type", field->project->enumtype, type);
   assert(type == "DiscreteField");
   H5::readAttribute(group, "name", name);
-  // TODO: check link "field"
+#warning "TODO: check link field"
   // TODO: Read and interpret objects (shallowly) instead of naively only
   // looking at their names
   {
@@ -34,11 +34,11 @@ DiscreteField::DiscreteField(const H5::CommonFG &loc, const string &entry,
     basis = field->tangentspace->bases.at(name);
   }
   H5::readGroup(group, "discretefieldblocks",
-                [&](const string &name, const H5::Group &group) {
+                [&](const H5::Group &group, const string &name) {
                   createDiscreteFieldBlock(group, name);
-                },
-                discretefieldblocks);
-  // discretization->insert(this);
+                });
+  discretization->noinsert(this);
+  basis->noinsert(this);
 }
 
 ostream &DiscreteField::output(ostream &os, int level) const {
@@ -66,7 +66,8 @@ void DiscreteField::write(const H5::CommonFG &loc,
   //                     string("manifold/discretizations/") +
   //                         discretization->name);
   // H5::createAttribute(group, "basis", parent,
-  //                     string("tangentspace/bases/") + basis->name);
+  //                     string("tangentspace/bases/") +
+  //                     basis->name);
   H5::createGroup(group, "discretefieldblocks", discretefieldblocks);
 }
 

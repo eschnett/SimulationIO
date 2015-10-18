@@ -20,8 +20,8 @@ using std::string;
 struct ParameterValue;
 
 struct Configuration : Common {
-  Project *project;
-  map<string, ParameterValue *> parametervalues; // owned
+  Project *project;                              // parent
+  map<string, ParameterValue *> parametervalues; // children
 
   virtual bool invariant() const {
     return Common::invariant() && bool(project) &&
@@ -51,10 +51,7 @@ public:
   virtual void write(const H5::CommonFG &loc,
                      const H5::H5Location &parent) const;
 
-  ParameterValue *createParameterValue(const string &name,
-                                       Parameter *parameter);
-  ParameterValue *createParameterValue(const H5::CommonFG &loc,
-                                       const string &entry);
+  void insert(ParameterValue *parametervalue);
 };
 }
 

@@ -17,7 +17,7 @@ DiscreteFieldBlock::DiscreteFieldBlock(const H5::CommonFG &loc,
                     type);
   assert(type == "DiscreteFieldBlock");
   H5::readAttribute(group, "name", name);
-  // TODO: check link "field"
+#warning "TODO: check link field"
   // TODO: Read and interpret objects (shallowly) instead of naively only
   // looking at their names
   {
@@ -29,12 +29,11 @@ DiscreteFieldBlock::DiscreteFieldBlock(const H5::CommonFG &loc,
     discretizationblock =
         discretefield->discretization->discretizationblocks.at(name);
   }
+  discretizationblock->noinsert(this);
   H5::readGroup(group, "discretefieldblockdata",
-                [&](const string &name, const H5::Group &group) {
+                [&](const H5::Group &group, const string &name) {
                   createDiscreteFieldBlockData(group, name);
-                },
-                discretefieldblockdata);
-  // discretizationblock->insert(this);
+                });
 }
 
 ostream &DiscreteFieldBlock::output(ostream &os, int level) const {
@@ -58,7 +57,8 @@ void DiscreteFieldBlock::write(const H5::CommonFG &loc,
                          discretizationblock->name);
   // H5::createAttribute(group, "discretefield", parent, ".");
   // H5::createAttribute(group, "discretizationblock", parent,
-  //                     string("discretization/discretizationblocks/") +
+  //                     string("discretization/discretizationblocks/")
+  //                     +
   //                         discretizationblock->name);
   H5::createGroup(group, "discretefieldblockdata", discretefieldblockdata);
 }

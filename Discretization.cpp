@@ -14,12 +14,11 @@ Discretization::Discretization(const H5::CommonFG &loc, const string &entry,
   H5::readAttribute(group, "type", manifold->project->enumtype, type);
   assert(type == "Discretization");
   H5::readAttribute(group, "name", name);
-  // TODO: check link "manifold"
+#warning "TODO: check link manifold"
   H5::readGroup(group, "discretizationblocks",
-                [&](const string &name, const H5::Group &group) {
+                [&](const H5::Group &group, const string &name) {
                   createDiscretizationBlock(group, name);
-                },
-                discretizationblocks);
+                });
 }
 
 ostream &Discretization::output(ostream &os, int level) const {

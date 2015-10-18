@@ -14,12 +14,12 @@ Basis::Basis(const H5::CommonFG &loc, const string &entry,
   H5::readAttribute(group, "type", tangentspace->project->enumtype, type);
   assert(type == "Basis");
   H5::readAttribute(group, "name", name);
-  // TODO: check link "tangentspace"
-  H5::readGroup(
-      group, "basisvectors", [&](const string &name, const H5::Group &group) {
-        createBasisVector(group, name);
-      }, basisvectors);
-  // TODO: check "directions"
+#warning "TODO: check link tangentspace"
+  H5::readGroup(group, "basisvectors",
+                [&](const H5::Group &group, const string &name) {
+                  createBasisVector(group, name);
+                });
+#warning "TODO: check group directions"
 }
 
 ostream &Basis::output(ostream &os, int level) const {

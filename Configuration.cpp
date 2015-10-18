@@ -14,18 +14,22 @@ Configuration::Configuration(const H5::CommonFG &loc, const string &entry,
   H5::readAttribute(group, "type", project->enumtype, type);
   assert(type == "Configuration");
   H5::readAttribute(group, "name", name);
-  // TODO: check link "project"
-  H5::readGroup(group, "parametervalues",
-                [&](const string &name, const H5::Group &group) {
-                  createParameterValue(group, name);
-                },
-                parametervalues);
+#warning "TODO: check link project"
+  H5::readGroup(group, "parametervalues", [&](const H5::Group &group,
+                                              const string &name) {
+    auto parname =
+        H5::readGroupAttribute<string>(group, name + "/parameter", "name");
+    auto parameter = project->parameters.at(parname);
+    auto parametervalue = parameter->parametervalues.at(name);
+    insert(parametervalue);
+  });
 }
 
 ostream &Configuration::output(ostream &os, int level) const {
   os << indent(level) << "Configuration \"" << name << "\"\n";
   for (const auto &val : parametervalues)
-    val.second->output(os, level + 1);
+    os << indent(level + 1) << "Parameter \"" << val.second->parameter->name
+       << "\", ParameterValue \"" << val.second->name << "\"\n";
   return os;
 }
 
@@ -36,22 +40,19 @@ void Configuration::write(const H5::CommonFG &loc,
   H5::createAttribute(group, "name", name);
   H5::createHardLink(group, "project", parent, ".");
   // H5::createAttribute(group, "project", parent, ".");
-  H5::createGroup(group, "parametervalues", parametervalues);
+  auto val_group = group.createGroup("parametervalues");
+  for (const auto &val : parametervalues) {
+    H5::createHardLink(val_group, val.second->name, parent,
+                       string("parameters/") + val.second->parameter->name +
+                           "/parametervalues/" + val.second->name);
+    H5::createHardLink(
+        group, string("project/parameters/") + val.second->parameter->name +
+                   "/parametervalues/" + val.second->name + "/configurations",
+        name, group, ".");
+  }
 }
 
-ParameterValue *Configuration::createParameterValue(const string &name,
-                                                    Parameter *parameter) {
-  auto parametervalue = new ParameterValue(name, this, parameter);
+void Configuration::insert(ParameterValue *parametervalue) {
   checked_emplace(parametervalues, parametervalue->name, parametervalue);
-  assert(parametervalue->invariant());
-  return parametervalue;
-}
-
-ParameterValue *Configuration::createParameterValue(const H5::CommonFG &loc,
-                                                    const string &entry) {
-  auto parametervalue = new ParameterValue(loc, entry, this);
-  checked_emplace(parametervalues, parametervalue->name, parametervalue);
-  assert(parametervalue->invariant());
-  return parametervalue;
 }
 }

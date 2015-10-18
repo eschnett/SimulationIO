@@ -27,17 +27,17 @@ struct TensorType;
 struct Manifold;
 struct TangentSpace;
 struct Field;
-struct CoordinateSystem;
-struct CoordinateBasis;
+// struct CoordinateSystem;
+// struct CoordinateBasis;
 
 struct Project : Common {
-  map<string, Parameter *> parameters;               // owned
-  map<string, Configuration *> configurations;       // owned
-  map<string, TensorType *> tensortypes;             // owned
-  map<string, Manifold *> manifolds;                 // owned
-  map<string, TangentSpace *> tangentspaces;         // owned
-  map<string, Field *> fields;                       // owned
-  map<string, CoordinateSystem *> coordinatesystems; // owned
+  map<string, Parameter *> parameters;         // children
+  map<string, Configuration *> configurations; // children
+  map<string, TensorType *> tensortypes;       // children
+  map<string, Manifold *> manifolds;           // children
+  map<string, TangentSpace *> tangentspaces;   // children
+  map<string, Field *> fields;                 // children
+  // map<string, CoordinateSystem *> coordinatesystems; // children
   // TODO: coordinatebasis
 
   mutable H5::EnumType enumtype;
@@ -90,10 +90,10 @@ public:
   Field *createField(const string &name, Manifold *manifold,
                      TangentSpace *tangentspace, TensorType *tensortype);
   Field *createField(const H5::CommonFG &loc, const string &entry);
-  CoordinateSystem *createCoordinateSystem(const string &name,
-                                           Manifold *manifold);
-  CoordinateSystem *createCoordinateSystem(const H5::CommonFG &loc,
-                                           const string &entry);
+  // CoordinateSystem *createCoordinateSystem(const string &name,
+  //                                          Manifold *manifold);
+  // CoordinateSystem *createCoordinateSystem(const H5::CommonFG &loc,
+  //                                          const string &entry);
 };
 }
 

@@ -30,33 +30,33 @@ Project::Project(const H5::CommonFG &loc, const string &entry) {
   H5::readAttribute(group, "type", enumtype, type);
   assert(type == "Project");
   H5::readAttribute(group, "name", name);
-  H5::readGroup(group,
-                "parameters", [&](const string &name, const H5::Group &group) {
+  H5::readGroup(group, "parameters",
+                [&](const H5::Group &group, const string &name) {
                   createParameter(group, name);
-                }, parameters);
-  H5::readGroup(
-      group, "configurations", [&](const string &name, const H5::Group &group) {
-        createConfiguration(group, name);
-      }, configurations);
-  H5::readGroup(group,
-                "tensortypes", [&](const string &name, const H5::Group &group) {
+                });
+  H5::readGroup(group, "configurations",
+                [&](const H5::Group &group, const string &name) {
+                  createConfiguration(group, name);
+                });
+  H5::readGroup(group, "tensortypes",
+                [&](const H5::Group &group, const string &name) {
                   createTensorType(group, name);
-                }, tensortypes);
-  H5::readGroup(group,
-                "manifolds", [&](const string &name, const H5::Group &group) {
+                });
+  H5::readGroup(group, "manifolds",
+                [&](const H5::Group &group, const string &name) {
                   createManifold(group, name);
-                }, manifolds);
-  H5::readGroup(
-      group, "tangentspaces", [&](const string &name, const H5::Group &group) {
-        createTangentSpace(group, name);
-      }, tangentspaces);
-  H5::readGroup(group,
-                "fields", [&](const string &name, const H5::Group &group) {
+                });
+  H5::readGroup(group, "tangentspaces",
+                [&](const H5::Group &group, const string &name) {
+                  createTangentSpace(group, name);
+                });
+  H5::readGroup(group, "fields",
+                [&](const H5::Group &group, const string &name) {
                   createField(group, name);
-                }, fields);
+                });
 #warning "TODO"
   // H5::readGroup(group, "coordinatesystems",
-  //                [&](const string &name, const H5::Group &group) {
+  //                [&](const H5::Group &group, const string &name) {
   //                  createCoordinateSystem(name, group);
   //                },
   //                coordinatesystems);
@@ -82,26 +82,19 @@ void Project::createStandardTensortypes() {
 
 ostream &Project::output(ostream &os, int level) const {
   os << indent(level) << "Project \"" << name << "\"\n";
-  os << indent(level) << "parameters:\n";
   for (const auto &par : parameters)
     par.second->output(os, level + 1);
-  os << indent(level) << "configurations:\n";
   for (const auto &conf : configurations)
     conf.second->output(os, level + 1);
-  os << indent(level) << "tensortypes:\n";
   for (const auto &tt : tensortypes)
     tt.second->output(os, level + 1);
-  os << indent(level) << "manifolds:\n";
   for (const auto &m : manifolds)
     m.second->output(os, level + 1);
-  os << indent(level) << "tangentspaces:\n";
   for (const auto &ts : tangentspaces)
     ts.second->output(os, level + 1);
-  os << indent(level) << "fields:\n";
   for (const auto &f : fields)
     f.second->output(os, level + 1);
 #warning "TODO"
-  // os << indent(level) << "coordinatesystems:\n";
   // for (const auto &cs : coordinatesystems)
   //   cs.second->output(os, level + 1);
   return os;

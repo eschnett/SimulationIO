@@ -10,15 +10,21 @@
 
 namespace SimulationIO {
 
+struct DiscreteFieldBlock;
+
 struct DiscretizationBlock : Common {
   // Discretization of a certain region, represented by contiguous data
-  Discretization *discretization;
+  Discretization *discretization; // parent
+  NoBackLink<DiscreteFieldBlock *> discretefieldblocks;
+
   // bounding box? in terms of coordinates?
   // connectivity? neighbouring blocks?
   // overlaps?
 
   virtual bool invariant() const {
-    return Common::invariant() && bool(discretization);
+    return Common::invariant() && bool(discretization) &&
+           discretization->discretizationblocks.count(name) &&
+           discretization->discretizationblocks.at(name) == this;
   }
 
   DiscretizationBlock() = delete;
@@ -44,6 +50,8 @@ public:
   }
   virtual void write(const H5::CommonFG &loc,
                      const H5::H5Location &parent) const;
+
+  void noinsert(DiscreteFieldBlock *discretefieldblock) {}
 };
 }
 

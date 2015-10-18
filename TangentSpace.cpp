@@ -1,6 +1,7 @@
 #include "TangentSpace.hpp"
 
 #include "Basis.hpp"
+#include "Field.hpp"
 
 #include "H5Helpers.hpp"
 
@@ -14,12 +15,13 @@ TangentSpace::TangentSpace(const H5::CommonFG &loc, const string &entry,
   H5::readAttribute(group, "type", project->enumtype, type);
   assert(type == "TangentSpace");
   H5::readAttribute(group, "name", name);
-  // TODO: check link "project"
+#warning "TODO: check link project"
   H5::readAttribute(group, "dimension", dimension);
-  H5::readGroup(group,
-                "bases", [&](const string &name, const H5::Group &group) {
+  H5::readGroup(group, "bases",
+                [&](const H5::Group &group, const string &name) {
                   createBasis(group, name);
-                }, bases);
+                });
+#warning "TODO: check fields"
 }
 
 ostream &TangentSpace::output(ostream &os, int level) const {
@@ -27,6 +29,8 @@ ostream &TangentSpace::output(ostream &os, int level) const {
      << "\n";
   for (const auto &b : bases)
     b.second->output(os, level + 1);
+  for (const auto &f : fields)
+    os << indent(level + 2) << "field \"" << f.second->name << "\"\n";
   return os;
 }
 
@@ -39,6 +43,7 @@ void TangentSpace::write(const H5::CommonFG &loc,
   // H5::createAttribute(group, "project", parent, ".");
   H5::createAttribute(group, "dimension", dimension);
   H5::createGroup(group, "bases", bases);
+  group.createGroup("fields");
 }
 
 Basis *TangentSpace::createBasis(const string &name) {

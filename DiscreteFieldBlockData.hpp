@@ -20,8 +20,8 @@ using std::string;
 
 struct DiscreteFieldBlockData : Common {
   // Tensor component for a discrete field on a particular region
-  DiscreteFieldBlock *discretefieldblock;
-  TensorComponent *tensorcomponent;
+  DiscreteFieldBlock *discretefieldblock; // parent
+  TensorComponent *tensorcomponent;       // without backlink
   bool have_extlink;
   string extlink_file_name, extlink_obj_name;
 
@@ -30,6 +30,7 @@ struct DiscreteFieldBlockData : Common {
                discretefieldblock->discretefieldblockdata.count(name) &&
                discretefieldblock->discretefieldblockdata.at(name) == this &&
                bool(tensorcomponent) &&
+               tensorcomponent->discretefieldblockdata.nobacklink() &&
                discretefieldblock->discretefield->field->tensortype ==
                    tensorcomponent->tensortype;
     if (have_extlink)
@@ -49,7 +50,9 @@ private:
                          DiscreteFieldBlock *discretefieldblock,
                          TensorComponent *tensorcomponent)
       : Common(name), discretefieldblock(discretefieldblock),
-        tensorcomponent(tensorcomponent), have_extlink(false) {}
+        tensorcomponent(tensorcomponent), have_extlink(false) {
+    tensorcomponent->noinsert(this);
+  }
   DiscreteFieldBlockData(const H5::CommonFG &loc, const string &entry,
                          DiscreteFieldBlock *discretefieldblock);
 

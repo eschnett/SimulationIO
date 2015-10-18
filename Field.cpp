@@ -13,7 +13,7 @@ Field::Field(const H5::CommonFG &loc, const string &entry, Project *project)
   H5::readAttribute(group, "type", project->enumtype, type);
   assert(type == "Field");
   H5::readAttribute(group, "name", name);
-  // TODO: check link "project"
+#warning "TODO: check link project"
   // TODO: Read and interpret objects (shallowly) instead of naively only
   // looking at their names
   {
@@ -40,13 +40,13 @@ Field::Field(const H5::CommonFG &loc, const string &entry, Project *project)
     auto attr = H5::readAttribute(obj, "name", name);
     tensortype = project->tensortypes.at(name);
   }
-  H5::readGroup(
-      group, "discretefields", [&](const string &name, const H5::Group &group) {
-        createDiscreteField(group, name);
-      }, discretefields);
+  H5::readGroup(group, "discretefields",
+                [&](const H5::Group &group, const string &name) {
+                  createDiscreteField(group, name);
+                });
   manifold->insert(name, this);
   tangentspace->insert(name, this);
-  // tensortype->insert(this);
+  tensortype->noinsert(this);
 }
 
 ostream &Field::output(ostream &os, int level) const {
@@ -65,8 +65,13 @@ void Field::write(const H5::CommonFG &loc, const H5::H5Location &parent) const {
   H5::createHardLink(group, "project", parent, ".");
   H5::createHardLink(group, "manifold", parent,
                      string("manifolds/") + manifold->name);
+  H5::createHardLink(group, string("project/manifolds/") + manifold->name, name,
+                     group, ".");
   H5::createHardLink(group, "tangentspace", parent,
                      string("tangentspaces/") + tangentspace->name);
+  H5::createHardLink(group,
+                     string("project/tangentspaces/") + tangentspace->name,
+                     name, group, ".");
   H5::createHardLink(group, "tensortype", parent,
                      string("tensortypes/") + tensortype->name);
   // H5::createAttribute(group, "project", parent, ".");

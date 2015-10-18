@@ -17,8 +17,11 @@ using std::iostream;
 using std::map;
 using std::string;
 
+struct ParameterValue;
+
 struct Parameter : Common {
-  Project *project;
+  Project *project;                              // parent
+  map<string, ParameterValue *> parametervalues; // children
   // type, range?, description?
 
   virtual bool invariant() const {
@@ -48,6 +51,10 @@ public:
   }
   virtual void write(const H5::CommonFG &loc,
                      const H5::H5Location &parent) const;
+
+  ParameterValue *createParameterValue(const string &name);
+  ParameterValue *createParameterValue(const H5::CommonFG &loc,
+                                       const string &entry);
 };
 }
 

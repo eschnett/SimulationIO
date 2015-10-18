@@ -18,14 +18,16 @@ using std::map;
 using std::string;
 using std::vector;
 
+struct Field;
 struct TensorComponent;
 
 struct TensorType : Common {
-  Project *project;
+  Project *project; // parent
   int dimension;
   int rank;
-  map<string, TensorComponent *> tensorcomponents; // owned
+  map<string, TensorComponent *> tensorcomponents; // children
   map<int, TensorComponent *> storage_indices;
+  NoBackLink<Field *> fields;
 
   virtual bool invariant() const {
     bool inv = Common::invariant() && bool(project) &&
@@ -64,6 +66,8 @@ public:
                                          const vector<int> &indexvalues);
   TensorComponent *createTensorComponent(const H5::CommonFG &loc,
                                          const string &entry);
+
+  void noinsert(Field *field) {}
 };
 }
 

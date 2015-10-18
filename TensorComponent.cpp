@@ -12,7 +12,7 @@ TensorComponent::TensorComponent(const H5::CommonFG &loc, const string &entry,
   H5::readAttribute(group, "type", tensortype->project->enumtype, type);
   assert(type == "TensorComponent");
   H5::readAttribute(group, "name", name);
-  // TODO: check link "tensortype"
+#warning "TODO: check link tensortype"
   H5::readAttribute(group, "storage_index", storage_index);
   H5::readAttribute(group, "indexvalues", indexvalues);
 }

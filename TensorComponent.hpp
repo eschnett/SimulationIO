@@ -17,10 +17,13 @@ using std::iostream;
 using std::string;
 using std::vector;
 
+struct DiscreteFieldBlockData;
+
 struct TensorComponent : Common {
-  TensorType *tensortype;
+  TensorType *tensortype; // parent
   int storage_index;
   vector<int> indexvalues;
+  NoBackLink<DiscreteFieldBlockData *> discretefieldblockdata;
 
   virtual bool invariant() const {
     bool inv = Common::invariant() && bool(tensortype) &&
@@ -74,6 +77,8 @@ public:
   }
   virtual void write(const H5::CommonFG &loc,
                      const H5::H5Location &parent) const;
+
+  void noinsert(DiscreteFieldBlockData *discretefieldblockdata) {}
 };
 }
 

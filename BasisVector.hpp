@@ -11,7 +11,7 @@
 namespace SimulationIO {
 
 struct BasisVector : Common {
-  Basis *basis;
+  Basis *basis; // parent
   int direction;
 
   virtual bool invariant() const {

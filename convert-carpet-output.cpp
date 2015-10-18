@@ -16,6 +16,16 @@ using namespace std;
 
 const char *const dirnames[] = {"x", "y", "z"};
 
+string get_basename(string filename) {
+  auto dotpos = filename.rfind('.');
+  if (dotpos != string::npos)
+    filename = filename.substr(0, dotpos);
+  auto slashpos = filename.rfind('/');
+  if (slashpos != string::npos)
+    filename = filename.substr(slashpos + 1);
+  return filename;
+}
+
 int main(int argc, char **argv) {
 
   if (argc < 3) {
@@ -25,17 +35,7 @@ int main(int argc, char **argv) {
   }
 
   const string outputfilename = argv[1];
-  string basename = outputfilename;
-  {
-    auto dotpos = basename.rfind('.');
-    if (dotpos != string::npos)
-      basename = basename.substr(0, dotpos);
-  }
-  {
-    auto slashpos = basename.rfind('/');
-    if (slashpos != string::npos)
-      basename = basename.substr(slashpos + 1);
-  }
+  const string basename = get_basename(outputfilename);
   assert(!basename.empty());
 
   // Project
@@ -146,21 +146,41 @@ int main(int argc, char **argv) {
           cout << "    refinement level: " << refinementlevel << "\n";
 
           // Get configuration
-          string configurationname;
+          string value_iteration_name;
           {
             ostringstream buf;
-            buf << "it." << iteration << "-tl." << timelevel;
-            configurationname = buf.str();
+            buf << parameter_iteration->name << "." << iteration;
+            value_iteration_name = buf.str();
           }
+          string value_timelevel_name;
+          {
+            ostringstream buf;
+            buf << parameter_timelevel->name << "." << timelevel;
+            value_timelevel_name = buf.str();
+          }
+          auto configurationname =
+              value_iteration_name + "-" + value_timelevel_name;
           if (!project->configurations.count(configurationname)) {
             auto configuration =
                 project->createConfiguration(configurationname);
-            auto value_iteration = configuration->createParameterValue(
-                parameter_iteration->name, parameter_iteration);
-            value_iteration->setValue(iteration);
-            auto value_timelevel = configuration->createParameterValue(
-                parameter_timelevel->name, parameter_timelevel);
-            value_timelevel->setValue(timelevel);
+            if (!parameter_iteration->parametervalues.count(
+                    value_iteration_name)) {
+              auto value_iteration = parameter_iteration->createParameterValue(
+                  value_iteration_name);
+              value_iteration->setValue(iteration);
+            }
+            auto value_iteration =
+                parameter_iteration->parametervalues.at(value_iteration_name);
+            configuration->insert(value_iteration);
+            if (!parameter_timelevel->parametervalues.count(
+                    value_timelevel_name)) {
+              auto value_timelevel = parameter_timelevel->createParameterValue(
+                  value_timelevel_name);
+              value_timelevel->setValue(timelevel);
+            }
+            auto value_timelevel =
+                parameter_timelevel->parametervalues.at(value_timelevel_name);
+            configuration->insert(value_timelevel);
           }
           auto configuration = project->configurations.at(configurationname);
 

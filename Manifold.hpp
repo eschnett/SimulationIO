@@ -21,10 +21,10 @@ struct Field;
 struct Discretization;
 
 struct Manifold : Common {
-  Project *project;
+  Project *project; // parent
   int dimension;
-  map<string, Discretization *> discretizations; // owned
-  map<string, Field *> fields;
+  map<string, Discretization *> discretizations; // children
+  map<string, Field *> fields;                   // backlinks
 
   virtual bool invariant() const {
     bool inv = Common::invariant() && bool(project) &&

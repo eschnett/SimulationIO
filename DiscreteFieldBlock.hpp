@@ -3,6 +3,7 @@
 
 #include "Common.hpp"
 #include "DiscreteField.hpp"
+#include "DiscretizationBlock.hpp"
 
 #include <H5Cpp.h>
 
@@ -21,14 +22,16 @@ struct DiscreteFieldBlockData;
 
 struct DiscreteFieldBlock : Common {
   // Discrete field on a particular region (discretization block)
-  DiscreteField *discretefield;
-  DiscretizationBlock *discretizationblock;
-  map<string, DiscreteFieldBlockData *> discretefieldblockdata; // owned
+  DiscreteField *discretefield;                                 // parent
+  DiscretizationBlock *discretizationblock;                     // with backlink
+  map<string, DiscreteFieldBlockData *> discretefieldblockdata; // children
 
   virtual bool invariant() const {
     return Common::invariant() && bool(discretefield) &&
            discretefield->discretefieldblocks.count(name) &&
-           discretefield->discretefieldblocks.at(name) == this;
+           discretefield->discretefieldblocks.at(name) == this &&
+           bool(discretizationblock) &&
+           discretizationblock->discretefieldblocks.nobacklink();
   }
 
   DiscreteFieldBlock() = delete;
@@ -50,8 +53,9 @@ public:
   virtual ~DiscreteFieldBlock() { assert(0); }
 
   virtual ostream &output(ostream &os, int level = 0) const;
-  friend ostream &operator<<(ostream &os, const DiscreteFieldBlock &basis) {
-    return basis.output(os);
+  friend ostream &operator<<(ostream &os,
+                             const DiscreteFieldBlock &discretefieldblock) {
+    return discretefieldblock.output(os);
   }
   virtual void write(const H5::CommonFG &loc,
                      const H5::H5Location &parent) const;

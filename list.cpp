@@ -28,10 +28,10 @@ int main(int argc, char **argv) {
   try {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);
     map<string, Project *> projects;
-    H5::readGroup(file, ".", [&](const string &name, const H5::Group &group) {
+    H5::readGroup(file, ".", [&](const H5::Group &group, const string &name) {
       auto project = createProject(group, name);
       cout << *project;
-    }, projects);
+    });
   } catch (H5::FileIException error) {
     cerr << "Could not open file \"" << filename << "\" for reading.\n";
     return 2;

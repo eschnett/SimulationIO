@@ -11,21 +11,45 @@ namespace SimulationIO {
 using std::ostream;
 using std::string;
 
+// Entity relationships
+
+#if 0
+// Parents and children; children are "owned" by their parents, and only created
+// by their parent
+template <typename Child> struct children { map<string, Child *> children; };
+template <typename Parent> struct parent { Parent *parent; };
+
+// Links that register with their target
+template <typename Source> struct backlinks { map<string, Source *> sources; };
+template <typename Target> struct link { Target *target; };
+
+// Unidirectionsl links that don't register with their target
+template <typename Source> struct nobacklinks {};
+template <typename Target> struct unilink { Target *target; };
+#endif
+
+// An always empty pseudo-container type indicating that there is no
+// back-link
+template <typename T> struct NoBackLink {
+  bool nobacklink() const { return true; }
+};
+
 // Common to all file elements
 
 struct Common {
   string name;
 
+  virtual bool invariant() const { return !name.empty(); }
+
   Common(const string &name) : name(name) {}
   Common() {}
-  virtual bool invariant() const { return !name.empty(); }
 
   virtual ~Common() {}
   virtual ostream &output(ostream &os, int level = 0) const = 0;
   virtual void write(const H5::CommonFG &loc,
                      const H5::H5Location &parent) const = 0;
 
-  // The associations between names and integer values below MUST NOT BE
+  // The association between names and integer values below MUST NOT BE
   // MODIFIED, except that new integer values may be added.
   enum types {
     type_Basis = 1,

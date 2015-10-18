@@ -14,7 +14,7 @@ DiscretizationBlock::DiscretizationBlock(const H5::CommonFG &loc,
                     type);
   assert(type == "DiscretizationBlock");
   H5::readAttribute(group, "name", name);
-  // TODO: check link "discretization"
+#warning "TODO: check link discretization"
 }
 
 ostream &DiscretizationBlock::output(ostream &os, int level) const {

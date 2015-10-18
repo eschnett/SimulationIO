@@ -13,7 +13,7 @@ BasisVector::BasisVector(const H5::CommonFG &loc, const string &entry,
                     type);
   assert(type == "BasisVector");
   H5::readAttribute(group, "name", name);
-  // TODO: check link "basis"
+#warning "TODO: check link basis"
   H5::readAttribute(group, "direction", direction);
 }
 

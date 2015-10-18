@@ -17,11 +17,13 @@ using std::ostream;
 using std::map;
 using std::string;
 
+struct DiscreteField;
 struct DiscretizationBlock;
 
 struct Discretization : Common {
-  Manifold *manifold;
-  map<string, DiscretizationBlock *> discretizationblocks; // owned
+  Manifold *manifold;                                      // parent
+  map<string, DiscretizationBlock *> discretizationblocks; // children
+  NoBackLink<DiscreteField *> discretefields;
 
   virtual bool invariant() const {
     return Common::invariant() && bool(manifold) &&
@@ -56,6 +58,8 @@ public:
   DiscretizationBlock *createDiscretizationBlock(const string &name);
   DiscretizationBlock *createDiscretizationBlock(const H5::CommonFG &loc,
                                                  const string &entry);
+
+  void noinsert(DiscreteField *discretefield) {}
 };
 }
 

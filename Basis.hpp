@@ -18,13 +18,15 @@ using std::map;
 using std::string;
 
 struct BasisVector;
-struct CoordinateBasis;
+struct DiscreteField;
+// struct CoordinateBasis;
 
 struct Basis : Common {
-  TangentSpace *tangentspace;
-  map<string, BasisVector *> basisvectors; // owned
+  TangentSpace *tangentspace;              // parent
+  map<string, BasisVector *> basisvectors; // children
   map<int, BasisVector *> directions;
-  map<string, CoordinateBasis *> coordinatebases;
+  NoBackLink<DiscreteField *> discretefields;
+  // map<string, CoordinateBasis *> coordinatebases;
 
   virtual bool invariant() const {
     return Common::invariant() && bool(tangentspace) &&
@@ -59,6 +61,8 @@ public:
 
   BasisVector *createBasisVector(const string &name, int direction);
   BasisVector *createBasisVector(const H5::CommonFG &loc, const string &entry);
+
+  void noinsert(DiscreteField *discretefield) {}
 };
 }
 

@@ -15,7 +15,7 @@ DiscreteFieldBlockData::DiscreteFieldBlockData(
                     type);
   assert(type == "DiscreteFieldBlockData");
   H5::readAttribute(group, "name", name);
-  // TODO: check link "discretefieldblock"
+#warning "TODO: check link discretefieldblock"
   // TODO: Read and interpret objects (shallowly) instead of naively only
   // looking at their names
   {
@@ -29,7 +29,7 @@ DiscreteFieldBlockData::DiscreteFieldBlockData(
   }
   H5::readExternalLink(group, "data", have_extlink, extlink_file_name,
                        extlink_obj_name);
-  // tensorcomponent->insert(this);
+  tensorcomponent->noinsert(this);
 }
 
 void DiscreteFieldBlockData::setExternalLink(const string &file_name,
@@ -44,7 +44,7 @@ ostream &DiscreteFieldBlockData::output(ostream &os, int level) const {
      << "\": discretefieldblock=\"" << discretefieldblock->name
      << "\" tensorcomponent=\"" << tensorcomponent->name << "\"\n";
   if (have_extlink)
-    os << indent(level) << "data: external link \"" << extlink_file_name
+    os << indent(level + 1) << "data: external link \"" << extlink_file_name
        << "\", \"" << extlink_file_name << "\"\n";
   // TODO: output information about the dataset, e.g. type and shape
   return os;

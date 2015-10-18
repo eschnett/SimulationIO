@@ -25,8 +25,13 @@ SIO_SRCS = \
 	TangentSpace.cpp \
 	TensorComponent.cpp \
 	TensorType.cpp
-ALL_SRCS = $(SIO_SRCS) convert-carpet-output.cpp example.cpp selftest.cpp
-ALL_EXE = convert-carpet-output xample selftest
+ALL_SRCS = \
+	$(SIO_SRCS) \
+	convert-carpet-output.cpp \
+	example.cpp \
+	list.cpp \
+	selftest.cpp
+ALL_EXE = convert-carpet-output list example selftest
 
 HDF5_DIR = /opt/local
 HDF5_CPPFLAGS = -I$(HDF5_DIR)/include

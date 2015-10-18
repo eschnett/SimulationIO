@@ -5,10 +5,13 @@
 
 #include <H5Cpp.h>
 
+#include <algorithm>
 #include <cassert>
 #include <map>
 #include <memory>
+#include <set>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 namespace H5 {
@@ -71,17 +74,6 @@ herr_t iterateElems(const H5Location &loc, H5_index_t index_type,
                                                              order, idx);
   assert(iret >= 0);
   return iret;
-}
-
-// Write a map (ignoring the keys)
-template <typename K, typename T>
-Group createGroup(const CommonFG &loc, const std::string &name,
-                  const std::map<K, T *> &m) {
-  // We assume that Key is string-like, and that T is a subtype of Common
-  auto group = loc.createGroup(name);
-  for (const auto &p : m)
-    p.second->write(group, *getLocation(loc));
-  return group;
 }
 
 // Get HDF5 datatype from C++ type
@@ -261,20 +253,26 @@ inline Attribute readAttribute(const H5Location &loc, const std::string &name,
   return attr;
 }
 
-// Read a map
-template <typename R, typename K, typename T>
-Group readGroup(const CommonFG &loc, const std::string &name, R read_object,
-                std::map<K, T *> &m) {
-  // We assume that Key is string-like, and that T is a subtype of Common
-  auto group = loc.openGroup(name);
-  hsize_t idx = 0;
-  iterateElems(
-      group, H5_INDEX_NAME, H5_ITER_NATIVE, &idx,
-      [&](const Group &group, const std::string &name, const H5L_info_t *info) {
-        read_object(name, group);
-        return 0;
-      });
-  return group;
+template <typename T>
+T readAttribute(const H5Location &loc, const std::string &name) {
+  T value;
+  readAttribute(loc, name, value);
+  return value;
+}
+
+template <typename T>
+T readAttribute(const H5Location &loc, const std::string &name,
+                const H5::EnumType &type) {
+  T value;
+  readAttribute(loc, name, type, value);
+  return value;
+}
+
+template <typename T>
+T readGroupAttribute(const CommonFG &loc, const std::string &groupname,
+                     const std::string &attrname) {
+  auto group = loc.openGroup(groupname);
+  return readAttribute<T>(group, attrname);
 }
 
 // Create a hard link
@@ -296,6 +294,15 @@ inline herr_t createHardLink(const CommonFG &link_loc,
   auto lapl_herr = H5Pclose(lapl);
   assert(!lapl_herr);
   return herr;
+}
+
+inline herr_t createHardLink(const CommonFG &link_loc,
+                             const std::string &link_path,
+                             const std::string &link_name,
+                             const H5Location &obj_loc,
+                             const std::string &obj_name) {
+  return createHardLink(link_loc.openGroup(link_path), link_name, obj_loc,
+                        obj_name);
 }
 
 // Create an external link
@@ -348,6 +355,61 @@ inline void readExternalLink(const CommonFG &link_loc,
   }
   auto lapl_herr = H5Pclose(lapl);
   assert(!lapl_herr);
+}
+
+// Write a map (ignoring the keys)
+template <typename K, typename T>
+Group createGroup(const CommonFG &loc, const std::string &name,
+                  const std::map<K, T *> &m) {
+  // We assume that T is a subtype of Common
+  auto group = loc.createGroup(name);
+  for (const auto &p : m)
+    p.second->write(group, *getLocation(loc));
+  return group;
+}
+
+// This is probably never correct; instead, the group's entries should insert
+// themselves into the group
+#if 0
+template <typename K, typename T>
+Group createHardLinkGroup(const CommonFG &loc, const std::string &name,
+                          const H5Location &parent, const std::string &path,
+                          const std::map<K, T *> &m) {
+  // We assume that T is a subtype of Common
+  auto group = loc.createGroup(name);
+  for (const auto &p : m)
+    createHardLink(group, p.second->name, parent, path + "/" + p.second->name);
+  return group;
+}
+#endif
+
+// Read a map
+template <typename R>
+Group readGroup(const CommonFG &loc, const std::string &name, R read_object) {
+  auto group = loc.openGroup(name);
+  hsize_t idx = 0;
+  iterateElems(
+      group, H5_INDEX_NAME, H5_ITER_NATIVE, &idx,
+      [&](const Group &group, const std::string &name, const H5L_info_t *info) {
+        read_object(group, name);
+        return 0;
+      });
+  return group;
+}
+
+template <typename K, typename T>
+bool checkGroupNames(const CommonFG &loc, const std::string &name,
+                     const std::map<K, T> &m) {
+  std::set<std::string> names;
+  readGroup(loc, name, [&](const Group &group, const std::string &name) {
+    names.insert(name);
+  });
+  if (names.size() != m.size())
+    return false;
+  return std::equal(names.begin(), names.end(), m.begin(),
+                    [](const std::string &s1, const std::pair<K, T> &sf2) {
+                      return s1 == sf2.first;
+                    });
 }
 }
 

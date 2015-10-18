@@ -46,6 +46,7 @@ using std::vector;
 
 // Coordinates
 
+struct CoordinateBasis;
 struct CoordinateField;
 
 struct CoordinateSystem {
