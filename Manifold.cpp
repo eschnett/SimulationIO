@@ -27,7 +27,8 @@ Manifold::Manifold(const H5::CommonFG &loc, const string &entry,
                 [&](const H5::Group &group, const string &name) {
                   createDiscretization(group, name);
                 });
-  assert(H5::checkGroupNames(group, "fields", fields));
+  // Cannot check "fields" since fields have not been read yet
+  // assert(H5::checkGroupNames(group, "fields", fields));
 }
 
 ostream &Manifold::output(ostream &os, int level) const {

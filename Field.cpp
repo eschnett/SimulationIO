@@ -47,12 +47,13 @@ void Field::write(const H5::CommonFG &loc, const H5::H5Location &parent) const {
   H5::createHardLink(group, "project", parent, ".");
   H5::createHardLink(group, "manifold", parent,
                      string("manifolds/") + manifold->name);
-  H5::createHardLink(group, string("project/manifolds/") + manifold->name, name,
-                     group, ".");
+  H5::createHardLink(group,
+                     string("project/manifolds/") + manifold->name + "/fields",
+                     name, group, ".");
   H5::createHardLink(group, "tangentspace", parent,
                      string("tangentspaces/") + tangentspace->name);
-  H5::createHardLink(group,
-                     string("project/tangentspaces/") + tangentspace->name,
+  H5::createHardLink(group, string("project/tangentspaces/") +
+                                tangentspace->name + "/fields",
                      name, group, ".");
   H5::createHardLink(group, "tensortype", parent,
                      string("tensortypes/") + tensortype->name);

@@ -39,7 +39,8 @@ ParameterValue::ParameterValue(const H5::CommonFG &loc, const string &entry,
       assert(0);
     }
   }
-  // cannot check "configurations" since configurations have not be read yet
+  // Cannot check "configurations" since configurations have not been read yet
+  // assert(H5::checkGroupNames(group, "configurations", configurations));
 }
 
 void ParameterValue::setValue() { value_type = type_empty; }
