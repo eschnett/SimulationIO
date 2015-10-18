@@ -9,24 +9,18 @@ DiscreteFieldBlockData::DiscreteFieldBlockData(
     DiscreteFieldBlock *discretefieldblock)
     : discretefieldblock(discretefieldblock), have_extlink(false) {
   auto group = loc.openGroup(entry);
-  string type;
-  H5::readAttribute(group, "type",
-                    discretefieldblock->discretefield->field->project->enumtype,
-                    type);
-  assert(type == "DiscreteFieldBlockData");
+  assert(H5::readAttribute<string>(
+             group, "type",
+             discretefieldblock->discretefield->field->project->enumtype) ==
+         "DiscreteFieldBlockData");
   H5::readAttribute(group, "name", name);
-#warning "TODO: check link discretefieldblock"
+  assert(H5::readGroupAttribute<string>(group, "discretefieldblock", "name") ==
+         discretefieldblock->name);
   // TODO: Read and interpret objects (shallowly) instead of naively only
   // looking at their names
-  {
-    auto obj = group.openGroup("tensorcomponent");
-    // H5::Group obj;
-    // H5::readAttribute(group, "tensorcomponent", obj);
-    string name;
-    auto attr = H5::readAttribute(obj, "name", name);
-    tensorcomponent = discretefieldblock->discretefield->field->tensortype
-                          ->tensorcomponents.at(name);
-  }
+  tensorcomponent =
+      discretefieldblock->discretefield->field->tensortype->tensorcomponents.at(
+          H5::readGroupAttribute<string>(group, "tensorcomponent", "name"));
   H5::readExternalLink(group, "data", have_extlink, extlink_file_name,
                        extlink_obj_name);
   tensorcomponent->noinsert(this);
@@ -46,7 +40,6 @@ ostream &DiscreteFieldBlockData::output(ostream &os, int level) const {
   if (have_extlink)
     os << indent(level + 1) << "data: external link \"" << extlink_file_name
        << "\", \"" << extlink_file_name << "\"\n";
-  // TODO: output information about the dataset, e.g. type and shape
   return os;
 }
 
@@ -63,10 +56,6 @@ void DiscreteFieldBlockData::write(const H5::CommonFG &loc,
       group, "tensorcomponent", parent,
       string("discretefield/field/tensortype/tensorcomponents/") +
           tensorcomponent->name);
-  // H5::createAttribute(group, "discretefieldblock", parent, ".");
-  // H5::createAttribute(group, "tensorcomponent", parent,
-  //                     string("discretefield/field/tensortype/") +
-  //                         tensorcomponent->name);
   if (have_extlink)
     H5::createExternalLink(group, "data", extlink_file_name, extlink_obj_name);
 }

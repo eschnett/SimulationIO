@@ -11,17 +11,17 @@ TangentSpace::TangentSpace(const H5::CommonFG &loc, const string &entry,
                            Project *project)
     : project(project) {
   auto group = loc.openGroup(entry);
-  string type;
-  H5::readAttribute(group, "type", project->enumtype, type);
-  assert(type == "TangentSpace");
+  assert(H5::readAttribute<string>(group, "type", project->enumtype) ==
+         "TangentSpace");
   H5::readAttribute(group, "name", name);
-#warning "TODO: check link project"
+  assert(H5::readGroupAttribute<string>(group, "project", "name") ==
+         project->name);
   H5::readAttribute(group, "dimension", dimension);
   H5::readGroup(group, "bases",
                 [&](const H5::Group &group, const string &name) {
                   createBasis(group, name);
                 });
-#warning "TODO: check fields"
+  assert(H5::checkGroupNames(group, "fields", fields));
 }
 
 ostream &TangentSpace::output(ostream &os, int level) const {
@@ -30,7 +30,7 @@ ostream &TangentSpace::output(ostream &os, int level) const {
   for (const auto &b : bases)
     b.second->output(os, level + 1);
   for (const auto &f : fields)
-    os << indent(level + 2) << "field \"" << f.second->name << "\"\n";
+    os << indent(level + 1) << "Field \"" << f.second->name << "\"\n";
   return os;
 }
 
@@ -40,7 +40,6 @@ void TangentSpace::write(const H5::CommonFG &loc,
   H5::createAttribute(group, "type", project->enumtype, "TangentSpace");
   H5::createAttribute(group, "name", name);
   H5::createHardLink(group, "project", parent, ".");
-  // H5::createAttribute(group, "project", parent, ".");
   H5::createAttribute(group, "dimension", dimension);
   H5::createGroup(group, "bases", bases);
   group.createGroup("fields");

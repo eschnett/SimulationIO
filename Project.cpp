@@ -23,7 +23,6 @@ Project *createProject(const H5::CommonFG &loc, const string &entry) {
 }
 
 Project::Project(const H5::CommonFG &loc, const string &entry) {
-  // auto group = loc.openGroup(entry);
   auto group = loc.openGroup(".");
   createTypes(); // TODO: read from file
   string type;
@@ -54,7 +53,7 @@ Project::Project(const H5::CommonFG &loc, const string &entry) {
                 [&](const H5::Group &group, const string &name) {
                   createField(group, name);
                 });
-#warning "TODO"
+  // TODO
   // H5::readGroup(group, "coordinatesystems",
   //                [&](const H5::Group &group, const string &name) {
   //                  createCoordinateSystem(name, group);
@@ -94,7 +93,7 @@ ostream &Project::output(ostream &os, int level) const {
     ts.second->output(os, level + 1);
   for (const auto &f : fields)
     f.second->output(os, level + 1);
-#warning "TODO"
+  // TODO
   // for (const auto &cs : coordinatesystems)
   //   cs.second->output(os, level + 1);
   return os;
@@ -142,7 +141,7 @@ void Project::write(const H5::CommonFG &loc,
   H5::createGroup(group, "manifolds", manifolds);
   H5::createGroup(group, "tangentspaces", tangentspaces);
   H5::createGroup(group, "fields", fields);
-#warning "TODO"
+  // TODO
   // H5::createGroup(group, "coordiantesystems", coordinatesystems);
   enumtype = H5::EnumType();
 }
@@ -239,7 +238,7 @@ Field *Project::createField(const H5::CommonFG &loc, const string &entry) {
   return field;
 }
 
-#warning "TODO"
+// TODO
 // CoordinateSystem *Project::createCoordinateSystem(const string &name,
 //                                                   Manifold *manifold) {
 //   auto coordinatesystem = new CoordinateSystem(name, this, manifold);

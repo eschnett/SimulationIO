@@ -11,11 +11,11 @@ ParameterValue::ParameterValue(const H5::CommonFG &loc, const string &entry,
                                Parameter *parameter)
     : parameter(parameter), value_type(type_empty) {
   auto group = loc.openGroup(entry);
-  string type;
-  H5::readAttribute(group, "type", parameter->project->enumtype, type);
-  assert(type == "ParameterValue");
+  assert(H5::readAttribute<string>(
+             group, "type", parameter->project->enumtype) == "ParameterValue");
   H5::readAttribute(group, "name", name);
-#warning "TODO: check link parameter"
+  assert(H5::readGroupAttribute<string>(group, "parameter", "name") ==
+         parameter->name);
   // TODO: Read and interpret objects (shallowly) instead of naively only
   // looking at their names
   if (group.attrExists("data")) {
@@ -39,7 +39,7 @@ ParameterValue::ParameterValue(const H5::CommonFG &loc, const string &entry,
       assert(0);
     }
   }
-#warning "TODO: check configurations"
+  // cannot check "configurations" since configurations have not be read yet
 }
 
 void ParameterValue::setValue() { value_type = type_empty; }
@@ -85,7 +85,6 @@ void ParameterValue::write(const H5::CommonFG &loc,
   H5::createAttribute(group, "type", parameter->project->enumtype,
                       "ParameterValue");
   H5::createAttribute(group, "name", name);
-  // H5::createAttribute(group, "configuration", parent, ".");
   H5::createHardLink(group, "parameter", parent,
                      string("project/parameters/") + parameter->name);
   switch (value_type) {

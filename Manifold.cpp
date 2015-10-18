@@ -36,7 +36,7 @@ ostream &Manifold::output(ostream &os, int level) const {
   for (const auto &d : discretizations)
     d.second->output(os, level + 1);
   for (const auto &f : fields)
-    os << indent(level + 2) << "Field \"" << f.second->name << "\"\n";
+    os << indent(level + 1) << "Field \"" << f.second->name << "\"\n";
   return os;
 }
 
@@ -46,10 +46,8 @@ void Manifold::write(const H5::CommonFG &loc,
   H5::createAttribute(group, "type", project->enumtype, "Manifold");
   H5::createAttribute(group, "name", name);
   H5::createHardLink(group, "project", parent, ".");
-  // H5::createAttribute(group, "project", parent, ".");
   H5::createAttribute(group, "dimension", dimension);
   H5::createGroup(group, "discretizations", discretizations);
-  // H5::createHardLinkGroup(group, "fields", parent, "fields", fields);
   group.createGroup("fields");
 }
 

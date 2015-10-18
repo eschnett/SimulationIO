@@ -95,14 +95,17 @@ TEST(ParameterValue, create) {
   const auto &par2 = project->parameters.at("par2");
   EXPECT_TRUE(par1->parametervalues.empty());
   EXPECT_TRUE(par2->parametervalues.empty());
-  auto val1 = par2->createParameterValue("val1");
+  auto val1 = par1->createParameterValue("val1");
   auto val2 = par2->createParameterValue("val2");
+  auto val3 = par2->createParameterValue("val3");
   val1->setValue(1);
   val2->setValue(2.0);
-  EXPECT_TRUE(par1->parametervalues.empty());
+  val3->setValue(3.0);
+  EXPECT_EQ(1, par1->parametervalues.size());
   EXPECT_EQ(2, par2->parametervalues.size());
-  EXPECT_EQ(val1, par2->parametervalues.at("val1"));
+  EXPECT_EQ(val1, par1->parametervalues.at("val1"));
   EXPECT_EQ(val2, par2->parametervalues.at("val2"));
+  EXPECT_EQ(val3, par2->parametervalues.at("val3"));
 }
 
 TEST(ParameterValue, HDF5) {
@@ -118,11 +121,13 @@ TEST(ParameterValue, HDF5) {
     buf << *p1->parameters.at("par1");
     buf << *p1->parameters.at("par2");
     EXPECT_EQ("Parameter \"par1\"\n"
-              "Parameter \"par2\"\n"
-              "  ParameterValue \"val1\": parameter=\"par2\"\n"
+              "  ParameterValue \"val1\": parameter=\"par1\"\n"
               "    value=int(1)\n"
+              "Parameter \"par2\"\n"
               "  ParameterValue \"val2\": parameter=\"par2\"\n"
-              "    value=double(2)\n",
+              "    value=double(2)\n"
+              "  ParameterValue \"val3\": parameter=\"par2\"\n"
+              "    value=double(3)\n",
               buf.str());
   }
   remove(filename);
@@ -132,8 +137,9 @@ TEST(Configuration, create) {
   EXPECT_TRUE(project->configurations.empty());
   const auto &conf1 = project->createConfiguration("conf1");
   const auto &conf2 = project->createConfiguration("conf2");
+  const auto &par1 = project->parameters.at("par1");
   const auto &par2 = project->parameters.at("par2");
-  const auto &val1 = par2->parametervalues.at("val1");
+  const auto &val1 = par1->parametervalues.at("val1");
   const auto &val2 = par2->parametervalues.at("val2");
   EXPECT_EQ(2, project->configurations.size());
   EXPECT_EQ(conf1, project->configurations.at("conf1"));
@@ -162,7 +168,7 @@ TEST(Configuration, HDF5) {
     buf << *p1->configurations.at("conf2");
     EXPECT_EQ("Configuration \"conf1\"\n"
               "Configuration \"conf2\"\n"
-              "  Parameter \"par2\", ParameterValue \"val1\"\n"
+              "  Parameter \"par1\", ParameterValue \"val1\"\n"
               "  Parameter \"par2\", ParameterValue \"val2\"\n",
               buf.str());
   }

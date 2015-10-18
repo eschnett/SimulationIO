@@ -12,28 +12,21 @@ DiscreteFieldBlock::DiscreteFieldBlock(const H5::CommonFG &loc,
                                        DiscreteField *discretefield)
     : discretefield(discretefield) {
   auto group = loc.openGroup(entry);
-  string type;
-  H5::readAttribute(group, "type", discretefield->field->project->enumtype,
-                    type);
-  assert(type == "DiscreteFieldBlock");
+  assert(H5::readAttribute<string>(group, "type",
+                                   discretefield->field->project->enumtype) ==
+         "DiscreteFieldBlock");
   H5::readAttribute(group, "name", name);
-#warning "TODO: check link field"
+  assert(H5::readGroupAttribute<string>(group, "discretefield", "name") ==
+         discretefield->name);
   // TODO: Read and interpret objects (shallowly) instead of naively only
   // looking at their names
-  {
-    auto obj = group.openGroup("discretizationblock");
-    // H5::Group obj;
-    // H5::readAttribute(group, "discretizationblock", obj);
-    string name;
-    auto attr = H5::readAttribute(obj, "name", name);
-    discretizationblock =
-        discretefield->discretization->discretizationblocks.at(name);
-  }
-  discretizationblock->noinsert(this);
+  discretizationblock = discretefield->discretization->discretizationblocks.at(
+      H5::readGroupAttribute<string>(group, "discretizationblock", "name"));
   H5::readGroup(group, "discretefieldblockdata",
                 [&](const H5::Group &group, const string &name) {
                   createDiscreteFieldBlockData(group, name);
                 });
+  discretizationblock->noinsert(this);
 }
 
 ostream &DiscreteFieldBlock::output(ostream &os, int level) const {
@@ -55,11 +48,6 @@ void DiscreteFieldBlock::write(const H5::CommonFG &loc,
   H5::createHardLink(group, "discretizationblock", parent,
                      string("discretization/discretizationblocks/") +
                          discretizationblock->name);
-  // H5::createAttribute(group, "discretefield", parent, ".");
-  // H5::createAttribute(group, "discretizationblock", parent,
-  //                     string("discretization/discretizationblocks/")
-  //                     +
-  //                         discretizationblock->name);
   H5::createGroup(group, "discretefieldblockdata", discretefieldblockdata);
 }
 

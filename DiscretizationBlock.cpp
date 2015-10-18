@@ -9,12 +9,12 @@ DiscretizationBlock::DiscretizationBlock(const H5::CommonFG &loc,
                                          Discretization *discretization)
     : discretization(discretization) {
   auto group = loc.openGroup(entry);
-  string type;
-  H5::readAttribute(group, "type", discretization->manifold->project->enumtype,
-                    type);
-  assert(type == "DiscretizationBlock");
+  assert(H5::readAttribute<string>(
+             group, "type", discretization->manifold->project->enumtype) ==
+         "DiscretizationBlock");
   H5::readAttribute(group, "name", name);
-#warning "TODO: check link discretization"
+  assert(H5::readGroupAttribute<string>(group, "discretization", "name") ==
+         discretization->name);
 }
 
 ostream &DiscretizationBlock::output(ostream &os, int level) const {
@@ -31,6 +31,5 @@ void DiscretizationBlock::write(const H5::CommonFG &loc,
                       "DiscretizationBlock");
   H5::createAttribute(group, "name", name);
   H5::createHardLink(group, "discretization", parent, ".");
-  // H5::createAttribute(group, "discretization", parent, ".");
 }
 }

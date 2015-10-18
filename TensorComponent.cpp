@@ -8,11 +8,12 @@ TensorComponent::TensorComponent(const H5::CommonFG &loc, const string &entry,
                                  TensorType *tensortype)
     : tensortype(tensortype) {
   auto group = loc.openGroup(entry);
-  string type;
-  H5::readAttribute(group, "type", tensortype->project->enumtype, type);
-  assert(type == "TensorComponent");
+  assert(
+      H5::readAttribute<string>(group, "type", tensortype->project->enumtype) ==
+      "TensorComponent");
   H5::readAttribute(group, "name", name);
-#warning "TODO: check link tensortype"
+  assert(H5::readGroupAttribute<string>(group, "tensortype", "name") ==
+         tensortype->name);
   H5::readAttribute(group, "storage_index", storage_index);
   H5::readAttribute(group, "indexvalues", indexvalues);
 }
@@ -37,7 +38,6 @@ void TensorComponent::write(const H5::CommonFG &loc,
                       "TensorComponent");
   H5::createAttribute(group, "name", name);
   H5::createHardLink(group, "tensortype", parent, ".");
-  // H5::createAttribute(group, "tensortype", parent, ".");
   H5::createAttribute(group, "storage_index", storage_index);
   H5::createAttribute(group, "indexvalues", indexvalues);
 }

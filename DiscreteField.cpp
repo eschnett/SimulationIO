@@ -10,29 +10,16 @@ DiscreteField::DiscreteField(const H5::CommonFG &loc, const string &entry,
                              Field *field)
     : field(field) {
   auto group = loc.openGroup(entry);
-  string type;
-  H5::readAttribute(group, "type", field->project->enumtype, type);
-  assert(type == "DiscreteField");
+  assert(H5::readAttribute<string>(group, "type", field->project->enumtype) ==
+         "DiscreteField");
   H5::readAttribute(group, "name", name);
-#warning "TODO: check link field"
+  assert(H5::readGroupAttribute<string>(group, "field", "name") == field->name);
   // TODO: Read and interpret objects (shallowly) instead of naively only
   // looking at their names
-  {
-    auto obj = group.openGroup("discretization");
-    // H5::Group obj;
-    // H5::readAttribute(group, "discretization", obj);
-    string name;
-    auto attr = H5::readAttribute(obj, "name", name);
-    discretization = field->manifold->discretizations.at(name);
-  }
-  {
-    auto obj = group.openGroup("basis");
-    // H5::Group obj;
-    // H5::readAttribute(group, "basis", obj);
-    string name;
-    auto attr = H5::readAttribute(obj, "name", name);
-    basis = field->tangentspace->bases.at(name);
-  }
+  discretization = field->manifold->discretizations.at(
+      H5::readGroupAttribute<string>(group, "discretization", "name"));
+  basis = field->tangentspace->bases.at(
+      H5::readGroupAttribute<string>(group, "basis", "name"));
   H5::readGroup(group, "discretefieldblocks",
                 [&](const H5::Group &group, const string &name) {
                   createDiscreteFieldBlock(group, name);
@@ -61,13 +48,6 @@ void DiscreteField::write(const H5::CommonFG &loc,
                          discretization->name);
   H5::createHardLink(group, "basis", parent,
                      string("tangentspace/bases/") + basis->name);
-  // H5::createAttribute(group, "field", parent, ".");
-  // H5::createAttribute(group, "discretization", parent,
-  //                     string("manifold/discretizations/") +
-  //                         discretization->name);
-  // H5::createAttribute(group, "basis", parent,
-  //                     string("tangentspace/bases/") +
-  //                     basis->name);
   H5::createGroup(group, "discretefieldblocks", discretefieldblocks);
 }
 

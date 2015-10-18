@@ -10,11 +10,11 @@ TensorType::TensorType(const H5::CommonFG &loc, const string &entry,
                        Project *project)
     : project(project) {
   auto group = loc.openGroup(entry);
-  string type;
-  H5::readAttribute(group, "type", project->enumtype, type);
-  assert(type == "TensorType");
+  assert(H5::readAttribute<string>(group, "type", project->enumtype) ==
+         "TensorType");
   H5::readAttribute(group, "name", name);
-#warning "TODO: check link project"
+  assert(H5::readGroupAttribute<string>(group, "project", "name") ==
+         project->name);
   H5::readAttribute(group, "dimension", dimension);
   H5::readAttribute(group, "rank", rank);
   H5::readGroup(group, "tensorcomponents",
@@ -38,7 +38,6 @@ void TensorType::write(const H5::CommonFG &loc,
   H5::createAttribute(group, "type", project->enumtype, "TensorType");
   H5::createAttribute(group, "name", name);
   H5::createHardLink(group, "project", parent, ".");
-  // H5::createAttribute(group, "project", parent, ".");
   H5::createAttribute(group, "dimension", dimension);
   H5::createAttribute(group, "rank", rank);
   H5::createGroup(group, "tensorcomponents", tensorcomponents);

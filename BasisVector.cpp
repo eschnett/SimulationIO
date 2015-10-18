@@ -8,12 +8,11 @@ BasisVector::BasisVector(const H5::CommonFG &loc, const string &entry,
                          Basis *basis)
     : basis(basis) {
   auto group = loc.openGroup(entry);
-  string type;
-  H5::readAttribute(group, "type", basis->tangentspace->project->enumtype,
-                    type);
-  assert(type == "BasisVector");
+  assert(H5::readAttribute<string>(group, "type",
+                                   basis->tangentspace->project->enumtype) ==
+         "BasisVector");
   H5::readAttribute(group, "name", name);
-#warning "TODO: check link basis"
+  assert(H5::readGroupAttribute<string>(group, "basis", "name") == basis->name);
   H5::readAttribute(group, "direction", direction);
 }
 
@@ -30,7 +29,6 @@ void BasisVector::write(const H5::CommonFG &loc,
                       "BasisVector");
   H5::createAttribute(group, "name", name);
   H5::createHardLink(group, "basis", parent, ".");
-  // H5::createAttribute(group, "basis", parent, ".");
   H5::createAttribute(group, "direction", direction);
 }
 }
