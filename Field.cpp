@@ -18,8 +18,12 @@ Field::Field(const H5::CommonFG &loc, const string &entry, Project *project)
   // looking at their names
   manifold = project->manifolds.at(
       H5::readGroupAttribute<string>(group, "manifold", "name"));
+  assert(H5::readGroupAttribute<string>(
+             group, string("manifold/fields/") + name, "name") == name);
   tangentspace = project->tangentspaces.at(
       H5::readGroupAttribute<string>(group, "tangentspace", "name"));
+  assert(H5::readGroupAttribute<string>(
+             group, string("tangentspace/fields/") + name, "name") == name);
   tensortype = project->tensortypes.at(
       H5::readGroupAttribute<string>(group, "tensortype", "name"));
   H5::readGroup(group, "discretefields",

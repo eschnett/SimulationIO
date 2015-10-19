@@ -16,11 +16,14 @@ Configuration::Configuration(const H5::CommonFG &loc, const string &entry,
   assert(H5::readGroupAttribute<string>(group, "project", "name") ==
          project->name);
   H5::readGroup(group, "parametervalues", [&](const H5::Group &group,
-                                              const string &name) {
+                                              const string &valname) {
     auto parname =
-        H5::readGroupAttribute<string>(group, name + "/parameter", "name");
+        H5::readGroupAttribute<string>(group, valname + "/parameter", "name");
     auto parameter = project->parameters.at(parname);
-    auto parametervalue = parameter->parametervalues.at(name);
+    auto parametervalue = parameter->parametervalues.at(valname);
+    assert(H5::readGroupAttribute<string>(
+               group, valname + string("/configurations/") + name, "name") ==
+           name);
     insert(parametervalue);
   });
 }
