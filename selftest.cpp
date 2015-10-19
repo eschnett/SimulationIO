@@ -66,9 +66,11 @@ TEST(Parameter, create) {
   EXPECT_TRUE(project->parameters.empty());
   const auto &par1 = project->createParameter("par1");
   const auto &par2 = project->createParameter("par2");
-  EXPECT_EQ(2, project->parameters.size());
+  const auto &par3 = project->createParameter("par3");
+  EXPECT_EQ(3, project->parameters.size());
   EXPECT_EQ(par1, project->parameters.at("par1"));
   EXPECT_EQ(par2, project->parameters.at("par2"));
+  EXPECT_EQ(par3, project->parameters.at("par3"));
 }
 
 TEST(Parameter, HDF5) {
@@ -83,8 +85,10 @@ TEST(Parameter, HDF5) {
     ostringstream buf;
     buf << *p1->parameters.at("par1");
     buf << *p1->parameters.at("par2");
+    buf << *p1->parameters.at("par3");
     EXPECT_EQ("Parameter \"par1\"\n"
-              "Parameter \"par2\"\n",
+              "Parameter \"par2\"\n"
+              "Parameter \"par3\"\n",
               buf.str());
   }
   remove(filename);
@@ -93,19 +97,25 @@ TEST(Parameter, HDF5) {
 TEST(ParameterValue, create) {
   const auto &par1 = project->parameters.at("par1");
   const auto &par2 = project->parameters.at("par2");
+  const auto &par3 = project->parameters.at("par3");
   EXPECT_TRUE(par1->parametervalues.empty());
   EXPECT_TRUE(par2->parametervalues.empty());
+  EXPECT_TRUE(par3->parametervalues.empty());
   auto val1 = par1->createParameterValue("val1");
   auto val2 = par2->createParameterValue("val2");
   auto val3 = par2->createParameterValue("val3");
+  auto val4 = par3->createParameterValue("val4");
   val1->setValue(1);
   val2->setValue(2.0);
   val3->setValue(3.0);
+  val4->setValue("four");
   EXPECT_EQ(1, par1->parametervalues.size());
   EXPECT_EQ(2, par2->parametervalues.size());
+  EXPECT_EQ(1, par3->parametervalues.size());
   EXPECT_EQ(val1, par1->parametervalues.at("val1"));
   EXPECT_EQ(val2, par2->parametervalues.at("val2"));
   EXPECT_EQ(val3, par2->parametervalues.at("val3"));
+  EXPECT_EQ(val4, par3->parametervalues.at("val4"));
 }
 
 TEST(ParameterValue, HDF5) {
@@ -120,6 +130,7 @@ TEST(ParameterValue, HDF5) {
     ostringstream buf;
     buf << *p1->parameters.at("par1");
     buf << *p1->parameters.at("par2");
+    buf << *p1->parameters.at("par3");
     EXPECT_EQ("Parameter \"par1\"\n"
               "  ParameterValue \"val1\": Parameter \"par1\"\n"
               "    value: int(1)\n"
@@ -127,7 +138,10 @@ TEST(ParameterValue, HDF5) {
               "  ParameterValue \"val2\": Parameter \"par2\"\n"
               "    value: double(2)\n"
               "  ParameterValue \"val3\": Parameter \"par2\"\n"
-              "    value: double(3)\n",
+              "    value: double(3)\n"
+              "Parameter \"par3\"\n"
+              "  ParameterValue \"val4\": Parameter \"par3\"\n"
+              "    value: string(\"four\")\n",
               buf.str());
   }
   remove(filename);
@@ -397,10 +411,9 @@ TEST(DiscretizationBlock, HDF5) {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);
     auto p1 = createProject(file, "p1");
     ostringstream buf;
-    buf << *p1->manifolds.at("m1")
-                ->discretizations.at("d1")
-                ->discretizationblocks.at("db1");
-    EXPECT_EQ("DiscretizationBlock \"db1\": Discretization \"d1\"\n",
+    buf << *p1->manifolds.at("m1")->discretizations.at("d1");
+    EXPECT_EQ("Discretization \"d1\": Manifold \"m1\"\n"
+              "  DiscretizationBlock \"db1\": Discretization \"d1\"\n",
               buf.str());
   }
   remove(filename);
@@ -488,9 +501,11 @@ TEST(DiscreteField, HDF5) {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);
     auto p1 = createProject(file, "p1");
     ostringstream buf;
-    buf << *p1->fields.at("f1")->discretefields.at("df1");
-    EXPECT_EQ("DiscreteField \"df1\": Field \"f1\" Discretization \"d1\" Basis "
-              "\"b1\"\n",
+    buf << *p1->fields.at("f1");
+    EXPECT_EQ("Field \"f1\": Manifold \"m1\" TangentSpace \"s1\" TensorType "
+              "\"Scalar3D\"\n"
+              "  DiscreteField \"df1\": Field \"f1\" Discretization \"d1\" "
+              "Basis \"b1\"\n",
               buf.str());
   }
   remove(filename);
@@ -517,10 +532,10 @@ TEST(DiscreteFieldBlock, HDF5) {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);
     auto p1 = createProject(file, "p1");
     ostringstream buf;
-    buf << *p1->fields.at("f1")
-                ->discretefields.at("df1")
-                ->discretefieldblocks.at("dfb1");
-    EXPECT_EQ("DiscreteFieldBlock \"dfb1\": DiscreteField \"df1\" "
+    buf << *p1->fields.at("f1")->discretefields.at("df1");
+    EXPECT_EQ("DiscreteField \"df1\": Field \"f1\" Discretization \"d1\" Basis "
+              "\"b1\"\n"
+              "  DiscreteFieldBlock \"dfb1\": DiscreteField \"df1\" "
               "DiscretizationBlock \"db1\"\n",
               buf.str());
   }
@@ -553,11 +568,12 @@ TEST(DiscreteFieldBlockData, HDF5) {
     ostringstream buf;
     buf << *p1->fields.at("f1")
                 ->discretefields.at("df1")
-                ->discretefieldblocks.at("dfb1")
-                ->discretefieldblockdata.at("dfbd1");
-    EXPECT_EQ("DiscreteFieldBlockData \"dfbd1\": DiscreteFieldBlock \"dfb1\" "
+                ->discretefieldblocks.at("dfb1");
+    EXPECT_EQ("DiscreteFieldBlock \"dfb1\": DiscreteField \"df1\" "
+              "DiscretizationBlock \"db1\"\n"
+              "  DiscreteFieldBlockData \"dfbd1\": DiscreteFieldBlock \"dfb1\" "
               "TensorComponent \"scalar\"\n"
-              "  data: external link \"discretizationfieldblockdata.h5\", "
+              "    data: external link \"discretizationfieldblockdata.h5\", "
               "\"discretizationfieldblockdata.h5\"\n",
               buf.str());
   }
