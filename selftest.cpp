@@ -121,13 +121,13 @@ TEST(ParameterValue, HDF5) {
     buf << *p1->parameters.at("par1");
     buf << *p1->parameters.at("par2");
     EXPECT_EQ("Parameter \"par1\"\n"
-              "  ParameterValue \"val1\": parameter=\"par1\"\n"
-              "    value=int(1)\n"
+              "  ParameterValue \"val1\": Parameter \"par1\"\n"
+              "    value: int(1)\n"
               "Parameter \"par2\"\n"
-              "  ParameterValue \"val2\": parameter=\"par2\"\n"
-              "    value=double(2)\n"
-              "  ParameterValue \"val3\": parameter=\"par2\"\n"
-              "    value=double(3)\n",
+              "  ParameterValue \"val2\": Parameter \"par2\"\n"
+              "    value: double(2)\n"
+              "  ParameterValue \"val3\": Parameter \"par2\"\n"
+              "    value: double(3)\n",
               buf.str());
   }
   remove(filename);
@@ -168,8 +168,8 @@ TEST(Configuration, HDF5) {
     buf << *p1->configurations.at("conf2");
     EXPECT_EQ("Configuration \"conf1\"\n"
               "Configuration \"conf2\"\n"
-              "  Parameter \"par1\", ParameterValue \"val1\"\n"
-              "  Parameter \"par2\", ParameterValue \"val2\"\n",
+              "  Parameter \"par1\" ParameterValue \"val1\"\n"
+              "  Parameter \"par2\" ParameterValue \"val2\"\n",
               buf.str());
   }
   remove(filename);
@@ -187,7 +187,7 @@ TEST(TensorTypes, Scalar3D) {
   ostringstream buf;
   buf << *tt;
   EXPECT_EQ("TensorType \"Scalar3D\": dim=3 rank=0\n"
-            "  TensorComponent \"scalar\": tensortype=\"Scalar3D\" "
+            "  TensorComponent \"scalar\": TensorType \"Scalar3D\" "
             "storage_index=0 indexvalues=[]\n",
             buf.str());
 }
@@ -204,11 +204,11 @@ TEST(TensorTypes, Vector3D) {
   ostringstream buf;
   buf << *tt;
   EXPECT_EQ("TensorType \"Vector3D\": dim=3 rank=1\n"
-            "  TensorComponent \"0\": tensortype=\"Vector3D\" storage_index=0 "
+            "  TensorComponent \"0\": TensorType \"Vector3D\" storage_index=0 "
             "indexvalues=[0]\n"
-            "  TensorComponent \"1\": tensortype=\"Vector3D\" storage_index=1 "
+            "  TensorComponent \"1\": TensorType \"Vector3D\" storage_index=1 "
             "indexvalues=[1]\n"
-            "  TensorComponent \"2\": tensortype=\"Vector3D\" storage_index=2 "
+            "  TensorComponent \"2\": TensorType \"Vector3D\" storage_index=2 "
             "indexvalues=[2]\n",
             buf.str());
 }
@@ -225,17 +225,17 @@ TEST(TensorTypes, SymmetricTensor3D) {
   ostringstream buf;
   buf << *tt;
   EXPECT_EQ("TensorType \"SymmetricTensor3D\": dim=3 rank=2\n"
-            "  TensorComponent \"00\": tensortype=\"SymmetricTensor3D\" "
+            "  TensorComponent \"00\": TensorType \"SymmetricTensor3D\" "
             "storage_index=0 indexvalues=[0,0]\n"
-            "  TensorComponent \"01\": tensortype=\"SymmetricTensor3D\" "
+            "  TensorComponent \"01\": TensorType \"SymmetricTensor3D\" "
             "storage_index=1 indexvalues=[0,1]\n"
-            "  TensorComponent \"02\": tensortype=\"SymmetricTensor3D\" "
+            "  TensorComponent \"02\": TensorType \"SymmetricTensor3D\" "
             "storage_index=2 indexvalues=[0,2]\n"
-            "  TensorComponent \"11\": tensortype=\"SymmetricTensor3D\" "
+            "  TensorComponent \"11\": TensorType \"SymmetricTensor3D\" "
             "storage_index=3 indexvalues=[1,1]\n"
-            "  TensorComponent \"12\": tensortype=\"SymmetricTensor3D\" "
+            "  TensorComponent \"12\": TensorType \"SymmetricTensor3D\" "
             "storage_index=4 indexvalues=[1,2]\n"
-            "  TensorComponent \"22\": tensortype=\"SymmetricTensor3D\" "
+            "  TensorComponent \"22\": TensorType \"SymmetricTensor3D\" "
             "storage_index=5 indexvalues=[2,2]\n",
             buf.str());
 }
@@ -253,27 +253,27 @@ TEST(TensorTypes, HDF5) {
     for (const auto &tt : p1->tensortypes)
       buf << *tt.second;
     EXPECT_EQ("TensorType \"Scalar3D\": dim=3 rank=0\n"
-              "  TensorComponent \"scalar\": tensortype=\"Scalar3D\" "
+              "  TensorComponent \"scalar\": TensorType \"Scalar3D\" "
               "storage_index=0 indexvalues=[]\n"
               "TensorType \"SymmetricTensor3D\": dim=3 rank=2\n"
-              "  TensorComponent \"00\": tensortype=\"SymmetricTensor3D\" "
+              "  TensorComponent \"00\": TensorType \"SymmetricTensor3D\" "
               "storage_index=0 indexvalues=[0,0]\n"
-              "  TensorComponent \"01\": tensortype=\"SymmetricTensor3D\" "
+              "  TensorComponent \"01\": TensorType \"SymmetricTensor3D\" "
               "storage_index=1 indexvalues=[0,1]\n"
-              "  TensorComponent \"02\": tensortype=\"SymmetricTensor3D\" "
+              "  TensorComponent \"02\": TensorType \"SymmetricTensor3D\" "
               "storage_index=2 indexvalues=[0,2]\n"
-              "  TensorComponent \"11\": tensortype=\"SymmetricTensor3D\" "
+              "  TensorComponent \"11\": TensorType \"SymmetricTensor3D\" "
               "storage_index=3 indexvalues=[1,1]\n"
-              "  TensorComponent \"12\": tensortype=\"SymmetricTensor3D\" "
+              "  TensorComponent \"12\": TensorType \"SymmetricTensor3D\" "
               "storage_index=4 indexvalues=[1,2]\n"
-              "  TensorComponent \"22\": tensortype=\"SymmetricTensor3D\" "
+              "  TensorComponent \"22\": TensorType \"SymmetricTensor3D\" "
               "storage_index=5 indexvalues=[2,2]\n"
               "TensorType \"Vector3D\": dim=3 rank=1\n"
-              "  TensorComponent \"0\": tensortype=\"Vector3D\" "
+              "  TensorComponent \"0\": TensorType \"Vector3D\" "
               "storage_index=0 indexvalues=[0]\n"
-              "  TensorComponent \"1\": tensortype=\"Vector3D\" "
+              "  TensorComponent \"1\": TensorType \"Vector3D\" "
               "storage_index=1 indexvalues=[1]\n"
-              "  TensorComponent \"2\": tensortype=\"Vector3D\" "
+              "  TensorComponent \"2\": TensorType \"Vector3D\" "
               "storage_index=2 indexvalues=[2]\n",
               buf.str());
   }
@@ -347,8 +347,8 @@ TEST(Field, HDF5) {
     auto p1 = createProject(file, "p1");
     ostringstream buf;
     buf << *p1->fields.at("f1");
-    EXPECT_EQ("Field \"f1\": manifold=\"m1\" tangentspace=\"s1\" "
-              "tensortype=\"Scalar3D\"\n",
+    EXPECT_EQ("Field \"f1\": Manifold \"m1\" TangentSpace \"s1\" "
+              "TensorType \"Scalar3D\"\n",
               buf.str());
   }
   remove(filename);
@@ -373,7 +373,7 @@ TEST(Discretization, HDF5) {
     auto p1 = createProject(file, "p1");
     ostringstream buf;
     buf << *p1->manifolds.at("m1")->discretizations.at("d1");
-    EXPECT_EQ("Discretization \"d1\": manifold=\"m1\"\n", buf.str());
+    EXPECT_EQ("Discretization \"d1\": Manifold \"m1\"\n", buf.str());
   }
   remove(filename);
 }
@@ -400,7 +400,7 @@ TEST(DiscretizationBlock, HDF5) {
     buf << *p1->manifolds.at("m1")
                 ->discretizations.at("d1")
                 ->discretizationblocks.at("db1");
-    EXPECT_EQ("DiscretizationBlock \"db1\": discretization=\"d1\"\n",
+    EXPECT_EQ("DiscretizationBlock \"db1\": Discretization \"d1\"\n",
               buf.str());
   }
   remove(filename);
@@ -425,7 +425,7 @@ TEST(Basis, HDF5) {
     auto p1 = createProject(file, "p1");
     ostringstream buf;
     buf << *p1->tangentspaces.at("s1")->bases.at("b1");
-    EXPECT_EQ("Basis \"b1\": tangentspace=\"s1\"\n", buf.str());
+    EXPECT_EQ("Basis \"b1\": TangentSpace \"s1\"\n", buf.str());
   }
   remove(filename);
 }
@@ -457,10 +457,10 @@ TEST(BasisVector, HDF5) {
     auto p1 = createProject(file, "p1");
     ostringstream buf;
     buf << *p1->tangentspaces.at("s1")->bases.at("b1");
-    EXPECT_EQ("Basis \"b1\": tangentspace=\"s1\"\n"
-              "  BasisVector \"x\": basis=\"b1\" direction=0\n"
-              "  BasisVector \"y\": basis=\"b1\" direction=1\n"
-              "  BasisVector \"z\": basis=\"b1\" direction=2\n",
+    EXPECT_EQ("Basis \"b1\": TangentSpace \"s1\"\n"
+              "  BasisVector \"x\": Basis \"b1\" direction=0\n"
+              "  BasisVector \"y\": Basis \"b1\" direction=1\n"
+              "  BasisVector \"z\": Basis \"b1\" direction=2\n",
               buf.str());
   }
   remove(filename);
@@ -489,8 +489,8 @@ TEST(DiscreteField, HDF5) {
     auto p1 = createProject(file, "p1");
     ostringstream buf;
     buf << *p1->fields.at("f1")->discretefields.at("df1");
-    EXPECT_EQ("DiscreteField \"df1\": field=\"f1\" discretization=\"d1\" "
-              "basis=\"b1\"\n",
+    EXPECT_EQ("DiscreteField \"df1\": Field \"f1\" Discretization \"d1\" Basis "
+              "\"b1\"\n",
               buf.str());
   }
   remove(filename);
@@ -520,8 +520,8 @@ TEST(DiscreteFieldBlock, HDF5) {
     buf << *p1->fields.at("f1")
                 ->discretefields.at("df1")
                 ->discretefieldblocks.at("dfb1");
-    EXPECT_EQ("DiscreteFieldBlock \"dfb1\": discretefield=\"df1\" "
-              "discretizationblock=\"db1\"\n",
+    EXPECT_EQ("DiscreteFieldBlock \"dfb1\": DiscreteField \"df1\" "
+              "DiscretizationBlock \"db1\"\n",
               buf.str());
   }
   remove(filename);
@@ -555,8 +555,8 @@ TEST(DiscreteFieldBlockData, HDF5) {
                 ->discretefields.at("df1")
                 ->discretefieldblocks.at("dfb1")
                 ->discretefieldblockdata.at("dfbd1");
-    EXPECT_EQ("DiscreteFieldBlockData \"dfbd1\": discretefieldblock=\"dfb1\" "
-              "tensorcomponent=\"scalar\"\n"
+    EXPECT_EQ("DiscreteFieldBlockData \"dfbd1\": DiscreteFieldBlock \"dfb1\" "
+              "TensorComponent \"scalar\"\n"
               "  data: external link \"discretizationfieldblockdata.h5\", "
               "\"discretizationfieldblockdata.h5\"\n",
               buf.str());

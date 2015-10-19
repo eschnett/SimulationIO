@@ -19,7 +19,7 @@ DiscretizationBlock::DiscretizationBlock(const H5::CommonFG &loc,
 
 ostream &DiscretizationBlock::output(ostream &os, int level) const {
   os << indent(level) << "DiscretizationBlock \"" << name
-     << "\": discretization=\"" << discretization->name << "\"\n";
+     << "\": Discretization \"" << discretization->name << "\"\n";
   return os;
 }
 

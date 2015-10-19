@@ -19,7 +19,7 @@ TensorComponent::TensorComponent(const H5::CommonFG &loc, const string &entry,
 }
 
 ostream &TensorComponent::output(ostream &os, int level) const {
-  os << indent(level) << "TensorComponent \"" << name << "\": tensortype=\""
+  os << indent(level) << "TensorComponent \"" << name << "\": TensorType \""
      << tensortype->name << "\" storage_index=" << storage_index
      << " indexvalues=[";
   for (int i = 0; i < int(indexvalues.size()); ++i) {

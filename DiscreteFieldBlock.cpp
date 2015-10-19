@@ -31,8 +31,8 @@ DiscreteFieldBlock::DiscreteFieldBlock(const H5::CommonFG &loc,
 
 ostream &DiscreteFieldBlock::output(ostream &os, int level) const {
   os << indent(level) << "DiscreteFieldBlock \"" << name
-     << "\": discretefield=\"" << discretefield->name
-     << "\" discretizationblock=\"" << discretizationblock->name << "\"\n";
+     << "\": DiscreteField \"" << discretefield->name
+     << "\" DiscretizationBlock \"" << discretizationblock->name << "\"\n";
   for (const auto &dfbd : discretefieldblockdata)
     dfbd.second->output(os, level + 1);
   return os;

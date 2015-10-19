@@ -23,7 +23,7 @@ Basis::Basis(const H5::CommonFG &loc, const string &entry,
 }
 
 ostream &Basis::output(ostream &os, int level) const {
-  os << indent(level) << "Basis \"" << name << "\": tangentspace=\""
+  os << indent(level) << "Basis \"" << name << "\": TangentSpace \""
      << tangentspace->name << "\"\n";
   for (const auto &db : directions)
     db.second->output(os, level + 1);

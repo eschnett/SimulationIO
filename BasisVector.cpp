@@ -17,7 +17,7 @@ BasisVector::BasisVector(const H5::CommonFG &loc, const string &entry,
 }
 
 ostream &BasisVector::output(ostream &os, int level) const {
-  os << indent(level) << "BasisVector \"" << name << "\": basis=\""
+  os << indent(level) << "BasisVector \"" << name << "\": Basis \""
      << basis->name << "\" direction=" << direction << "\n";
   return os;
 }

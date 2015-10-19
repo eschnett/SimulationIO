@@ -29,9 +29,9 @@ DiscreteField::DiscreteField(const H5::CommonFG &loc, const string &entry,
 }
 
 ostream &DiscreteField::output(ostream &os, int level) const {
-  os << indent(level) << "DiscreteField \"" << name << "\": field=\""
-     << field->name << "\" discretization=\"" << discretization->name
-     << "\" basis=\"" << basis->name << "\"\n";
+  os << indent(level) << "DiscreteField \"" << name << "\": Field \""
+     << field->name << "\" Discretization \"" << discretization->name
+     << "\" Basis \"" << basis->name << "\"\n";
   for (const auto &db : discretefieldblocks)
     db.second->output(os, level + 1);
   return os;

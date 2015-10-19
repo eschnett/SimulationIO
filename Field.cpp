@@ -36,9 +36,9 @@ Field::Field(const H5::CommonFG &loc, const string &entry, Project *project)
 }
 
 ostream &Field::output(ostream &os, int level) const {
-  os << indent(level) << "Field \"" << name << "\": manifold=\""
-     << manifold->name << "\" tangentspace=\"" << tangentspace->name
-     << "\" tensortype=\"" << tensortype->name << "\"\n";
+  os << indent(level) << "Field \"" << name << "\": Manifold \""
+     << manifold->name << "\" TangentSpace \"" << tangentspace->name
+     << "\" TensorType \"" << tensortype->name << "\"\n";
   for (const auto &df : discretefields)
     df.second->output(os, level + 1);
   return os;

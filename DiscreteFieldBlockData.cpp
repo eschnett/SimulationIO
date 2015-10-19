@@ -35,8 +35,8 @@ void DiscreteFieldBlockData::setExternalLink(const string &file_name,
 
 ostream &DiscreteFieldBlockData::output(ostream &os, int level) const {
   os << indent(level) << "DiscreteFieldBlockData \"" << name
-     << "\": discretefieldblock=\"" << discretefieldblock->name
-     << "\" tensorcomponent=\"" << tensorcomponent->name << "\"\n";
+     << "\": DiscreteFieldBlock \"" << discretefieldblock->name
+     << "\" TensorComponent \"" << tensorcomponent->name << "\"\n";
   if (have_extlink)
     os << indent(level + 1) << "data: external link \"" << extlink_file_name
        << "\", \"" << extlink_file_name << "\"\n";

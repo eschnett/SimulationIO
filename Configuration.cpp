@@ -32,7 +32,7 @@ ostream &Configuration::output(ostream &os, int level) const {
   os << indent(level) << "Configuration \"" << name << "\"\n";
   for (const auto &val : parametervalues)
     os << indent(level + 1) << "Parameter \"" << val.second->parameter->name
-       << "\", ParameterValue \"" << val.second->name << "\"\n";
+       << "\" ParameterValue \"" << val.second->name << "\"\n";
   return os;
 }
 

@@ -58,8 +58,8 @@ void ParameterValue::setValue(const string &s) {
 }
 
 ostream &ParameterValue::output(ostream &os, int level) const {
-  os << indent(level) << "ParameterValue \"" << name << "\": parameter=\""
-     << parameter->name << "\"\n" << indent(level + 1) << "value=";
+  os << indent(level) << "ParameterValue \"" << name << "\": Parameter \""
+     << parameter->name << "\"\n" << indent(level + 1) << "value: ";
   switch (value_type) {
   case type_empty:
     os << "empty";
