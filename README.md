@@ -22,8 +22,6 @@ This repository contains a few sketches describing brainstorming results in vari
 - Add "configuration" links to most entities
 - Implement Python wrapper
   - probably want to use SWIG
-- Implement destructors; check out shared_ptr for gcc 4.6
-  - shared_ptr seems to work fine; transition seems straightforward
 - Implement coordinate systems
 - Implement writing/reading datasets, not just external links
 - Run benchmarks with large datasets
@@ -33,5 +31,5 @@ This repository contains a few sketches describing brainstorming results in vari
   - may want to use Python wrappers for this
 - Allow writing just part of a project, or adding to / modifying a project
   - idea: whenever creating an HDF5 object, check whether it already exists; if so, check whether it looks as expected
-- Allow removing parts of a project?
+- Allow removing parts of a project, deleting it from a file?
 - Implement (value) equality comparison operators for our objects
