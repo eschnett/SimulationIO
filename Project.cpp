@@ -16,13 +16,13 @@ Project *createProject(const string &name) {
   assert(project->invariant());
   return project;
 }
-Project *createProject(const H5::CommonFG &loc, const string &entry) {
-  auto project = new Project(loc, entry);
+Project *createProject(const H5::CommonFG &loc) {
+  auto project = new Project(loc);
   assert(project->invariant());
   return project;
 }
 
-Project::Project(const H5::CommonFG &loc, const string &entry) {
+Project::Project(const H5::CommonFG &loc) {
   auto group = loc.openGroup(".");
   createTypes(); // TODO: read from file
   string type;

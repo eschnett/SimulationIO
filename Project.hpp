@@ -19,7 +19,7 @@ using std::string;
 struct Project;
 
 Project *createProject(const string &name);
-Project *createProject(const H5::CommonFG &loc, const string &entry);
+Project *createProject(const H5::CommonFG &loc);
 
 struct Parameter;
 struct Configuration;
@@ -51,9 +51,9 @@ struct Project : Common {
 
 private:
   friend Project *createProject(const string &name);
-  friend Project *createProject(const H5::CommonFG &loc, const string &entry);
+  friend Project *createProject(const H5::CommonFG &loc);
   Project(const string &name) : Common(name) { createTypes(); }
-  Project(const H5::CommonFG &loc, const string &entry);
+  Project(const H5::CommonFG &loc);
 
 public:
   virtual ~Project() { assert(0); }
