@@ -3,38 +3,31 @@
 #include "H5Helpers.hpp"
 
 #include <iostream>
-#include <sstream>
 #include <string>
-#include <vector>
 
 using namespace SimulationIO;
 
 using std::cerr;
 using std::cout;
-using std::ostringstream;
 using std::string;
-using std::vector;
-
-const char *const dirnames[] = {"x", "y", "z"};
 
 int main(int argc, char **argv) {
 
-  if (argc != 2) {
-    cerr << "Synopsis:\n" << argv[0] << " <filename>\n";
+  if (argc < 2) {
+    cerr << "Synopsis:\n" << argv[0] << " {<filename>}+\n";
     return 1;
   }
 
-  auto filename = argv[1];
-  try {
-    auto file = H5::H5File(filename, H5F_ACC_RDONLY);
-    map<string, Project *> projects;
-    H5::readGroup(file, ".", [&](const H5::Group &group, const string &name) {
-      auto project = createProject(group, name);
+  for (int argi = 1; argi < argc; ++argi) {
+    auto filename = argv[argi];
+    try {
+      auto file = H5::H5File(filename, H5F_ACC_RDONLY);
+      auto project = createProject(file, ".");
       cout << *project;
-    });
-  } catch (H5::FileIException error) {
-    cerr << "Could not open file \"" << filename << "\" for reading.\n";
-    return 2;
+    } catch (H5::FileIException error) {
+      cerr << "Could not open file \"" << filename << "\" for reading.\n";
+      return 2;
+    }
   }
 
   return 0;
