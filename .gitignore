@@ -42,3 +42,5 @@ example.h5
 convert-carpet-output
 list
 cactus
+benchmark
+benchmark.h5

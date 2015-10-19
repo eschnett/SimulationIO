@@ -27,11 +27,12 @@ SIO_SRCS = \
 	TensorType.cpp
 ALL_SRCS = \
 	$(SIO_SRCS) \
+	benchmark.cpp \
 	convert-carpet-output.cpp \
 	example.cpp \
 	list.cpp \
 	selftest.cpp
-ALL_EXE = convert-carpet-output list example selftest
+ALL_EXE = benchmark convert-carpet-output list example selftest
 
 HDF5_DIR = /opt/local
 HDF5_CPPFLAGS = -I$(HDF5_DIR)/include
@@ -44,7 +45,7 @@ GTEST_CPPFLAGS = -isystem $(GTEST_DIR)/include -I$(GTEST_DIR)
 GTEST_CXXFLAGS = -pthread
 GTEST_LIBS =
 
-all: convert-carpet-output example list selftest
+all: $(ALL_EXE)
 
 gtest:
 	$(RM) $@
@@ -60,6 +61,9 @@ selftest: $(SIO_SRCS:%.cpp=%.o) selftest.o gtest-all.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 test: selftest
 	./selftest
+
+benchmark: $(SIO_SRCS:%.cpp=%.o) benchmark.o
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 example: $(SIO_SRCS:%.cpp=%.o) example.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
