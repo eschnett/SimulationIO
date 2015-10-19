@@ -13,14 +13,13 @@ results in various forms in the subdirectory `sketches`:
 - `SimulationIO.jl`: Begin of an implementation in Julia
 
 ## Ideas
-- Define datatypes instead of groups with attributes to represent the various objects; avoid the "type" attributes
 - Add a UUID to every object
-
-## Handling multiple simulations, iterations
-- group parameters: set of parameters
-- parameter: name, type, range?, description?
-- configuration: set of parameters and their values
-- manifold, tangentspace, field, etc. (all?) can optionally specify a configuration
-- instead of "optionally": introduce a hierarchy of configurations, and point to top-level configuration
-- note: also want hierarchy of manifolds, tangent spaces
-- value: parameter, data
+  - can't just create UUIDs
+  - probably need to handle set of UUIDs?
+- Add "configuration" links to most entities
+- Implement Python wrapper
+- Implement destructors; check out shared_ptr for gcc 4.6
+- Implement coordinate systems
+- Implement writing/reading datasets, not just external links
+- Run benchmarks with large datasets
+- Add parallelism
