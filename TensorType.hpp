@@ -20,23 +20,24 @@ using std::ostream;
 using std::shared_ptr;
 using std::string;
 using std::vector;
+using std::weak_ptr;
 
 struct Field;
 struct TensorComponent;
 
 struct TensorType : Common, std::enable_shared_from_this<TensorType> {
-  shared_ptr<Project> project; // parent
+  weak_ptr<Project> project; // parent
   int dimension;
   int rank;
   map<string, shared_ptr<TensorComponent>> tensorcomponents; // children
   map<int, shared_ptr<TensorComponent>> storage_indices;
-  NoBackLink<shared_ptr<Field>> fields;
+  NoBackLink<weak_ptr<Field>> fields;
 
   virtual bool invariant() const {
-    bool inv = Common::invariant() && bool(project) &&
-               project->tensortypes.count(name) &&
-               project->tensortypes.at(name).get() == this && dimension >= 0 &&
-               rank >= 0 &&
+    bool inv = Common::invariant() && bool(project.lock()) &&
+               project.lock()->tensortypes.count(name) &&
+               project.lock()->tensortypes.at(name).get() == this &&
+               dimension >= 0 && rank >= 0 &&
                int(tensorcomponents.size()) <= ipow(dimension, rank);
     for (const auto &tc : tensorcomponents)
       inv &= !tc.first.empty() && bool(tc.second);

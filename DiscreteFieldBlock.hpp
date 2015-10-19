@@ -19,21 +19,22 @@ using std::map;
 using std::ostream;
 using std::shared_ptr;
 using std::string;
+using std::weak_ptr;
 
 struct DiscreteFieldBlockData;
 
 struct DiscreteFieldBlock : Common,
                             std::enable_shared_from_this<DiscreteFieldBlock> {
   // Discrete field on a particular region (discretization block)
-  shared_ptr<DiscreteField> discretefield;             // parent
+  weak_ptr<DiscreteField> discretefield;               // parent
   shared_ptr<DiscretizationBlock> discretizationblock; // with backlink
   map<string, shared_ptr<DiscreteFieldBlockData>>
       discretefieldblockdata; // children
 
   virtual bool invariant() const {
-    return Common::invariant() && bool(discretefield) &&
-           discretefield->discretefieldblocks.count(name) &&
-           discretefield->discretefieldblocks.at(name).get() == this &&
+    return Common::invariant() && bool(discretefield.lock()) &&
+           discretefield.lock()->discretefieldblocks.count(name) &&
+           discretefield.lock()->discretefieldblocks.at(name).get() == this &&
            bool(discretizationblock) &&
            discretizationblock->discretefieldblocks.nobacklink();
   }

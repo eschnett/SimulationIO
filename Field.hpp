@@ -21,6 +21,7 @@ using std::map;
 using std::ostream;
 using std::shared_ptr;
 using std::string;
+using std::weak_ptr;
 
 struct Manifold;
 struct TangentSpace;
@@ -28,22 +29,23 @@ struct TensorType;
 struct DiscreteField;
 
 struct Field : Common, std::enable_shared_from_this<Field> {
-  shared_ptr<Project> project;                           // parent
+  weak_ptr<Project> project;                             // parent
   shared_ptr<Manifold> manifold;                         // with backlink
   shared_ptr<TangentSpace> tangentspace;                 // with backlink
   shared_ptr<TensorType> tensortype;                     // without backlink
   map<string, shared_ptr<DiscreteField>> discretefields; // children
 
   virtual bool invariant() const {
-    bool inv =
-        Common::invariant() && bool(project) && project->fields.count(name) &&
-        project->fields.at(name).get() == this && bool(manifold) &&
-        manifold->fields.count(name) &&
-        manifold->fields.at(name).get() == this && bool(tangentspace) &&
-        tangentspace->fields.count(name) &&
-        tangentspace->fields.at(name).get() == this && bool(tensortype) &&
-        tangentspace->dimension == tensortype->dimension &&
-        tensortype->fields.nobacklink();
+    bool inv = Common::invariant() && bool(project.lock()) &&
+               project.lock()->fields.count(name) &&
+               project.lock()->fields.at(name).get() == this &&
+               bool(manifold) && manifold->fields.count(name) &&
+               manifold->fields.at(name).lock().get() == this &&
+               bool(tangentspace) && tangentspace->fields.count(name) &&
+               tangentspace->fields.at(name).lock().get() == this &&
+               bool(tensortype) &&
+               tangentspace->dimension == tensortype->dimension &&
+               tensortype->fields.nobacklink();
     for (const auto &df : discretefields)
       inv &= !df.first.empty() && bool(df.second);
     return inv;

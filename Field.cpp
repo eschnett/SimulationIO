@@ -47,7 +47,7 @@ ostream &Field::output(ostream &os, int level) const {
 
 void Field::write(const H5::CommonFG &loc, const H5::H5Location &parent) const {
   auto group = loc.createGroup(name);
-  H5::createAttribute(group, "type", project->enumtype, "Field");
+  H5::createAttribute(group, "type", project.lock()->enumtype, "Field");
   H5::createAttribute(group, "name", name);
   H5::createHardLink(group, "project", parent, ".");
   H5::createHardLink(group, "manifold", parent,

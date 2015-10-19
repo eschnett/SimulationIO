@@ -20,24 +20,26 @@ using std::map;
 using std::ostream;
 using std::shared_ptr;
 using std::string;
+using std::weak_ptr;
 
 struct DiscreteFieldBlock;
 
 struct DiscreteField : Common, std::enable_shared_from_this<DiscreteField> {
-  shared_ptr<Field> field;                   // parent
+  weak_ptr<Field> field;                     // parent
   shared_ptr<Discretization> discretization; // with backlink
   shared_ptr<Basis> basis;                   // with backlink
   map<string, shared_ptr<DiscreteFieldBlock>> discretefieldblocks; // children
 
   virtual bool invariant() const {
-    return Common::invariant() && bool(field) &&
-           field->discretefields.count(name) &&
-           field->discretefields.at(name).get() == this &&
+    return Common::invariant() && bool(field.lock()) &&
+           field.lock()->discretefields.count(name) &&
+           field.lock()->discretefields.at(name).get() == this &&
            bool(discretization) &&
            discretization->discretefields.nobacklink() &&
-           field->manifold == discretization->manifold && bool(basis) &&
-           basis->discretefields.nobacklink() &&
-           field->tangentspace == basis->tangentspace;
+           field.lock()->manifold.get() ==
+               discretization->manifold.lock().get() &&
+           bool(basis) && basis->discretefields.nobacklink() &&
+           field.lock()->tangentspace.get() == basis->tangentspace.lock().get();
   }
 
   DiscreteField() = delete;

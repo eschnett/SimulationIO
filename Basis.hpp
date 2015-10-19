@@ -18,22 +18,23 @@ using std::map;
 using std::ostream;
 using std::shared_ptr;
 using std::string;
+using std::weak_ptr;
 
 struct BasisVector;
 struct DiscreteField;
 // struct CoordinateBasis;
 
 struct Basis : Common, std::enable_shared_from_this<Basis> {
-  shared_ptr<TangentSpace> tangentspace;             // parent
+  weak_ptr<TangentSpace> tangentspace;               // parent
   map<string, shared_ptr<BasisVector>> basisvectors; // children
   map<int, shared_ptr<BasisVector>> directions;
-  NoBackLink<shared_ptr<DiscreteField>> discretefields;
+  NoBackLink<weak_ptr<DiscreteField>> discretefields;
   // map<string, CoordinateBasis *> coordinatebases;
 
   virtual bool invariant() const {
-    return Common::invariant() && bool(tangentspace) &&
-           tangentspace->bases.count(name) &&
-           tangentspace->bases.at(name).get() == this;
+    return Common::invariant() && bool(tangentspace.lock()) &&
+           tangentspace.lock()->bases.count(name) &&
+           tangentspace.lock()->bases.at(name).get() == this;
     // int(basisvectors.size()) == tangentspace->dimension
     // int(directions.size()) == tangentspace->dimension
   }

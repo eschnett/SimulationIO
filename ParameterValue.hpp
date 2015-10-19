@@ -18,23 +18,23 @@ using std::map;
 using std::ostream;
 using std::shared_ptr;
 using std::string;
+using std::weak_ptr;
 
 struct Configuration;
 
 struct ParameterValue : Common, std::enable_shared_from_this<ParameterValue> {
-  shared_ptr<Parameter> parameter;                       // parent
-  map<string, shared_ptr<Configuration>> configurations; // backlinks
+  weak_ptr<Parameter> parameter;                       // parent
+  map<string, weak_ptr<Configuration>> configurations; // backlinks
   enum { type_empty, type_int, type_double, type_string } value_type;
   int value_int;
   double value_double;
   string value_string;
 
   virtual bool invariant() const {
-    return Common::invariant() && bool(parameter) &&
-           parameter->parametervalues.count(name) &&
-           parameter->parametervalues.at(name).get() == this &&
-           bool(parameter) && value_type >= type_empty &&
-           value_type <= type_string;
+    return Common::invariant() && bool(parameter.lock()) &&
+           parameter.lock()->parametervalues.count(name) &&
+           parameter.lock()->parametervalues.at(name).get() == this &&
+           value_type >= type_empty && value_type <= type_string;
   }
 
   ParameterValue() = delete;

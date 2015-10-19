@@ -19,24 +19,24 @@ using std::map;
 using std::ostream;
 using std::shared_ptr;
 using std::string;
+using std::weak_ptr;
 
 struct Field;
 struct Discretization;
 
 struct Manifold : Common, std::enable_shared_from_this<Manifold> {
-  shared_ptr<Project> project; // parent
+  weak_ptr<Project> project; // parent
   int dimension;
   map<string, shared_ptr<Discretization>> discretizations; // children
-  map<string, shared_ptr<Field>> fields;                   // backlinks
+  map<string, weak_ptr<Field>> fields;                     // backlinks
 
   virtual bool invariant() const {
-    bool inv = Common::invariant() && bool(project) &&
-               project->manifolds.count(name) &&
-               project->manifolds.at(name).get() == this && dimension >= 0;
+    bool inv = Common::invariant() && bool(project.lock()) &&
+               project.lock()->manifolds.count(name) &&
+               project.lock()->manifolds.at(name).get() == this &&
+               dimension >= 0;
     for (const auto &d : discretizations)
       inv &= !d.first.empty() && bool(d.second);
-    for (const auto &f : fields)
-      inv &= !f.first.empty() && bool(f.second);
     return inv;
   }
 

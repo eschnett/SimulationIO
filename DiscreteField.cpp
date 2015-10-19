@@ -10,7 +10,8 @@ void DiscreteField::read(const H5::CommonFG &loc, const string &entry,
                          const shared_ptr<Field> &field) {
   this->field = field;
   auto group = loc.openGroup(entry);
-  assert(H5::readAttribute<string>(group, "type", field->project->enumtype) ==
+  assert(H5::readAttribute<string>(group, "type",
+                                   field->project.lock()->enumtype) ==
          "DiscreteField");
   H5::readAttribute(group, "name", name);
   assert(H5::readGroupAttribute<string>(group, "field", "name") == field->name);
@@ -30,7 +31,7 @@ void DiscreteField::read(const H5::CommonFG &loc, const string &entry,
 
 ostream &DiscreteField::output(ostream &os, int level) const {
   os << indent(level) << "DiscreteField \"" << name << "\": Field \""
-     << field->name << "\" Discretization \"" << discretization->name
+     << field.lock()->name << "\" Discretization \"" << discretization->name
      << "\" Basis \"" << basis->name << "\"\n";
   for (const auto &db : discretefieldblocks)
     db.second->output(os, level + 1);
@@ -40,7 +41,8 @@ ostream &DiscreteField::output(ostream &os, int level) const {
 void DiscreteField::write(const H5::CommonFG &loc,
                           const H5::H5Location &parent) const {
   auto group = loc.createGroup(name);
-  H5::createAttribute(group, "type", field->project->enumtype, "DiscreteField");
+  H5::createAttribute(group, "type", field.lock()->project.lock()->enumtype,
+                      "DiscreteField");
   H5::createAttribute(group, "name", name);
   H5::createHardLink(group, "field", parent, ".");
   H5::createHardLink(group, "discretization", parent,

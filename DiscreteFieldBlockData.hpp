@@ -19,25 +19,29 @@ using std::map;
 using std::ostream;
 using std::shared_ptr;
 using std::string;
+using std::weak_ptr;
 
 struct DiscreteFieldBlockData
     : Common,
       std::enable_shared_from_this<DiscreteFieldBlockData> {
   // Tensor component for a discrete field on a particular region
-  shared_ptr<DiscreteFieldBlock> discretefieldblock; // parent
-  shared_ptr<TensorComponent> tensorcomponent;       // without backlink
+  weak_ptr<DiscreteFieldBlock> discretefieldblock; // parent
+  shared_ptr<TensorComponent> tensorcomponent;     // without backlink
   bool have_extlink;
   string extlink_file_name, extlink_obj_name;
 
   virtual bool invariant() const {
     bool inv =
-        Common::invariant() && bool(discretefieldblock) &&
-        discretefieldblock->discretefieldblockdata.count(name) &&
-        discretefieldblock->discretefieldblockdata.at(name).get() == this &&
+        Common::invariant() && bool(discretefieldblock.lock()) &&
+        discretefieldblock.lock()->discretefieldblockdata.count(name) &&
+        discretefieldblock.lock()->discretefieldblockdata.at(name).get() ==
+            this &&
         bool(tensorcomponent) &&
         tensorcomponent->discretefieldblockdata.nobacklink() &&
-        discretefieldblock->discretefield->field->tensortype ==
-            tensorcomponent->tensortype;
+        discretefieldblock.lock()
+                ->discretefield.lock()
+                ->field.lock()
+                ->tensortype.get() == tensorcomponent->tensortype.lock().get();
     if (have_extlink)
       inv &= !extlink_file_name.empty() && !extlink_obj_name.empty();
     return inv;

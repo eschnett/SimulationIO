@@ -8,9 +8,9 @@ void TensorComponent::read(const H5::CommonFG &loc, const string &entry,
                            const shared_ptr<TensorType> &tensortype) {
   this->tensortype = tensortype;
   auto group = loc.openGroup(entry);
-  assert(
-      H5::readAttribute<string>(group, "type", tensortype->project->enumtype) ==
-      "TensorComponent");
+  assert(H5::readAttribute<string>(group, "type",
+                                   tensortype->project.lock()->enumtype) ==
+         "TensorComponent");
   H5::readAttribute(group, "name", name);
   assert(H5::readGroupAttribute<string>(group, "tensortype", "name") ==
          tensortype->name);
@@ -20,7 +20,7 @@ void TensorComponent::read(const H5::CommonFG &loc, const string &entry,
 
 ostream &TensorComponent::output(ostream &os, int level) const {
   os << indent(level) << "TensorComponent \"" << name << "\": TensorType \""
-     << tensortype->name << "\" storage_index=" << storage_index
+     << tensortype.lock()->name << "\" storage_index=" << storage_index
      << " indexvalues=[";
   for (int i = 0; i < int(indexvalues.size()); ++i) {
     if (i > 0)
@@ -34,7 +34,8 @@ ostream &TensorComponent::output(ostream &os, int level) const {
 void TensorComponent::write(const H5::CommonFG &loc,
                             const H5::H5Location &parent) const {
   auto group = loc.createGroup(name);
-  H5::createAttribute(group, "type", tensortype->project->enumtype,
+  H5::createAttribute(group, "type",
+                      tensortype.lock()->project.lock()->enumtype,
                       "TensorComponent");
   H5::createAttribute(group, "name", name);
   H5::createHardLink(group, "tensortype", parent, ".");

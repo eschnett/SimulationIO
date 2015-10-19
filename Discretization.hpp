@@ -18,19 +18,20 @@ using std::map;
 using std::ostream;
 using std::shared_ptr;
 using std::string;
+using std::weak_ptr;
 
 struct DiscreteField;
 struct DiscretizationBlock;
 
 struct Discretization : Common, std::enable_shared_from_this<Discretization> {
-  shared_ptr<Manifold> manifold;                                     // parent
+  weak_ptr<Manifold> manifold;                                       // parent
   map<string, shared_ptr<DiscretizationBlock>> discretizationblocks; // children
-  NoBackLink<shared_ptr<DiscreteField>> discretefields;
+  NoBackLink<weak_ptr<DiscreteField>> discretefields;
 
   virtual bool invariant() const {
-    return Common::invariant() && bool(manifold) &&
-           manifold->discretizations.count(name) &&
-           manifold->discretizations.at(name).get() == this;
+    return Common::invariant() && bool(manifold.lock()) &&
+           manifold.lock()->discretizations.count(name) &&
+           manifold.lock()->discretizations.at(name).get() == this;
   }
 
   Discretization() = delete;

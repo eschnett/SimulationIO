@@ -19,24 +19,24 @@ using std::map;
 using std::ostream;
 using std::shared_ptr;
 using std::string;
+using std::weak_ptr;
 
 struct Field;
 struct Basis;
 
 struct TangentSpace : Common, std::enable_shared_from_this<TangentSpace> {
-  shared_ptr<Project> project; // parent
+  weak_ptr<Project> project; // parent
   int dimension;
-  map<string, shared_ptr<Basis>> bases;  // children
-  map<string, shared_ptr<Field>> fields; // backlinks
+  map<string, shared_ptr<Basis>> bases; // children
+  map<string, weak_ptr<Field>> fields;  // backlinks
 
   virtual bool invariant() const {
-    bool inv = Common::invariant() && bool(project) &&
-               project->tangentspaces.count(name) &&
-               project->tangentspaces.at(name).get() == this && dimension >= 0;
+    bool inv = Common::invariant() && bool(project.lock()) &&
+               project.lock()->tangentspaces.count(name) &&
+               project.lock()->tangentspaces.at(name).get() == this &&
+               dimension >= 0;
     for (const auto &b : bases)
       inv &= !b.first.empty() && bool(b.second);
-    for (const auto &f : fields)
-      inv &= !f.first.empty() && bool(f.second);
     return inv;
   }
 

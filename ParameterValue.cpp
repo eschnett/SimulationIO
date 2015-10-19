@@ -12,8 +12,9 @@ void ParameterValue::read(const H5::CommonFG &loc, const string &entry,
   this->parameter = parameter;
   value_type = type_empty;
   auto group = loc.openGroup(entry);
-  assert(H5::readAttribute<string>(
-             group, "type", parameter->project->enumtype) == "ParameterValue");
+  assert(H5::readAttribute<string>(group, "type",
+                                   parameter->project.lock()->enumtype) ==
+         "ParameterValue");
   H5::readAttribute(group, "name", name);
   assert(H5::readGroupAttribute<string>(group, "parameter", "name") ==
          parameter->name);
@@ -60,7 +61,7 @@ void ParameterValue::setValue(const string &s) {
 
 ostream &ParameterValue::output(ostream &os, int level) const {
   os << indent(level) << "ParameterValue \"" << name << "\": Parameter \""
-     << parameter->name << "\"\n" << indent(level + 1) << "value: ";
+     << parameter.lock()->name << "\"\n" << indent(level + 1) << "value: ";
   switch (value_type) {
   case type_empty:
     os << "empty";
@@ -84,11 +85,11 @@ ostream &ParameterValue::output(ostream &os, int level) const {
 void ParameterValue::write(const H5::CommonFG &loc,
                            const H5::H5Location &parent) const {
   auto group = loc.createGroup(name);
-  H5::createAttribute(group, "type", parameter->project->enumtype,
+  H5::createAttribute(group, "type", parameter.lock()->project.lock()->enumtype,
                       "ParameterValue");
   H5::createAttribute(group, "name", name);
   H5::createHardLink(group, "parameter", parent,
-                     string("project/parameters/") + parameter->name);
+                     string("project/parameters/") + parameter.lock()->name);
   switch (value_type) {
   case type_empty:
     // do nothing

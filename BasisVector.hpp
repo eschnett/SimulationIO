@@ -14,20 +14,22 @@ using std::make_shared;
 using std::ostream;
 using std::shared_ptr;
 using std::string;
+using std::weak_ptr;
 
 namespace SimulationIO {
 
 struct BasisVector : Common, std::enable_shared_from_this<BasisVector> {
-  shared_ptr<Basis> basis; // parent
+  weak_ptr<Basis> basis; // parent
   int direction;
 
   virtual bool invariant() const {
-    return Common::invariant() && bool(basis) &&
-           basis->basisvectors.count(name) &&
-           basis->basisvectors.at(name).get() == this && direction >= 0 &&
-           direction < basis->tangentspace->dimension &&
-           basis->directions.count(direction) &&
-           basis->directions.at(direction).get() == this;
+    return Common::invariant() && bool(basis.lock()) &&
+           basis.lock()->basisvectors.count(name) &&
+           basis.lock()->basisvectors.at(name).get() == this &&
+           direction >= 0 &&
+           direction < basis.lock()->tangentspace.lock()->dimension &&
+           basis.lock()->directions.count(direction) &&
+           basis.lock()->directions.at(direction).get() == this;
   }
 
   BasisVector() = delete;

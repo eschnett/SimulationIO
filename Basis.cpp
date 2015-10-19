@@ -10,8 +10,8 @@ void Basis::read(const H5::CommonFG &loc, const string &entry,
                  const shared_ptr<TangentSpace> &tangentspace) {
   this->tangentspace = tangentspace;
   auto group = loc.openGroup(entry);
-  assert(H5::readAttribute<string>(group, "type",
-                                   tangentspace->project->enumtype) == "Basis");
+  assert(H5::readAttribute<string>(
+             group, "type", tangentspace->project.lock()->enumtype) == "Basis");
   H5::readAttribute(group, "name", name);
   assert(H5::readGroupAttribute<string>(group, "tangentspace", "name") ==
          tangentspace->name);
@@ -24,7 +24,7 @@ void Basis::read(const H5::CommonFG &loc, const string &entry,
 
 ostream &Basis::output(ostream &os, int level) const {
   os << indent(level) << "Basis \"" << name << "\": TangentSpace \""
-     << tangentspace->name << "\"\n";
+     << tangentspace.lock()->name << "\"\n";
   for (const auto &db : directions)
     db.second->output(os, level + 1);
   return os;
@@ -32,7 +32,8 @@ ostream &Basis::output(ostream &os, int level) const {
 
 void Basis::write(const H5::CommonFG &loc, const H5::H5Location &parent) const {
   auto group = loc.createGroup(name);
-  H5::createAttribute(group, "type", tangentspace->project->enumtype, "Basis");
+  H5::createAttribute(group, "type",
+                      tangentspace.lock()->project.lock()->enumtype, "Basis");
   H5::createAttribute(group, "name", name);
   H5::createHardLink(group, "tangentspace", parent, ".");
   H5::createGroup(group, "basisvectors", basisvectors);

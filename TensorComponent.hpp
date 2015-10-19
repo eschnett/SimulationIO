@@ -17,28 +17,32 @@ using std::ostream;
 using std::shared_ptr;
 using std::string;
 using std::vector;
+using std::weak_ptr;
 
 struct DiscreteFieldBlockData;
 
 struct TensorComponent : Common, std::enable_shared_from_this<TensorComponent> {
-  shared_ptr<TensorType> tensortype; // parent
+  weak_ptr<TensorType> tensortype; // parent
   int storage_index;
   vector<int> indexvalues;
-  NoBackLink<shared_ptr<DiscreteFieldBlockData>> discretefieldblockdata;
+  NoBackLink<weak_ptr<DiscreteFieldBlockData>> discretefieldblockdata;
 
   virtual bool invariant() const {
-    bool inv = Common::invariant() && bool(tensortype) &&
-               tensortype->tensorcomponents.count(name) &&
-               tensortype->tensorcomponents.at(name).get() == this &&
-               storage_index >= 0 &&
-               storage_index < ipow(tensortype->dimension, tensortype->rank) &&
-               tensortype->storage_indices.count(storage_index) &&
-               tensortype->storage_indices.at(storage_index).get() == this &&
-               int(indexvalues.size()) == tensortype->rank;
+    bool inv =
+        Common::invariant() && bool(tensortype.lock()) &&
+        tensortype.lock()->tensorcomponents.count(name) &&
+        tensortype.lock()->tensorcomponents.at(name).get() == this &&
+        storage_index >= 0 &&
+        storage_index <
+            ipow(tensortype.lock()->dimension, tensortype.lock()->rank) &&
+        tensortype.lock()->storage_indices.count(storage_index) &&
+        tensortype.lock()->storage_indices.at(storage_index).get() == this &&
+        int(indexvalues.size()) == tensortype.lock()->rank;
     for (int i = 0; i < int(indexvalues.size()); ++i)
-      inv &= indexvalues[i] >= 0 && indexvalues[i] < tensortype->dimension;
+      inv &=
+          indexvalues[i] >= 0 && indexvalues[i] < tensortype.lock()->dimension;
     // Ensure all tensor components are distinct
-    for (const auto &tc : tensortype->tensorcomponents) {
+    for (const auto &tc : tensortype.lock()->tensorcomponents) {
       const auto &other = tc.second;
       if (other.get() == this)
         continue;

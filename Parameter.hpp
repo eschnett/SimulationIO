@@ -19,18 +19,19 @@ using std::map;
 using std::ostream;
 using std::shared_ptr;
 using std::string;
+using std::weak_ptr;
 
 struct ParameterValue;
 
 struct Parameter : Common, std::enable_shared_from_this<Parameter> {
-  shared_ptr<Project> project;                             // parent
+  weak_ptr<Project> project;                               // parent
   map<string, shared_ptr<ParameterValue>> parametervalues; // children
   // type, range?, description?
 
   virtual bool invariant() const {
-    return Common::invariant() && bool(project) &&
-           project->parameters.count(name) &&
-           project->parameters.at(name).get() == this;
+    return Common::invariant() && bool(project.lock()) &&
+           project.lock()->parameters.count(name) &&
+           project.lock()->parameters.at(name).get() == this;
   }
 
   Parameter() = delete;

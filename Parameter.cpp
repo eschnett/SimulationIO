@@ -31,7 +31,7 @@ ostream &Parameter::output(ostream &os, int level) const {
 void Parameter::write(const H5::CommonFG &loc,
                       const H5::H5Location &parent) const {
   auto group = loc.createGroup(name);
-  H5::createAttribute(group, "type", project->enumtype, "Parameter");
+  H5::createAttribute(group, "type", project.lock()->enumtype, "Parameter");
   H5::createAttribute(group, "name", name);
   H5::createHardLink(group, "project", parent, ".");
   H5::createGroup(group, "parametervalues", parametervalues);

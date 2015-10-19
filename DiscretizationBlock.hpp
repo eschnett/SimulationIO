@@ -14,23 +14,24 @@ using std::make_shared;
 using std::ostream;
 using std::shared_ptr;
 using std::string;
+using std::weak_ptr;
 
 struct DiscreteFieldBlock;
 
 struct DiscretizationBlock : Common,
                              std::enable_shared_from_this<DiscretizationBlock> {
   // Discretization of a certain region, represented by contiguous data
-  shared_ptr<Discretization> discretization; // parent
-  NoBackLink<shared_ptr<DiscreteFieldBlock>> discretefieldblocks;
+  weak_ptr<Discretization> discretization; // parent
+  NoBackLink<weak_ptr<DiscreteFieldBlock>> discretefieldblocks;
 
   // bounding box? in terms of coordinates?
   // connectivity? neighbouring blocks?
   // overlaps?
 
   virtual bool invariant() const {
-    return Common::invariant() && bool(discretization) &&
-           discretization->discretizationblocks.count(name) &&
-           discretization->discretizationblocks.at(name).get() == this;
+    return Common::invariant() && bool(discretization.lock()) &&
+           discretization.lock()->discretizationblocks.count(name) &&
+           discretization.lock()->discretizationblocks.at(name).get() == this;
   }
 
   DiscretizationBlock() = delete;

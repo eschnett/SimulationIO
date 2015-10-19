@@ -31,14 +31,14 @@ ostream &TangentSpace::output(ostream &os, int level) const {
   for (const auto &b : bases)
     b.second->output(os, level + 1);
   for (const auto &f : fields)
-    os << indent(level + 1) << "Field \"" << f.second->name << "\"\n";
+    os << indent(level + 1) << "Field \"" << f.second.lock()->name << "\"\n";
   return os;
 }
 
 void TangentSpace::write(const H5::CommonFG &loc,
                          const H5::H5Location &parent) const {
   auto group = loc.createGroup(name);
-  H5::createAttribute(group, "type", project->enumtype, "TangentSpace");
+  H5::createAttribute(group, "type", project.lock()->enumtype, "TangentSpace");
   H5::createAttribute(group, "name", name);
   H5::createHardLink(group, "project", parent, ".");
   H5::createAttribute(group, "dimension", dimension);

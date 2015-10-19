@@ -10,8 +10,9 @@ void Discretization::read(const H5::CommonFG &loc, const string &entry,
                           const shared_ptr<Manifold> &manifold) {
   this->manifold = manifold;
   auto group = loc.openGroup(entry);
-  assert(H5::readAttribute<string>(
-             group, "type", manifold->project->enumtype) == "Discretization");
+  assert(H5::readAttribute<string>(group, "type",
+                                   manifold->project.lock()->enumtype) ==
+         "Discretization");
   H5::readAttribute(group, "name", name);
   assert(H5::readGroupAttribute<string>(group, "manifold", "name") ==
          manifold->name);
@@ -23,7 +24,7 @@ void Discretization::read(const H5::CommonFG &loc, const string &entry,
 
 ostream &Discretization::output(ostream &os, int level) const {
   os << indent(level) << "Discretization \"" << name << "\": Manifold \""
-     << manifold->name << "\"\n";
+     << manifold.lock()->name << "\"\n";
   for (const auto &db : discretizationblocks)
     db.second->output(os, level + 1);
   return os;
@@ -32,7 +33,7 @@ ostream &Discretization::output(ostream &os, int level) const {
 void Discretization::write(const H5::CommonFG &loc,
                            const H5::H5Location &parent) const {
   auto group = loc.createGroup(name);
-  H5::createAttribute(group, "type", manifold->project->enumtype,
+  H5::createAttribute(group, "type", manifold.lock()->project.lock()->enumtype,
                       "Discretization");
   H5::createAttribute(group, "name", name);
   H5::createHardLink(group, "manifold", parent, ".");
