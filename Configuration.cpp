@@ -24,7 +24,7 @@ Configuration::Configuration(const H5::CommonFG &loc, const string &entry,
     assert(H5::readGroupAttribute<string>(
                group, valname + string("/configurations/") + name, "name") ==
            name);
-    insert(parametervalue);
+    insertParameterValue(parametervalue);
   });
 }
 
@@ -54,9 +54,10 @@ void Configuration::write(const H5::CommonFG &loc,
   }
 }
 
-void Configuration::insert(ParameterValue *parametervalue) {
+void Configuration::insertParameterValue(ParameterValue *parametervalue) {
   for (const auto &val : parametervalues)
     assert(val.second->parameter != parametervalue->parameter);
   checked_emplace(parametervalues, parametervalue->name, parametervalue);
+  parametervalue->insert(this);
 }
 }

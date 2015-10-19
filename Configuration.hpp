@@ -21,7 +21,7 @@ struct ParameterValue;
 
 struct Configuration : Common {
   Project *project;                              // parent
-  map<string, ParameterValue *> parametervalues; // children
+  map<string, ParameterValue *> parametervalues; // links
 
   virtual bool invariant() const {
     return Common::invariant() && bool(project) &&
@@ -51,7 +51,7 @@ public:
   virtual void write(const H5::CommonFG &loc,
                      const H5::H5Location &parent) const;
 
-  void insert(ParameterValue *parametervalue);
+  void insertParameterValue(ParameterValue *parametervalue);
 };
 }
 

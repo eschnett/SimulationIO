@@ -171,7 +171,7 @@ int main(int argc, char **argv) {
             }
             auto value_iteration =
                 parameter_iteration->parametervalues.at(value_iteration_name);
-            configuration->insert(value_iteration);
+            configuration->insertParameterValue(value_iteration);
             if (!parameter_timelevel->parametervalues.count(
                     value_timelevel_name)) {
               auto value_timelevel = parameter_timelevel->createParameterValue(
@@ -180,7 +180,7 @@ int main(int argc, char **argv) {
             }
             auto value_timelevel =
                 parameter_timelevel->parametervalues.at(value_timelevel_name);
-            configuration->insert(value_timelevel);
+            configuration->insertParameterValue(value_timelevel);
           }
           auto configuration = project->configurations.at(configurationname);
 

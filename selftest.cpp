@@ -146,8 +146,8 @@ TEST(Configuration, create) {
   EXPECT_EQ(conf2, project->configurations.at("conf2"));
   EXPECT_TRUE(conf1->parametervalues.empty());
   EXPECT_TRUE(conf2->parametervalues.empty());
-  conf2->insert(val1);
-  conf2->insert(val2);
+  conf2->insertParameterValue(val1);
+  conf2->insertParameterValue(val2);
   EXPECT_TRUE(conf1->parametervalues.empty());
   EXPECT_EQ(2, conf2->parametervalues.size());
   EXPECT_EQ(val1, conf2->parametervalues.at("val1"));
