@@ -1,6 +1,7 @@
 #include "SimulationIO.hpp"
 
 #include <iostream>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -9,12 +10,15 @@ using namespace SimulationIO;
 
 using std::cout;
 using std::ostringstream;
+using std::shared_ptr;
 using std::string;
 using std::vector;
 
 const char *const dirnames[] = {"x", "y", "z"};
 
 int main(int argc, char **argv) {
+
+  auto x = make_shared<int>(1);
 
   // Project
   auto project = createProject("simulation");
