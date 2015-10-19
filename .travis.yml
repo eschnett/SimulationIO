@@ -42,6 +42,7 @@ compiler:
 script:
   - make -j2 COVERAGE=1 HDF5_DIR="$HDF5_DIR"
   - make -j2 test
+  - ./example && ./list example.h5
 after_success:
   - make -j2 coverage
   - coveralls-lcov coverage.info
