@@ -7,6 +7,7 @@
 #include <iostream>
 #include <iterator>
 #include <map>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -187,7 +188,7 @@ int main(int argc, char **argv) {
           // Get tensor type
           auto tensortype = project->tensortypes.at(tensortypename);
           assert(tensortype->rank == tensorrank);
-          TensorComponent *tensorcomponent = 0;
+          shared_ptr<TensorComponent> tensorcomponent;
           for (const auto &tc : tensortype->tensorcomponents) {
             if (tc.second->indexvalues == tensorindices) {
               tensorcomponent = tc.second;

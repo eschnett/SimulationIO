@@ -6,9 +6,9 @@
 
 namespace SimulationIO {
 
-Basis::Basis(const H5::CommonFG &loc, const string &entry,
-             TangentSpace *tangentspace)
-    : tangentspace(tangentspace) {
+void Basis::read(const H5::CommonFG &loc, const string &entry,
+                 const shared_ptr<TangentSpace> &tangentspace) {
+  this->tangentspace = tangentspace;
   auto group = loc.openGroup(entry);
   assert(H5::readAttribute<string>(group, "type",
                                    tangentspace->project->enumtype) == "Basis");
@@ -39,17 +39,18 @@ void Basis::write(const H5::CommonFG &loc, const H5::H5Location &parent) const {
 #warning "TODO: output directions"
 }
 
-BasisVector *Basis::createBasisVector(const string &name, int direction) {
-  auto basisvector = new BasisVector(name, this, direction);
+shared_ptr<BasisVector> Basis::createBasisVector(const string &name,
+                                                 int direction) {
+  auto basisvector = BasisVector::create(name, shared_from_this(), direction);
   checked_emplace(basisvectors, basisvector->name, basisvector);
   checked_emplace(directions, basisvector->direction, basisvector);
   assert(basisvector->invariant());
   return basisvector;
 }
 
-BasisVector *Basis::createBasisVector(const H5::CommonFG &loc,
-                                      const string &entry) {
-  auto basisvector = new BasisVector(loc, entry, this);
+shared_ptr<BasisVector> Basis::createBasisVector(const H5::CommonFG &loc,
+                                                 const string &entry) {
+  auto basisvector = BasisVector::create(loc, entry, shared_from_this());
   checked_emplace(basisvectors, basisvector->name, basisvector);
   checked_emplace(directions, basisvector->direction, basisvector);
   assert(basisvector->invariant());

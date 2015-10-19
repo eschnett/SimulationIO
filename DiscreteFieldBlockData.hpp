@@ -7,32 +7,37 @@
 
 #include <H5Cpp.h>
 
-#include <cassert>
 #include <iostream>
 #include <map>
+#include <memory>
 #include <string>
 
 namespace SimulationIO {
 
-using std::ostream;
+using std::make_shared;
 using std::map;
+using std::ostream;
+using std::shared_ptr;
 using std::string;
 
-struct DiscreteFieldBlockData : Common {
+struct DiscreteFieldBlockData
+    : Common,
+      std::enable_shared_from_this<DiscreteFieldBlockData> {
   // Tensor component for a discrete field on a particular region
-  DiscreteFieldBlock *discretefieldblock; // parent
-  TensorComponent *tensorcomponent;       // without backlink
+  shared_ptr<DiscreteFieldBlock> discretefieldblock; // parent
+  shared_ptr<TensorComponent> tensorcomponent;       // without backlink
   bool have_extlink;
   string extlink_file_name, extlink_obj_name;
 
   virtual bool invariant() const {
-    bool inv = Common::invariant() && bool(discretefieldblock) &&
-               discretefieldblock->discretefieldblockdata.count(name) &&
-               discretefieldblock->discretefieldblockdata.at(name) == this &&
-               bool(tensorcomponent) &&
-               tensorcomponent->discretefieldblockdata.nobacklink() &&
-               discretefieldblock->discretefield->field->tensortype ==
-                   tensorcomponent->tensortype;
+    bool inv =
+        Common::invariant() && bool(discretefieldblock) &&
+        discretefieldblock->discretefieldblockdata.count(name) &&
+        discretefieldblock->discretefieldblockdata.at(name).get() == this &&
+        bool(tensorcomponent) &&
+        tensorcomponent->discretefieldblockdata.nobacklink() &&
+        discretefieldblock->discretefield->field->tensortype ==
+            tensorcomponent->tensortype;
     if (have_extlink)
       inv &= !extlink_file_name.empty() && !extlink_obj_name.empty();
     return inv;
@@ -44,20 +49,37 @@ struct DiscreteFieldBlockData : Common {
   DiscreteFieldBlockData &operator=(const DiscreteFieldBlockData &) = delete;
   DiscreteFieldBlockData &operator=(DiscreteFieldBlockData &&) = delete;
 
-private:
   friend class DiscreteFieldBlock;
-  DiscreteFieldBlockData(const string &name,
-                         DiscreteFieldBlock *discretefieldblock,
-                         TensorComponent *tensorcomponent)
+  DiscreteFieldBlockData(
+      hidden, const string &name,
+      const shared_ptr<DiscreteFieldBlock> &discretefieldblock,
+      const shared_ptr<TensorComponent> &tensorcomponent)
       : Common(name), discretefieldblock(discretefieldblock),
-        tensorcomponent(tensorcomponent), have_extlink(false) {
-    tensorcomponent->noinsert(this);
+        tensorcomponent(tensorcomponent), have_extlink(false) {}
+  DiscreteFieldBlockData(hidden) : Common(hidden()) {}
+
+private:
+  static shared_ptr<DiscreteFieldBlockData>
+  create(const string &name,
+         const shared_ptr<DiscreteFieldBlock> &discretefieldblock,
+         const shared_ptr<TensorComponent> &tensorcomponent) {
+    auto discretefieldblockdata = make_shared<DiscreteFieldBlockData>(
+        hidden(), name, discretefieldblock, tensorcomponent);
+    tensorcomponent->noinsert(discretefieldblockdata);
+    return discretefieldblockdata;
   }
-  DiscreteFieldBlockData(const H5::CommonFG &loc, const string &entry,
-                         DiscreteFieldBlock *discretefieldblock);
+  static shared_ptr<DiscreteFieldBlockData>
+  create(const H5::CommonFG &loc, const string &entry,
+         const shared_ptr<DiscreteFieldBlock> &discretefieldblock) {
+    auto discretefieldblockdata = make_shared<DiscreteFieldBlockData>(hidden());
+    discretefieldblockdata->read(loc, entry, discretefieldblock);
+    return discretefieldblockdata;
+  }
+  void read(const H5::CommonFG &loc, const string &entry,
+            const shared_ptr<DiscreteFieldBlock> &discretefieldblock);
 
 public:
-  virtual ~DiscreteFieldBlockData() { assert(0); }
+  virtual ~DiscreteFieldBlockData() {}
 
   void setExternalLink(const string &file_name, const string &obj_name);
 

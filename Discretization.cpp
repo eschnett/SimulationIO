@@ -6,9 +6,9 @@
 
 namespace SimulationIO {
 
-Discretization::Discretization(const H5::CommonFG &loc, const string &entry,
-                               Manifold *manifold)
-    : manifold(manifold) {
+void Discretization::read(const H5::CommonFG &loc, const string &entry,
+                          const shared_ptr<Manifold> &manifold) {
+  this->manifold = manifold;
   auto group = loc.openGroup(entry);
   assert(H5::readAttribute<string>(
              group, "type", manifold->project->enumtype) == "Discretization");
@@ -39,19 +39,21 @@ void Discretization::write(const H5::CommonFG &loc,
   H5::createGroup(group, "discretizationblocks", discretizationblocks);
 }
 
-DiscretizationBlock *
+shared_ptr<DiscretizationBlock>
 Discretization::createDiscretizationBlock(const string &name) {
-  auto discretizationblock = new DiscretizationBlock(name, this);
+  auto discretizationblock =
+      DiscretizationBlock::create(name, shared_from_this());
   checked_emplace(discretizationblocks, discretizationblock->name,
                   discretizationblock);
   assert(discretizationblock->invariant());
   return discretizationblock;
 }
 
-DiscretizationBlock *
+shared_ptr<DiscretizationBlock>
 Discretization::createDiscretizationBlock(const H5::CommonFG &loc,
                                           const string &entry) {
-  auto discretizationblock = new DiscretizationBlock(loc, entry, this);
+  auto discretizationblock =
+      DiscretizationBlock::create(loc, entry, shared_from_this());
   checked_emplace(discretizationblocks, discretizationblock->name,
                   discretizationblock);
   assert(discretizationblock->invariant());

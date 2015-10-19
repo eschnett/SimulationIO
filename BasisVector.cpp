@@ -4,9 +4,9 @@
 
 namespace SimulationIO {
 
-BasisVector::BasisVector(const H5::CommonFG &loc, const string &entry,
-                         Basis *basis)
-    : basis(basis) {
+void BasisVector::read(const H5::CommonFG &loc, const string &entry,
+                       const shared_ptr<Basis> &basis) {
+  this->basis = basis;
   auto group = loc.openGroup(entry);
   assert(H5::readAttribute<string>(group, "type",
                                    basis->tangentspace->project->enumtype) ==

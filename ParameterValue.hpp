@@ -6,23 +6,24 @@
 
 #include <H5Cpp.h>
 
-#include <cassert>
 #include <iostream>
 #include <map>
+#include <memory>
 #include <string>
 
 namespace SimulationIO {
 
-using std::ostream;
+using std::make_shared;
 using std::map;
+using std::ostream;
+using std::shared_ptr;
 using std::string;
-using std::tuple;
 
 struct Configuration;
 
-struct ParameterValue : Common {
-  Parameter *parameter;                        // parent
-  map<string, Configuration *> configurations; // backlinks
+struct ParameterValue : Common, std::enable_shared_from_this<ParameterValue> {
+  shared_ptr<Parameter> parameter;                       // parent
+  map<string, shared_ptr<Configuration>> configurations; // backlinks
   enum { type_empty, type_int, type_double, type_string } value_type;
   int value_int;
   double value_double;
@@ -31,8 +32,9 @@ struct ParameterValue : Common {
   virtual bool invariant() const {
     return Common::invariant() && bool(parameter) &&
            parameter->parametervalues.count(name) &&
-           parameter->parametervalues.at(name) == this && bool(parameter) &&
-           value_type >= type_empty && value_type <= type_string;
+           parameter->parametervalues.at(name).get() == this &&
+           bool(parameter) && value_type >= type_empty &&
+           value_type <= type_string;
   }
 
   ParameterValue() = delete;
@@ -41,15 +43,29 @@ struct ParameterValue : Common {
   ParameterValue &operator=(const ParameterValue &) = delete;
   ParameterValue &operator=(ParameterValue &&) = delete;
 
-private:
   friend class Parameter;
-  ParameterValue(const string &name, Parameter *parameter)
+  ParameterValue(hidden, const string &name,
+                 const shared_ptr<Parameter> &parameter)
       : Common(name), parameter(parameter), value_type(type_empty) {}
-  ParameterValue(const H5::CommonFG &loc, const string &entry,
-                 Parameter *parameter);
+  ParameterValue(hidden) : Common(hidden()) {}
+
+private:
+  static shared_ptr<ParameterValue>
+  create(const string &name, const shared_ptr<Parameter> &parameter) {
+    return make_shared<ParameterValue>(hidden(), name, parameter);
+  }
+  static shared_ptr<ParameterValue>
+  create(const H5::CommonFG &loc, const string &entry,
+         const shared_ptr<Parameter> &parameter) {
+    auto parametervalue = make_shared<ParameterValue>(hidden());
+    parametervalue->read(loc, entry, parameter);
+    return parametervalue;
+  }
+  void read(const H5::CommonFG &loc, const string &entry,
+            const shared_ptr<Parameter> &parameter);
 
 public:
-  virtual ~ParameterValue() { assert(0); }
+  virtual ~ParameterValue() {}
 
   void setValue();
   void setValue(int i);
@@ -64,7 +80,7 @@ public:
   virtual void write(const H5::CommonFG &loc,
                      const H5::H5Location &parent) const;
 
-  void insert(Configuration *configuration);
+  void insert(const shared_ptr<Configuration> &configuration);
 };
 }
 

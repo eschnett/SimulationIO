@@ -5,21 +5,23 @@
 
 #include "Common.hpp"
 
-#include <cassert>
-#include <map>
 #include <iostream>
+#include <map>
+#include <memory>
 #include <string>
 
 namespace SimulationIO {
 
+using std::make_shared;
 using std::map;
 using std::ostream;
+using std::shared_ptr;
 using std::string;
 
 struct Project;
 
-Project *createProject(const string &name);
-Project *createProject(const H5::CommonFG &loc);
+shared_ptr<Project> createProject(const string &name);
+shared_ptr<Project> createProject(const H5::CommonFG &loc);
 
 struct Parameter;
 struct Configuration;
@@ -30,14 +32,14 @@ struct Field;
 // struct CoordinateSystem;
 // struct CoordinateBasis;
 
-struct Project : Common {
-  map<string, Parameter *> parameters;         // children
-  map<string, Configuration *> configurations; // children
-  map<string, TensorType *> tensortypes;       // children
-  map<string, Manifold *> manifolds;           // children
-  map<string, TangentSpace *> tangentspaces;   // children
-  map<string, Field *> fields;                 // children
-  // map<string, CoordinateSystem *> coordinatesystems; // children
+struct Project : Common, std::enable_shared_from_this<Project> {
+  map<string, shared_ptr<Parameter>> parameters;         // children
+  map<string, shared_ptr<Configuration>> configurations; // children
+  map<string, shared_ptr<TensorType>> tensortypes;       // children
+  map<string, shared_ptr<Manifold>> manifolds;           // children
+  map<string, shared_ptr<TangentSpace>> tangentspaces;   // children
+  map<string, shared_ptr<Field>> fields;                 // children
+  // map<string, shared_ptr<CoordinateSystem>> coordinatesystems; // children
   // TODO: coordinatebasis
 
   mutable H5::EnumType enumtype;
@@ -49,14 +51,26 @@ struct Project : Common {
   Project &operator=(const Project &) = delete;
   Project &operator=(Project &&) = delete;
 
+  friend shared_ptr<Project> createProject(const string &name);
+  friend shared_ptr<Project> createProject(const H5::CommonFG &loc);
+  Project(hidden, const string &name) : Common(name) { createTypes(); }
+  Project(hidden) : Common(hidden()) {}
+
 private:
-  friend Project *createProject(const string &name);
-  friend Project *createProject(const H5::CommonFG &loc);
-  Project(const string &name) : Common(name) { createTypes(); }
-  Project(const H5::CommonFG &loc);
+  static shared_ptr<Project> create(const string &name) {
+    auto project = make_shared<Project>(hidden(), name);
+    project->createTypes();
+    return project;
+  }
+  static shared_ptr<Project> create(const H5::CommonFG &loc) {
+    auto project = make_shared<Project>(hidden());
+    project->read(loc);
+    return project;
+  }
+  void read(const H5::CommonFG &loc);
 
 public:
-  virtual ~Project() { assert(0); }
+  virtual ~Project() {}
 
   void createStandardTensortypes();
 
@@ -75,24 +89,32 @@ public:
                      const H5::H5Location &parent) const;
   void write(const H5::CommonFG &loc) const { write(loc, H5::H5File()); }
 
-  Parameter *createParameter(const string &name);
-  Parameter *createParameter(const H5::CommonFG &loc, const string &entry);
-  Configuration *createConfiguration(const string &name);
-  Configuration *createConfiguration(const H5::CommonFG &loc,
-                                     const string &entry);
-  TensorType *createTensorType(const string &name, int dimension, int rank);
-  TensorType *createTensorType(const H5::CommonFG &loc, const string &entry);
-  Manifold *createManifold(const string &name, int dimension);
-  Manifold *createManifold(const H5::CommonFG &loc, const string &entry);
-  TangentSpace *createTangentSpace(const string &name, int dimension);
-  TangentSpace *createTangentSpace(const H5::CommonFG &loc,
-                                   const string &entry);
-  Field *createField(const string &name, Manifold *manifold,
-                     TangentSpace *tangentspace, TensorType *tensortype);
-  Field *createField(const H5::CommonFG &loc, const string &entry);
-  // CoordinateSystem *createCoordinateSystem(const string &name,
-  //                                          Manifold *manifold);
-  // CoordinateSystem *createCoordinateSystem(const H5::CommonFG &loc,
+  shared_ptr<Parameter> createParameter(const string &name);
+  shared_ptr<Parameter> createParameter(const H5::CommonFG &loc,
+                                        const string &entry);
+  shared_ptr<Configuration> createConfiguration(const string &name);
+  shared_ptr<Configuration> createConfiguration(const H5::CommonFG &loc,
+                                                const string &entry);
+  shared_ptr<TensorType> createTensorType(const string &name, int dimension,
+                                          int rank);
+  shared_ptr<TensorType> createTensorType(const H5::CommonFG &loc,
+                                          const string &entry);
+  shared_ptr<Manifold> createManifold(const string &name, int dimension);
+  shared_ptr<Manifold> createManifold(const H5::CommonFG &loc,
+                                      const string &entry);
+  shared_ptr<TangentSpace> createTangentSpace(const string &name,
+                                              int dimension);
+  shared_ptr<TangentSpace> createTangentSpace(const H5::CommonFG &loc,
+                                              const string &entry);
+  shared_ptr<Field> createField(const string &name,
+                                const shared_ptr<Manifold> &manifold,
+                                const shared_ptr<TangentSpace> &tangentspace,
+                                const shared_ptr<TensorType> &tensortype);
+  shared_ptr<Field> createField(const H5::CommonFG &loc, const string &entry);
+  // shared_ptr<CoordinateSystem>createCoordinateSystem(const string &name,
+  //                                          const
+  //                                          shared_ptr<Manifold>&manifold);
+  // shared_ptr<CoordinateSystem>createCoordinateSystem(const H5::CommonFG &loc,
   //                                          const string &entry);
 };
 }

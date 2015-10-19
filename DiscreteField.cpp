@@ -6,9 +6,9 @@
 
 namespace SimulationIO {
 
-DiscreteField::DiscreteField(const H5::CommonFG &loc, const string &entry,
-                             Field *field)
-    : field(field) {
+void DiscreteField::read(const H5::CommonFG &loc, const string &entry,
+                         const shared_ptr<Field> &field) {
+  this->field = field;
   auto group = loc.openGroup(entry);
   assert(H5::readAttribute<string>(group, "type", field->project->enumtype) ==
          "DiscreteField");
@@ -24,8 +24,8 @@ DiscreteField::DiscreteField(const H5::CommonFG &loc, const string &entry,
                 [&](const H5::Group &group, const string &name) {
                   createDiscreteFieldBlock(group, name);
                 });
-  discretization->noinsert(this);
-  basis->noinsert(this);
+  discretization->noinsert(shared_from_this());
+  basis->noinsert(shared_from_this());
 }
 
 ostream &DiscreteField::output(ostream &os, int level) const {
@@ -51,20 +51,22 @@ void DiscreteField::write(const H5::CommonFG &loc,
   H5::createGroup(group, "discretefieldblocks", discretefieldblocks);
 }
 
-DiscreteFieldBlock *DiscreteField::createDiscreteFieldBlock(
-    const string &name, DiscretizationBlock *discretizationblock) {
+shared_ptr<DiscreteFieldBlock> DiscreteField::createDiscreteFieldBlock(
+    const string &name,
+    const shared_ptr<DiscretizationBlock> &discretizationblock) {
   auto discretefieldblock =
-      new DiscreteFieldBlock(name, this, discretizationblock);
+      DiscreteFieldBlock::create(name, shared_from_this(), discretizationblock);
   checked_emplace(discretefieldblocks, discretefieldblock->name,
                   discretefieldblock);
   assert(discretefieldblock->invariant());
   return discretefieldblock;
 }
 
-DiscreteFieldBlock *
+shared_ptr<DiscreteFieldBlock>
 DiscreteField::createDiscreteFieldBlock(const H5::CommonFG &loc,
                                         const string &entry) {
-  auto discretefieldblock = new DiscreteFieldBlock(loc, entry, this);
+  auto discretefieldblock =
+      DiscreteFieldBlock::create(loc, entry, shared_from_this());
   checked_emplace(discretefieldblocks, discretefieldblock->name,
                   discretefieldblock);
   assert(discretefieldblock->invariant());

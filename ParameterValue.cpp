@@ -7,9 +7,10 @@
 
 namespace SimulationIO {
 
-ParameterValue::ParameterValue(const H5::CommonFG &loc, const string &entry,
-                               Parameter *parameter)
-    : parameter(parameter), value_type(type_empty) {
+void ParameterValue::read(const H5::CommonFG &loc, const string &entry,
+                          const shared_ptr<Parameter> &parameter) {
+  this->parameter = parameter;
+  value_type = type_empty;
   auto group = loc.openGroup(entry);
   assert(H5::readAttribute<string>(
              group, "type", parameter->project->enumtype) == "ParameterValue");
@@ -107,7 +108,7 @@ void ParameterValue::write(const H5::CommonFG &loc,
   group.createGroup("configurations");
 }
 
-void ParameterValue::insert(Configuration *configuration) {
+void ParameterValue::insert(const shared_ptr<Configuration> &configuration) {
   checked_emplace(configurations, configuration->name, configuration);
 }
 }

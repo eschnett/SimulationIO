@@ -6,9 +6,9 @@
 
 namespace SimulationIO {
 
-Configuration::Configuration(const H5::CommonFG &loc, const string &entry,
-                             Project *project)
-    : project(project) {
+void Configuration::read(const H5::CommonFG &loc, const string &entry,
+                         const shared_ptr<Project> &project) {
+  this->project = project;
   auto group = loc.openGroup(entry);
   assert(H5::readAttribute<string>(group, "type", project->enumtype) ==
          "Configuration");
@@ -54,10 +54,11 @@ void Configuration::write(const H5::CommonFG &loc,
   }
 }
 
-void Configuration::insertParameterValue(ParameterValue *parametervalue) {
+void Configuration::insertParameterValue(
+    const shared_ptr<ParameterValue> &parametervalue) {
   for (const auto &val : parametervalues)
     assert(val.second->parameter != parametervalue->parameter);
   checked_emplace(parametervalues, parametervalue->name, parametervalue);
-  parametervalue->insert(this);
+  parametervalue->insert(shared_from_this());
 }
 }

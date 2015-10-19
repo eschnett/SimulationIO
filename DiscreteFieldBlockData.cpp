@@ -4,10 +4,11 @@
 
 namespace SimulationIO {
 
-DiscreteFieldBlockData::DiscreteFieldBlockData(
+void DiscreteFieldBlockData::read(
     const H5::CommonFG &loc, const string &entry,
-    DiscreteFieldBlock *discretefieldblock)
-    : discretefieldblock(discretefieldblock), have_extlink(false) {
+    const shared_ptr<DiscreteFieldBlock> &discretefieldblock) {
+  this->discretefieldblock = discretefieldblock;
+  have_extlink = false;
   auto group = loc.openGroup(entry);
   assert(H5::readAttribute<string>(
              group, "type",
@@ -23,7 +24,7 @@ DiscreteFieldBlockData::DiscreteFieldBlockData(
           H5::readGroupAttribute<string>(group, "tensorcomponent", "name"));
   H5::readExternalLink(group, "data", have_extlink, extlink_file_name,
                        extlink_obj_name);
-  tensorcomponent->noinsert(this);
+  tensorcomponent->noinsert(shared_from_this());
 }
 
 void DiscreteFieldBlockData::setExternalLink(const string &file_name,

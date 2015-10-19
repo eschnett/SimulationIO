@@ -34,6 +34,7 @@
 #include <cassert>
 #include <iostream>
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -41,6 +42,7 @@ namespace SimulationIO {
 
 using std::map;
 using std::ostream;
+using std::shared_ptr;
 using std::string;
 using std::vector;
 
@@ -51,35 +53,35 @@ struct CoordinateField;
 
 struct CoordinateSystem {
   string name;
-  Manifold *manifold;
-  vector<CoordinateField *> coordinatefields; // owned
-  map<string, CoordinateBasis *> coordinatebases;
+  shared_ptr<Manifold> manifold;
+  vector<shared_ptr<CoordinateField>> coordinatefields; // owned
+  map<string, shared_ptr<CoordinateBasis>> coordinatebases;
   bool invariant() const { return true; }
 };
 
 struct CoordinateField {
-  CoordinateSystem *coordinatesystem;
+  shared_ptr<CoordinateSystem> coordinatesystem;
   int direction;
-  Field *field;
+  shared_ptr<Field> field;
   bool invariant() const {
     return direction >= 0 &&
            direction < int(coordinatesystem->coordinatefields.size()) &&
-           coordinatesystem->coordinatefields[direction] == this;
+           coordinatesystem->coordinatefields.at(direction).get() == this;
   }
 };
 
 struct CoordinateBasisElement;
 
 struct CoordinateBasis {
-  CoordinateSystem *coordinatesystem;
-  Basis *basis;
-  vector<CoordinateBasisElement *> coordinatebasiselements; // owned
+  shared_ptr<CoordinateSystem> coordinatesystem;
+  shared_ptr<Basis> basis;
+  vector<shared_ptr<CoordinateBasisElement>> coordinatebasiselements; // owned
 };
 
 struct CoordinateBasisElement {
-  CoordinateBasis *coordinatebasis;
-  CoordinateField *coordinatefield;
-  BasisVector *basisvector;
+  shared_ptr<CoordinateBasis> coordinatebasis;
+  shared_ptr<CoordinateField> coordinatefield;
+  shared_ptr<BasisVector> basisvector;
   bool invariant() const {
     return coordinatefield->direction == basisvector->direction;
   }

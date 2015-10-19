@@ -6,39 +6,41 @@
 
 #include <H5Cpp.h>
 
-#include <cassert>
 #include <iostream>
 #include <string>
 #include <vector>
 
 namespace SimulationIO {
 
-using std::iostream;
+using std::make_shared;
+using std::ostream;
+using std::shared_ptr;
 using std::string;
 using std::vector;
 
 struct DiscreteFieldBlockData;
 
-struct TensorComponent : Common {
-  TensorType *tensortype; // parent
+struct TensorComponent : Common, std::enable_shared_from_this<TensorComponent> {
+  shared_ptr<TensorType> tensortype; // parent
   int storage_index;
   vector<int> indexvalues;
-  NoBackLink<DiscreteFieldBlockData *> discretefieldblockdata;
+  NoBackLink<shared_ptr<DiscreteFieldBlockData>> discretefieldblockdata;
 
   virtual bool invariant() const {
     bool inv = Common::invariant() && bool(tensortype) &&
-               tensortype->tensorcomponents[name] == this &&
+               tensortype->tensorcomponents.count(name) &&
+               tensortype->tensorcomponents.at(name).get() == this &&
                storage_index >= 0 &&
                storage_index < ipow(tensortype->dimension, tensortype->rank) &&
                tensortype->storage_indices.count(storage_index) &&
-               tensortype->storage_indices.at(storage_index) == this &&
+               tensortype->storage_indices.at(storage_index).get() == this &&
                int(indexvalues.size()) == tensortype->rank;
     for (int i = 0; i < int(indexvalues.size()); ++i)
       inv &= indexvalues[i] >= 0 && indexvalues[i] < tensortype->dimension;
     // Ensure all tensor components are distinct
     for (const auto &tc : tensortype->tensorcomponents) {
       const auto &other = tc.second;
-      if (other == this)
+      if (other.get() == this)
         continue;
       bool samesize = other->indexvalues.size() == indexvalues.size();
       inv &= samesize;
@@ -58,17 +60,33 @@ struct TensorComponent : Common {
   TensorComponent &operator=(const TensorComponent &) = delete;
   TensorComponent &operator=(TensorComponent &&) = delete;
 
-private:
   friend class TensorType;
-  TensorComponent(const string &name, TensorType *tensortype, int storage_index,
+  TensorComponent(hidden, const string &name,
+                  const shared_ptr<TensorType> &tensortype, int storage_index,
                   const vector<int> &indexvalues)
       : Common(name), tensortype(tensortype), storage_index(storage_index),
         indexvalues(indexvalues) {}
-  TensorComponent(const H5::CommonFG &loc, const string &entry,
-                  TensorType *tensortype);
+  TensorComponent(hidden) : Common(hidden()) {}
+
+private:
+  static shared_ptr<TensorComponent>
+  create(const string &name, const shared_ptr<TensorType> &tensortype,
+         int storage_index, const vector<int> &indexvalues) {
+    return make_shared<TensorComponent>(hidden(), name, tensortype,
+                                        storage_index, indexvalues);
+  }
+  static shared_ptr<TensorComponent>
+  create(const H5::CommonFG &loc, const string &entry,
+         const shared_ptr<TensorType> &tensortype) {
+    auto tensorcomponent = make_shared<TensorComponent>(hidden());
+    tensorcomponent->read(loc, entry, tensortype);
+    return tensorcomponent;
+  }
+  void read(const H5::CommonFG &loc, const string &entry,
+            const shared_ptr<TensorType> &tensortype);
 
 public:
-  virtual ~TensorComponent() { assert(0); }
+  virtual ~TensorComponent() {}
 
   virtual ostream &output(ostream &os, int level = 0) const;
   friend ostream &operator<<(ostream &os,
@@ -78,7 +96,8 @@ public:
   virtual void write(const H5::CommonFG &loc,
                      const H5::H5Location &parent) const;
 
-  void noinsert(DiscreteFieldBlockData *discretefieldblockdata) {}
+  void
+  noinsert(const shared_ptr<DiscreteFieldBlockData> &discretefieldblockdata) {}
 };
 }
 

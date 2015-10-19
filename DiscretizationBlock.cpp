@@ -4,10 +4,10 @@
 
 namespace SimulationIO {
 
-DiscretizationBlock::DiscretizationBlock(const H5::CommonFG &loc,
-                                         const string &entry,
-                                         Discretization *discretization)
-    : discretization(discretization) {
+void DiscretizationBlock::read(
+    const H5::CommonFG &loc, const string &entry,
+    const shared_ptr<Discretization> &discretization) {
+  this->discretization = discretization;
   auto group = loc.openGroup(entry);
   assert(H5::readAttribute<string>(
              group, "type", discretization->manifold->project->enumtype) ==

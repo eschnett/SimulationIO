@@ -3,11 +3,13 @@
 #include <gtest/gtest.h>
 
 #include <cstdio>
+#include <memory>
 #include <sstream>
 #include <string>
 
 using std::ostringstream;
 using std::remove;
+using std::shared_ptr;
 using std::string;
 
 using namespace SimulationIO;
@@ -24,7 +26,7 @@ TEST(ipow, ipow) {
   EXPECT_EQ(4, ipow(2, 2));
 }
 
-Project *project = nullptr;
+shared_ptr<Project> project;
 
 TEST(Project, create) {
   project = createProject("p1");
@@ -191,7 +193,7 @@ TEST(Configuration, HDF5) {
 
 TEST(TensorTypes, Scalar3D) {
   const auto &tt = project->tensortypes.at("Scalar3D");
-  EXPECT_TRUE(tt);
+  EXPECT_TRUE(bool(tt));
   EXPECT_EQ(3, tt->dimension);
   EXPECT_EQ(0, tt->rank);
   EXPECT_EQ(1, tt->tensorcomponents.size());
@@ -208,7 +210,7 @@ TEST(TensorTypes, Scalar3D) {
 
 TEST(TensorTypes, Vector3D) {
   const auto &tt = project->tensortypes.at("Vector3D");
-  EXPECT_TRUE(tt);
+  EXPECT_TRUE(bool(tt));
   EXPECT_EQ(3, tt->dimension);
   EXPECT_EQ(1, tt->rank);
   EXPECT_EQ(3, tt->tensorcomponents.size());
@@ -229,7 +231,7 @@ TEST(TensorTypes, Vector3D) {
 
 TEST(TensorTypes, SymmetricTensor3D) {
   const auto &tt = project->tensortypes.at("SymmetricTensor3D");
-  EXPECT_TRUE(tt);
+  EXPECT_TRUE(bool(tt));
   EXPECT_EQ(3, tt->dimension);
   EXPECT_EQ(2, tt->rank);
   EXPECT_EQ(6, tt->tensorcomponents.size());

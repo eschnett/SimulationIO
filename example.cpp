@@ -1,6 +1,7 @@
 #include "SimulationIO.hpp"
 
 #include <iostream>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -9,6 +10,7 @@ using namespace SimulationIO;
 
 using std::cout;
 using std::ostringstream;
+using std::shared_ptr;
 using std::string;
 using std::vector;
 
@@ -35,7 +37,7 @@ int main(int argc, char **argv) {
   // Discretization for Manifold
   auto discretization = manifold->createDiscretization("uniform");
   const int ngrids = 10;
-  vector<DiscretizationBlock *> blocks;
+  vector<shared_ptr<DiscretizationBlock>> blocks;
   for (int i = 0; i < ngrids; ++i) {
     ostringstream name;
     name << "grid." << i;
@@ -44,7 +46,7 @@ int main(int argc, char **argv) {
 
   // Basis for TangentSpace
   auto basis = tangentspace->createBasis("Cartesian");
-  vector<BasisVector *> directions;
+  vector<shared_ptr<BasisVector>> directions;
   for (int d = 0; d < dim; ++d) {
     directions.push_back(basis->createBasisVector(dirnames[d], d));
   }

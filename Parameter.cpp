@@ -6,9 +6,9 @@
 
 namespace SimulationIO {
 
-Parameter::Parameter(const H5::CommonFG &loc, const string &entry,
-                     Project *project)
-    : project(project) {
+void Parameter::read(const H5::CommonFG &loc, const string &entry,
+                     const shared_ptr<Project> &project) {
+  this->project = project;
   auto group = loc.openGroup(entry);
   assert(H5::readAttribute<string>(group, "type", project->enumtype) ==
          "Parameter");
@@ -37,16 +37,16 @@ void Parameter::write(const H5::CommonFG &loc,
   H5::createGroup(group, "parametervalues", parametervalues);
 }
 
-ParameterValue *Parameter::createParameterValue(const string &name) {
-  auto parametervalue = new ParameterValue(name, this);
+shared_ptr<ParameterValue> Parameter::createParameterValue(const string &name) {
+  auto parametervalue = ParameterValue::create(name, shared_from_this());
   checked_emplace(parametervalues, parametervalue->name, parametervalue);
   assert(parametervalue->invariant());
   return parametervalue;
 }
 
-ParameterValue *Parameter::createParameterValue(const H5::CommonFG &loc,
-                                                const string &entry) {
-  auto parametervalue = new ParameterValue(loc, entry, this);
+shared_ptr<ParameterValue>
+Parameter::createParameterValue(const H5::CommonFG &loc, const string &entry) {
+  auto parametervalue = ParameterValue::create(loc, entry, shared_from_this());
   checked_emplace(parametervalues, parametervalue->name, parametervalue);
   assert(parametervalue->invariant());
   return parametervalue;

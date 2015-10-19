@@ -8,29 +8,32 @@
 
 #include <H5Cpp.h>
 
-#include <cassert>
 #include <iostream>
 #include <map>
+#include <memory>
 #include <string>
 
 namespace SimulationIO {
 
-using std::ostream;
+using std::make_shared;
 using std::map;
+using std::ostream;
+using std::shared_ptr;
 using std::string;
 
 struct DiscreteFieldBlock;
 
-struct DiscreteField : Common {
-  Field *field;                                          // parent
-  Discretization *discretization;                        // with backlink
-  Basis *basis;                                          // with backlink
-  map<string, DiscreteFieldBlock *> discretefieldblocks; // children
+struct DiscreteField : Common, std::enable_shared_from_this<DiscreteField> {
+  shared_ptr<Field> field;                   // parent
+  shared_ptr<Discretization> discretization; // with backlink
+  shared_ptr<Basis> basis;                   // with backlink
+  map<string, shared_ptr<DiscreteFieldBlock>> discretefieldblocks; // children
 
   virtual bool invariant() const {
     return Common::invariant() && bool(field) &&
            field->discretefields.count(name) &&
-           field->discretefields.at(name) == this && bool(discretization) &&
+           field->discretefields.at(name).get() == this &&
+           bool(discretization) &&
            discretization->discretefields.nobacklink() &&
            field->manifold == discretization->manifold && bool(basis) &&
            basis->discretefields.nobacklink() &&
@@ -43,16 +46,34 @@ struct DiscreteField : Common {
   DiscreteField &operator=(const DiscreteField &) = delete;
   DiscreteField &operator=(DiscreteField &&) = delete;
 
-private:
   friend class Field;
-  DiscreteField(const string &name, Field *field,
-                Discretization *discretization, Basis *basis)
+  DiscreteField(hidden, const string &name, const shared_ptr<Field> &field,
+                const shared_ptr<Discretization> &discretization,
+                const shared_ptr<Basis> &basis)
       : Common(name), field(field), discretization(discretization),
         basis(basis) {}
-  DiscreteField(const H5::CommonFG &loc, const string &entry, Field *field);
+  DiscreteField(hidden) : Common(hidden()) {}
+
+private:
+  static shared_ptr<DiscreteField>
+  create(const string &name, const shared_ptr<Field> &field,
+         const shared_ptr<Discretization> &discretization,
+         const shared_ptr<Basis> &basis) {
+    return make_shared<DiscreteField>(hidden(), name, field, discretization,
+                                      basis);
+  }
+  static shared_ptr<DiscreteField> create(const H5::CommonFG &loc,
+                                          const string &entry,
+                                          const shared_ptr<Field> &field) {
+    auto discretefield = make_shared<DiscreteField>(hidden());
+    discretefield->read(loc, entry, field);
+    return discretefield;
+  }
+  void read(const H5::CommonFG &loc, const string &entry,
+            const shared_ptr<Field> &field);
 
 public:
-  virtual ~DiscreteField() { assert(0); }
+  virtual ~DiscreteField() {}
 
   virtual ostream &output(ostream &os, int level = 0) const;
   friend ostream &operator<<(ostream &os, const DiscreteField &discretefield) {
@@ -61,11 +82,11 @@ public:
   virtual void write(const H5::CommonFG &loc,
                      const H5::H5Location &parent) const;
 
-  DiscreteFieldBlock *
-  createDiscreteFieldBlock(const string &name,
-                           DiscretizationBlock *discretizationblock);
-  DiscreteFieldBlock *createDiscreteFieldBlock(const H5::CommonFG &loc,
-                                               const string &entry);
+  shared_ptr<DiscreteFieldBlock> createDiscreteFieldBlock(
+      const string &name,
+      const shared_ptr<DiscretizationBlock> &discretizationblock);
+  shared_ptr<DiscreteFieldBlock>
+  createDiscreteFieldBlock(const H5::CommonFG &loc, const string &entry);
 };
 }
 

@@ -9,24 +9,27 @@
 
 #include <iostream>
 #include <map>
+#include <memory>
 #include <string>
 
 namespace SimulationIO {
 
-using std::iostream;
+using std::make_shared;
 using std::map;
+using std::ostream;
+using std::shared_ptr;
 using std::string;
 
 struct ParameterValue;
 
-struct Configuration : Common {
-  Project *project;                              // parent
-  map<string, ParameterValue *> parametervalues; // links
+struct Configuration : Common, std::enable_shared_from_this<Configuration> {
+  shared_ptr<Project> project;                             // parent
+  map<string, shared_ptr<ParameterValue>> parametervalues; // links
 
   virtual bool invariant() const {
     return Common::invariant() && bool(project) &&
            project->configurations.count(name) &&
-           project->configurations.at(name) == this;
+           project->configurations.at(name).get() == this;
   }
 
   Configuration() = delete;
@@ -35,14 +38,28 @@ struct Configuration : Common {
   Configuration &operator=(const Configuration &) = delete;
   Configuration &operator=(Configuration &&) = delete;
 
-private:
   friend class Project;
-  Configuration(const string &name, Project *project)
+  Configuration(hidden, const string &name, const shared_ptr<Project> &project)
       : Common(name), project(project) {}
-  Configuration(const H5::CommonFG &loc, const string &entry, Project *project);
+  Configuration(hidden) : Common(hidden()) {}
+
+private:
+  static shared_ptr<Configuration> create(const string &name,
+                                          const shared_ptr<Project> &project) {
+    return make_shared<Configuration>(hidden(), name, project);
+  }
+  static shared_ptr<Configuration> create(const H5::CommonFG &loc,
+                                          const string &entry,
+                                          const shared_ptr<Project> &project) {
+    auto configuration = make_shared<Configuration>(hidden());
+    configuration->read(loc, entry, project);
+    return configuration;
+  }
+  void read(const H5::CommonFG &loc, const string &entry,
+            const shared_ptr<Project> &project);
 
 public:
-  virtual ~Configuration() { assert(0); }
+  virtual ~Configuration() {}
 
   virtual ostream &output(ostream &os, int level = 0) const;
   friend ostream &operator<<(ostream &os, const Configuration &configuration) {
@@ -51,7 +68,7 @@ public:
   virtual void write(const H5::CommonFG &loc,
                      const H5::H5Location &parent) const;
 
-  void insertParameterValue(ParameterValue *parametervalue);
+  void insertParameterValue(const shared_ptr<ParameterValue> &parametervalue);
 };
 }
 

@@ -360,7 +360,7 @@ inline void readExternalLink(const CommonFG &link_loc,
 // Write a map (ignoring the keys)
 template <typename K, typename T>
 Group createGroup(const CommonFG &loc, const std::string &name,
-                  const std::map<K, T *> &m) {
+                  const std::map<K, T> &m) {
   // We assume that T is a subtype of Common
   auto group = loc.createGroup(name);
   for (const auto &p : m)
@@ -374,7 +374,7 @@ Group createGroup(const CommonFG &loc, const std::string &name,
 template <typename K, typename T>
 Group createHardLinkGroup(const CommonFG &loc, const std::string &name,
                           const H5Location &parent, const std::string &path,
-                          const std::map<K, T *> &m) {
+                          const std::map<K, T> &m) {
   // We assume that T is a subtype of Common
   auto group = loc.createGroup(name);
   for (const auto &p : m)

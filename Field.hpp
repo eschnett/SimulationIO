@@ -9,15 +9,17 @@
 
 #include <H5Cpp.h>
 
-#include <cassert>
 #include <iostream>
 #include <map>
+#include <memory>
 #include <string>
 
 namespace SimulationIO {
 
-using std::iostream;
+using std::make_shared;
 using std::map;
+using std::ostream;
+using std::shared_ptr;
 using std::string;
 
 struct Manifold;
@@ -25,20 +27,21 @@ struct TangentSpace;
 struct TensorType;
 struct DiscreteField;
 
-struct Field : Common {
-  Project *project;                            // parent
-  Manifold *manifold;                          // with backlink
-  TangentSpace *tangentspace;                  // with backlink
-  TensorType *tensortype;                      // without backlink
-  map<string, DiscreteField *> discretefields; // children
+struct Field : Common, std::enable_shared_from_this<Field> {
+  shared_ptr<Project> project;                           // parent
+  shared_ptr<Manifold> manifold;                         // with backlink
+  shared_ptr<TangentSpace> tangentspace;                 // with backlink
+  shared_ptr<TensorType> tensortype;                     // without backlink
+  map<string, shared_ptr<DiscreteField>> discretefields; // children
 
   virtual bool invariant() const {
     bool inv =
         Common::invariant() && bool(project) && project->fields.count(name) &&
-        project->fields.at(name) == this && bool(manifold) &&
-        manifold->fields.count(name) && manifold->fields.at(name) == this &&
-        bool(tangentspace) && tangentspace->fields.count(name) &&
-        tangentspace->fields.at(name) == this && bool(tensortype) &&
+        project->fields.at(name).get() == this && bool(manifold) &&
+        manifold->fields.count(name) &&
+        manifold->fields.at(name).get() == this && bool(tangentspace) &&
+        tangentspace->fields.count(name) &&
+        tangentspace->fields.at(name).get() == this && bool(tensortype) &&
         tangentspace->dimension == tensortype->dimension &&
         tensortype->fields.nobacklink();
     for (const auto &df : discretefields)
@@ -52,20 +55,39 @@ struct Field : Common {
   Field &operator=(const Field &) = delete;
   Field &operator=(Field &&) = delete;
 
-private:
   friend class Project;
-  Field(const string &name, Project *project, Manifold *manifold,
-        TangentSpace *tangentspace, TensorType *tensortype)
+  Field(hidden, const string &name, const shared_ptr<Project> &project,
+        const shared_ptr<Manifold> &manifold,
+        const shared_ptr<TangentSpace> &tangentspace,
+        const shared_ptr<TensorType> &tensortype)
       : Common(name), project(project), manifold(manifold),
-        tangentspace(tangentspace), tensortype(tensortype) {
-    manifold->insert(name, this);
-    tangentspace->insert(name, this);
-    tensortype->noinsert(this);
+        tangentspace(tangentspace), tensortype(tensortype) {}
+  Field(hidden) : Common(hidden()) {}
+
+private:
+  static shared_ptr<Field> create(const string &name,
+                                  const shared_ptr<Project> &project,
+                                  const shared_ptr<Manifold> &manifold,
+                                  const shared_ptr<TangentSpace> &tangentspace,
+                                  const shared_ptr<TensorType> &tensortype) {
+    auto field = make_shared<Field>(hidden(), name, project, manifold,
+                                    tangentspace, tensortype);
+    manifold->insert(name, field);
+    tangentspace->insert(name, field);
+    tensortype->noinsert(field);
+    return field;
   }
-  Field(const H5::CommonFG &loc, const string &entry, Project *project);
+  static shared_ptr<Field> create(const H5::CommonFG &loc, const string &entry,
+                                  const shared_ptr<Project> &project) {
+    auto field = make_shared<Field>(hidden());
+    field->read(loc, entry, project);
+    return field;
+  }
+  void read(const H5::CommonFG &loc, const string &entry,
+            const shared_ptr<Project> &project);
 
 public:
-  virtual ~Field() { assert(0); }
+  virtual ~Field() {}
 
   virtual ostream &output(ostream &os, int level = 0) const;
   friend ostream &operator<<(ostream &os, const Field &field) {
@@ -74,11 +96,12 @@ public:
   virtual void write(const H5::CommonFG &loc,
                      const H5::H5Location &parent) const;
 
-  DiscreteField *createDiscreteField(const string &name,
-                                     Discretization *discretization,
-                                     Basis *basis);
-  DiscreteField *createDiscreteField(const H5::CommonFG &loc,
-                                     const string &entry);
+  shared_ptr<DiscreteField>
+  createDiscreteField(const string &name,
+                      const shared_ptr<Discretization> &discretization,
+                      const shared_ptr<Basis> &basis);
+  shared_ptr<DiscreteField> createDiscreteField(const H5::CommonFG &loc,
+                                                const string &entry);
 };
 }
 

@@ -6,9 +6,9 @@
 
 namespace SimulationIO {
 
-TensorType::TensorType(const H5::CommonFG &loc, const string &entry,
-                       Project *project)
-    : project(project) {
+void TensorType::read(const H5::CommonFG &loc, const string &entry,
+                      const shared_ptr<Project> &project) {
+  this->project = project;
   auto group = loc.openGroup(entry);
   assert(H5::readAttribute<string>(group, "type", project->enumtype) ==
          "TensorType");
@@ -44,11 +44,11 @@ void TensorType::write(const H5::CommonFG &loc,
 #warning "TODO: write storage_indices"
 }
 
-TensorComponent *
+shared_ptr<TensorComponent>
 TensorType::createTensorComponent(const string &name, int stored_component,
                                   const vector<int> &indexvalues) {
-  auto tensorcomponent =
-      new TensorComponent(name, this, stored_component, indexvalues);
+  auto tensorcomponent = TensorComponent::create(name, shared_from_this(),
+                                                 stored_component, indexvalues);
   checked_emplace(tensorcomponents, tensorcomponent->name, tensorcomponent);
   checked_emplace(storage_indices, tensorcomponent->storage_index,
                   tensorcomponent);
@@ -56,9 +56,11 @@ TensorType::createTensorComponent(const string &name, int stored_component,
   return tensorcomponent;
 }
 
-TensorComponent *TensorType::createTensorComponent(const H5::CommonFG &loc,
-                                                   const string &entry) {
-  auto tensorcomponent = new TensorComponent(loc, entry, this);
+shared_ptr<TensorComponent>
+TensorType::createTensorComponent(const H5::CommonFG &loc,
+                                  const string &entry) {
+  auto tensorcomponent =
+      TensorComponent::create(loc, entry, shared_from_this());
   checked_emplace(tensorcomponents, tensorcomponent->name, tensorcomponent);
   checked_emplace(storage_indices, tensorcomponent->storage_index,
                   tensorcomponent);

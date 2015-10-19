@@ -13,9 +13,9 @@ namespace SimulationIO {
 using std::equal;
 using std::set;
 
-Manifold::Manifold(const H5::CommonFG &loc, const string &entry,
-                   Project *project)
-    : project(project) {
+void Manifold::read(const H5::CommonFG &loc, const string &entry,
+                    const shared_ptr<Project> &project) {
+  this->project = project;
   auto group = loc.openGroup(entry);
   assert(H5::readAttribute<string>(group, "type", project->enumtype) ==
          "Manifold");
@@ -52,16 +52,16 @@ void Manifold::write(const H5::CommonFG &loc,
   group.createGroup("fields");
 }
 
-Discretization *Manifold::createDiscretization(const string &name) {
-  auto discretization = new Discretization(name, this);
+shared_ptr<Discretization> Manifold::createDiscretization(const string &name) {
+  auto discretization = Discretization::create(name, shared_from_this());
   checked_emplace(discretizations, discretization->name, discretization);
   assert(discretization->invariant());
   return discretization;
 }
 
-Discretization *Manifold::createDiscretization(const H5::CommonFG &loc,
-                                               const string &entry) {
-  auto discretization = new Discretization(loc, entry, this);
+shared_ptr<Discretization>
+Manifold::createDiscretization(const H5::CommonFG &loc, const string &entry) {
+  auto discretization = Discretization::create(loc, entry, shared_from_this());
   checked_emplace(discretizations, discretization->name, discretization);
   assert(discretization->invariant());
   return discretization;

@@ -30,5 +30,8 @@ This repository contains a few sketches describing brainstorming results in vari
 - Add parallelism
 - Add sub-manifolds, sub-tangentspaces, etc.
 - Write a reader for some visualization toolkit
+  - may want to use Python wrappers for this
 - Allow writing just part of a project, or adding to / modifying a project
+  - idea: whenever creating an HDF5 object, check whether it already exists; if so, check whether it looks as expected
 - Allow removing parts of a project?
+- Implement (value) equality comparison operators for our objects

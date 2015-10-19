@@ -4,18 +4,24 @@
 #include "Common.hpp"
 #include "Discretization.hpp"
 
-#include <cassert>
 #include <iostream>
+#include <memory>
 #include <string>
 
 namespace SimulationIO {
 
+using std::make_shared;
+using std::ostream;
+using std::shared_ptr;
+using std::string;
+
 struct DiscreteFieldBlock;
 
-struct DiscretizationBlock : Common {
+struct DiscretizationBlock : Common,
+                             std::enable_shared_from_this<DiscretizationBlock> {
   // Discretization of a certain region, represented by contiguous data
-  Discretization *discretization; // parent
-  NoBackLink<DiscreteFieldBlock *> discretefieldblocks;
+  shared_ptr<Discretization> discretization; // parent
+  NoBackLink<shared_ptr<DiscreteFieldBlock>> discretefieldblocks;
 
   // bounding box? in terms of coordinates?
   // connectivity? neighbouring blocks?
@@ -24,7 +30,7 @@ struct DiscretizationBlock : Common {
   virtual bool invariant() const {
     return Common::invariant() && bool(discretization) &&
            discretization->discretizationblocks.count(name) &&
-           discretization->discretizationblocks.at(name) == this;
+           discretization->discretizationblocks.at(name).get() == this;
   }
 
   DiscretizationBlock() = delete;
@@ -33,15 +39,29 @@ struct DiscretizationBlock : Common {
   DiscretizationBlock &operator=(const DiscretizationBlock &) = delete;
   DiscretizationBlock &operator=(DiscretizationBlock &&) = delete;
 
-private:
   friend class Discretization;
-  DiscretizationBlock(const string &name, Discretization *discretization)
+  DiscretizationBlock(hidden, const string &name,
+                      const shared_ptr<Discretization> &discretization)
       : Common(name), discretization(discretization) {}
-  DiscretizationBlock(const H5::CommonFG &loc, const string &entry,
-                      Discretization *discretization);
+  DiscretizationBlock(hidden) : Common(hidden()) {}
+
+private:
+  static shared_ptr<DiscretizationBlock>
+  create(const string &name, const shared_ptr<Discretization> &discretization) {
+    return make_shared<DiscretizationBlock>(hidden(), name, discretization);
+  }
+  static shared_ptr<DiscretizationBlock>
+  create(const H5::CommonFG &loc, const string &entry,
+         const shared_ptr<Discretization> &discretization) {
+    auto discretizationblock = make_shared<DiscretizationBlock>(hidden());
+    discretizationblock->read(loc, entry, discretization);
+    return discretizationblock;
+  }
+  void read(const H5::CommonFG &loc, const string &entry,
+            const shared_ptr<Discretization> &discretization);
 
 public:
-  virtual ~DiscretizationBlock() { assert(0); }
+  virtual ~DiscretizationBlock() {}
 
   virtual ostream &output(ostream &os, int level = 0) const;
   friend ostream &operator<<(ostream &os,
@@ -51,7 +71,7 @@ public:
   virtual void write(const H5::CommonFG &loc,
                      const H5::H5Location &parent) const;
 
-  void noinsert(DiscreteFieldBlock *discretefieldblock) {}
+  void noinsert(const shared_ptr<DiscreteFieldBlock> &discretefieldblock) {}
 };
 }
 

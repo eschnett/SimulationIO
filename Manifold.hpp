@@ -9,27 +9,30 @@
 
 #include <iostream>
 #include <map>
+#include <memory>
 #include <string>
 
 namespace SimulationIO {
 
-using std::ostream;
+using std::make_shared;
 using std::map;
+using std::ostream;
+using std::shared_ptr;
 using std::string;
 
 struct Field;
 struct Discretization;
 
-struct Manifold : Common {
-  Project *project; // parent
+struct Manifold : Common, std::enable_shared_from_this<Manifold> {
+  shared_ptr<Project> project; // parent
   int dimension;
-  map<string, Discretization *> discretizations; // children
-  map<string, Field *> fields;                   // backlinks
+  map<string, shared_ptr<Discretization>> discretizations; // children
+  map<string, shared_ptr<Field>> fields;                   // backlinks
 
   virtual bool invariant() const {
     bool inv = Common::invariant() && bool(project) &&
                project->manifolds.count(name) &&
-               project->manifolds.at(name) == this && dimension >= 0;
+               project->manifolds.at(name).get() == this && dimension >= 0;
     for (const auto &d : discretizations)
       inv &= !d.first.empty() && bool(d.second);
     for (const auto &f : fields)
@@ -43,14 +46,30 @@ struct Manifold : Common {
   Manifold &operator=(const Manifold &) = delete;
   Manifold &operator=(Manifold &&) = delete;
 
-private:
   friend class Project;
-  Manifold(const string &name, Project *project, int dimension)
+  Manifold(hidden, const string &name, const shared_ptr<Project> &project,
+           int dimension)
       : Common(name), project(project), dimension(dimension) {}
-  Manifold(const H5::CommonFG &loc, const string &entry, Project *project);
+  Manifold(hidden) : Common(hidden()) {}
+
+private:
+  static shared_ptr<Manifold> create(const string &name,
+                                     const shared_ptr<Project> &project,
+                                     int dimension) {
+    return make_shared<Manifold>(hidden(), name, project, dimension);
+  }
+  static shared_ptr<Manifold> create(const H5::CommonFG &loc,
+                                     const string &entry,
+                                     const shared_ptr<Project> &project) {
+    auto manifold = make_shared<Manifold>(hidden());
+    manifold->read(loc, entry, project);
+    return manifold;
+  }
+  void read(const H5::CommonFG &loc, const string &entry,
+            const shared_ptr<Project> &project);
 
 public:
-  virtual ~Manifold() { assert(0); }
+  virtual ~Manifold() {}
 
   virtual ostream &output(ostream &os, int level = 0) const;
   friend ostream &operator<<(ostream &os, const Manifold &manifold) {
@@ -59,11 +78,11 @@ public:
   virtual void write(const H5::CommonFG &loc,
                      const H5::H5Location &parent) const;
 
-  Discretization *createDiscretization(const string &name);
-  Discretization *createDiscretization(const H5::CommonFG &loc,
-                                       const string &entry);
+  shared_ptr<Discretization> createDiscretization(const string &name);
+  shared_ptr<Discretization> createDiscretization(const H5::CommonFG &loc,
+                                                  const string &entry);
 
-  void insert(const string &name, Field *field) {
+  void insert(const string &name, const shared_ptr<Field> &field) {
     checked_emplace(fields, name, field);
   }
 };

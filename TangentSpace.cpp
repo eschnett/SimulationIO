@@ -7,9 +7,9 @@
 
 namespace SimulationIO {
 
-TangentSpace::TangentSpace(const H5::CommonFG &loc, const string &entry,
-                           Project *project)
-    : project(project) {
+void TangentSpace::read(const H5::CommonFG &loc, const string &entry,
+                        const shared_ptr<Project> &project) {
+  this->project = project;
   auto group = loc.openGroup(entry);
   assert(H5::readAttribute<string>(group, "type", project->enumtype) ==
          "TangentSpace");
@@ -46,15 +46,16 @@ void TangentSpace::write(const H5::CommonFG &loc,
   group.createGroup("fields");
 }
 
-Basis *TangentSpace::createBasis(const string &name) {
-  auto basis = new Basis(name, this);
+shared_ptr<Basis> TangentSpace::createBasis(const string &name) {
+  auto basis = Basis::create(name, shared_from_this());
   checked_emplace(bases, basis->name, basis);
   assert(basis->invariant());
   return basis;
 }
 
-Basis *TangentSpace::createBasis(const H5::CommonFG &loc, const string &entry) {
-  auto basis = new Basis(loc, entry, this);
+shared_ptr<Basis> TangentSpace::createBasis(const H5::CommonFG &loc,
+                                            const string &entry) {
+  auto basis = Basis::create(loc, entry, shared_from_this());
   checked_emplace(bases, basis->name, basis);
   assert(basis->invariant());
   return basis;

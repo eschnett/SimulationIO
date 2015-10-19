@@ -11,6 +11,10 @@ namespace SimulationIO {
 using std::ostream;
 using std::string;
 
+// C++ make_shared requires constructors to be public; we add a field of type
+// `hidden` to ensure they are not called accidentally.
+struct hidden {};
+
 // Entity relationships
 
 #if 0
@@ -41,9 +45,11 @@ struct Common {
 
   virtual bool invariant() const { return !name.empty(); }
 
+protected:
   Common(const string &name) : name(name) {}
-  Common() {}
+  Common(hidden) {}
 
+public:
   virtual ~Common() {}
   virtual ostream &output(ostream &os, int level = 0) const = 0;
   virtual void write(const H5::CommonFG &loc,

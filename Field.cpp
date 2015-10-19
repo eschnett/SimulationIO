@@ -6,8 +6,9 @@
 
 namespace SimulationIO {
 
-Field::Field(const H5::CommonFG &loc, const string &entry, Project *project)
-    : project(project) {
+void Field::read(const H5::CommonFG &loc, const string &entry,
+                 const shared_ptr<Project> &project) {
+  this->project = project;
   auto group = loc.openGroup(entry);
   assert(H5::readAttribute<string>(group, "type", project->enumtype) ==
          "Field");
@@ -30,9 +31,9 @@ Field::Field(const H5::CommonFG &loc, const string &entry, Project *project)
                 [&](const H5::Group &group, const string &name) {
                   createDiscreteField(group, name);
                 });
-  manifold->insert(name, this);
-  tangentspace->insert(name, this);
-  tensortype->noinsert(this);
+  manifold->insert(name, shared_from_this());
+  tangentspace->insert(name, shared_from_this());
+  tensortype->noinsert(shared_from_this());
 }
 
 ostream &Field::output(ostream &os, int level) const {
@@ -64,17 +65,19 @@ void Field::write(const H5::CommonFG &loc, const H5::H5Location &parent) const {
   H5::createGroup(group, "discretefields", discretefields);
 }
 
-DiscreteField *Field::createDiscreteField(const string &name,
-                                          Discretization *discretization,
-                                          Basis *basis) {
-  auto discretefield = new DiscreteField(name, this, discretization, basis);
+shared_ptr<DiscreteField>
+Field::createDiscreteField(const string &name,
+                           const shared_ptr<Discretization> &discretization,
+                           const shared_ptr<Basis> &basis) {
+  auto discretefield =
+      DiscreteField::create(name, shared_from_this(), discretization, basis);
   checked_emplace(discretefields, discretefield->name, discretefield);
   assert(discretefield->invariant());
   return discretefield;
 }
-DiscreteField *Field::createDiscreteField(const H5::CommonFG &loc,
-                                          const string &entry) {
-  auto discretefield = new DiscreteField(loc, entry, this);
+shared_ptr<DiscreteField> Field::createDiscreteField(const H5::CommonFG &loc,
+                                                     const string &entry) {
+  auto discretefield = DiscreteField::create(loc, entry, shared_from_this());
   checked_emplace(discretefields, discretefield->name, discretefield);
   assert(discretefield->invariant());
   return discretefield;

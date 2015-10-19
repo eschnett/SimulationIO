@@ -11,23 +11,21 @@
 
 namespace SimulationIO {
 
-Project *createProject(const string &name) {
-  auto project = new Project(name);
+shared_ptr<Project> createProject(const string &name) {
+  auto project = Project::create(name);
   assert(project->invariant());
   return project;
 }
-Project *createProject(const H5::CommonFG &loc) {
-  auto project = new Project(loc);
+shared_ptr<Project> createProject(const H5::CommonFG &loc) {
+  auto project = Project::create(loc);
   assert(project->invariant());
   return project;
 }
 
-Project::Project(const H5::CommonFG &loc) {
+void Project::read(const H5::CommonFG &loc) {
   auto group = loc.openGroup(".");
   createTypes(); // TODO: read from file
-  string type;
-  H5::readAttribute(group, "type", enumtype, type);
-  assert(type == "Project");
+  assert(H5::readAttribute<string>(group, "type", enumtype) == "Project");
   H5::readAttribute(group, "name", name);
   H5::readGroup(group, "parameters",
                 [&](const H5::Group &group, const string &name) {
@@ -146,112 +144,124 @@ void Project::write(const H5::CommonFG &loc,
   enumtype = H5::EnumType();
 }
 
-Parameter *Project::createParameter(const string &name) {
-  auto parameter = new Parameter(name, this);
+shared_ptr<Parameter> Project::createParameter(const string &name) {
+  auto parameter = Parameter::create(name, shared_from_this());
   checked_emplace(parameters, parameter->name, parameter);
   assert(parameter->invariant());
   return parameter;
 }
 
-Parameter *Project::createParameter(const H5::CommonFG &loc,
-                                    const string &entry) {
-  auto parameter = new Parameter(loc, entry, this);
+shared_ptr<Parameter> Project::createParameter(const H5::CommonFG &loc,
+                                               const string &entry) {
+  auto parameter = Parameter::create(loc, entry, shared_from_this());
   checked_emplace(parameters, parameter->name, parameter);
   assert(parameter->invariant());
   return parameter;
 }
 
-Configuration *Project::createConfiguration(const string &name) {
-  auto configuration = new Configuration(name, this);
+shared_ptr<Configuration> Project::createConfiguration(const string &name) {
+  auto configuration = Configuration::create(name, shared_from_this());
   checked_emplace(configurations, configuration->name, configuration);
   assert(configuration->invariant());
   return configuration;
 }
 
-Configuration *Project::createConfiguration(const H5::CommonFG &loc,
-                                            const string &entry) {
-  auto configuration = new Configuration(loc, entry, this);
+shared_ptr<Configuration> Project::createConfiguration(const H5::CommonFG &loc,
+                                                       const string &entry) {
+  auto configuration = Configuration::create(loc, entry, shared_from_this());
   checked_emplace(configurations, configuration->name, configuration);
   assert(configuration->invariant());
   return configuration;
 }
 
-TensorType *Project::createTensorType(const string &name, int dimension,
-                                      int rank) {
-  auto tensortype = new TensorType(name, this, dimension, rank);
+shared_ptr<TensorType> Project::createTensorType(const string &name,
+                                                 int dimension, int rank) {
+  auto tensortype =
+      TensorType::create(name, shared_from_this(), dimension, rank);
   checked_emplace(tensortypes, tensortype->name, tensortype);
   assert(tensortype->invariant());
   return tensortype;
 }
 
-TensorType *Project::createTensorType(const H5::CommonFG &loc,
-                                      const string &entry) {
-  auto tensortype = new TensorType(loc, entry, this);
+shared_ptr<TensorType> Project::createTensorType(const H5::CommonFG &loc,
+                                                 const string &entry) {
+  auto tensortype = TensorType::create(loc, entry, shared_from_this());
   checked_emplace(tensortypes, tensortype->name, tensortype);
   assert(tensortype->invariant());
   return tensortype;
 }
 
-Manifold *Project::createManifold(const string &name, int dimension) {
-  auto manifold = new Manifold(name, this, dimension);
+shared_ptr<Manifold> Project::createManifold(const string &name,
+                                             int dimension) {
+  auto manifold = Manifold::create(name, shared_from_this(), dimension);
   checked_emplace(manifolds, manifold->name, manifold);
   assert(manifold->invariant());
   return manifold;
 }
 
-Manifold *Project::createManifold(const H5::CommonFG &loc,
-                                  const string &entry) {
-  auto manifold = new Manifold(loc, entry, this);
+shared_ptr<Manifold> Project::createManifold(const H5::CommonFG &loc,
+                                             const string &entry) {
+  auto manifold = Manifold::create(loc, entry, shared_from_this());
   checked_emplace(manifolds, manifold->name, manifold);
   assert(manifold->invariant());
   return manifold;
 }
 
-TangentSpace *Project::createTangentSpace(const string &name, int dimension) {
-  auto tangentspace = new TangentSpace(name, this, dimension);
+shared_ptr<TangentSpace> Project::createTangentSpace(const string &name,
+                                                     int dimension) {
+  auto tangentspace = TangentSpace::create(name, shared_from_this(), dimension);
   checked_emplace(tangentspaces, tangentspace->name, tangentspace);
   assert(tangentspace->invariant());
   return tangentspace;
 }
 
-TangentSpace *Project::createTangentSpace(const H5::CommonFG &loc,
-                                          const string &entry) {
-  auto tangentspace = new TangentSpace(loc, entry, this);
+shared_ptr<TangentSpace> Project::createTangentSpace(const H5::CommonFG &loc,
+                                                     const string &entry) {
+  auto tangentspace = TangentSpace::create(loc, entry, shared_from_this());
   checked_emplace(tangentspaces, tangentspace->name, tangentspace);
   assert(tangentspace->invariant());
   return tangentspace;
 }
 
-Field *Project::createField(const string &name, Manifold *manifold,
-                            TangentSpace *tangentspace,
-                            TensorType *tensortype) {
-  auto field = new Field(name, this, manifold, tangentspace, tensortype);
+shared_ptr<Field>
+Project::createField(const string &name, const shared_ptr<Manifold> &manifold,
+                     const shared_ptr<TangentSpace> &tangentspace,
+                     const shared_ptr<TensorType> &tensortype) {
+  auto field = Field::create(name, shared_from_this(), manifold, tangentspace,
+                             tensortype);
   checked_emplace(fields, field->name, field);
   assert(field->invariant());
   return field;
 }
 
-Field *Project::createField(const H5::CommonFG &loc, const string &entry) {
-  auto field = new Field(loc, entry, this);
+shared_ptr<Field> Project::createField(const H5::CommonFG &loc,
+                                       const string &entry) {
+  auto field = Field::create(loc, entry, shared_from_this());
   checked_emplace(fields, field->name, field);
   assert(field->invariant());
   return field;
 }
 
 // TODO
-// CoordinateSystem *Project::createCoordinateSystem(const string &name,
-//                                                   Manifold *manifold) {
-//   auto coordinatesystem = new CoordinateSystem(name, this, manifold);
+// shared_ptr<CoordinateSystem>Project::createCoordinateSystem(const string
+// &name,
+//                                                   const
+//                                                   shared_ptr<Manifold>&manifold)
+//                                                   {
+//   auto coordinatesystem = new CoordinateSystem(name, shared_from_this(),
+//   manifold);
 //   checked_emplace(coordinatesystems,coordinatesystem->name,
 //   coordinatesystem);
 //   assert(coordinatesystem->invariant());
 //   return coordinatesystem;
 // }
 //
-// CoordinateSystem *Project::createCoordinateSystem(const string &name,
+// shared_ptr<CoordinateSystem>Project::createCoordinateSystem(const string
+// &name,
 //                                                   const H5::CommonFG &loc)
 //                                                   {
-//   auto coordinatesystem = new CoordinateSystem(name, this, loc);
+//   auto coordinatesystem = new CoordinateSystem(name, shared_from_this(),
+//   loc);
 //   checked_emplace(coordinatesystems, coordinatesystem->name,
 //   coordinatesystem);
 //   assert(coordinatesystem->invariant());

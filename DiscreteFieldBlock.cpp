@@ -7,10 +7,9 @@
 
 namespace SimulationIO {
 
-DiscreteFieldBlock::DiscreteFieldBlock(const H5::CommonFG &loc,
-                                       const string &entry,
-                                       DiscreteField *discretefield)
-    : discretefield(discretefield) {
+void DiscreteFieldBlock::read(const H5::CommonFG &loc, const string &entry,
+                              const shared_ptr<DiscreteField> &discretefield) {
+  this->discretefield = discretefield;
   auto group = loc.openGroup(entry);
   assert(H5::readAttribute<string>(group, "type",
                                    discretefield->field->project->enumtype) ==
@@ -26,7 +25,7 @@ DiscreteFieldBlock::DiscreteFieldBlock(const H5::CommonFG &loc,
                 [&](const H5::Group &group, const string &name) {
                   createDiscreteFieldBlockData(group, name);
                 });
-  discretizationblock->noinsert(this);
+  discretizationblock->noinsert(shared_from_this());
 }
 
 ostream &DiscreteFieldBlock::output(ostream &os, int level) const {
@@ -51,20 +50,22 @@ void DiscreteFieldBlock::write(const H5::CommonFG &loc,
   H5::createGroup(group, "discretefieldblockdata", discretefieldblockdata);
 }
 
-DiscreteFieldBlockData *DiscreteFieldBlock::createDiscreteFieldBlockData(
-    const string &name, TensorComponent *tensorcomponent) {
+shared_ptr<DiscreteFieldBlockData>
+DiscreteFieldBlock::createDiscreteFieldBlockData(
+    const string &name, const shared_ptr<TensorComponent> &tensorcomponent) {
   auto discretefieldblockdata =
-      new DiscreteFieldBlockData(name, this, tensorcomponent);
+      DiscreteFieldBlockData::create(name, shared_from_this(), tensorcomponent);
   checked_emplace(this->discretefieldblockdata, discretefieldblockdata->name,
                   discretefieldblockdata);
   assert(discretefieldblockdata->invariant());
   return discretefieldblockdata;
 }
 
-DiscreteFieldBlockData *
+shared_ptr<DiscreteFieldBlockData>
 DiscreteFieldBlock::createDiscreteFieldBlockData(const H5::CommonFG &loc,
                                                  const string &entry) {
-  auto discretefieldblockdata = new DiscreteFieldBlockData(loc, entry, this);
+  auto discretefieldblockdata =
+      DiscreteFieldBlockData::create(loc, entry, shared_from_this());
   checked_emplace(this->discretefieldblockdata, discretefieldblockdata->name,
                   discretefieldblockdata);
   assert(discretefieldblockdata->invariant());

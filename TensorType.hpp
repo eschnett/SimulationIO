@@ -7,32 +7,35 @@
 
 #include <H5Cpp.h>
 
-#include <cassert>
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
 namespace SimulationIO {
 
+using std::make_shared;
 using std::map;
+using std::ostream;
+using std::shared_ptr;
 using std::string;
 using std::vector;
 
 struct Field;
 struct TensorComponent;
 
-struct TensorType : Common {
-  Project *project; // parent
+struct TensorType : Common, std::enable_shared_from_this<TensorType> {
+  shared_ptr<Project> project; // parent
   int dimension;
   int rank;
-  map<string, TensorComponent *> tensorcomponents; // children
-  map<int, TensorComponent *> storage_indices;
-  NoBackLink<Field *> fields;
+  map<string, shared_ptr<TensorComponent>> tensorcomponents; // children
+  map<int, shared_ptr<TensorComponent>> storage_indices;
+  NoBackLink<shared_ptr<Field>> fields;
 
   virtual bool invariant() const {
     bool inv = Common::invariant() && bool(project) &&
                project->tensortypes.count(name) &&
-               project->tensortypes.at(name) == this && dimension >= 0 &&
+               project->tensortypes.at(name).get() == this && dimension >= 0 &&
                rank >= 0 &&
                int(tensorcomponents.size()) <= ipow(dimension, rank);
     for (const auto &tc : tensorcomponents)
@@ -46,14 +49,30 @@ struct TensorType : Common {
   TensorType &operator=(const TensorType &) = delete;
   TensorType &operator=(TensorType &&) = delete;
 
-private:
   friend class Project;
-  TensorType(const string &name, Project *project, int dimension, int rank)
+  TensorType(hidden, const string &name, const shared_ptr<Project> &project,
+             int dimension, int rank)
       : Common(name), project(project), dimension(dimension), rank(rank) {}
-  TensorType(const H5::CommonFG &loc, const string &entry, Project *project);
+  TensorType(hidden) : Common(hidden()) {}
+
+private:
+  static shared_ptr<TensorType> create(const string &name,
+                                       const shared_ptr<Project> &project,
+                                       int dimension, int rank) {
+    return make_shared<TensorType>(hidden(), name, project, dimension, rank);
+  }
+  static shared_ptr<TensorType> create(const H5::CommonFG &loc,
+                                       const string &entry,
+                                       const shared_ptr<Project> &project) {
+    auto tensortype = make_shared<TensorType>(hidden());
+    tensortype->read(loc, entry, project);
+    return tensortype;
+  }
+  void read(const H5::CommonFG &loc, const string &entry,
+            const shared_ptr<Project> &project);
 
 public:
-  virtual ~TensorType() { assert(0); }
+  virtual ~TensorType() {}
 
   virtual ostream &output(ostream &os, int level = 0) const;
   friend ostream &operator<<(ostream &os, const TensorType &tensortype) {
@@ -62,12 +81,13 @@ public:
   virtual void write(const H5::CommonFG &loc,
                      const H5::H5Location &parent) const;
 
-  TensorComponent *createTensorComponent(const string &name, int storage_index,
-                                         const vector<int> &indexvalues);
-  TensorComponent *createTensorComponent(const H5::CommonFG &loc,
-                                         const string &entry);
+  shared_ptr<TensorComponent>
+  createTensorComponent(const string &name, int storage_index,
+                        const vector<int> &indexvalues);
+  shared_ptr<TensorComponent> createTensorComponent(const H5::CommonFG &loc,
+                                                    const string &entry);
 
-  void noinsert(Field *field) {}
+  void noinsert(const shared_ptr<Field> &field) {}
 };
 }
 

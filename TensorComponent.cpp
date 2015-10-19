@@ -4,9 +4,9 @@
 
 namespace SimulationIO {
 
-TensorComponent::TensorComponent(const H5::CommonFG &loc, const string &entry,
-                                 TensorType *tensortype)
-    : tensortype(tensortype) {
+void TensorComponent::read(const H5::CommonFG &loc, const string &entry,
+                           const shared_ptr<TensorType> &tensortype) {
+  this->tensortype = tensortype;
   auto group = loc.openGroup(entry);
   assert(
       H5::readAttribute<string>(group, "type", tensortype->project->enumtype) ==
