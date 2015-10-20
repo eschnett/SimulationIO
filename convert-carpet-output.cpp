@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
   // Configuration
   auto configuration = project->createConfiguration("global");
   // TensorTypes
-  project->createStandardTensortypes();
+  project->createStandardTensorTypes();
   // Manifold and TangentSpace, both 3D
   const int dim = 3;
   auto manifold = project->createManifold("domain", dim);

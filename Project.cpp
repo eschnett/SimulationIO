@@ -59,7 +59,7 @@ void Project::read(const H5::CommonFG &loc) {
   //                coordinatesystems);
 }
 
-void Project::createStandardTensortypes() {
+void Project::createStandardTensorTypes() {
   auto s3d = createTensorType("Scalar3D", 3, 0);
   s3d->createTensorComponent("scalar", 0, vector<int>{});
 

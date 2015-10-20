@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
   auto configuration = project->createConfiguration("global");
 
   // TensorTypes
-  project->createStandardTensortypes();
+  project->createStandardTensorTypes();
   auto scalar3d = project->tensortypes.at("Scalar3D");
   auto vector3d = project->tensortypes.at("Vector3D");
 

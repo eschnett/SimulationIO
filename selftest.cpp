@@ -60,7 +60,7 @@ TEST(Project, HDF5) {
 // of the following tests. It must be the last of the "Project" tests. TODO:
 // Avoid this dependency.
 TEST(Project, setup) {
-  project->createStandardTensortypes();
+  project->createStandardTensorTypes();
   EXPECT_EQ(3, project->tensortypes.size());
 }
 

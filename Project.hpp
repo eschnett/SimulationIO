@@ -72,7 +72,7 @@ private:
 public:
   virtual ~Project() {}
 
-  void createStandardTensortypes();
+  void createStandardTensorTypes();
 
   virtual ostream &output(ostream &os, int level = 0) const;
   friend ostream &operator<<(ostream &os, const Project &project) {
