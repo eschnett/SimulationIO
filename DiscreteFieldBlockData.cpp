@@ -49,6 +49,7 @@ ostream &DiscreteFieldBlockData::output(ostream &os, int level) const {
 
 void DiscreteFieldBlockData::write(const H5::CommonFG &loc,
                                    const H5::H5Location &parent) const {
+  assert(invariant());
   auto group = loc.createGroup(name);
   H5::createAttribute(group, "type", discretefieldblock.lock()
                                          ->discretefield.lock()

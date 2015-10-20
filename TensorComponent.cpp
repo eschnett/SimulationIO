@@ -33,6 +33,7 @@ ostream &TensorComponent::output(ostream &os, int level) const {
 
 void TensorComponent::write(const H5::CommonFG &loc,
                             const H5::H5Location &parent) const {
+  assert(invariant());
   auto group = loc.createGroup(name);
   H5::createAttribute(group, "type",
                       tensortype.lock()->project.lock()->enumtype,

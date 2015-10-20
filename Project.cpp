@@ -124,6 +124,7 @@ void Project::createTypes() const {
 
 void Project::write(const H5::CommonFG &loc,
                     const H5::H5Location &parent) const {
+  assert(invariant());
   // auto group = loc.createGroup(name);
   auto group = loc.openGroup(".");
   createTypes();

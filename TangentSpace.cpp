@@ -37,6 +37,7 @@ ostream &TangentSpace::output(ostream &os, int level) const {
 
 void TangentSpace::write(const H5::CommonFG &loc,
                          const H5::H5Location &parent) const {
+  assert(invariant());
   auto group = loc.createGroup(name);
   H5::createAttribute(group, "type", project.lock()->enumtype, "TangentSpace");
   H5::createAttribute(group, "name", name);
