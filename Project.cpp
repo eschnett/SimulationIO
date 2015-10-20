@@ -128,8 +128,7 @@ void Project::write(const H5::CommonFG &loc,
   // auto group = loc.createGroup(name);
   auto group = loc.openGroup(".");
   createTypes();
-  H5::Group typegroup;
-  typegroup = group.createGroup("types");
+  auto typegroup = group.createGroup("types");
   enumtype.commit(typegroup, "SimulationIO");
   H5::createAttribute(group, "type", enumtype, "Project");
   H5::createAttribute(group, "name", name);
@@ -142,7 +141,6 @@ void Project::write(const H5::CommonFG &loc,
   H5::createGroup(group, "fields", fields);
   // TODO
   // H5::createGroup(group, "coordiantesystems", coordinatesystems);
-  enumtype = H5::EnumType();
 }
 
 shared_ptr<Parameter> Project::createParameter(const string &name) {
