@@ -9,12 +9,14 @@ addons:
    packages:
      - lcov
      # - libhdf5-serial-dev   # This lacks the HDF5 C++ bindings
+     - swig
 before_install:
   - |
     if [ `uname` = Darwin ]; then
       brew update
       brew install homebrew/science/hdf5
       brew install lcov
+      brew install swig
     fi
   - |
     if [ `uname` = Linux ]; then
@@ -43,6 +45,7 @@ script:
   - make -j2 COVERAGE=1 HDF5_DIR="$HDF5_DIR"
   - make -j2 test
   - ./example && ./list example.h5
+  - ./python-example && ./list python-example.h5
 after_success:
   - make -j2 coverage
   - coveralls-lcov coverage.info
