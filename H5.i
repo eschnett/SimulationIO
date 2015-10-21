@@ -8,7 +8,7 @@
 
 %include <std_string.i>
 
-enum H5F_ACC {
+enum {
   H5F_ACC_TRUNC, H5F_ACC_EXCL, H5F_ACC_RDONLY, H5F_ACC_RDWR, H5F_ACC_DEBUG
 };
 namespace H5 {
