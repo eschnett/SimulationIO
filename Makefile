@@ -86,7 +86,8 @@ _%.so: %_wrap.o $(SIO_SRCS:%.cpp=%.o)
 	$(CXX) -dynamiclib $(LDFLAGS) $(PYTHON_LDFLAGS) -o $@ $^ $(LIBS) $(PYTHON_LIBS)
 
 %_wrap.cpp: %.i
-	swig -Wall -cppext cpp -c++ -python $*.i
+	swig -Wall -c++ -python $*.i
+	mv $*_wrap.cxx $*_wrap.cpp
 .PRECIOUS: H5_wrap.cpp SimulationIO_wrap.cpp
 .PRECIOUS: H5_wrap.o SimulationIO_wrap.o
 
@@ -116,8 +117,9 @@ clean:
 	$(RM) *.gcda *.gcno coverage.info
 	$(RM) gtest-all.o
 	$(RM) $(ALL_SRCS:%.cpp=%.o) $(ALL_SRCS:%.cpp=%.d)
-	$(RM) H5_wrap.cpp H5_wrap.d H5_wrap.o H5.py H5.pyc
-	$(RM) SimulationIO_wrap.cpp SimulationIO_wrap.d SimulationIO_wrap.o SimulationIO.py SimulationIO.pyc
+	$(RM) H5_wrap.cxx H5_wrap.cpp H5_wrap.d H5_wrap.o H5.py H5.pyc
+	$(RM) SimulationIO_wrap.cxx SimulationIO_wrap.cpp SimulationIO_wrap.d \
+		SimulationIO_wrap.o SimulationIO.py SimulationIO.pyc
 	$(RM) $(ALL_EXE)
 
 distclean: clean
