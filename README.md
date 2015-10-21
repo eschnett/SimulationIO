@@ -20,8 +20,6 @@ This repository contains a few sketches describing brainstorming results in vari
   - can't just create UUIDs
   - probably need to handle set of UUIDs?
 - Add "configuration" links to most entities
-- Implement Python wrapper
-  - probably want to use SWIG
 - Implement coordinate systems
 - Implement writing/reading datasets, not just external links
 - Run benchmarks with large datasets
@@ -33,3 +31,4 @@ This repository contains a few sketches describing brainstorming results in vari
   - idea: whenever creating an HDF5 object, check whether it already exists; if so, check whether it looks as expected
 - Allow removing parts of a project, deleting it from a file?
 - Implement (value) equality comparison operators for our objects
+- Replace H5 SWIG interface with standard Python HDF5 library
