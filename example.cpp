@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
     directions.push_back(basis->createBasisVector(dirnames[d], d));
   }
 
-  // Field
+  // Fields
   auto rho = project->createField("rho", manifold, tangentspace, scalar3d);
   auto vel = project->createField("vel", manifold, tangentspace, vector3d);
   auto discretized_rho = rho->createDiscreteField("rho", discretization, basis);
