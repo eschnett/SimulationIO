@@ -84,7 +84,7 @@ convert-carpet-output: $(SIO_SRCS:%.cpp=%.o) convert-carpet-output.o
 
 os = $(shell uname)
 ifeq ($(os), Linux)
-make-dynamiclib = -dynamiclib # -shared
+make-dynamiclib = -shared
 else ifeq ($(os), Darwin)
 make-dynamiclib = -dynamiclib
 else
