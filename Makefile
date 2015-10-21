@@ -83,7 +83,7 @@ convert-carpet-output: $(SIO_SRCS:%.cpp=%.o) convert-carpet-output.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 _%.so: %_wrap.o $(SIO_SRCS:%.cpp=%.o)
-	$(CXX) -dynamiclib $(LDFLAGS) $(PYTHON_LDFLAGS) -o $@ $^ $(LIBS) $(PYTHON_LIBS)
+	$(CXX) -dynamiclib $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $(PYTHON_LDFLAGS) -o $@ $^ $(LIBS) $(PYTHON_LIBS)
 
 %_wrap.cpp: %.i
 	swig -Wall -c++ -python $*.i
