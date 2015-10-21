@@ -50,7 +50,7 @@ struct TensorType : Common, std::enable_shared_from_this<TensorType> {
   TensorType &operator=(const TensorType &) = delete;
   TensorType &operator=(TensorType &&) = delete;
 
-  friend class Project;
+  friend struct Project;
   TensorType(hidden, const string &name, const shared_ptr<Project> &project,
              int dimension, int rank)
       : Common(name), project(project), dimension(dimension), rank(rank) {}
@@ -89,7 +89,7 @@ public:
                                                     const string &entry);
 
 private:
-  friend class Field;
+  friend struct Field;
   void noinsert(const shared_ptr<Field> &field) {}
 };
 }

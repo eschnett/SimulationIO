@@ -46,7 +46,7 @@ struct Manifold : Common, std::enable_shared_from_this<Manifold> {
   Manifold &operator=(const Manifold &) = delete;
   Manifold &operator=(Manifold &&) = delete;
 
-  friend class Project;
+  friend struct Project;
   Manifold(hidden, const string &name, const shared_ptr<Project> &project,
            int dimension)
       : Common(name), project(project), dimension(dimension) {}
@@ -83,7 +83,7 @@ public:
                                                   const string &entry);
 
 private:
-  friend class Field;
+  friend struct Field;
   void insert(const string &name, const shared_ptr<Field> &field) {
     checked_emplace(fields, name, field);
   }

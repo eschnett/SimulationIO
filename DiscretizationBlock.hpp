@@ -40,7 +40,7 @@ struct DiscretizationBlock : Common,
   DiscretizationBlock &operator=(const DiscretizationBlock &) = delete;
   DiscretizationBlock &operator=(DiscretizationBlock &&) = delete;
 
-  friend class Discretization;
+  friend struct Discretization;
   DiscretizationBlock(hidden, const string &name,
                       const shared_ptr<Discretization> &discretization)
       : Common(name), discretization(discretization) {}
@@ -73,7 +73,7 @@ public:
                      const H5::H5Location &parent) const;
 
 private:
-  friend class DiscreteFieldBlock;
+  friend struct DiscreteFieldBlock;
   void noinsert(const shared_ptr<DiscreteFieldBlock> &discretefieldblock) {}
 };
 }

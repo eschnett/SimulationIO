@@ -43,7 +43,7 @@ struct ParameterValue : Common, std::enable_shared_from_this<ParameterValue> {
   ParameterValue &operator=(const ParameterValue &) = delete;
   ParameterValue &operator=(ParameterValue &&) = delete;
 
-  friend class Parameter;
+  friend struct Parameter;
   ParameterValue(hidden, const string &name,
                  const shared_ptr<Parameter> &parameter)
       : Common(name), parameter(parameter), value_type(type_empty) {}
@@ -81,7 +81,7 @@ public:
                      const H5::H5Location &parent) const;
 
 private:
-  friend class Configuration;
+  friend struct Configuration;
   void insert(const shared_ptr<Configuration> &configuration);
 };
 }

@@ -40,7 +40,7 @@ struct Parameter : Common, std::enable_shared_from_this<Parameter> {
   Parameter &operator=(const Parameter &) = delete;
   Parameter &operator=(Parameter &&) = delete;
 
-  friend class Project;
+  friend struct Project;
   Parameter(hidden, const string &name, const shared_ptr<Project> &project)
       : Common(name), project(project) {}
   Parameter(hidden) : Common(hidden()) {}

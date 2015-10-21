@@ -48,7 +48,7 @@ struct DiscreteField : Common, std::enable_shared_from_this<DiscreteField> {
   DiscreteField &operator=(const DiscreteField &) = delete;
   DiscreteField &operator=(DiscreteField &&) = delete;
 
-  friend class Field;
+  friend struct Field;
   DiscreteField(hidden, const string &name, const shared_ptr<Field> &field,
                 const shared_ptr<Discretization> &discretization,
                 const shared_ptr<Basis> &basis)

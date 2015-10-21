@@ -39,7 +39,7 @@ struct Configuration : Common, std::enable_shared_from_this<Configuration> {
   Configuration &operator=(const Configuration &) = delete;
   Configuration &operator=(Configuration &&) = delete;
 
-  friend class Project;
+  friend struct Project;
   Configuration(hidden, const string &name, const shared_ptr<Project> &project)
       : Common(name), project(project) {}
   Configuration(hidden) : Common(hidden()) {}

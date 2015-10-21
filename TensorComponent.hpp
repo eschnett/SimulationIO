@@ -64,7 +64,7 @@ struct TensorComponent : Common, std::enable_shared_from_this<TensorComponent> {
   TensorComponent &operator=(const TensorComponent &) = delete;
   TensorComponent &operator=(TensorComponent &&) = delete;
 
-  friend class TensorType;
+  friend struct TensorType;
   TensorComponent(hidden, const string &name,
                   const shared_ptr<TensorType> &tensortype, int storage_index,
                   const vector<int> &indexvalues)
@@ -101,7 +101,7 @@ public:
                      const H5::H5Location &parent) const;
 
 private:
-  friend class DiscreteFieldBlockData;
+  friend struct DiscreteFieldBlockData;
   void
   noinsert(const shared_ptr<DiscreteFieldBlockData> &discretefieldblockdata) {}
 };

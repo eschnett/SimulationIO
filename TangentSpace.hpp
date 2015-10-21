@@ -46,7 +46,7 @@ struct TangentSpace : Common, std::enable_shared_from_this<TangentSpace> {
   TangentSpace &operator=(const TangentSpace &) = delete;
   TangentSpace &operator=(TangentSpace &&) = delete;
 
-  friend class Project;
+  friend struct Project;
   TangentSpace(hidden, const string &name, const shared_ptr<Project> &project,
                int dimension)
       : Common(name), project(project), dimension(dimension) {}
@@ -82,7 +82,7 @@ public:
   shared_ptr<Basis> createBasis(const H5::CommonFG &loc, const string &entry);
 
 private:
-  friend class Field;
+  friend struct Field;
   void insert(const string &name, const shared_ptr<Field> &field) {
     checked_emplace(fields, name, field);
   }

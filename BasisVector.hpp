@@ -38,7 +38,7 @@ struct BasisVector : Common, std::enable_shared_from_this<BasisVector> {
   BasisVector &operator=(const BasisVector &) = delete;
   BasisVector &operator=(BasisVector &&) = delete;
 
-  friend class Basis;
+  friend struct Basis;
   BasisVector(hidden, const string &name, const shared_ptr<Basis> &basis,
               int direction)
       : Common(name), basis(basis), direction(direction) {}

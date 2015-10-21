@@ -45,7 +45,7 @@ struct Basis : Common, std::enable_shared_from_this<Basis> {
   Basis &operator=(const Basis &) = delete;
   Basis &operator=(Basis &&) = delete;
 
-  friend class TangentSpace;
+  friend struct TangentSpace;
   Basis(hidden, const string &name,
         const shared_ptr<TangentSpace> &tangentspace)
       : Common(name), tangentspace(tangentspace) {}
@@ -81,7 +81,7 @@ public:
                                             const string &entry);
 
 private:
-  friend class DiscreteField;
+  friend struct DiscreteField;
   void noinsert(const shared_ptr<DiscreteField> &discretefield) {}
 };
 }

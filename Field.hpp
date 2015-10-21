@@ -57,7 +57,7 @@ struct Field : Common, std::enable_shared_from_this<Field> {
   Field &operator=(const Field &) = delete;
   Field &operator=(Field &&) = delete;
 
-  friend class Project;
+  friend struct Project;
   Field(hidden, const string &name, const shared_ptr<Project> &project,
         const shared_ptr<Manifold> &manifold,
         const shared_ptr<TangentSpace> &tangentspace,

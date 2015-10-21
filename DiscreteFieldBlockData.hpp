@@ -53,7 +53,7 @@ struct DiscreteFieldBlockData
   DiscreteFieldBlockData &operator=(const DiscreteFieldBlockData &) = delete;
   DiscreteFieldBlockData &operator=(DiscreteFieldBlockData &&) = delete;
 
-  friend class DiscreteFieldBlock;
+  friend struct DiscreteFieldBlock;
   DiscreteFieldBlockData(
       hidden, const string &name,
       const shared_ptr<DiscreteFieldBlock> &discretefieldblock,

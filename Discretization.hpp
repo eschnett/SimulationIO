@@ -40,7 +40,7 @@ struct Discretization : Common, std::enable_shared_from_this<Discretization> {
   Discretization &operator=(const Discretization &) = delete;
   Discretization &operator=(Discretization &&) = delete;
 
-  friend class Manifold;
+  friend struct Manifold;
   Discretization(hidden, const string &name,
                  const shared_ptr<Manifold> &manifold)
       : Common(name), manifold(manifold) {}
@@ -77,7 +77,7 @@ public:
   createDiscretizationBlock(const H5::CommonFG &loc, const string &entry);
 
 private:
-  friend class DiscreteField;
+  friend struct DiscreteField;
   void noinsert(const shared_ptr<DiscreteField> &discretefield) {}
 };
 }

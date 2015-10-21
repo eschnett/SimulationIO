@@ -45,7 +45,7 @@ struct DiscreteFieldBlock : Common,
   DiscreteFieldBlock &operator=(const DiscreteFieldBlock &) = delete;
   DiscreteFieldBlock &operator=(DiscreteFieldBlock &&) = delete;
 
-  friend class DiscreteField;
+  friend struct DiscreteField;
   DiscreteFieldBlock(hidden, const string &name,
                      const shared_ptr<DiscreteField> &discretefield,
                      const shared_ptr<DiscretizationBlock> &discretizationblock)
