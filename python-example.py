@@ -9,7 +9,6 @@ project = createProject("python-simulation")
 # Configuration
 configuration = project.createConfiguration("global")
 
-
 # TensorTypes
 project.createStandardTensorTypes()
 scalar3d = project.tensortypes["Scalar3D"]
