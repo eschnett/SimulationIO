@@ -88,6 +88,8 @@ public:
   shared_ptr<TensorComponent> createTensorComponent(const H5::CommonFG &loc,
                                                     const string &entry);
 
+private:
+  friend class Field;
   void noinsert(const shared_ptr<Field> &field) {}
 };
 }

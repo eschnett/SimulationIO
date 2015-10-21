@@ -82,6 +82,8 @@ public:
   shared_ptr<Discretization> createDiscretization(const H5::CommonFG &loc,
                                                   const string &entry);
 
+private:
+  friend class Field;
   void insert(const string &name, const shared_ptr<Field> &field) {
     checked_emplace(fields, name, field);
   }

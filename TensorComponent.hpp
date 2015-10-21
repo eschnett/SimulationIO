@@ -100,6 +100,8 @@ public:
   virtual void write(const H5::CommonFG &loc,
                      const H5::H5Location &parent) const;
 
+private:
+  friend class DiscreteFieldBlockData;
   void
   noinsert(const shared_ptr<DiscreteFieldBlockData> &discretefieldblockdata) {}
 };

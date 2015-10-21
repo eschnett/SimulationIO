@@ -80,6 +80,8 @@ public:
   virtual void write(const H5::CommonFG &loc,
                      const H5::H5Location &parent) const;
 
+private:
+  friend class Configuration;
   void insert(const shared_ptr<Configuration> &configuration);
 };
 }

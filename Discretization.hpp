@@ -76,6 +76,8 @@ public:
   shared_ptr<DiscretizationBlock>
   createDiscretizationBlock(const H5::CommonFG &loc, const string &entry);
 
+private:
+  friend class DiscreteField;
   void noinsert(const shared_ptr<DiscreteField> &discretefield) {}
 };
 }

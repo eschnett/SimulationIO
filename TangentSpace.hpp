@@ -81,6 +81,8 @@ public:
   shared_ptr<Basis> createBasis(const string &name);
   shared_ptr<Basis> createBasis(const H5::CommonFG &loc, const string &entry);
 
+private:
+  friend class Field;
   void insert(const string &name, const shared_ptr<Field> &field) {
     checked_emplace(fields, name, field);
   }
