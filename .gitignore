@@ -27,6 +27,10 @@
 *.out
 *.app
 *.dSYM
+benchmark
+convert-carpet-output
+example
+list
 selftest
 
 # Temporary files
@@ -37,12 +41,7 @@ coverage.info
 *.gcda
 *.gcno
 *.d
-example
 example.h5
-convert-carpet-output
-list
-cactus
-benchmark
 benchmark.h5
 H5.py
 *.pyc
@@ -50,3 +49,5 @@ H5.py
 python-example.h5
 python-example.py
 SimulationIO.py
+
+cactus
