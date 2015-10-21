@@ -32,7 +32,9 @@ ALL_SRCS = \
 	example.cpp \
 	list.cpp \
 	selftest.cpp
-ALL_EXE = benchmark convert-carpet-output list example selftest
+ALL_EXE = \
+	benchmark convert-carpet-output list example selftest \
+	_H5.so _SimulationIO.so
 
 HDF5_DIR = /opt/local
 HDF5_CPPFLAGS = -I$(HDF5_DIR)/include
@@ -114,8 +116,8 @@ clean:
 	$(RM) *.gcda *.gcno coverage.info
 	$(RM) gtest-all.o
 	$(RM) $(ALL_SRCS:%.cpp=%.o) $(ALL_SRCS:%.cpp=%.d)
-	$(RM) H5_wrap.cpp H5_wrap.d H5_wrap.o _H5.so H5.py H5.pyc
-	$(RM) SimulationIO_wrap.cpp SimulationIO_wrap.d SimulationIO_wrap.o _SimulationIO.so SimulationIO.py SimulationIO.pyc
+	$(RM) H5_wrap.cpp H5_wrap.d H5_wrap.o H5.py H5.pyc
+	$(RM) SimulationIO_wrap.cpp SimulationIO_wrap.d SimulationIO_wrap.o SimulationIO.py SimulationIO.pyc
 	$(RM) $(ALL_EXE)
 
 distclean: clean
