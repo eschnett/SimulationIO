@@ -45,9 +45,9 @@ compiler:
   - gcc
 script:
   - make -j2 COVERAGE=1 HDF5_DIR="$HDF5_DIR" PYTHON_DIR="$PYTHON_DIR"
-  - make -j2 test
   - ./example && ./list example.h5
   - ./python-example.py && ./list python-example.h5
+  - make -j2 test
 after_success:
   - make -j2 coverage
   - coveralls-lcov coverage.info
