@@ -17,6 +17,7 @@ before_install:
       brew install homebrew/science/hdf5
       brew install lcov
       brew install swig
+      export PYTHON_DIR="/System/Library/Frameworks/Python.framework/Versions/2.7"
     fi
   - |
     if [ `uname` = Linux ]; then
@@ -42,7 +43,7 @@ compiler:
   - clang
   - gcc
 script:
-  - make -j2 COVERAGE=1 HDF5_DIR="$HDF5_DIR"
+  - make -j2 COVERAGE=1 HDF5_DIR="$HDF5_DIR" PYTHON_DIR="$PYTHON_DIR"
   - make -j2 test
   - ./example && ./list example.h5
   - ./python-example.py && ./list python-example.h5
