@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <map>
+#include <memory>
 #include <string>
 #include <utility>
 
@@ -15,6 +16,11 @@ inline int ipow(int base, int exp) {
   while (exp--)
     res *= base;
   return res;
+}
+
+// Convert a weak_ptr to a shared_ptr, deducing the element type
+template <typename T> std::shared_ptr<T> shared(const std::weak_ptr<T> &x) {
+  return std::shared_ptr<T>(x);
 }
 
 // Insert an element into a map, ensuring that the key does not yet exist
