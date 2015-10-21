@@ -82,8 +82,16 @@ list: $(SIO_SRCS:%.cpp=%.o) list.o
 convert-carpet-output: $(SIO_SRCS:%.cpp=%.o) convert-carpet-output.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
+os = $(shell uname)
+ifeq ($(os), Linux)
+make-dynamiclib = -shared
+else ifeq ($(os), Darwin)
+make-dynamiclib = -dynamiclib
+else
+make-dynamiclib = -shared
+endif
 _%.so: %_wrap.o $(SIO_SRCS:%.cpp=%.o)
-	$(CXX) -dynamiclib $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $(PYTHON_LDFLAGS) -o $@ $^ $(LIBS) $(PYTHON_LIBS)
+	$(CXX) $(make-dynamiclib) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $(PYTHON_LDFLAGS) -o $@ $^ $(LIBS) $(PYTHON_LIBS)
 
 %_wrap.cpp: %.i
 	swig -Wall -c++ -python $*.i
