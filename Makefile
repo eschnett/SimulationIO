@@ -1,6 +1,6 @@
 CXX = g++
-CPPFLAGS = $(GTEST_CPPFLAGS) $(HDF5_CPPFLAGS)
-CXXFLAGS = $(GTEST_CXXFLAGS) $(HDF5_CXXFLAGS) -g -Wall -std=c++0x
+CPPFLAGS = $(GTEST_CPPFLAGS) $(HDF5_CPPFLAGS) $(PYTHON_CPPFLAGS)
+CXXFLAGS = $(GTEST_CXXFLAGS) $(HDF5_CXXFLAGS) $(PYTHON_CXXFLAGS) -g -Wall -std=c++0x
 LDFLAGS = $(GTEST_LDFLAGS) $(HDF5_LDFLAGS)
 LIBS = $(GTEST_LIBS) $(HDF5_LIBS)
 
@@ -40,6 +40,12 @@ HDF5_CXXFLAGS =
 HDF5_LDFLAGS = -L$(HDF5_DIR)/lib -Wl,-rpath,$(HDF5_DIR)/lib
 HDF5_LIBS = -lhdf5_cpp -lhdf5
 
+PYTHON_DIR = /opt/local/Library/Frameworks/Python.framework/Versions/2.7
+PYTHON_CPPFLAGS = -I$(PYTHON_DIR)/include/python2.7
+PYTHON_CXXFLAGS =
+PYTHON_LDFLAGS = -L$(PYTHON_DIR)/lib -Wl,-rpath,$(PYTHON_DIR)/lib
+PYTHON_LIBS = -lpython2.7
+
 GTEST_DIR = googletest-release-1.7.0
 GTEST_CPPFLAGS = -isystem $(GTEST_DIR)/include -I$(GTEST_DIR)
 GTEST_CXXFLAGS = -pthread
@@ -74,7 +80,15 @@ list: $(SIO_SRCS:%.cpp=%.o) list.o
 convert-carpet-output: $(SIO_SRCS:%.cpp=%.o) convert-carpet-output.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
-%.o: %.cpp Makefile
+_%.so: %_wrap.o $(SIO_SRCS:%.cpp=%.o)
+	$(CXX) -dynamiclib $(LDFLAGS) $(PYTHON_LDFLAGS) -o $@ $^ $(LIBS) $(PYTHON_LIBS)
+
+%_wrap.cpp: %.i
+	swig -Wall -cppext cpp -c++ -python $*.i
+.PRECIOUS: H5_wrap.cpp SimulationIO_wrap.cpp
+.PRECIOUS: H5_wrap.o SimulationIO_wrap.o
+
+%.o: %.cpp
 	@$(RM) $*.o
 	$(CXX) -MD $(CPPFLAGS) $(CXXFLAGS) -c -o $*.o.tmp $*.cpp
 	@$(PROCESS_DEPENDENCIES)
@@ -100,6 +114,8 @@ clean:
 	$(RM) *.gcda *.gcno coverage.info
 	$(RM) gtest-all.o
 	$(RM) $(ALL_SRCS:%.cpp=%.o) $(ALL_SRCS:%.cpp=%.d)
+	$(RM) H5_wrap.cpp H5_wrap.d H5_wrap.o _H5.so H5.py H5.pyc
+	$(RM) SimulationIO_wrap.cpp SimulationIO_wrap.d SimulationIO_wrap.o _SimulationIO.so SimulationIO.py SimulationIO.pyc
 	$(RM) $(ALL_EXE)
 
 distclean: clean

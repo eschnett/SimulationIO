@@ -44,3 +44,9 @@ list
 cactus
 benchmark
 benchmark.h5
+H5.py
+*.pyc
+*_wrap.cpp
+python-example.h5
+python-example.py
+SimulationIO.py
