@@ -25,7 +25,7 @@ void TensorType::read(const H5::CommonFG &loc, const string &entry,
 }
 
 ostream &TensorType::output(ostream &os, int level) const {
-  os << indent(level) << "TensorType \"" << name << "\": dim=" << dimension
+  os << indent(level) << "TensorType " << quote(name) << ": dim=" << dimension
      << " rank=" << rank << "\n";
   for (const auto &tc : storage_indices)
     tc.second->output(os, level + 1);

@@ -23,8 +23,8 @@ void Basis::read(const H5::CommonFG &loc, const string &entry,
 }
 
 ostream &Basis::output(ostream &os, int level) const {
-  os << indent(level) << "Basis \"" << name << "\": TangentSpace \""
-     << tangentspace.lock()->name << "\"\n";
+  os << indent(level) << "Basis " << quote(name) << ": TangentSpace "
+     << quote(tangentspace.lock()->name) << "\n";
   for (const auto &db : directions)
     db.second->output(os, level + 1);
   return os;

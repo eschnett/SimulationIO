@@ -23,8 +23,8 @@ void Discretization::read(const H5::CommonFG &loc, const string &entry,
 }
 
 ostream &Discretization::output(ostream &os, int level) const {
-  os << indent(level) << "Discretization \"" << name << "\": Manifold \""
-     << manifold.lock()->name << "\"\n";
+  os << indent(level) << "Discretization " << quote(name) << ": Manifold "
+     << quote(manifold.lock()->name) << "\n";
   for (const auto &db : discretizationblocks)
     db.second->output(os, level + 1);
   return os;

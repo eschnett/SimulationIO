@@ -25,7 +25,7 @@ int main(int argc, char **argv) {
       auto project = createProject(file);
       cout << *project;
     } catch (H5::FileIException error) {
-      cerr << "Could not open file \"" << filename << "\" for reading.\n";
+      cerr << "Could not open file " << quote(filename) << " for reading.\n";
       return 2;
     }
   }

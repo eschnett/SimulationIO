@@ -18,8 +18,8 @@ void BasisVector::read(const H5::CommonFG &loc, const string &entry,
 }
 
 ostream &BasisVector::output(ostream &os, int level) const {
-  os << indent(level) << "BasisVector \"" << name << "\": Basis \""
-     << basis.lock()->name << "\" direction=" << direction << "\n";
+  os << indent(level) << "BasisVector " << quote(name) << ": Basis "
+     << quote(basis.lock()->name) << " direction=" << direction << "\n";
   return os;
 }
 

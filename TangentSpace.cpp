@@ -26,12 +26,12 @@ void TangentSpace::read(const H5::CommonFG &loc, const string &entry,
 }
 
 ostream &TangentSpace::output(ostream &os, int level) const {
-  os << indent(level) << "TangentSpace \"" << name << "\": dim=" << dimension
+  os << indent(level) << "TangentSpace " << quote(name) << ": dim=" << dimension
      << "\n";
   for (const auto &b : bases)
     b.second->output(os, level + 1);
   for (const auto &f : fields)
-    os << indent(level + 1) << "Field \"" << f.second.lock()->name << "\"\n";
+    os << indent(level + 1) << "Field " << quote(f.second.lock()->name) << "\n";
   return os;
 }
 

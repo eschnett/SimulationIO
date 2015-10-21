@@ -30,9 +30,9 @@ void DiscreteFieldBlock::read(const H5::CommonFG &loc, const string &entry,
 }
 
 ostream &DiscreteFieldBlock::output(ostream &os, int level) const {
-  os << indent(level) << "DiscreteFieldBlock \"" << name
-     << "\": DiscreteField \"" << discretefield.lock()->name
-     << "\" DiscretizationBlock \"" << discretizationblock->name << "\"\n";
+  os << indent(level) << "DiscreteFieldBlock " << quote(name)
+     << ": DiscreteField " << quote(discretefield.lock()->name)
+     << " DiscretizationBlock " << quote(discretizationblock->name) << "\n";
   for (const auto &dfbd : discretefieldblockdata)
     dfbd.second->output(os, level + 1);
   return os;

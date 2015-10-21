@@ -37,9 +37,9 @@ void Field::read(const H5::CommonFG &loc, const string &entry,
 }
 
 ostream &Field::output(ostream &os, int level) const {
-  os << indent(level) << "Field \"" << name << "\": Manifold \""
-     << manifold->name << "\" TangentSpace \"" << tangentspace->name
-     << "\" TensorType \"" << tensortype->name << "\"\n";
+  os << indent(level) << "Field " << quote(name) << ": Manifold "
+     << quote(manifold->name) << " TangentSpace " << quote(tangentspace->name)
+     << " TensorType " << quote(tensortype->name) << "\n";
   for (const auto &df : discretefields)
     df.second->output(os, level + 1);
   return os;

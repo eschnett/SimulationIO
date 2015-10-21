@@ -29,11 +29,11 @@ void Configuration::read(const H5::CommonFG &loc, const string &entry,
 }
 
 ostream &Configuration::output(ostream &os, int level) const {
-  os << indent(level) << "Configuration \"" << name << "\"\n";
+  os << indent(level) << "Configuration " << quote(name) << "\n";
   for (const auto &val : parametervalues)
-    os << indent(level + 1) << "Parameter \""
-       << val.second->parameter.lock()->name << "\" ParameterValue \""
-       << val.second->name << "\"\n";
+    os << indent(level + 1) << "Parameter "
+       << quote(val.second->parameter.lock()->name) << " ParameterValue "
+       << quote(val.second->name) << "\n";
   return os;
 }
 

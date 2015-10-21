@@ -60,8 +60,8 @@ void ParameterValue::setValue(const string &s) {
 }
 
 ostream &ParameterValue::output(ostream &os, int level) const {
-  os << indent(level) << "ParameterValue \"" << name << "\": Parameter \""
-     << parameter.lock()->name << "\"\n" << indent(level + 1) << "value: ";
+  os << indent(level) << "ParameterValue " << quote(name) << ": Parameter "
+     << quote(parameter.lock()->name) << "\n" << indent(level + 1) << "value: ";
   switch (value_type) {
   case type_empty:
     os << "empty";
@@ -73,7 +73,7 @@ ostream &ParameterValue::output(ostream &os, int level) const {
     os << "double(" << value_double << ")";
     break;
   case type_string:
-    os << "string(\"" << value_string << "\")";
+    os << "string(" << quote(value_string) << ")";
     break;
   default:
     assert(0);

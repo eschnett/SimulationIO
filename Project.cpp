@@ -78,7 +78,7 @@ void Project::createStandardTensorTypes() {
 }
 
 ostream &Project::output(ostream &os, int level) const {
-  os << indent(level) << "Project \"" << name << "\"\n";
+  os << indent(level) << "Project " << quote(name) << "\n";
   for (const auto &par : parameters)
     par.second->output(os, level + 1);
   for (const auto &conf : configurations)

@@ -22,7 +22,7 @@ void Parameter::read(const H5::CommonFG &loc, const string &entry,
 }
 
 ostream &Parameter::output(ostream &os, int level) const {
-  os << indent(level) << "Parameter \"" << name << "\"\n";
+  os << indent(level) << "Parameter " << quote(name) << "\n";
   for (const auto &val : parametervalues)
     val.second->output(os, level + 1);
   return os;

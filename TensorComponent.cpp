@@ -19,8 +19,8 @@ void TensorComponent::read(const H5::CommonFG &loc, const string &entry,
 }
 
 ostream &TensorComponent::output(ostream &os, int level) const {
-  os << indent(level) << "TensorComponent \"" << name << "\": TensorType \""
-     << tensortype.lock()->name << "\" storage_index=" << storage_index
+  os << indent(level) << "TensorComponent " << quote(name) << ": TensorType "
+     << quote(tensortype.lock()->name) << " storage_index=" << storage_index
      << " indexvalues=[";
   for (int i = 0; i < int(indexvalues.size()); ++i) {
     if (i > 0)

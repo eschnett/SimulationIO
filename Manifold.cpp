@@ -32,12 +32,12 @@ void Manifold::read(const H5::CommonFG &loc, const string &entry,
 }
 
 ostream &Manifold::output(ostream &os, int level) const {
-  os << indent(level) << "Manifold \"" << name << "\": dim=" << dimension
+  os << indent(level) << "Manifold " << quote(name) << ": dim=" << dimension
      << "\n";
   for (const auto &d : discretizations)
     d.second->output(os, level + 1);
   for (const auto &f : fields)
-    os << indent(level + 1) << "Field \"" << f.second.lock()->name << "\"\n";
+    os << indent(level + 1) << "Field " << quote(f.second.lock()->name) << "\n";
   return os;
 }
 

@@ -19,8 +19,8 @@ void DiscretizationBlock::read(
 }
 
 ostream &DiscretizationBlock::output(ostream &os, int level) const {
-  os << indent(level) << "DiscretizationBlock \"" << name
-     << "\": Discretization \"" << discretization.lock()->name << "\"\n";
+  os << indent(level) << "DiscretizationBlock " << quote(name)
+     << ": Discretization " << quote(discretization.lock()->name) << "\n";
   return os;
 }
 
