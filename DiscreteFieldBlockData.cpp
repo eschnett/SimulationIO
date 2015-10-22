@@ -30,8 +30,8 @@ void DiscreteFieldBlockData::read(
               H5::readGroupAttribute<string>(group, "tensorcomponent", "name"));
   {
     data_type = type_empty; // fallback
-    auto lapl = H5Pcreate(H5P_LINK_ACCESS);
-    assert(lapl >= 0);
+    auto lapl = H5::take_hid(H5Pcreate(H5P_LINK_ACCESS));
+    assert(lapl.valid());
     auto exists = H5Lexists(group.getLocId(), "data", lapl);
     assert(exists >= 0);
     if (exists) {
@@ -53,8 +53,6 @@ void DiscreteFieldBlockData::read(
         data_type = type_dataset;
       }
     }
-    auto lapl_herr = H5Pclose(lapl);
-    assert(!lapl_herr);
   }
   tensorcomponent->noinsert(shared_from_this());
 }

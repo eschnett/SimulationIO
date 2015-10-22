@@ -16,6 +16,40 @@
 
 namespace H5 {
 
+// Wrapper for hid_t that ensures correct HDF5 reference counting
+class hid {
+  hid_t id;
+  void incref() {
+    if (valid())
+      H5Iinc_ref(id);
+  }
+  void decref() {
+    if (valid())
+      H5Idec_ref(id);
+  }
+
+public:
+  hid() : id(-1) {}
+  hid(hid_t id) : id(id) { incref(); }
+  struct take {};
+  hid(take, hid_t id) : id(id) { /* no incref */
+  }
+  hid(const hid &id) : id(id) { incref(); }
+  ~hid() { decref(); }
+  operator hid_t() const { return id; }
+  hid &operator=(const hid &other) {
+    if (&other != this) {
+      decref();
+      id = other.id;
+      incref();
+    }
+    return *this;
+  }
+  bool valid() const { return id >= 0; }
+  hid_t get() const { return id; }
+};
+inline hid take_hid(hid_t id) { return hid(hid::take(), id); }
+
 // Convert CommonFG to H5Location
 namespace detail {
 struct H5LocationDeleter {
@@ -281,18 +315,14 @@ inline herr_t createHardLink(const CommonFG &link_loc,
                              const std::string &link_name,
                              const H5Location &obj_loc,
                              const std::string &obj_name) {
-  auto lcpl = H5Pcreate(H5P_LINK_CREATE);
-  assert(lcpl >= 0);
-  auto lapl = H5Pcreate(H5P_LINK_ACCESS);
-  assert(lapl >= 0);
+  auto lcpl = take_hid(H5Pcreate(H5P_LINK_CREATE));
+  assert(lcpl.valid());
+  auto lapl = take_hid(H5Pcreate(H5P_LINK_ACCESS));
+  assert(lapl.valid());
   auto herr =
       H5Lcreate_hard(obj_loc.getId(), obj_name.c_str(), link_loc.getLocId(),
                      link_name.c_str(), lcpl, lapl);
   assert(herr >= 0);
-  auto lcpl_herr = H5Pclose(lcpl);
-  assert(!lcpl_herr);
-  auto lapl_herr = H5Pclose(lapl);
-  assert(!lapl_herr);
   return herr;
 }
 
@@ -311,18 +341,14 @@ inline herr_t createExternalLink(const CommonFG &link_loc,
                                  const std::string &link_name,
                                  const std::string &file_name,
                                  const std::string &obj_name) {
-  auto lcpl = H5Pcreate(H5P_LINK_CREATE);
-  assert(lcpl >= 0);
-  auto lapl = H5Pcreate(H5P_LINK_ACCESS);
-  assert(lapl >= 0);
+  auto lcpl = take_hid(H5Pcreate(H5P_LINK_CREATE));
+  assert(lcpl.valid());
+  auto lapl = take_hid(H5Pcreate(H5P_LINK_ACCESS));
+  assert(lapl.valid());
   auto herr =
       H5Lcreate_external(file_name.c_str(), obj_name.c_str(),
                          link_loc.getLocId(), link_name.c_str(), lcpl, lapl);
   assert(herr >= 0);
-  auto lcpl_herr = H5Pclose(lcpl);
-  assert(!lcpl_herr);
-  auto lapl_herr = H5Pclose(lapl);
-  assert(!lapl_herr);
   return herr;
 }
 
@@ -330,8 +356,8 @@ inline herr_t createExternalLink(const CommonFG &link_loc,
 inline void readExternalLink(const CommonFG &link_loc,
                              const std::string &link_name, bool &link_exists,
                              std::string &file_name, std::string &obj_name) {
-  auto lapl = H5Pcreate(H5P_LINK_ACCESS);
-  assert(lapl >= 0);
+  auto lapl = take_hid(H5Pcreate(H5P_LINK_ACCESS));
+  assert(lapl.valid());
   auto exists = H5Lexists(link_loc.getLocId(), link_name.c_str(), lapl);
   assert(exists >= 0);
   if (exists) {
@@ -354,8 +380,6 @@ inline void readExternalLink(const CommonFG &link_loc,
       obj_name = obj_name_ptr;
     }
   }
-  auto lapl_herr = H5Pclose(lapl);
-  assert(!lapl_herr);
 }
 
 // Write a map (ignoring the keys)
