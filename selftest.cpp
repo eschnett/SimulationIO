@@ -346,7 +346,7 @@ TEST(Field, create) {
   EXPECT_TRUE(project->fields.empty());
   const auto &m1 = project->manifolds.at("m1");
   const auto &s1 = project->tangentspaces.at("s1");
-  const auto &s3d = project->tensortypes.at("Scalar3D");
+  const auto &s3d = project->tensortypes.at("Vector3D");
   auto f1 = project->createField("f1", m1, s1, s3d);
   EXPECT_EQ(1, project->fields.size());
   EXPECT_EQ(f1, project->fields.at("f1"));
@@ -364,7 +364,7 @@ TEST(Field, HDF5) {
     ostringstream buf;
     buf << *p1->fields.at("f1");
     EXPECT_EQ("Field \"f1\": Manifold \"m1\" TangentSpace \"s1\" "
-              "TensorType \"Scalar3D\"\n",
+              "TensorType \"Vector3D\"\n",
               buf.str());
   }
   remove(filename);
@@ -505,7 +505,7 @@ TEST(DiscreteField, HDF5) {
     ostringstream buf;
     buf << *p1->fields.at("f1");
     EXPECT_EQ("Field \"f1\": Manifold \"m1\" TangentSpace \"s1\" TensorType "
-              "\"Scalar3D\"\n"
+              "\"Vector3D\"\n"
               "  DiscreteField \"df1\": Field \"f1\" Discretization \"d1\" "
               "Basis \"b1\"\n",
               buf.str());
@@ -549,15 +549,30 @@ TEST(DiscreteFieldBlockData, create) {
   const auto &df1 = f1->discretefields.at("df1");
   const auto &dfb1 = df1->discretefieldblocks.at("dfb1");
   const auto &tt1 = f1->tensortype;
-  const auto &sc1 = tt1->tensorcomponents.at("scalar");
+  const auto &bx1 = tt1->tensorcomponents.at("0");
+  const auto &by1 = tt1->tensorcomponents.at("1");
+  const auto &bz1 = tt1->tensorcomponents.at("2");
   EXPECT_TRUE(dfb1->discretefieldblockdata.empty());
-  auto dfbd1 = dfb1->createDiscreteFieldBlockData("dfbd1", sc1);
-  EXPECT_EQ(1, dfb1->discretefieldblockdata.size());
+  auto dfbd1 = dfb1->createDiscreteFieldBlockData("dfbd1", bx1);
+  auto dfbd2 = dfb1->createDiscreteFieldBlockData("dfbd2", by1);
+  auto dfbd3 = dfb1->createDiscreteFieldBlockData("dfbd3", bz1);
+  EXPECT_EQ(3, dfb1->discretefieldblockdata.size());
   EXPECT_EQ(dfbd1, dfb1->discretefieldblockdata.at("dfbd1"));
+  EXPECT_EQ(dfbd2, dfb1->discretefieldblockdata.at("dfbd2"));
+  EXPECT_EQ(dfbd3, dfb1->discretefieldblockdata.at("dfbd3"));
   EXPECT_EQ(DiscreteFieldBlockData::type_empty, dfbd1->data_type);
-  dfbd1->setData("discretizationfieldblockdata.h5",
+  EXPECT_EQ(DiscreteFieldBlockData::type_empty, dfbd2->data_type);
+  EXPECT_EQ(DiscreteFieldBlockData::type_empty, dfbd3->data_type);
+  dfbd2->setData("discretizationfieldblockdata.h5",
                  project->name + "/tensortypes/Scalar3D");
-  EXPECT_EQ(DiscreteFieldBlockData::type_extlink, dfbd1->data_type);
+  const auto datatype = H5::getType(0.0);
+  const int rank = 1;
+  const hsize_t dims[rank] = {10};
+  auto dataspace = H5::DataSpace(rank, dims);
+  dfbd3->setData(datatype, dataspace);
+  EXPECT_EQ(DiscreteFieldBlockData::type_empty, dfbd1->data_type);
+  EXPECT_EQ(DiscreteFieldBlockData::type_extlink, dfbd2->data_type);
+  EXPECT_EQ(DiscreteFieldBlockData::type_dataset, dfbd3->data_type);
 }
 
 TEST(DiscreteFieldBlockData, HDF5) {
@@ -576,10 +591,16 @@ TEST(DiscreteFieldBlockData, HDF5) {
     EXPECT_EQ("DiscreteFieldBlock \"dfb1\": DiscreteField \"df1\" "
               "DiscretizationBlock \"db1\"\n"
               "  DiscreteFieldBlockData \"dfbd1\": DiscreteFieldBlock \"dfb1\" "
-              "TensorComponent \"scalar\"\n"
+              "TensorComponent \"0\"\n"
+              "    data: empty\n"
+              "  DiscreteFieldBlockData \"dfbd2\": DiscreteFieldBlock \"dfb1\" "
+              "TensorComponent \"1\"\n"
               "    data: external link to "
               "\"discretizationfieldblockdata.h5\":\"p1/tensortypes/"
-              "Scalar3D\"\n",
+              "Scalar3D\"\n"
+              "  DiscreteFieldBlockData \"dfbd3\": DiscreteFieldBlock \"dfb1\" "
+              "TensorComponent \"2\"\n"
+              "    data: dataset\n",
               buf.str());
   }
   remove(filename);

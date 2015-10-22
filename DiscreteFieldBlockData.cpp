@@ -73,8 +73,10 @@ void DiscreteFieldBlockData::setData() {
   data_dataspace = H5::DataSpace();
   data_datatype = H5::DataType();
   data_dataset = H5::DataSet();
-  data_extlink_filename = "";
-  data_extlink_objname = "";
+  data_extlink_filename.clear();
+  data_extlink_objname.clear();
+  data_copy_loc = H5::hid();
+  data_copy_name.clear();
 }
 
 void DiscreteFieldBlockData::setData(const H5::DataType &datatype,
@@ -95,6 +97,15 @@ void DiscreteFieldBlockData::setData(const string &filename,
   data_extlink_objname = objname;
 }
 
+void DiscreteFieldBlockData::setData(const H5::H5Location &loc,
+                                     const string &name) {
+  if (data_type != type_empty)
+    setData();
+  data_type = type_copy;
+  data_copy_loc = loc.getId();
+  data_copy_name = name;
+}
+
 ostream &DiscreteFieldBlockData::output(ostream &os, int level) const {
   os << indent(level) << "DiscreteFieldBlockData " << quote(name)
      << ": DiscreteFieldBlock " << quote(discretefieldblock.lock()->name)
@@ -111,6 +122,9 @@ ostream &DiscreteFieldBlockData::output(ostream &os, int level) const {
   case type_extlink:
     os << "external link to " << quote(data_extlink_filename) << ":"
        << quote(data_extlink_objname) << "\n";
+    break;
+  case type_copy:
+    os << "copy of (?):" << quote(data_copy_name) << "\n";
     break;
   default:
     assert(0);
@@ -144,6 +158,16 @@ void DiscreteFieldBlockData::write(const H5::CommonFG &loc,
     H5::createExternalLink(group, "data", data_extlink_filename,
                            data_extlink_objname);
     break;
+  case type_copy: {
+    auto ocpypl = H5::take_hid(H5Pcreate(H5P_OBJECT_COPY));
+    assert(ocpypl.valid());
+    auto lcpl = H5::take_hid(H5Pcreate(H5P_LINK_CREATE));
+    assert(lcpl.valid());
+    herr_t herr = H5Ocopy(data_copy_loc, data_copy_name.c_str(), group.getId(),
+                          "data", ocpypl, lcpl);
+    assert(!herr);
+    break;
+  }
   default:
     assert(0);
   }
