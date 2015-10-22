@@ -235,7 +235,7 @@ int main(int argc, char **argv) {
           auto discretefieldblockdata =
               discretefieldblock->discretefieldblockdata.at(
                   tensorcomponent->name);
-          discretefieldblockdata->setExternalLink(inputfilename, name);
+          discretefieldblockdata->setData(inputfilename, name);
           // Done
           return 0;
         });

@@ -27,8 +27,11 @@ struct DiscreteFieldBlockData
   // Tensor component for a discrete field on a particular region
   weak_ptr<DiscreteFieldBlock> discretefieldblock; // parent
   shared_ptr<TensorComponent> tensorcomponent;     // without backlink
-  bool have_extlink;
-  string extlink_file_name, extlink_obj_name;
+  enum { type_empty, type_dataset, type_extlink } data_type;
+  H5::DataSpace data_dataspace;
+  H5::DataType data_datatype;
+  mutable H5::DataSet data_dataset;
+  string data_extlink_filename, data_extlink_objname;
 
   virtual bool invariant() const {
     bool inv =
@@ -42,8 +45,18 @@ struct DiscreteFieldBlockData
                 ->discretefield.lock()
                 ->field.lock()
                 ->tensortype.get() == tensorcomponent->tensortype.lock().get();
-    if (have_extlink)
-      inv &= !extlink_file_name.empty() && !extlink_obj_name.empty();
+    switch (data_type) {
+    case type_empty: // do nothing
+      break;
+    case type_dataset:
+      inv &= data_extlink_filename.empty() && data_extlink_objname.empty();
+      break;
+    case type_extlink:
+      inv &= !data_extlink_filename.empty() && !data_extlink_objname.empty();
+      break;
+    default:
+      assert(0);
+    }
     return inv;
   }
 
@@ -59,7 +72,7 @@ struct DiscreteFieldBlockData
       const shared_ptr<DiscreteFieldBlock> &discretefieldblock,
       const shared_ptr<TensorComponent> &tensorcomponent)
       : Common(name), discretefieldblock(discretefieldblock),
-        tensorcomponent(tensorcomponent), have_extlink(false) {}
+        tensorcomponent(tensorcomponent), data_type(type_empty) {}
   DiscreteFieldBlockData(hidden) : Common(hidden()) {}
 
 private:
@@ -85,7 +98,11 @@ private:
 public:
   virtual ~DiscreteFieldBlockData() {}
 
-  void setExternalLink(const string &file_name, const string &obj_name);
+  string getPath() const;
+  string getName() const;
+  void setData();
+  void setData(const H5::DataType &datatype, const H5::DataSpace &dataspace);
+  void setData(const string &filename, const string &objname);
 
   virtual ostream &output(ostream &os, int level = 0) const;
   friend ostream &

@@ -334,24 +334,25 @@ inline void readExternalLink(const CommonFG &link_loc,
   assert(lapl >= 0);
   auto exists = H5Lexists(link_loc.getLocId(), link_name.c_str(), lapl);
   assert(exists >= 0);
-  link_exists = bool(exists);
-  if (link_exists) {
+  if (exists) {
     herr_t herr;
     H5L_info_t info;
     herr = H5Lget_info(link_loc.getLocId(), link_name.c_str(), &info, lapl);
     assert(!herr);
-    assert(info.type == H5L_TYPE_EXTERNAL);
-    std::vector<char> buf(info.u.val_size);
-    herr = H5Lget_val(link_loc.getLocId(), link_name.c_str(), buf.data(),
-                      buf.size(), lapl);
-    assert(!herr);
-    const char *file_name_ptr, *obj_name_ptr;
-    unsigned flags;
-    herr = H5Lunpack_elink_val(buf.data(), buf.size(), &flags, &file_name_ptr,
-                               &obj_name_ptr);
-    assert(!herr);
-    file_name = file_name_ptr;
-    obj_name = obj_name_ptr;
+    if (info.type == H5L_TYPE_EXTERNAL) {
+      std::vector<char> buf(info.u.val_size);
+      herr = H5Lget_val(link_loc.getLocId(), link_name.c_str(), buf.data(),
+                        buf.size(), lapl);
+      assert(!herr);
+      const char *file_name_ptr, *obj_name_ptr;
+      unsigned flags;
+      herr = H5Lunpack_elink_val(buf.data(), buf.size(), &flags, &file_name_ptr,
+                                 &obj_name_ptr);
+      assert(!herr);
+      link_exists = true;
+      file_name = file_name_ptr;
+      obj_name = obj_name_ptr;
+    }
   }
   auto lapl_herr = H5Pclose(lapl);
   assert(!lapl_herr);
