@@ -29,13 +29,53 @@ string get_basename(string filename) {
 
 int main(int argc, char **argv) {
 
-  if (argc < 3) {
+  bool have_error = false;
+  enum { action_unset, action_copy, action_extlink } action = action_unset;
+  string outputfilename;
+  vector<string> inputfilenames;
+
+  for (int argi = 1; argi < argc; ++argi) {
+    auto argvi = string(argv[argi]);
+    if (argvi.empty()) {
+      have_error = true;
+      break;
+    } else if (argvi[0] == '-') {
+      if (argvi == "--copy") {
+        if (action != action_unset) {
+          have_error = true;
+          break;
+        }
+        action = action_copy;
+      } else if (argvi == "--extlink") {
+        if (action != action_unset) {
+          have_error = true;
+          break;
+        }
+        action = action_extlink;
+      } else {
+        have_error = true;
+        break;
+      }
+    } else {
+      if (outputfilename.empty()) {
+        outputfilename = argvi;
+      } else {
+        inputfilenames.push_back(argvi);
+      }
+    }
+  }
+  if (inputfilenames.empty()) {
+    have_error = true;
+  }
+  if (have_error) {
     cerr << "Synposis:\n" << argv[0]
-         << " <output file name> {<input file name>}+\n";
+         << " [--copy|--extlink] <output file name> {<input file name>}\n";
     return 1;
   }
+  if (action == action_unset) {
+    action = action_copy;
+  }
 
-  const string outputfilename = argv[1];
   const string basename = get_basename(outputfilename);
   assert(!basename.empty());
 
@@ -61,14 +101,13 @@ int main(int argc, char **argv) {
     basis->createBasisVector(dirnames[d], d);
   }
 
-  for (int argi = 2; argi < argc; ++argi) {
-    auto inputfilename = argv[argi];
+  for (const auto &inputfilename : inputfilenames) {
     cout << "Reading file " << inputfilename << "...\n";
 
-    auto file = H5::H5File(inputfilename, H5F_ACC_RDONLY);
+    auto inputfile = H5::H5File(inputfilename, H5F_ACC_RDONLY);
     hsize_t idx = 0;
     H5::iterateElems(
-        file, H5_INDEX_NAME, H5_ITER_NATIVE, &idx,
+        inputfile, H5_INDEX_NAME, H5_ITER_NATIVE, &idx,
         [&](const H5::Group &group, const std::string &name,
             const H5L_info_t *info) {
           if (name == "Parameters and Global Attributes") {
@@ -235,7 +274,16 @@ int main(int argc, char **argv) {
           auto discretefieldblockdata =
               discretefieldblock->discretefieldblockdata.at(
                   tensorcomponent->name);
-          discretefieldblockdata->setData(inputfilename, name);
+          switch (action) {
+          case action_copy:
+            discretefieldblockdata->setData(inputfile, name);
+            break;
+          case action_extlink:
+            discretefieldblockdata->setData(inputfilename, name);
+            break;
+          default:
+            assert(0);
+          }
           // Done
           return 0;
         });
