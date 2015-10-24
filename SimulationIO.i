@@ -145,8 +145,11 @@ struct DiscreteFieldBlockData {
   string name;
   std::weak_ptr<DiscreteFieldBlock> discretefieldblock;
   std::shared_ptr<TensorComponent> tensorcomponent;
+  H5::DataSet data_dataset;
   bool invariant() const;
-};
+  string getPath() const;
+  string getName() const;
+  };
 
 struct Discretization {
   string name;
@@ -233,6 +236,7 @@ struct Project {
                 const std::shared_ptr<TensorType>& tensortype);
 };
 std::shared_ptr<Project> createProject(const string& name);
+std::shared_ptr<Project> createProject(const H5::CommonFG &loc);
 
 struct TangentSpace {
   string name;

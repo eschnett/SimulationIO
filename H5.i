@@ -12,6 +12,9 @@ enum {
   H5F_ACC_TRUNC, H5F_ACC_EXCL, H5F_ACC_RDONLY, H5F_ACC_RDWR, H5F_ACC_DEBUG
 };
 namespace H5 {
+  struct DataSet {
+    int getId() const;
+  };
   struct Group;
   %nodefaultctor CommonFG;
   struct CommonFG {
