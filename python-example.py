@@ -26,14 +26,31 @@ blocks = []
 for i in range(ngrids):
     blocks.append(discretization.createDiscretizationBlock("grid.%d" % i))
 
-# Coordinate system, Basis for TangentSpace
-coordinatesystem = project.createCoordinateSystem(
-    "Cartesian", configuration, manifold)
+# Basis for TangentSpace
 basis = tangentspace.createBasis("Cartesian", configuration)
 dirnames = ["x", "y", "z"]
 directions = []
 for d in range(dim):
     directions.append(basis.createBasisVector(dirnames[d], d))
+
+# Coordinate system
+coordinatesystem = project.createCoordinateSystem(
+    "Cartesian", configuration, manifold)
+coordinates = []
+for d in range(dim):
+    field = project.createField(
+        dirnames[d], configuration, manifold, tangentspace, scalar3d)
+    discretefield = field.createDiscreteField(
+        field.name, configuration, discretization, basis)
+    for i in range(ngrids):
+        block = discretefield.createDiscreteFieldBlock(
+            "%s-%s" % (discretefield.name, blocks[i].name), blocks[i])
+        scalar3d_component = scalar3d.storage_indices[0]
+        component = block.createDiscreteFieldBlockComponent(
+            block.name, scalar3d_component)
+        # TODO: Write coordinate information
+    coordinates.append(
+        coordinatesystem.createCoordinateField(dirnames[d], d, field))
 
 # Fields
 rho = project.createField(
