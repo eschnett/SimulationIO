@@ -356,6 +356,7 @@ inline herr_t createExternalLink(const CommonFG &link_loc,
 inline void readExternalLink(const CommonFG &link_loc,
                              const std::string &link_name, bool &link_exists,
                              std::string &file_name, std::string &obj_name) {
+  link_exists = false;
   auto lapl = take_hid(H5Pcreate(H5P_LINK_ACCESS));
   assert(lapl.valid());
   auto exists = H5Lexists(link_loc.getLocId(), link_name.c_str(), lapl);
