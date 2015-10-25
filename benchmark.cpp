@@ -78,7 +78,7 @@ int main(int argc, char **argv) {
           discretefield->name + "-" + blocks.at(i)->name, blocks.at(i));
       for (int d = 0; d < dim; ++d) {
         auto vector3d_component = vector3d->storage_indices.at(d);
-        auto field_component = field_block->createDiscreteFieldBlockData(
+        auto field_component = field_block->createDiscreteFieldBlockComponent(
             field_block->name + "-" + dirnames[d], vector3d_component);
         (void)field_component;
       }

@@ -1,6 +1,6 @@
 #include "DiscreteFieldBlock.hpp"
 
-#include "DiscreteFieldBlockData.hpp"
+#include "DiscreteFieldBlockComponent.hpp"
 #include "DiscretizationBlock.hpp"
 
 #include "H5Helpers.hpp"
@@ -22,9 +22,9 @@ void DiscreteFieldBlock::read(const H5::CommonFG &loc, const string &entry,
   // looking at their names
   discretizationblock = discretefield->discretization->discretizationblocks.at(
       H5::readGroupAttribute<string>(group, "discretizationblock", "name"));
-  H5::readGroup(group, "discretefieldblockdata",
+  H5::readGroup(group, "discretefieldblockcomponent",
                 [&](const H5::Group &group, const string &name) {
-                  createDiscreteFieldBlockData(group, name);
+                  createDiscreteFieldBlockComponent(group, name);
                 });
   discretizationblock->noinsert(shared_from_this());
 }
@@ -33,7 +33,7 @@ ostream &DiscreteFieldBlock::output(ostream &os, int level) const {
   os << indent(level) << "DiscreteFieldBlock " << quote(name)
      << ": DiscreteField " << quote(discretefield.lock()->name)
      << " DiscretizationBlock " << quote(discretizationblock->name) << "\n";
-  for (const auto &dfbd : discretefieldblockdata)
+  for (const auto &dfbd : discretefieldblockcomponent)
     dfbd.second->output(os, level + 1);
   return os;
 }
@@ -51,28 +51,28 @@ void DiscreteFieldBlock::write(const H5::CommonFG &loc,
   H5::createHardLink(group, "discretizationblock", parent,
                      string("discretization/discretizationblocks/") +
                          discretizationblock->name);
-  H5::createGroup(group, "discretefieldblockdata", discretefieldblockdata);
+  H5::createGroup(group, "discretefieldblockcomponent", discretefieldblockcomponent);
 }
 
-shared_ptr<DiscreteFieldBlockData>
-DiscreteFieldBlock::createDiscreteFieldBlockData(
+shared_ptr<DiscreteFieldBlockComponent>
+DiscreteFieldBlock::createDiscreteFieldBlockComponent(
     const string &name, const shared_ptr<TensorComponent> &tensorcomponent) {
-  auto discretefieldblockdata =
-      DiscreteFieldBlockData::create(name, shared_from_this(), tensorcomponent);
-  checked_emplace(this->discretefieldblockdata, discretefieldblockdata->name,
-                  discretefieldblockdata);
-  assert(discretefieldblockdata->invariant());
-  return discretefieldblockdata;
+  auto discretefieldblockcomponent =
+      DiscreteFieldBlockComponent::create(name, shared_from_this(), tensorcomponent);
+  checked_emplace(this->discretefieldblockcomponent, discretefieldblockcomponent->name,
+                  discretefieldblockcomponent);
+  assert(discretefieldblockcomponent->invariant());
+  return discretefieldblockcomponent;
 }
 
-shared_ptr<DiscreteFieldBlockData>
-DiscreteFieldBlock::createDiscreteFieldBlockData(const H5::CommonFG &loc,
+shared_ptr<DiscreteFieldBlockComponent>
+DiscreteFieldBlock::createDiscreteFieldBlockComponent(const H5::CommonFG &loc,
                                                  const string &entry) {
-  auto discretefieldblockdata =
-      DiscreteFieldBlockData::create(loc, entry, shared_from_this());
-  checked_emplace(this->discretefieldblockdata, discretefieldblockdata->name,
-                  discretefieldblockdata);
-  assert(discretefieldblockdata->invariant());
-  return discretefieldblockdata;
+  auto discretefieldblockcomponent =
+      DiscreteFieldBlockComponent::create(loc, entry, shared_from_this());
+  checked_emplace(this->discretefieldblockcomponent, discretefieldblockcomponent->name,
+                  discretefieldblockcomponent);
+  assert(discretefieldblockcomponent->invariant());
+  return discretefieldblockcomponent;
 }
 }

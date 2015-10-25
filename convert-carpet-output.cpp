@@ -309,20 +309,20 @@ int main(int argc, char **argv) {
           auto discretefieldblock =
               discretefield->discretefieldblocks.at(discretizationblock->name);
           // Get discrete field block data
-          if (!discretefieldblock->discretefieldblockdata.count(
+          if (!discretefieldblock->discretefieldblockcomponent.count(
                   tensorcomponent->name)) {
-            discretefieldblock->createDiscreteFieldBlockData(
+            discretefieldblock->createDiscreteFieldBlockComponent(
                 tensorcomponent->name, tensorcomponent);
           }
-          auto discretefieldblockdata =
-              discretefieldblock->discretefieldblockdata.at(
+          auto discretefieldblockcomponent =
+              discretefieldblock->discretefieldblockcomponent.at(
                   tensorcomponent->name);
           switch (action) {
           case action_copy:
-            discretefieldblockdata->setData(inputfile, name);
+            discretefieldblockcomponent->setData(inputfile, name);
             break;
           case action_extlink:
-            discretefieldblockdata->setData(inputfilename, name);
+            discretefieldblockcomponent->setData(inputfilename, name);
             break;
           default:
             assert(0);

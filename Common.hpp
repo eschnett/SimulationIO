@@ -62,7 +62,7 @@ public:
     type_BasisVector = 2,
     type_DiscreteField = 3,
     type_DiscreteFieldBlock = 4,
-    type_DiscreteFieldBlockData = 5,
+    type_DiscreteFieldBlockComponent = 5,
     type_Discretization = 6,
     type_DiscretizationBlock = 7,
     type_Field = 8,

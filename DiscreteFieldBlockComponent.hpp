@@ -1,5 +1,5 @@
-#ifndef DISCRETEFIELDBLOCKDATA_HPP
-#define DISCRETEFIELDBLOCKDATA_HPP
+#ifndef DISCRETEFIELDBLOCKCOMPONENT_HPP
+#define DISCRETEFIELDBLOCKCOMPONENT_HPP
 
 #include "Common.hpp"
 #include "DiscreteFieldBlock.hpp"
@@ -21,9 +21,9 @@ using std::shared_ptr;
 using std::string;
 using std::weak_ptr;
 
-struct DiscreteFieldBlockData
+struct DiscreteFieldBlockComponent
     : Common,
-      std::enable_shared_from_this<DiscreteFieldBlockData> {
+      std::enable_shared_from_this<DiscreteFieldBlockComponent> {
   // Tensor component for a discrete field on a particular region
   weak_ptr<DiscreteFieldBlock> discretefieldblock; // parent
   shared_ptr<TensorComponent> tensorcomponent;     // without backlink
@@ -38,17 +38,17 @@ struct DiscreteFieldBlockData
   virtual bool invariant() const {
     bool inv =
         Common::invariant() && bool(discretefieldblock.lock()) &&
-        discretefieldblock.lock()->discretefieldblockdata.count(name) &&
-        discretefieldblock.lock()->discretefieldblockdata.at(name).get() ==
+        discretefieldblock.lock()->discretefieldblockcomponent.count(name) &&
+        discretefieldblock.lock()->discretefieldblockcomponent.at(name).get() ==
             this &&
         bool(tensorcomponent) &&
-        tensorcomponent->discretefieldblockdata.nobacklink() &&
+        tensorcomponent->discretefieldblockcomponent.nobacklink() &&
         discretefieldblock.lock()
                 ->discretefield.lock()
                 ->field.lock()
                 ->tensortype.get() == tensorcomponent->tensortype.lock().get();
     // Ensure all discrete field block data have different tensor components
-    for (const auto &dfbd : discretefieldblock.lock()->discretefieldblockdata)
+    for (const auto &dfbd : discretefieldblock.lock()->discretefieldblockcomponent)
       if (dfbd.second.get() != this)
         inv &= dfbd.second->tensorcomponent.get() != tensorcomponent.get();
     inv &= (data_type == type_empty || data_type == type_dataset ||
@@ -60,43 +60,43 @@ struct DiscreteFieldBlockData
     return inv;
   }
 
-  DiscreteFieldBlockData() = delete;
-  DiscreteFieldBlockData(const DiscreteFieldBlockData &) = delete;
-  DiscreteFieldBlockData(DiscreteFieldBlockData &&) = delete;
-  DiscreteFieldBlockData &operator=(const DiscreteFieldBlockData &) = delete;
-  DiscreteFieldBlockData &operator=(DiscreteFieldBlockData &&) = delete;
+  DiscreteFieldBlockComponent() = delete;
+  DiscreteFieldBlockComponent(const DiscreteFieldBlockComponent &) = delete;
+  DiscreteFieldBlockComponent(DiscreteFieldBlockComponent &&) = delete;
+  DiscreteFieldBlockComponent &operator=(const DiscreteFieldBlockComponent &) = delete;
+  DiscreteFieldBlockComponent &operator=(DiscreteFieldBlockComponent &&) = delete;
 
   friend struct DiscreteFieldBlock;
-  DiscreteFieldBlockData(
+  DiscreteFieldBlockComponent(
       hidden, const string &name,
       const shared_ptr<DiscreteFieldBlock> &discretefieldblock,
       const shared_ptr<TensorComponent> &tensorcomponent)
       : Common(name), discretefieldblock(discretefieldblock),
         tensorcomponent(tensorcomponent), data_type(type_empty) {}
-  DiscreteFieldBlockData(hidden) : Common(hidden()) {}
+  DiscreteFieldBlockComponent(hidden) : Common(hidden()) {}
 
 private:
-  static shared_ptr<DiscreteFieldBlockData>
+  static shared_ptr<DiscreteFieldBlockComponent>
   create(const string &name,
          const shared_ptr<DiscreteFieldBlock> &discretefieldblock,
          const shared_ptr<TensorComponent> &tensorcomponent) {
-    auto discretefieldblockdata = make_shared<DiscreteFieldBlockData>(
+    auto discretefieldblockcomponent = make_shared<DiscreteFieldBlockComponent>(
         hidden(), name, discretefieldblock, tensorcomponent);
-    tensorcomponent->noinsert(discretefieldblockdata);
-    return discretefieldblockdata;
+    tensorcomponent->noinsert(discretefieldblockcomponent);
+    return discretefieldblockcomponent;
   }
-  static shared_ptr<DiscreteFieldBlockData>
+  static shared_ptr<DiscreteFieldBlockComponent>
   create(const H5::CommonFG &loc, const string &entry,
          const shared_ptr<DiscreteFieldBlock> &discretefieldblock) {
-    auto discretefieldblockdata = make_shared<DiscreteFieldBlockData>(hidden());
-    discretefieldblockdata->read(loc, entry, discretefieldblock);
-    return discretefieldblockdata;
+    auto discretefieldblockcomponent = make_shared<DiscreteFieldBlockComponent>(hidden());
+    discretefieldblockcomponent->read(loc, entry, discretefieldblock);
+    return discretefieldblockcomponent;
   }
   void read(const H5::CommonFG &loc, const string &entry,
             const shared_ptr<DiscreteFieldBlock> &discretefieldblock);
 
 public:
-  virtual ~DiscreteFieldBlockData() {}
+  virtual ~DiscreteFieldBlockComponent() {}
 
   string getPath() const;
   string getName() const;
@@ -108,16 +108,16 @@ public:
   virtual ostream &output(ostream &os, int level = 0) const;
   friend ostream &
   operator<<(ostream &os,
-             const DiscreteFieldBlockData &discretefieldblockdata) {
-    return discretefieldblockdata.output(os);
+             const DiscreteFieldBlockComponent &discretefieldblockcomponent) {
+    return discretefieldblockcomponent.output(os);
   }
   virtual void write(const H5::CommonFG &loc,
                      const H5::H5Location &parent) const;
 };
 }
 
-#define DISCRETEFIELDBLOCKDATA_HPP_DONE
-#endif // #ifndef DISCRETEFIELDBLOCKDATA_HPP
-#ifndef DISCRETEFIELDBLOCKDATA_HPP_DONE
+#define DISCRETEFIELDBLOCKCOMPONENT_HPP_DONE
+#endif // #ifndef DISCRETEFIELDBLOCKCOMPONENT_HPP
+#ifndef DISCRETEFIELDBLOCKCOMPONENT_HPP_DONE
 #error "Cyclic include depencency"
 #endif

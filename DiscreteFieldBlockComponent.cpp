@@ -1,4 +1,4 @@
-#include "DiscreteFieldBlockData.hpp"
+#include "DiscreteFieldBlockComponent.hpp"
 
 #include "H5Helpers.hpp"
 
@@ -8,7 +8,7 @@ namespace SimulationIO {
 
 using std::ostringstream;
 
-void DiscreteFieldBlockData::read(
+void DiscreteFieldBlockComponent::read(
     const H5::CommonFG &loc, const string &entry,
     const shared_ptr<DiscreteFieldBlock> &discretefieldblock) {
   this->discretefieldblock = discretefieldblock;
@@ -17,7 +17,7 @@ void DiscreteFieldBlockData::read(
                                    discretefieldblock->discretefield.lock()
                                        ->field.lock()
                                        ->project.lock()
-                                       ->enumtype) == "DiscreteFieldBlockData");
+                                       ->enumtype) == "DiscreteFieldBlockComponent");
   H5::readAttribute(group, "name", name);
   assert(H5::readGroupAttribute<string>(group, "discretefieldblock", "name") ==
          discretefieldblock->name);
@@ -57,18 +57,18 @@ void DiscreteFieldBlockData::read(
   tensorcomponent->noinsert(shared_from_this());
 }
 
-string DiscreteFieldBlockData::getPath() const {
+string DiscreteFieldBlockComponent::getPath() const {
   const auto &discretefield = discretefieldblock.lock()->discretefield;
   const auto &field = discretefield.lock()->field;
   ostringstream buf;
   buf << "fields/" << field.lock()->name << "/discretefields/"
       << discretefield.lock()->name << "/discretefieldblocks/"
-      << discretefieldblock.lock()->name << "/discretefieldblockdata/" << name;
+      << discretefieldblock.lock()->name << "/discretefieldblockcomponent/" << name;
   return buf.str();
 }
-string DiscreteFieldBlockData::getName() const { return "data"; }
+string DiscreteFieldBlockComponent::getName() const { return "data"; }
 
-void DiscreteFieldBlockData::setData() {
+void DiscreteFieldBlockComponent::setData() {
   data_type = type_empty;
   data_dataspace = H5::DataSpace();
   data_datatype = H5::DataType();
@@ -79,7 +79,7 @@ void DiscreteFieldBlockData::setData() {
   data_copy_name.clear();
 }
 
-void DiscreteFieldBlockData::setData(const H5::DataType &datatype,
+void DiscreteFieldBlockComponent::setData(const H5::DataType &datatype,
                                      const H5::DataSpace &dataspace) {
   if (data_type != type_empty)
     setData();
@@ -88,7 +88,7 @@ void DiscreteFieldBlockData::setData(const H5::DataType &datatype,
   data_dataspace = dataspace;
 }
 
-void DiscreteFieldBlockData::setData(const string &filename,
+void DiscreteFieldBlockComponent::setData(const string &filename,
                                      const string &objname) {
   if (data_type != type_empty)
     setData();
@@ -97,7 +97,7 @@ void DiscreteFieldBlockData::setData(const string &filename,
   data_extlink_objname = objname;
 }
 
-void DiscreteFieldBlockData::setData(const H5::H5Location &loc,
+void DiscreteFieldBlockComponent::setData(const H5::H5Location &loc,
                                      const string &name) {
   if (data_type != type_empty)
     setData();
@@ -106,8 +106,8 @@ void DiscreteFieldBlockData::setData(const H5::H5Location &loc,
   data_copy_name = name;
 }
 
-ostream &DiscreteFieldBlockData::output(ostream &os, int level) const {
-  os << indent(level) << "DiscreteFieldBlockData " << quote(name)
+ostream &DiscreteFieldBlockComponent::output(ostream &os, int level) const {
+  os << indent(level) << "DiscreteFieldBlockComponent " << quote(name)
      << ": DiscreteFieldBlock " << quote(discretefieldblock.lock()->name)
      << " TensorComponent " << quote(tensorcomponent->name) << "\n";
   os << indent(level + 1) << "data: ";
@@ -132,7 +132,7 @@ ostream &DiscreteFieldBlockData::output(ostream &os, int level) const {
   return os;
 }
 
-void DiscreteFieldBlockData::write(const H5::CommonFG &loc,
+void DiscreteFieldBlockComponent::write(const H5::CommonFG &loc,
                                    const H5::H5Location &parent) const {
   assert(invariant());
   auto group = loc.createGroup(name);
@@ -141,7 +141,7 @@ void DiscreteFieldBlockData::write(const H5::CommonFG &loc,
                                          ->field.lock()
                                          ->project.lock()
                                          ->enumtype,
-                      "DiscreteFieldBlockData");
+                      "DiscreteFieldBlockComponent");
   H5::createAttribute(group, "name", name);
   H5::createHardLink(group, "discretefieldblock", parent, ".");
   H5::createHardLink(

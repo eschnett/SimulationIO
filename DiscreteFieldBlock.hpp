@@ -21,15 +21,15 @@ using std::shared_ptr;
 using std::string;
 using std::weak_ptr;
 
-struct DiscreteFieldBlockData;
+struct DiscreteFieldBlockComponent;
 
 struct DiscreteFieldBlock : Common,
                             std::enable_shared_from_this<DiscreteFieldBlock> {
   // Discrete field on a particular region (discretization block)
   weak_ptr<DiscreteField> discretefield;               // parent
   shared_ptr<DiscretizationBlock> discretizationblock; // with backlink
-  map<string, shared_ptr<DiscreteFieldBlockData>>
-      discretefieldblockdata; // children
+  map<string, shared_ptr<DiscreteFieldBlockComponent>>
+      discretefieldblockcomponent; // children
 
   virtual bool invariant() const {
     return Common::invariant() && bool(discretefield.lock()) &&
@@ -81,10 +81,10 @@ public:
   virtual void write(const H5::CommonFG &loc,
                      const H5::H5Location &parent) const;
 
-  shared_ptr<DiscreteFieldBlockData> createDiscreteFieldBlockData(
+  shared_ptr<DiscreteFieldBlockComponent> createDiscreteFieldBlockComponent(
       const string &name, const shared_ptr<TensorComponent> &tensorcomponent);
-  shared_ptr<DiscreteFieldBlockData>
-  createDiscreteFieldBlockData(const H5::CommonFG &loc, const string &entry);
+  shared_ptr<DiscreteFieldBlockComponent>
+  createDiscreteFieldBlockComponent(const H5::CommonFG &loc, const string &entry);
 };
 }
 

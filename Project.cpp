@@ -108,8 +108,8 @@ void Project::createTypes() const {
   insertEnumField(enumtype, "CoordinateSystem", type_CoordinateSystem);
   insertEnumField(enumtype, "DiscreteField", type_DiscreteField);
   insertEnumField(enumtype, "DiscreteFieldBlock", type_DiscreteFieldBlock);
-  insertEnumField(enumtype, "DiscreteFieldBlockData",
-                  type_DiscreteFieldBlockData);
+  insertEnumField(enumtype, "DiscreteFieldBlockComponent",
+                  type_DiscreteFieldBlockComponent);
   insertEnumField(enumtype, "Discretization", type_Discretization);
   insertEnumField(enumtype, "DiscretizationBlock", type_DiscretizationBlock);
   insertEnumField(enumtype, "Field", type_Field);

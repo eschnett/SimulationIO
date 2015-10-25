@@ -45,13 +45,33 @@ int main(int argc, char **argv) {
     blocks.push_back(discretization->createDiscretizationBlock(name.str()));
   }
 
-  // Coordinate system, basis for TangentSpace
-  auto coordinatesystem =
-      project->createCoordinateSystem("Cartesian", configuration, manifold);
+  // Basis for TangentSpace
   auto basis = tangentspace->createBasis("Cartesian", configuration);
   vector<shared_ptr<BasisVector>> directions;
   for (int d = 0; d < dim; ++d) {
     directions.push_back(basis->createBasisVector(dirnames[d], d));
+  }
+
+  // Coordinate System
+  auto coordinatesystem =
+      project->createCoordinateSystem("Cartesian", configuration, manifold);
+  vector<shared_ptr<CoordinateField>> coordinates;
+  for (int d = 0; d < dim; ++d) {
+    auto field = project->createField(dirnames[d], configuration, manifold,
+                                      tangentspace, scalar3d);
+    auto discretefield = field->createDiscreteField(field->name, configuration,
+                                                    discretization, basis);
+    for (int i = 0; i < ngrids; ++i) {
+      auto block = discretefield->createDiscreteFieldBlock(
+          discretefield->name + "-" + blocks.at(i)->name, blocks.at(i));
+      const auto &scalar3d_component = scalar3d->storage_indices.at(0);
+      auto component = block->createDiscreteFieldBlockComponent(
+          block->name, scalar3d_component);
+      // TODO: Write coordinate information
+      (void)component;
+    }
+    coordinates.push_back(
+        coordinatesystem->createCoordinateField(dirnames[d], d, field));
   }
 
   // Fields
@@ -70,14 +90,16 @@ int main(int argc, char **argv) {
     auto vel_block = discretized_vel->createDiscreteFieldBlock(
         vel->name + "-" + blocks.at(i)->name, blocks.at(i));
     // Create tensor components for this region
-    auto scalar3d_component = scalar3d->storage_indices.at(0);
-    auto rho_component = rho_block->createDiscreteFieldBlockData(
+    const auto &scalar3d_component = scalar3d->storage_indices.at(0);
+    auto rho_component = rho_block->createDiscreteFieldBlockComponent(
         rho_block->name, scalar3d_component);
+    // TODO: write data
     (void)rho_component;
     for (int d = 0; d < dim; ++d) {
-      auto vector3d_component = vector3d->storage_indices.at(d);
-      auto vel_component = vel_block->createDiscreteFieldBlockData(
+      const auto &vector3d_component = vector3d->storage_indices.at(d);
+      auto vel_component = vel_block->createDiscreteFieldBlockComponent(
           vel_block->name + "-" + dirnames[d], vector3d_component);
+      // TODO: write data
       (void)vel_component;
     }
   }

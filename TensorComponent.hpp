@@ -19,13 +19,13 @@ using std::string;
 using std::vector;
 using std::weak_ptr;
 
-struct DiscreteFieldBlockData;
+struct DiscreteFieldBlockComponent;
 
 struct TensorComponent : Common, std::enable_shared_from_this<TensorComponent> {
   weak_ptr<TensorType> tensortype; // parent
   int storage_index;
   vector<int> indexvalues;
-  NoBackLink<weak_ptr<DiscreteFieldBlockData>> discretefieldblockdata;
+  NoBackLink<weak_ptr<DiscreteFieldBlockComponent>> discretefieldblockcomponent;
 
   virtual bool invariant() const {
     bool inv =
@@ -101,9 +101,9 @@ public:
                      const H5::H5Location &parent) const;
 
 private:
-  friend struct DiscreteFieldBlockData;
+  friend struct DiscreteFieldBlockComponent;
   void
-  noinsert(const shared_ptr<DiscreteFieldBlockData> &discretefieldblockdata) {}
+  noinsert(const shared_ptr<DiscreteFieldBlockComponent> &discretefieldblockcomponent) {}
 };
 }
 

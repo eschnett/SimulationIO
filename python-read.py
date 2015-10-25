@@ -18,9 +18,11 @@ project = createProject(file)
 
 field = project.fields['GRID::r']
 discretefield = field.discretefields['GRID::r']
-discretefieldblock = discretefield.discretefieldblocks['iteration.0-timelevel.0-m.0-rl.0']
-discretefieldblockdata = discretefieldblock.discretefieldblockdata['scalar']
-dataset = discretefieldblockdata.data_dataset
+discretefieldblock =
+    discretefield.discretefieldblocks['iteration.0-timelevel.0-m.0-rl.0']
+discretefieldblockcomponent =
+    discretefieldblock.discretefieldblockcomponent['scalar']
+dataset = discretefieldblockcomponent.data_dataset
 path = discretefieldblockdata.getPath()
 name = discretefieldblockdata.getName()
 
@@ -52,9 +54,11 @@ print "Average radius: %g" % ravg
 file = h5py.File(filename, 'r')
 field = file['fields']['GRID::r']
 discretefield = field['discretefields']['GRID::r']
-discretefieldblock = discretefield['discretefieldblocks']['iteration.0-timelevel.0-m.0-rl.0']
-discretefieldblockdata = discretefieldblock['discretefieldblockdata']['scalar']
-data = discretefieldblockdata['data']
+discretefieldblock =
+    discretefield['discretefieldblocks']['iteration.0-timelevel.0-m.0-rl.0']
+discretefieldblockcomponent =
+    discretefieldblock['discretefieldblockcomponent']['scalar']
+data = discretefieldblockcomponentdata']
 
 rsum = 0.0
 rcount = 0.0

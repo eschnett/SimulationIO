@@ -21,7 +21,7 @@
 #include "CoordinateSystem.hpp"
 #include "DiscreteField.hpp"
 #include "DiscreteFieldBlock.hpp"
-#include "DiscreteFieldBlockData.hpp"
+#include "DiscreteFieldBlockComponent.hpp"
 #include "Discretization.hpp"
 #include "DiscretizationBlock.hpp"
 #include "Field.hpp"

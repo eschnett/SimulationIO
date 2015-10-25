@@ -610,7 +610,7 @@ TEST(DiscreteFieldBlock, HDF5) {
   remove(filename);
 }
 
-TEST(DiscreteFieldBlockData, create) {
+TEST(DiscreteFieldBlockComponent, create) {
   const auto &f1 = project->fields.at("f1");
   const auto &df1 = f1->discretefields.at("df1");
   const auto &dfb1 = df1->discretefieldblocks.at("dfb1");
@@ -618,31 +618,31 @@ TEST(DiscreteFieldBlockData, create) {
   const auto &bx1 = tt1->tensorcomponents.at("0");
   const auto &by1 = tt1->tensorcomponents.at("1");
   const auto &bz1 = tt1->tensorcomponents.at("2");
-  EXPECT_TRUE(dfb1->discretefieldblockdata.empty());
-  auto dfbd1 = dfb1->createDiscreteFieldBlockData("dfbd1", bx1);
-  auto dfbd2 = dfb1->createDiscreteFieldBlockData("dfbd2", by1);
-  auto dfbd3 = dfb1->createDiscreteFieldBlockData("dfbd3", bz1);
-  EXPECT_EQ(3, dfb1->discretefieldblockdata.size());
-  EXPECT_EQ(dfbd1, dfb1->discretefieldblockdata.at("dfbd1"));
-  EXPECT_EQ(dfbd2, dfb1->discretefieldblockdata.at("dfbd2"));
-  EXPECT_EQ(dfbd3, dfb1->discretefieldblockdata.at("dfbd3"));
-  EXPECT_EQ(DiscreteFieldBlockData::type_empty, dfbd1->data_type);
-  EXPECT_EQ(DiscreteFieldBlockData::type_empty, dfbd2->data_type);
-  EXPECT_EQ(DiscreteFieldBlockData::type_empty, dfbd3->data_type);
-  dfbd2->setData("discretizationfieldblockdata.h5",
+  EXPECT_TRUE(dfb1->discretefieldblockcomponent.empty());
+  auto dfbd1 = dfb1->createDiscreteFieldBlockComponent("dfbd1", bx1);
+  auto dfbd2 = dfb1->createDiscreteFieldBlockComponent("dfbd2", by1);
+  auto dfbd3 = dfb1->createDiscreteFieldBlockComponent("dfbd3", bz1);
+  EXPECT_EQ(3, dfb1->discretefieldblockcomponent.size());
+  EXPECT_EQ(dfbd1, dfb1->discretefieldblockcomponent.at("dfbd1"));
+  EXPECT_EQ(dfbd2, dfb1->discretefieldblockcomponent.at("dfbd2"));
+  EXPECT_EQ(dfbd3, dfb1->discretefieldblockcomponent.at("dfbd3"));
+  EXPECT_EQ(DiscreteFieldBlockComponent::type_empty, dfbd1->data_type);
+  EXPECT_EQ(DiscreteFieldBlockComponent::type_empty, dfbd2->data_type);
+  EXPECT_EQ(DiscreteFieldBlockComponent::type_empty, dfbd3->data_type);
+  dfbd2->setData("discretizationfieldblockcomponent.h5",
                  project->name + "/tensortypes/Scalar3D");
   const auto datatype = H5::getType(0.0);
   const int rank = 1;
   const hsize_t dims[rank] = {10};
   auto dataspace = H5::DataSpace(rank, dims);
   dfbd3->setData(datatype, dataspace);
-  EXPECT_EQ(DiscreteFieldBlockData::type_empty, dfbd1->data_type);
-  EXPECT_EQ(DiscreteFieldBlockData::type_extlink, dfbd2->data_type);
-  EXPECT_EQ(DiscreteFieldBlockData::type_dataset, dfbd3->data_type);
+  EXPECT_EQ(DiscreteFieldBlockComponent::type_empty, dfbd1->data_type);
+  EXPECT_EQ(DiscreteFieldBlockComponent::type_extlink, dfbd2->data_type);
+  EXPECT_EQ(DiscreteFieldBlockComponent::type_dataset, dfbd3->data_type);
 }
 
-TEST(DiscreteFieldBlockData, HDF5) {
-  auto filename = "discretizationfieldblockdata.h5";
+TEST(DiscreteFieldBlockComponent, HDF5) {
+  auto filename = "discretizationfieldblockcomponent.h5";
   {
     auto file = H5::H5File(filename, H5F_ACC_TRUNC);
     project->write(file);
@@ -656,15 +656,15 @@ TEST(DiscreteFieldBlockData, HDF5) {
                 ->discretefieldblocks.at("dfb1");
     EXPECT_EQ("DiscreteFieldBlock \"dfb1\": DiscreteField \"df1\" "
               "DiscretizationBlock \"db1\"\n"
-              "  DiscreteFieldBlockData \"dfbd1\": DiscreteFieldBlock \"dfb1\" "
+              "  DiscreteFieldBlockComponent \"dfbd1\": DiscreteFieldBlock \"dfb1\" "
               "TensorComponent \"0\"\n"
               "    data: empty\n"
-              "  DiscreteFieldBlockData \"dfbd2\": DiscreteFieldBlock \"dfb1\" "
+              "  DiscreteFieldBlockComponent \"dfbd2\": DiscreteFieldBlock \"dfb1\" "
               "TensorComponent \"1\"\n"
               "    data: external link to "
-              "\"discretizationfieldblockdata.h5\":\"p1/tensortypes/"
+              "\"discretizationfieldblockcomponent.h5\":\"p1/tensortypes/"
               "Scalar3D\"\n"
-              "  DiscreteFieldBlockData \"dfbd3\": DiscreteFieldBlock \"dfb1\" "
+              "  DiscreteFieldBlockComponent \"dfbd3\": DiscreteFieldBlock \"dfb1\" "
               "TensorComponent \"2\"\n"
               "    data: dataset\n",
               buf.str());

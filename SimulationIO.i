@@ -20,7 +20,7 @@
 %shared_ptr(Configuration);
 %shared_ptr(DiscreteField);
 %shared_ptr(DiscreteFieldBlock);
-%shared_ptr(DiscreteFieldBlockData);
+%shared_ptr(DiscreteFieldBlockComponent);
 %shared_ptr(Discretization);
 %shared_ptr(DiscretizationBlock);
 %shared_ptr(Field);
@@ -46,7 +46,7 @@ struct CoordinateSystem;
 struct Configuration;
 struct DiscreteField;
 struct DiscreteFieldBlock;
-struct DiscreteFieldBlockData;
+struct DiscreteFieldBlockComponent;
 struct Discretization;
 struct DiscretizationBlock;
 struct Field;
@@ -71,8 +71,8 @@ struct TensorType;
   std::map<string, std::shared_ptr<DiscreteField> >;
 %template(map_string_DiscreteFieldBlock)
   std::map<string, std::shared_ptr<DiscreteFieldBlock> >;
-%template(map_string_DiscreteFieldBlockData)
-  std::map<string, std::shared_ptr<DiscreteFieldBlockData> >;
+%template(map_string_DiscreteFieldBlockComponent)
+  std::map<string, std::shared_ptr<DiscreteFieldBlockComponent> >;
 %template(map_string_Discretization)
   std::map<string, std::shared_ptr<Discretization> >;
 %template(map_string_DiscretizationBlock)
@@ -173,17 +173,17 @@ struct DiscreteFieldBlock {
   string name;
   std::weak_ptr<DiscreteField> discretefield;
   std::shared_ptr<DiscretizationBlock> discretizationblock;
-  std::map<string, std::shared_ptr<DiscreteFieldBlockData> >
-    discretefieldblockdata;
+  std::map<string, std::shared_ptr<DiscreteFieldBlockComponent> >
+    discretefieldblockcomponent;
   bool invariant() const;
 
-  std::shared_ptr<DiscreteFieldBlockData>
-    createDiscreteFieldBlockData(const string& name,
-                                 const std::shared_ptr<TensorComponent>&
-                                   tensorcomponent);
+  std::shared_ptr<DiscreteFieldBlockComponent>
+    createDiscreteFieldBlockComponent(const string& name,
+                                      const std::shared_ptr<TensorComponent>&
+                                        tensorcomponent);
 };
 
-struct DiscreteFieldBlockData {
+struct DiscreteFieldBlockComponent {
   string name;
   std::weak_ptr<DiscreteFieldBlock> discretefieldblock;
   std::shared_ptr<TensorComponent> tensorcomponent;
