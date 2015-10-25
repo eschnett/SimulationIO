@@ -1,5 +1,6 @@
 #include "Manifold.hpp"
 
+#include "CoordinateSystem.hpp"
 #include "Discretization.hpp"
 #include "Field.hpp"
 
@@ -31,8 +32,10 @@ void Manifold::read(const H5::CommonFG &loc, const string &entry,
                 [&](const H5::Group &group, const string &name) {
                   createDiscretization(group, name);
                 });
-  // Cannot check "fields" since fields have not been read yet
+  // Cannot check "fields", "coordinatesystems" since they have not been read
+  // yet
   // assert(H5::checkGroupNames(group, "fields", fields));
+  // assert(H5::checkGroupNames(group, "coordinatesystems", fields));
   configuration->insert(name, shared_from_this());
 }
 
@@ -43,6 +46,9 @@ ostream &Manifold::output(ostream &os, int level) const {
     d.second->output(os, level + 1);
   for (const auto &f : fields)
     os << indent(level + 1) << "Field " << quote(f.second.lock()->name) << "\n";
+  for (const auto &cs : coordinatesystems)
+    os << indent(level + 1) << "CoordinateSystem "
+       << quote(cs.second.lock()->name) << "\n";
   return os;
 }
 
@@ -61,6 +67,7 @@ void Manifold::write(const H5::CommonFG &loc,
   H5::createAttribute(group, "dimension", dimension);
   H5::createGroup(group, "discretizations", discretizations);
   group.createGroup("fields");
+  group.createGroup("coordinatesystems");
 }
 
 shared_ptr<Discretization>

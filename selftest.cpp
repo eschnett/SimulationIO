@@ -374,6 +374,33 @@ TEST(Field, HDF5) {
   remove(filename);
 }
 
+TEST(CoordinateSystem, create) {
+  EXPECT_TRUE(project->coordinatesystems.empty());
+  const auto &conf1 = project->configurations.at("conf1");
+  const auto &m1 = project->manifolds.at("m1");
+  auto cs1 = project->createCoordinateSystem("cs1", conf1, m1);
+  EXPECT_EQ(1, project->coordinatesystems.size());
+  EXPECT_EQ(cs1, project->coordinatesystems.at("cs1"));
+}
+
+TEST(CoordinateSystem, HDF5) {
+  auto filename = "coordinatesystem.h5";
+  {
+    auto file = H5::H5File(filename, H5F_ACC_TRUNC);
+    project->write(file);
+  }
+  {
+    auto file = H5::H5File(filename, H5F_ACC_RDONLY);
+    auto p1 = createProject(file);
+    ostringstream buf;
+    buf << *p1->coordinatesystems.at("cs1");
+    EXPECT_EQ("CoordinateSystem \"cs1\": Configuration \"conf1\" Project "
+              "\"p1\" Manifold \"m1\"\n",
+              buf.str());
+  }
+  remove(filename);
+}
+
 TEST(Discretization, create) {
   const auto &m1 = project->manifolds.at("m1");
   EXPECT_TRUE(m1->discretizations.empty());
@@ -519,6 +546,35 @@ TEST(DiscreteField, HDF5) {
               "  DiscreteField \"df1\": Configuration \"conf1\" Field \"f1\" "
               "Discretization \"d1\" Basis \"b1\"\n",
               buf.str());
+  }
+  remove(filename);
+}
+
+TEST(CoordinateField, create) {
+  const auto &cs1 = project->coordinatesystems.at("cs1");
+  const auto &f1 = project->fields.at("f1");
+  EXPECT_TRUE(cs1->coordinatefields.empty());
+  auto csf1 = cs1->createCoordinateField("csf1", 0, f1);
+  EXPECT_EQ(1, cs1->coordinatefields.size());
+  EXPECT_EQ(csf1, cs1->coordinatefields.at("csf1"));
+}
+
+TEST(CoordinateField, HDF5) {
+  auto filename = "coordinatefield.h5";
+  {
+    auto file = H5::H5File(filename, H5F_ACC_TRUNC);
+    project->write(file);
+  }
+  {
+    auto file = H5::H5File(filename, H5F_ACC_RDONLY);
+    auto p1 = createProject(file);
+    ostringstream buf;
+    buf << *p1->coordinatesystems.at("cs1")->coordinatefields.at("csf1");
+    EXPECT_EQ(
+        "CoordinateField \"csf1\": CoordinateSystem \"cs1\" direction=0 Field "
+        "\"f1\"\n",
+
+        buf.str());
   }
   remove(filename);
 }

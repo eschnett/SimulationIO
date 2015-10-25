@@ -74,6 +74,8 @@ public:
     type_Configuration = 14,
     type_Parameter = 15,
     type_ParameterValue = 16,
+    type_CoordinateSystem = 17,
+    type_CoordinateField = 18,
   };
 };
 }

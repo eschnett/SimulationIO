@@ -45,7 +45,9 @@ int main(int argc, char **argv) {
     blocks.push_back(discretization->createDiscretizationBlock(name.str()));
   }
 
-  // Basis for TangentSpace
+  // Coordinate system, basis for TangentSpace
+  auto coordinatesystem =
+      project->createCoordinateSystem("Cartesian", configuration, manifold);
   auto basis = tangentspace->createBasis("Cartesian", configuration);
   vector<shared_ptr<BasisVector>> directions;
   for (int d = 0; d < dim; ++d) {

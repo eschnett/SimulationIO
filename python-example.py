@@ -26,7 +26,9 @@ blocks = []
 for i in range(ngrids):
     blocks.append(discretization.createDiscretizationBlock("grid.%d" % i))
 
-# Basis for TangentSpace
+# Coordinate system, Basis for TangentSpace
+coordinatesystem = project.createCoordinateSystem(
+    "Cartesian", configuration, manifold)
 basis = tangentspace.createBasis("Cartesian", configuration)
 dirnames = ["x", "y", "z"]
 directions = []

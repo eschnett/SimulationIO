@@ -12,6 +12,8 @@ SIO_SRCS = \
 	Basis.cpp \
 	BasisVector.cpp \
 	Configuration.cpp \
+	CoordinateField.cpp \
+	CoordinateSystem.cpp \
 	DiscreteField.cpp \
 	DiscreteFieldBlock.cpp \
 	DiscreteFieldBlockData.cpp \

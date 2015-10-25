@@ -22,6 +22,7 @@ using std::string;
 using std::weak_ptr;
 
 struct Basis;
+struct CoordinateSystem;
 struct DiscreteField;
 struct Discretization;
 struct Field;
@@ -30,14 +31,15 @@ struct ParameterValue;
 struct TangentSpace;
 
 struct Configuration : Common, std::enable_shared_from_this<Configuration> {
-  weak_ptr<Project> project;                               // parent
-  map<string, shared_ptr<ParameterValue>> parametervalues; // links
-  map<string, weak_ptr<Basis>> bases;                      // backlinks
-  map<string, weak_ptr<DiscreteField>> discretefields;     // backlinks
-  map<string, weak_ptr<Discretization>> discretizations;   // backlinks
-  map<string, weak_ptr<Field>> fields;                     // backlinks
-  map<string, weak_ptr<Manifold>> manifolds;               // backlinks
-  map<string, weak_ptr<TangentSpace>> tangentspaces;       // backlinks
+  weak_ptr<Project> project;                                 // parent
+  map<string, shared_ptr<ParameterValue>> parametervalues;   // links
+  map<string, weak_ptr<Basis>> bases;                        // backlinks
+  map<string, weak_ptr<CoordinateSystem>> coordinatesystems; // backlinks
+  map<string, weak_ptr<DiscreteField>> discretefields;       // backlinks
+  map<string, weak_ptr<Discretization>> discretizations;     // backlinks
+  map<string, weak_ptr<Field>> fields;                       // backlinks
+  map<string, weak_ptr<Manifold>> manifolds;                 // backlinks
+  map<string, weak_ptr<TangentSpace>> tangentspaces;         // backlinks
 
   virtual bool invariant() const {
     return Common::invariant() && bool(project.lock()) &&
@@ -85,6 +87,7 @@ public:
 
 private:
   friend struct Basis;
+  friend struct CoordinateSystem;
   friend struct DiscreteField;
   friend struct Discretization;
   friend struct Field;
@@ -92,6 +95,10 @@ private:
   friend struct TangentSpace;
   void insert(const string &name, const shared_ptr<Basis> &basis) {
     checked_emplace(bases, name, basis);
+  }
+  void insert(const string &name,
+              const shared_ptr<CoordinateSystem> &coordinatesystem) {
+    checked_emplace(coordinatesystems, name, coordinatesystem);
   }
   void insert(const string &name,
               const shared_ptr<DiscreteField> &discretefield) {

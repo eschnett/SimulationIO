@@ -24,6 +24,7 @@ using std::shared_ptr;
 using std::string;
 using std::weak_ptr;
 
+struct CoordinateField;
 struct Manifold;
 struct TangentSpace;
 struct TensorType;
@@ -36,6 +37,7 @@ struct Field : Common, std::enable_shared_from_this<Field> {
   shared_ptr<TangentSpace> tangentspace;                 // with backlink
   shared_ptr<TensorType> tensortype;                     // without backlink
   map<string, shared_ptr<DiscreteField>> discretefields; // children
+  NoBackLink<CoordinateField> coordinatefields;
 
   virtual bool invariant() const {
     bool inv = Common::invariant() && bool(project.lock()) &&
@@ -113,6 +115,10 @@ public:
                       const shared_ptr<Basis> &basis);
   shared_ptr<DiscreteField> createDiscreteField(const H5::CommonFG &loc,
                                                 const string &entry);
+
+private:
+  friend struct CoordinateField;
+  void noinsert(const shared_ptr<CoordinateField> &coordinatefield) {}
 };
 }
 

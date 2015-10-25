@@ -1,6 +1,7 @@
 #include "Project.hpp"
 
 #include "Configuration.hpp"
+#include "CoordinateSystem.hpp"
 #include "Field.hpp"
 #include "Manifold.hpp"
 #include "Parameter.hpp"
@@ -51,12 +52,10 @@ void Project::read(const H5::CommonFG &loc) {
                 [&](const H5::Group &group, const string &name) {
                   createField(group, name);
                 });
-  // TODO
-  // H5::readGroup(group, "coordinatesystems",
-  //                [&](const H5::Group &group, const string &name) {
-  //                  createCoordinateSystem(name, group);
-  //                },
-  //                coordinatesystems);
+  H5::readGroup(group, "coordinatesystems",
+                [&](const H5::Group &group, const string &name) {
+                  createCoordinateSystem(group, name);
+                });
 }
 
 void Project::createStandardTensorTypes() {
@@ -91,9 +90,8 @@ ostream &Project::output(ostream &os, int level) const {
     ts.second->output(os, level + 1);
   for (const auto &f : fields)
     f.second->output(os, level + 1);
-  // TODO
-  // for (const auto &cs : coordinatesystems)
-  //   cs.second->output(os, level + 1);
+  for (const auto &cs : coordinatesystems)
+    cs.second->output(os, level + 1);
   return os;
 }
 
@@ -106,6 +104,8 @@ void Project::createTypes() const {
   insertEnumField(enumtype, "Basis", type_Basis);
   insertEnumField(enumtype, "BasisVector", type_BasisVector);
   insertEnumField(enumtype, "Configuration", type_Configuration);
+  insertEnumField(enumtype, "CoordinateField", type_CoordinateField);
+  insertEnumField(enumtype, "CoordinateSystem", type_CoordinateSystem);
   insertEnumField(enumtype, "DiscreteField", type_DiscreteField);
   insertEnumField(enumtype, "DiscreteFieldBlock", type_DiscreteFieldBlock);
   insertEnumField(enumtype, "DiscreteFieldBlockData",
@@ -139,8 +139,7 @@ void Project::write(const H5::CommonFG &loc,
   H5::createGroup(group, "manifolds", manifolds);
   H5::createGroup(group, "tangentspaces", tangentspaces);
   H5::createGroup(group, "fields", fields);
-  // TODO
-  // H5::createGroup(group, "coordiantesystems", coordinatesystems);
+  H5::createGroup(group, "coordinatesystems", coordinatesystems);
 }
 
 shared_ptr<Parameter> Project::createParameter(const string &name) {
@@ -249,29 +248,23 @@ shared_ptr<Field> Project::createField(const H5::CommonFG &loc,
   return field;
 }
 
-// TODO
-// shared_ptr<CoordinateSystem>Project::createCoordinateSystem(const string
-// &name,
-//                                                   const
-//                                                   shared_ptr<Manifold>&manifold)
-//                                                   {
-//   auto coordinatesystem = new CoordinateSystem(name, shared_from_this(),
-//   manifold);
-//   checked_emplace(coordinatesystems,coordinatesystem->name,
-//   coordinatesystem);
-//   assert(coordinatesystem->invariant());
-//   return coordinatesystem;
-// }
-//
-// shared_ptr<CoordinateSystem>Project::createCoordinateSystem(const string
-// &name,
-//                                                   const H5::CommonFG &loc)
-//                                                   {
-//   auto coordinatesystem = new CoordinateSystem(name, shared_from_this(),
-//   loc);
-//   checked_emplace(coordinatesystems, coordinatesystem->name,
-//   coordinatesystem);
-//   assert(coordinatesystem->invariant());
-//   return coordinatesystem;
-// }
+shared_ptr<CoordinateSystem>
+Project::createCoordinateSystem(const string &name,
+                                const shared_ptr<Configuration> &configuration,
+                                const shared_ptr<Manifold> &manifold) {
+  auto coordinatesystem = CoordinateSystem::create(name, shared_from_this(),
+                                                   configuration, manifold);
+  checked_emplace(coordinatesystems, coordinatesystem->name, coordinatesystem);
+  assert(coordinatesystem->invariant());
+  return coordinatesystem;
+}
+
+shared_ptr<CoordinateSystem>
+Project::createCoordinateSystem(const H5::CommonFG &loc, const string &entry) {
+  auto coordinatesystem =
+      CoordinateSystem::create(loc, entry, shared_from_this());
+  checked_emplace(coordinatesystems, coordinatesystem->name, coordinatesystem);
+  assert(coordinatesystem->invariant());
+  return coordinatesystem;
+}
 }

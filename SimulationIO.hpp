@@ -17,6 +17,8 @@
 #include "BasisVector.hpp"
 #include "Common.hpp"
 #include "Configuration.hpp"
+#include "CoordinateField.hpp"
+#include "CoordinateSystem.hpp"
 #include "DiscreteField.hpp"
 #include "DiscreteFieldBlock.hpp"
 #include "DiscreteFieldBlockData.hpp"
@@ -49,26 +51,6 @@ using std::vector;
 // Coordinates
 
 struct CoordinateBasis;
-struct CoordinateField;
-
-struct CoordinateSystem {
-  string name;
-  shared_ptr<Manifold> manifold;
-  vector<shared_ptr<CoordinateField>> coordinatefields; // owned
-  map<string, shared_ptr<CoordinateBasis>> coordinatebases;
-  bool invariant() const { return true; }
-};
-
-struct CoordinateField {
-  shared_ptr<CoordinateSystem> coordinatesystem;
-  int direction;
-  shared_ptr<Field> field;
-  bool invariant() const {
-    return direction >= 0 &&
-           direction < int(coordinatesystem->coordinatefields.size()) &&
-           coordinatesystem->coordinatefields.at(direction).get() == this;
-  }
-};
 
 struct CoordinateBasisElement;
 

@@ -1,6 +1,7 @@
 #include "Configuration.hpp"
 
 #include "Basis.hpp"
+#include "CoordinateSystem.hpp"
 #include "DiscreteField.hpp"
 #include "Discretization.hpp"
 #include "Field.hpp"
@@ -32,9 +33,11 @@ void Configuration::read(const H5::CommonFG &loc, const string &entry,
            name);
     insertParameterValue(parametervalue);
   });
-  // Cannot check "bases", "discretefields", "discretizations", "fields",
-  // "manifolds", "tangentspaces" since they have not been read yet
+  // Cannot check "bases", "coordinatesystems", "discretefields",
+  // "discretizations", "fields", "manifolds", "tangentspaces" since they have
+  // not been read yet
   // assert(H5::checkGroupNames(group, "bases", manifolds));
+  // assert(H5::checkGroupNames(group, "coordinatesystems", manifolds));
   // assert(H5::checkGroupNames(group, "discretefields", manifolds));
   // assert(H5::checkGroupNames(group, "discretizations", manifolds));
   // assert(H5::checkGroupNames(group, "fields", manifolds));
@@ -50,6 +53,9 @@ ostream &Configuration::output(ostream &os, int level) const {
        << quote(val.second->name) << "\n";
   for (const auto &b : bases)
     os << indent(level + 1) << "Basis " << quote(b.second.lock()->name) << "\n";
+  for (const auto &cs : coordinatesystems)
+    os << indent(level + 1) << "CoordinateSystem "
+       << quote(cs.second.lock()->name) << "\n";
   for (const auto &df : discretefields)
     os << indent(level + 1) << "DiscreteField " << quote(df.second.lock()->name)
        << "\n";
@@ -87,6 +93,7 @@ void Configuration::write(const H5::CommonFG &loc,
                        name, group, ".");
   }
   group.createGroup("bases");
+  group.createGroup("coordinatesystems");
   group.createGroup("discretefields");
   group.createGroup("discretizations");
   group.createGroup("fields");

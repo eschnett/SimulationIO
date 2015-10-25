@@ -19,9 +19,6 @@ This repository contains a few sketches describing brainstorming results in vari
 - Add a UUID to every object
   - can't just create UUIDs
   - probably need to handle set of UUIDs?
-- Add "configuration" links to most entities
-- Implement coordinate systems
-- Implement writing/reading datasets, not just external links
 - Run benchmarks with large datasets
 - Add parallelism
 - Add sub-manifolds, sub-tangentspaces, etc.
@@ -32,3 +29,4 @@ This repository contains a few sketches describing brainstorming results in vari
 - Allow removing parts of a project, deleting it from a file?
 - Implement (value) equality comparison operators for our objects
 - Replace H5 SWIG interface with standard Python HDF5 library
+- Allow coordinates that are not fields, but are e.g. uniform, or uniform per dimension

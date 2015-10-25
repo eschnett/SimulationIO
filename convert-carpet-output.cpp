@@ -258,6 +258,36 @@ int main(int argc, char **argv) {
                                      tangentspace, tensortype);
           }
           auto field = project->fields.at(fieldname);
+
+          // Get coordinates
+          if (field->name == "GRID") {
+            string coordinatesystemname;
+            {
+              ostringstream buf;
+              buf << field->name << "-" << configuration->name;
+              coordinatesystemname = buf.str();
+            }
+            if (!project->coordinatesystems.count(coordinatesystemname)) {
+              project->createCoordinateSystem(coordinatesystemname,
+                                              configuration, manifold);
+            }
+            auto coordinatesystem =
+                project->coordinatesystems.at(coordinatesystemname);
+            // TODO: Handle scalar coordinate fields
+            assert(tensortype->rank == 1);
+            int direction = tensorcomponent->indexvalues.at(0);
+            string coordinatefieldname;
+            {
+              ostringstream buf;
+              buf << coordinatesystem->name << "-" << direction;
+              coordinatefieldname = buf.str();
+            }
+            if (!coordinatesystem->directions.count(direction)) {
+              coordinatesystem->createCoordinateField(coordinatefieldname,
+                                                      direction, field);
+            }
+          }
+
           // Get discrete field
           string discretefieldname;
           {
