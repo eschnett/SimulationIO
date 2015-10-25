@@ -16,14 +16,21 @@ void Discretization::read(const H5::CommonFG &loc, const string &entry,
   H5::readAttribute(group, "name", name);
   assert(H5::readGroupAttribute<string>(group, "manifold", "name") ==
          manifold->name);
+  configuration = manifold->project.lock()->configurations.at(
+      H5::readGroupAttribute<string>(group, "configuration", "name"));
+  assert(H5::readGroupAttribute<string>(
+             group, string("configuration/discretizations/") + name, "name") ==
+         name);
   H5::readGroup(group, "discretizationblocks",
                 [&](const H5::Group &group, const string &name) {
                   createDiscretizationBlock(group, name);
                 });
+  configuration->insert(name, shared_from_this());
 }
 
 ostream &Discretization::output(ostream &os, int level) const {
-  os << indent(level) << "Discretization " << quote(name) << ": Manifold "
+  os << indent(level) << "Discretization " << quote(name) << ": Configuration "
+     << quote(configuration->name) << " Manifold "
      << quote(manifold.lock()->name) << "\n";
   for (const auto &db : discretizationblocks)
     db.second->output(os, level + 1);
@@ -38,6 +45,11 @@ void Discretization::write(const H5::CommonFG &loc,
                       "Discretization");
   H5::createAttribute(group, "name", name);
   H5::createHardLink(group, "manifold", parent, ".");
+  H5::createHardLink(group, "configuration", parent,
+                     string("project/configurations/") + configuration->name);
+  H5::createHardLink(group, string("manifold/project/configurations/") +
+                                configuration->name + "/discretizations",
+                     name, group, ".");
   H5::createGroup(group, "discretizationblocks", discretizationblocks);
 }
 

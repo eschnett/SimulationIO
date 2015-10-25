@@ -3,6 +3,7 @@
 
 #include "Basis.hpp"
 #include "Common.hpp"
+#include "Configuration.hpp"
 #include "Discretization.hpp"
 #include "Field.hpp"
 
@@ -26,6 +27,7 @@ struct DiscreteFieldBlock;
 
 struct DiscreteField : Common, std::enable_shared_from_this<DiscreteField> {
   weak_ptr<Field> field;                     // parent
+  shared_ptr<Configuration> configuration;   // with backlink
   shared_ptr<Discretization> discretization; // with backlink
   shared_ptr<Basis> basis;                   // with backlink
   map<string, shared_ptr<DiscreteFieldBlock>> discretefieldblocks; // children
@@ -34,6 +36,8 @@ struct DiscreteField : Common, std::enable_shared_from_this<DiscreteField> {
     return Common::invariant() && bool(field.lock()) &&
            field.lock()->discretefields.count(name) &&
            field.lock()->discretefields.at(name).get() == this &&
+           bool(configuration) && configuration->discretefields.count(name) &&
+           configuration->discretefields.at(name).lock().get() == this &&
            bool(discretization) &&
            discretization->discretefields.nobacklink() &&
            field.lock()->manifold.get() ==
@@ -50,19 +54,23 @@ struct DiscreteField : Common, std::enable_shared_from_this<DiscreteField> {
 
   friend struct Field;
   DiscreteField(hidden, const string &name, const shared_ptr<Field> &field,
+                const shared_ptr<Configuration> &configuration,
                 const shared_ptr<Discretization> &discretization,
                 const shared_ptr<Basis> &basis)
-      : Common(name), field(field), discretization(discretization),
-        basis(basis) {}
+      : Common(name), field(field), configuration(configuration),
+        discretization(discretization), basis(basis) {}
   DiscreteField(hidden) : Common(hidden()) {}
 
 private:
   static shared_ptr<DiscreteField>
   create(const string &name, const shared_ptr<Field> &field,
+         const shared_ptr<Configuration> &configuration,
          const shared_ptr<Discretization> &discretization,
          const shared_ptr<Basis> &basis) {
-    return make_shared<DiscreteField>(hidden(), name, field, discretization,
-                                      basis);
+    auto discretefield = make_shared<DiscreteField>(
+        hidden(), name, field, configuration, discretization, basis);
+    configuration->insert(name, discretefield);
+    return discretefield;
   }
   static shared_ptr<DiscreteField> create(const H5::CommonFG &loc,
                                           const string &entry,

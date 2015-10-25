@@ -35,11 +35,12 @@ int main(int argc, char **argv) {
 
   // Manifold and TangentSpace, both 3D
   const int dim = 3;
-  auto manifold = project->createManifold("domain", dim);
-  auto tangentspace = project->createTangentSpace("space", dim);
+  auto manifold = project->createManifold("domain", configuration, dim);
+  auto tangentspace = project->createTangentSpace("space", configuration, dim);
 
   // Discretization for Manifold
-  auto discretization = manifold->createDiscretization("uniform");
+  auto discretization =
+      manifold->createDiscretization("uniform", configuration);
   const int ngrids = 100;
   vector<shared_ptr<DiscretizationBlock>> blocks;
   for (int i = 0; i < ngrids; ++i) {
@@ -49,7 +50,7 @@ int main(int argc, char **argv) {
   }
 
   // Basis for TangentSpace
-  auto basis = tangentspace->createBasis("Cartesian");
+  auto basis = tangentspace->createBasis("Cartesian", configuration);
   vector<shared_ptr<BasisVector>> directions;
   for (int d = 0; d < dim; ++d) {
     directions.push_back(basis->createBasisVector(dirnames[d], d));
@@ -62,11 +63,11 @@ int main(int argc, char **argv) {
   for (int f = 0; f < nfields; ++f) {
     ostringstream name;
     name << "field." << f;
-    auto field =
-        project->createField(name.str(), manifold, tangentspace, vector3d);
+    auto field = project->createField(name.str(), configuration, manifold,
+                                      tangentspace, vector3d);
     fields.push_back(field);
-    auto discretefield =
-        field->createDiscreteField(field->name, discretization, basis);
+    auto discretefield = field->createDiscreteField(field->name, configuration,
+                                                    discretization, basis);
     discretefields.push_back(discretefield);
   }
   for (int i = 0; i < ngrids; ++i) {

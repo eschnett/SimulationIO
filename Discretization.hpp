@@ -2,6 +2,7 @@
 #define DISCRETIZATION_HPP
 
 #include "Common.hpp"
+#include "Configuration.hpp"
 #include "Manifold.hpp"
 
 #include <H5Cpp.h>
@@ -24,14 +25,17 @@ struct DiscreteField;
 struct DiscretizationBlock;
 
 struct Discretization : Common, std::enable_shared_from_this<Discretization> {
-  weak_ptr<Manifold> manifold;                                       // parent
+  weak_ptr<Manifold> manifold;             // parent
+  shared_ptr<Configuration> configuration; // with backlink
   map<string, shared_ptr<DiscretizationBlock>> discretizationblocks; // children
   NoBackLink<weak_ptr<DiscreteField>> discretefields;
 
   virtual bool invariant() const {
     return Common::invariant() && bool(manifold.lock()) &&
            manifold.lock()->discretizations.count(name) &&
-           manifold.lock()->discretizations.at(name).get() == this;
+           manifold.lock()->discretizations.at(name).get() == this &&
+           bool(configuration) && configuration->discretizations.count(name) &&
+           configuration->discretizations.at(name).lock().get() == this;
   }
 
   Discretization() = delete;
@@ -42,14 +46,19 @@ struct Discretization : Common, std::enable_shared_from_this<Discretization> {
 
   friend struct Manifold;
   Discretization(hidden, const string &name,
-                 const shared_ptr<Manifold> &manifold)
-      : Common(name), manifold(manifold) {}
+                 const shared_ptr<Manifold> &manifold,
+                 const shared_ptr<Configuration> &configuration)
+      : Common(name), manifold(manifold), configuration(configuration) {}
   Discretization(hidden) : Common(hidden()) {}
 
 private:
   static shared_ptr<Discretization>
-  create(const string &name, const shared_ptr<Manifold> &manifold) {
-    return make_shared<Discretization>(hidden(), name, manifold);
+  create(const string &name, const shared_ptr<Manifold> &manifold,
+         const shared_ptr<Configuration> &configuration) {
+    auto discretization =
+        make_shared<Discretization>(hidden(), name, manifold, configuration);
+    configuration->insert(name, discretization);
+    return discretization;
   }
   static shared_ptr<Discretization>
   create(const H5::CommonFG &loc, const string &entry,

@@ -190,9 +190,12 @@ shared_ptr<TensorType> Project::createTensorType(const H5::CommonFG &loc,
   return tensortype;
 }
 
-shared_ptr<Manifold> Project::createManifold(const string &name,
-                                             int dimension) {
-  auto manifold = Manifold::create(name, shared_from_this(), dimension);
+shared_ptr<Manifold>
+Project::createManifold(const string &name,
+                        const shared_ptr<Configuration> &configuration,
+                        int dimension) {
+  auto manifold =
+      Manifold::create(name, shared_from_this(), configuration, dimension);
   checked_emplace(manifolds, manifold->name, manifold);
   assert(manifold->invariant());
   return manifold;
@@ -206,9 +209,12 @@ shared_ptr<Manifold> Project::createManifold(const H5::CommonFG &loc,
   return manifold;
 }
 
-shared_ptr<TangentSpace> Project::createTangentSpace(const string &name,
-                                                     int dimension) {
-  auto tangentspace = TangentSpace::create(name, shared_from_this(), dimension);
+shared_ptr<TangentSpace>
+Project::createTangentSpace(const string &name,
+                            const shared_ptr<Configuration> &configuration,
+                            int dimension) {
+  auto tangentspace =
+      TangentSpace::create(name, shared_from_this(), configuration, dimension);
   checked_emplace(tangentspaces, tangentspace->name, tangentspace);
   assert(tangentspace->invariant());
   return tangentspace;
@@ -223,11 +229,13 @@ shared_ptr<TangentSpace> Project::createTangentSpace(const H5::CommonFG &loc,
 }
 
 shared_ptr<Field>
-Project::createField(const string &name, const shared_ptr<Manifold> &manifold,
+Project::createField(const string &name,
+                     const shared_ptr<Configuration> &configuration,
+                     const shared_ptr<Manifold> &manifold,
                      const shared_ptr<TangentSpace> &tangentspace,
                      const shared_ptr<TensorType> &tensortype) {
-  auto field = Field::create(name, shared_from_this(), manifold, tangentspace,
-                             tensortype);
+  auto field = Field::create(name, shared_from_this(), configuration, manifold,
+                             tangentspace, tensortype);
   checked_emplace(fields, field->name, field);
   assert(field->invariant());
   return field;

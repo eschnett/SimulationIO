@@ -16,28 +16,32 @@ vector3d = project.tensortypes["Vector3D"]
 
 # Manifold and TangentSpace, both 3D
 dim = 3
-manifold = project.createManifold("domain", dim)
-tangentspace = project.createTangentSpace("space", dim)
+manifold = project.createManifold("domain", configuration, dim)
+tangentspace = project.createTangentSpace("space", configuration, dim)
 
 # Discretization for Manifold
-discretization = manifold.createDiscretization("uniform")
+discretization = manifold.createDiscretization("uniform", configuration)
 ngrids = 10
 blocks = []
 for i in range(ngrids):
     blocks.append(discretization.createDiscretizationBlock("grid.%d" % i))
 
 # Basis for TangentSpace
-basis = tangentspace.createBasis("Cartesian")
+basis = tangentspace.createBasis("Cartesian", configuration)
 dirnames = ["x", "y", "z"]
 directions = []
 for d in range(dim):
     directions.append(basis.createBasisVector(dirnames[d], d))
 
 # Fields
-rho = project.createField("rho", manifold, tangentspace, scalar3d)
-vel = project.createField("vel", manifold, tangentspace, vector3d)
-discretized_rho = rho.createDiscreteField("rho", discretization, basis)
-discretized_vel = vel.createDiscreteField("vel", discretization, basis)
+rho = project.createField(
+    "rho", configuration, manifold, tangentspace, scalar3d)
+vel = project.createField(
+    "vel", configuration, manifold, tangentspace, vector3d)
+discretized_rho = rho.createDiscreteField(
+    "rho", configuration, discretization, basis)
+discretized_vel = vel.createDiscreteField(
+    "vel", configuration, discretization, basis)
 for i in range(ngrids):
     # Create discrete region
     rho_block = discretized_rho.createDiscreteFieldBlock(

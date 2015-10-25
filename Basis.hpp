@@ -2,6 +2,7 @@
 #define BASIS_HPP
 
 #include "Common.hpp"
+#include "Configuration.hpp"
 #include "TangentSpace.hpp"
 
 #include <H5Cpp.h>
@@ -26,6 +27,7 @@ struct DiscreteField;
 
 struct Basis : Common, std::enable_shared_from_this<Basis> {
   weak_ptr<TangentSpace> tangentspace;               // parent
+  shared_ptr<Configuration> configuration;           // with backlink
   map<string, shared_ptr<BasisVector>> basisvectors; // children
   map<int, shared_ptr<BasisVector>> directions;
   NoBackLink<weak_ptr<DiscreteField>> discretefields;
@@ -34,7 +36,9 @@ struct Basis : Common, std::enable_shared_from_this<Basis> {
   virtual bool invariant() const {
     return Common::invariant() && bool(tangentspace.lock()) &&
            tangentspace.lock()->bases.count(name) &&
-           tangentspace.lock()->bases.at(name).get() == this;
+           tangentspace.lock()->bases.at(name).get() == this &&
+           bool(configuration) && configuration->bases.count(name) &&
+           configuration->bases.at(name).lock().get() == this;
     // int(basisvectors.size()) == tangentspace->dimension
     // int(directions.size()) == tangentspace->dimension
   }
@@ -47,14 +51,20 @@ struct Basis : Common, std::enable_shared_from_this<Basis> {
 
   friend struct TangentSpace;
   Basis(hidden, const string &name,
-        const shared_ptr<TangentSpace> &tangentspace)
-      : Common(name), tangentspace(tangentspace) {}
+        const shared_ptr<TangentSpace> &tangentspace,
+        const shared_ptr<Configuration> &configuration)
+      : Common(name), tangentspace(tangentspace), configuration(configuration) {
+  }
   Basis(hidden) : Common(hidden()) {}
 
 private:
   static shared_ptr<Basis>
-  create(const string &name, const shared_ptr<TangentSpace> &tangentspace) {
-    return make_shared<Basis>(hidden(), name, tangentspace);
+  create(const string &name, const shared_ptr<TangentSpace> &tangentspace,
+         const shared_ptr<Configuration> &configuration) {
+    auto basis =
+        make_shared<Basis>(hidden(), name, tangentspace, configuration);
+    configuration->insert(name, basis);
+    return basis;
   }
   static shared_ptr<Basis>
   create(const H5::CommonFG &loc, const string &entry,

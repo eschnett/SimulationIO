@@ -21,11 +21,23 @@ using std::shared_ptr;
 using std::string;
 using std::weak_ptr;
 
+struct Basis;
+struct DiscreteField;
+struct Discretization;
+struct Field;
+struct Manifold;
 struct ParameterValue;
+struct TangentSpace;
 
 struct Configuration : Common, std::enable_shared_from_this<Configuration> {
   weak_ptr<Project> project;                               // parent
   map<string, shared_ptr<ParameterValue>> parametervalues; // links
+  map<string, weak_ptr<Basis>> bases;                      // backlinks
+  map<string, weak_ptr<DiscreteField>> discretefields;     // backlinks
+  map<string, weak_ptr<Discretization>> discretizations;   // backlinks
+  map<string, weak_ptr<Field>> fields;                     // backlinks
+  map<string, weak_ptr<Manifold>> manifolds;               // backlinks
+  map<string, weak_ptr<TangentSpace>> tangentspaces;       // backlinks
 
   virtual bool invariant() const {
     return Common::invariant() && bool(project.lock()) &&
@@ -70,6 +82,35 @@ public:
                      const H5::H5Location &parent) const;
 
   void insertParameterValue(const shared_ptr<ParameterValue> &parametervalue);
+
+private:
+  friend struct Basis;
+  friend struct DiscreteField;
+  friend struct Discretization;
+  friend struct Field;
+  friend struct Manifold;
+  friend struct TangentSpace;
+  void insert(const string &name, const shared_ptr<Basis> &basis) {
+    checked_emplace(bases, name, basis);
+  }
+  void insert(const string &name,
+              const shared_ptr<DiscreteField> &discretefield) {
+    checked_emplace(discretefields, name, discretefield);
+  }
+  void insert(const string &name,
+              const shared_ptr<Discretization> &discretization) {
+    checked_emplace(discretizations, name, discretization);
+  }
+  void insert(const string &name, const shared_ptr<Field> &field) {
+    checked_emplace(fields, name, field);
+  }
+  void insert(const string &name, const shared_ptr<Manifold> &manifold) {
+    checked_emplace(manifolds, name, manifold);
+  }
+  void insert(const string &name,
+              const shared_ptr<TangentSpace> &tangentspace) {
+    checked_emplace(tangentspaces, name, tangentspace);
+  }
 };
 }
 

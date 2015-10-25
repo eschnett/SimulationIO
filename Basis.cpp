@@ -15,15 +15,21 @@ void Basis::read(const H5::CommonFG &loc, const string &entry,
   H5::readAttribute(group, "name", name);
   assert(H5::readGroupAttribute<string>(group, "tangentspace", "name") ==
          tangentspace->name);
+  configuration = tangentspace->project.lock()->configurations.at(
+      H5::readGroupAttribute<string>(group, "configuration", "name"));
+  assert(H5::readGroupAttribute<string>(
+             group, string("configuration/bases/") + name, "name") == name);
   H5::readGroup(group, "basisvectors",
                 [&](const H5::Group &group, const string &name) {
                   createBasisVector(group, name);
                 });
 #warning "TODO: check group directions"
+  configuration->insert(name, shared_from_this());
 }
 
 ostream &Basis::output(ostream &os, int level) const {
-  os << indent(level) << "Basis " << quote(name) << ": TangentSpace "
+  os << indent(level) << "Basis " << quote(name) << ": Configuration "
+     << quote(configuration->name) << " TangentSpace "
      << quote(tangentspace.lock()->name) << "\n";
   for (const auto &db : directions)
     db.second->output(os, level + 1);
@@ -37,6 +43,11 @@ void Basis::write(const H5::CommonFG &loc, const H5::H5Location &parent) const {
                       tangentspace.lock()->project.lock()->enumtype, "Basis");
   H5::createAttribute(group, "name", name);
   H5::createHardLink(group, "tangentspace", parent, ".");
+  H5::createHardLink(group, "configuration", parent,
+                     string("project/configurations/") + configuration->name);
+  H5::createHardLink(group, string("tangentspace/project/configurations/") +
+                                configuration->name + "/bases",
+                     name, group, ".");
   H5::createGroup(group, "basisvectors", basisvectors);
 #warning "TODO: output directions"
 }

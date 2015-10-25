@@ -86,17 +86,19 @@ int main(int argc, char **argv) {
   auto parameter_iteration = project->createParameter("iteration");
   auto parameter_timelevel = project->createParameter("timelevel");
   // Configuration
-  auto configuration = project->createConfiguration("global");
+  auto global_configuration = project->createConfiguration("global");
   // TensorTypes
   project->createStandardTensorTypes();
   // Manifold and TangentSpace, both 3D
   const int dim = 3;
-  auto manifold = project->createManifold("domain", dim);
-  auto tangentspace = project->createTangentSpace("space", dim);
+  auto manifold = project->createManifold("domain", global_configuration, dim);
+  auto tangentspace =
+      project->createTangentSpace("space", global_configuration, dim);
   // Discretization for Manifold
-  auto discretization = manifold->createDiscretization("grid");
+  auto discretization =
+      manifold->createDiscretization("grid", global_configuration);
   // Basis for TangentSpace
-  auto basis = tangentspace->createBasis("Cartesian");
+  auto basis = tangentspace->createBasis("Cartesian", global_configuration);
   for (int d = 0; d < dim; ++d) {
     basis->createBasisVector(dirnames[d], d);
   }
@@ -251,12 +253,23 @@ int main(int argc, char **argv) {
               discretization->discretizationblocks.at(blockname);
           // Get field
           if (!project->fields.count(fieldname)) {
-            auto field = project->createField(fieldname, manifold, tangentspace,
-                                              tensortype);
-            field->createDiscreteField(fieldname, discretization, basis);
+            auto field =
+                project->createField(fieldname, global_configuration, manifold,
+                                     tangentspace, tensortype);
           }
           auto field = project->fields.at(fieldname);
-          auto discretefield = field->discretefields.at(fieldname);
+          // Get discrete field
+          string discretefieldname;
+          {
+            ostringstream buf;
+            buf << fieldname << "-" << configurationname;
+            discretefieldname = buf.str();
+          }
+          if (!field->discretefields.count(discretefieldname)) {
+            field->createDiscreteField(discretefieldname, configuration,
+                                       discretization, basis);
+          }
+          auto discretefield = field->discretefields.at(discretefieldname);
           // Get discrete field block
           if (!discretefield->discretefieldblocks.count(
                   discretizationblock->name)) {

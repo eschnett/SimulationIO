@@ -298,7 +298,8 @@ TEST(TensorTypes, HDF5) {
 
 TEST(Manifold, create) {
   EXPECT_TRUE(project->manifolds.empty());
-  auto m1 = project->createManifold("m1", 3);
+  const auto &conf1 = project->configurations.at("conf1");
+  auto m1 = project->createManifold("m1", conf1, 3);
   EXPECT_EQ(1, project->manifolds.size());
   EXPECT_EQ(m1, project->manifolds.at("m1"));
 }
@@ -314,14 +315,15 @@ TEST(Manifold, HDF5) {
     auto p1 = createProject(file);
     ostringstream buf;
     buf << *p1->manifolds.at("m1");
-    EXPECT_EQ("Manifold \"m1\": dim=3\n", buf.str());
+    EXPECT_EQ("Manifold \"m1\": Configuration \"conf1\" dim=3\n", buf.str());
   }
   remove(filename);
 }
 
 TEST(TangentSpace, create) {
   EXPECT_TRUE(project->tangentspaces.empty());
-  const auto &s1 = project->createTangentSpace("s1", 3);
+  const auto &conf1 = project->configurations.at("conf1");
+  const auto &s1 = project->createTangentSpace("s1", conf1, 3);
   EXPECT_EQ(1, project->tangentspaces.size());
   EXPECT_EQ(s1, project->tangentspaces.at("s1"));
 }
@@ -337,17 +339,19 @@ TEST(TangentSpace, HDF5) {
     auto p1 = createProject(file);
     ostringstream buf;
     buf << *p1->tangentspaces.at("s1");
-    EXPECT_EQ("TangentSpace \"s1\": dim=3\n", buf.str());
+    EXPECT_EQ("TangentSpace \"s1\": Configuration \"conf1\" dim=3\n",
+              buf.str());
   }
   remove(filename);
 }
 
 TEST(Field, create) {
   EXPECT_TRUE(project->fields.empty());
+  const auto &conf1 = project->configurations.at("conf1");
   const auto &m1 = project->manifolds.at("m1");
   const auto &s1 = project->tangentspaces.at("s1");
   const auto &s3d = project->tensortypes.at("Vector3D");
-  auto f1 = project->createField("f1", m1, s1, s3d);
+  auto f1 = project->createField("f1", conf1, m1, s1, s3d);
   EXPECT_EQ(1, project->fields.size());
   EXPECT_EQ(f1, project->fields.at("f1"));
 }
@@ -363,8 +367,8 @@ TEST(Field, HDF5) {
     auto p1 = createProject(file);
     ostringstream buf;
     buf << *p1->fields.at("f1");
-    EXPECT_EQ("Field \"f1\": Manifold \"m1\" TangentSpace \"s1\" "
-              "TensorType \"Vector3D\"\n",
+    EXPECT_EQ("Field \"f1\": Configuration \"conf1\" Manifold \"m1\" "
+              "TangentSpace \"s1\" TensorType \"Vector3D\"\n",
               buf.str());
   }
   remove(filename);
@@ -373,7 +377,8 @@ TEST(Field, HDF5) {
 TEST(Discretization, create) {
   const auto &m1 = project->manifolds.at("m1");
   EXPECT_TRUE(m1->discretizations.empty());
-  auto d1 = m1->createDiscretization("d1");
+  const auto &conf1 = project->configurations.at("conf1");
+  auto d1 = m1->createDiscretization("d1", conf1);
   EXPECT_EQ(1, m1->discretizations.size());
   EXPECT_EQ(d1, m1->discretizations.at("d1"));
 }
@@ -389,7 +394,9 @@ TEST(Discretization, HDF5) {
     auto p1 = createProject(file);
     ostringstream buf;
     buf << *p1->manifolds.at("m1")->discretizations.at("d1");
-    EXPECT_EQ("Discretization \"d1\": Manifold \"m1\"\n", buf.str());
+    EXPECT_EQ(
+        "Discretization \"d1\": Configuration \"conf1\" Manifold \"m1\"\n",
+        buf.str());
   }
   remove(filename);
 }
@@ -414,7 +421,7 @@ TEST(DiscretizationBlock, HDF5) {
     auto p1 = createProject(file);
     ostringstream buf;
     buf << *p1->manifolds.at("m1")->discretizations.at("d1");
-    EXPECT_EQ("Discretization \"d1\": Manifold \"m1\"\n"
+    EXPECT_EQ("Discretization \"d1\": Configuration \"conf1\" Manifold \"m1\"\n"
               "  DiscretizationBlock \"db1\": Discretization \"d1\"\n",
               buf.str());
   }
@@ -422,9 +429,10 @@ TEST(DiscretizationBlock, HDF5) {
 }
 
 TEST(Basis, create) {
+  const auto &conf1 = project->configurations.at("conf1");
   const auto &s1 = project->tangentspaces.at("s1");
   EXPECT_TRUE(s1->bases.empty());
-  auto b1 = s1->createBasis("b1");
+  auto b1 = s1->createBasis("b1", conf1);
   EXPECT_EQ(1, s1->bases.size());
   EXPECT_EQ(b1, s1->bases.at("b1"));
 }
@@ -440,7 +448,8 @@ TEST(Basis, HDF5) {
     auto p1 = createProject(file);
     ostringstream buf;
     buf << *p1->tangentspaces.at("s1")->bases.at("b1");
-    EXPECT_EQ("Basis \"b1\": TangentSpace \"s1\"\n", buf.str());
+    EXPECT_EQ("Basis \"b1\": Configuration \"conf1\" TangentSpace \"s1\"\n",
+              buf.str());
   }
   remove(filename);
 }
@@ -472,7 +481,7 @@ TEST(BasisVector, HDF5) {
     auto p1 = createProject(file);
     ostringstream buf;
     buf << *p1->tangentspaces.at("s1")->bases.at("b1");
-    EXPECT_EQ("Basis \"b1\": TangentSpace \"s1\"\n"
+    EXPECT_EQ("Basis \"b1\": Configuration \"conf1\" TangentSpace \"s1\"\n"
               "  BasisVector \"x\": Basis \"b1\" direction=0\n"
               "  BasisVector \"y\": Basis \"b1\" direction=1\n"
               "  BasisVector \"z\": Basis \"b1\" direction=2\n",
@@ -483,12 +492,13 @@ TEST(BasisVector, HDF5) {
 
 TEST(DiscreteField, create) {
   const auto &f1 = project->fields.at("f1");
+  const auto &conf1 = project->configurations.at("conf1");
   const auto &m1 = f1->manifold;
   const auto &d1 = m1->discretizations.at("d1");
   const auto &s1 = f1->tangentspace;
   const auto &b1 = s1->bases.at("b1");
   EXPECT_TRUE(f1->discretefields.empty());
-  auto df1 = f1->createDiscreteField("df1", d1, b1);
+  auto df1 = f1->createDiscreteField("df1", conf1, d1, b1);
   EXPECT_EQ(1, f1->discretefields.size());
   EXPECT_EQ(df1, f1->discretefields.at("df1"));
 }
@@ -504,10 +514,10 @@ TEST(DiscreteField, HDF5) {
     auto p1 = createProject(file);
     ostringstream buf;
     buf << *p1->fields.at("f1");
-    EXPECT_EQ("Field \"f1\": Manifold \"m1\" TangentSpace \"s1\" TensorType "
-              "\"Vector3D\"\n"
-              "  DiscreteField \"df1\": Field \"f1\" Discretization \"d1\" "
-              "Basis \"b1\"\n",
+    EXPECT_EQ("Field \"f1\": Configuration \"conf1\" Manifold \"m1\" "
+              "TangentSpace \"s1\" TensorType \"Vector3D\"\n"
+              "  DiscreteField \"df1\": Configuration \"conf1\" Field \"f1\" "
+              "Discretization \"d1\" Basis \"b1\"\n",
               buf.str());
   }
   remove(filename);
@@ -535,8 +545,8 @@ TEST(DiscreteFieldBlock, HDF5) {
     auto p1 = createProject(file);
     ostringstream buf;
     buf << *p1->fields.at("f1")->discretefields.at("df1");
-    EXPECT_EQ("DiscreteField \"df1\": Field \"f1\" Discretization \"d1\" Basis "
-              "\"b1\"\n"
+    EXPECT_EQ("DiscreteField \"df1\": Configuration \"conf1\" Field \"f1\" "
+              "Discretization \"d1\" Basis \"b1\"\n"
               "  DiscreteFieldBlock \"dfb1\": DiscreteField \"df1\" "
               "DiscretizationBlock \"db1\"\n",
               buf.str());

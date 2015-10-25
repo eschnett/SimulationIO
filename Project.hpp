@@ -99,14 +99,19 @@ public:
                                           int rank);
   shared_ptr<TensorType> createTensorType(const H5::CommonFG &loc,
                                           const string &entry);
-  shared_ptr<Manifold> createManifold(const string &name, int dimension);
+  shared_ptr<Manifold>
+  createManifold(const string &name,
+                 const shared_ptr<Configuration> &configuration, int dimension);
   shared_ptr<Manifold> createManifold(const H5::CommonFG &loc,
                                       const string &entry);
-  shared_ptr<TangentSpace> createTangentSpace(const string &name,
-                                              int dimension);
+  shared_ptr<TangentSpace>
+  createTangentSpace(const string &name,
+                     const shared_ptr<Configuration> &configuration,
+                     int dimension);
   shared_ptr<TangentSpace> createTangentSpace(const H5::CommonFG &loc,
                                               const string &entry);
   shared_ptr<Field> createField(const string &name,
+                                const shared_ptr<Configuration> &configuration,
                                 const shared_ptr<Manifold> &manifold,
                                 const shared_ptr<TangentSpace> &tangentspace,
                                 const shared_ptr<TensorType> &tensortype);

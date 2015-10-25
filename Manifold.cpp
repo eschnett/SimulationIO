@@ -22,6 +22,10 @@ void Manifold::read(const H5::CommonFG &loc, const string &entry,
   H5::readAttribute(group, "name", name);
   assert(H5::readGroupAttribute<string>(group, "project", "name") ==
          project->name);
+  configuration = project->configurations.at(
+      H5::readGroupAttribute<string>(group, "configuration", "name"));
+  assert(H5::readGroupAttribute<string>(
+             group, string("configuration/manifolds/") + name, "name") == name);
   H5::readAttribute(group, "dimension", dimension);
   H5::readGroup(group, "discretizations",
                 [&](const H5::Group &group, const string &name) {
@@ -29,11 +33,12 @@ void Manifold::read(const H5::CommonFG &loc, const string &entry,
                 });
   // Cannot check "fields" since fields have not been read yet
   // assert(H5::checkGroupNames(group, "fields", fields));
+  configuration->insert(name, shared_from_this());
 }
 
 ostream &Manifold::output(ostream &os, int level) const {
-  os << indent(level) << "Manifold " << quote(name) << ": dim=" << dimension
-     << "\n";
+  os << indent(level) << "Manifold " << quote(name) << ": Configuration "
+     << quote(configuration->name) << " dim=" << dimension << "\n";
   for (const auto &d : discretizations)
     d.second->output(os, level + 1);
   for (const auto &f : fields)
@@ -48,13 +53,21 @@ void Manifold::write(const H5::CommonFG &loc,
   H5::createAttribute(group, "type", project.lock()->enumtype, "Manifold");
   H5::createAttribute(group, "name", name);
   H5::createHardLink(group, "project", parent, ".");
+  H5::createHardLink(group, "configuration", parent,
+                     string("configurations/") + configuration->name);
+  H5::createHardLink(group, string("project/configurations/") +
+                                configuration->name + "/manifolds",
+                     name, group, ".");
   H5::createAttribute(group, "dimension", dimension);
   H5::createGroup(group, "discretizations", discretizations);
   group.createGroup("fields");
 }
 
-shared_ptr<Discretization> Manifold::createDiscretization(const string &name) {
-  auto discretization = Discretization::create(name, shared_from_this());
+shared_ptr<Discretization>
+Manifold::createDiscretization(const string &name,
+                               const shared_ptr<Configuration> &configuration) {
+  auto discretization =
+      Discretization::create(name, shared_from_this(), configuration);
   checked_emplace(discretizations, discretization->name, discretization);
   assert(discretization->invariant());
   return discretization;

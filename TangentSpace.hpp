@@ -2,6 +2,7 @@
 #define TANGENTSPACE_HPP
 
 #include "Common.hpp"
+#include "Configuration.hpp"
 #include "Helpers.hpp"
 #include "Project.hpp"
 
@@ -25,7 +26,8 @@ struct Field;
 struct Basis;
 
 struct TangentSpace : Common, std::enable_shared_from_this<TangentSpace> {
-  weak_ptr<Project> project; // parent
+  weak_ptr<Project> project;               // parent
+  shared_ptr<Configuration> configuration; // with backlink
   int dimension;
   map<string, shared_ptr<Basis>> bases; // children
   map<string, weak_ptr<Field>> fields;  // backlinks
@@ -34,6 +36,9 @@ struct TangentSpace : Common, std::enable_shared_from_this<TangentSpace> {
     bool inv = Common::invariant() && bool(project.lock()) &&
                project.lock()->tangentspaces.count(name) &&
                project.lock()->tangentspaces.at(name).get() == this &&
+               bool(configuration) &&
+               configuration->tangentspaces.count(name) &&
+               configuration->tangentspaces.at(name).lock().get() == this &&
                dimension >= 0;
     for (const auto &b : bases)
       inv &= !b.first.empty() && bool(b.second);
@@ -48,15 +53,19 @@ struct TangentSpace : Common, std::enable_shared_from_this<TangentSpace> {
 
   friend struct Project;
   TangentSpace(hidden, const string &name, const shared_ptr<Project> &project,
-               int dimension)
-      : Common(name), project(project), dimension(dimension) {}
+               const shared_ptr<Configuration> &configuration, int dimension)
+      : Common(name), project(project), configuration(configuration),
+        dimension(dimension) {}
   TangentSpace(hidden) : Common(hidden()) {}
 
 private:
-  static shared_ptr<TangentSpace> create(const string &name,
-                                         const shared_ptr<Project> &project,
-                                         int dimension) {
-    return make_shared<TangentSpace>(hidden(), name, project, dimension);
+  static shared_ptr<TangentSpace>
+  create(const string &name, const shared_ptr<Project> &project,
+         const shared_ptr<Configuration> &configuration, int dimension) {
+    auto tangentspace = make_shared<TangentSpace>(hidden(), name, project,
+                                                  configuration, dimension);
+    configuration->insert(name, tangentspace);
+    return tangentspace;
   }
   static shared_ptr<TangentSpace> create(const H5::CommonFG &loc,
                                          const string &entry,
@@ -78,7 +87,8 @@ public:
   virtual void write(const H5::CommonFG &loc,
                      const H5::H5Location &parent) const;
 
-  shared_ptr<Basis> createBasis(const string &name);
+  shared_ptr<Basis> createBasis(const string &name,
+                                const shared_ptr<Configuration> &configuration);
   shared_ptr<Basis> createBasis(const H5::CommonFG &loc, const string &entry);
 
 private:

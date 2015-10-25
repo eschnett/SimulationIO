@@ -2,6 +2,7 @@
 #define FIELD_HPP
 
 #include "Common.hpp"
+#include "Configuration.hpp"
 #include "Manifold.hpp"
 #include "Project.hpp"
 #include "TangentSpace.hpp"
@@ -30,6 +31,7 @@ struct DiscreteField;
 
 struct Field : Common, std::enable_shared_from_this<Field> {
   weak_ptr<Project> project;                             // parent
+  shared_ptr<Configuration> configuration;               // with backlink
   shared_ptr<Manifold> manifold;                         // with backlink
   shared_ptr<TangentSpace> tangentspace;                 // with backlink
   shared_ptr<TensorType> tensortype;                     // without backlink
@@ -39,6 +41,8 @@ struct Field : Common, std::enable_shared_from_this<Field> {
     bool inv = Common::invariant() && bool(project.lock()) &&
                project.lock()->fields.count(name) &&
                project.lock()->fields.at(name).get() == this &&
+               bool(configuration) && configuration->fields.count(name) &&
+               configuration->fields.at(name).lock().get() == this &&
                bool(manifold) && manifold->fields.count(name) &&
                manifold->fields.at(name).lock().get() == this &&
                bool(tangentspace) && tangentspace->fields.count(name) &&
@@ -59,21 +63,25 @@ struct Field : Common, std::enable_shared_from_this<Field> {
 
   friend struct Project;
   Field(hidden, const string &name, const shared_ptr<Project> &project,
+        const shared_ptr<Configuration> &configuration,
         const shared_ptr<Manifold> &manifold,
         const shared_ptr<TangentSpace> &tangentspace,
         const shared_ptr<TensorType> &tensortype)
-      : Common(name), project(project), manifold(manifold),
-        tangentspace(tangentspace), tensortype(tensortype) {}
+      : Common(name), project(project), configuration(configuration),
+        manifold(manifold), tangentspace(tangentspace), tensortype(tensortype) {
+  }
   Field(hidden) : Common(hidden()) {}
 
 private:
-  static shared_ptr<Field> create(const string &name,
-                                  const shared_ptr<Project> &project,
-                                  const shared_ptr<Manifold> &manifold,
-                                  const shared_ptr<TangentSpace> &tangentspace,
-                                  const shared_ptr<TensorType> &tensortype) {
-    auto field = make_shared<Field>(hidden(), name, project, manifold,
-                                    tangentspace, tensortype);
+  static shared_ptr<Field>
+  create(const string &name, const shared_ptr<Project> &project,
+         const shared_ptr<Configuration> &configuration,
+         const shared_ptr<Manifold> &manifold,
+         const shared_ptr<TangentSpace> &tangentspace,
+         const shared_ptr<TensorType> &tensortype) {
+    auto field = make_shared<Field>(hidden(), name, project, configuration,
+                                    manifold, tangentspace, tensortype);
+    configuration->insert(name, field);
     manifold->insert(name, field);
     tangentspace->insert(name, field);
     tensortype->noinsert(field);
@@ -100,6 +108,7 @@ public:
 
   shared_ptr<DiscreteField>
   createDiscreteField(const string &name,
+                      const shared_ptr<Configuration> &configuration,
                       const shared_ptr<Discretization> &discretization,
                       const shared_ptr<Basis> &basis);
   shared_ptr<DiscreteField> createDiscreteField(const H5::CommonFG &loc,
