@@ -47,7 +47,7 @@ for d in range(dim):
             "%s-%s" % (discretefield.name, blocks[i].name), blocks[i])
         scalar3d_component = scalar3d.storage_indices[0]
         component = block.createDiscreteFieldBlockComponent(
-            block.name, scalar3d_component)
+            dirnames[d], scalar3d_component)
         # TODO: Write coordinate information
     coordinates.append(
         coordinatesystem.createCoordinateField(dirnames[d], d, field))
@@ -70,11 +70,11 @@ for i in range(ngrids):
     # Create tensor components for this region
     scalar3d_component = scalar3d.storage_indices[0]
     rho_component = rho_block.createDiscreteFieldBlockComponent(
-        rho_block.name, scalar3d_component)
+        "scalar", scalar3d_component)
     for d in range(dim):
         vector3d_component = vector3d.storage_indices[d]
         vel_component = vel_block.createDiscreteFieldBlockComponent(
-            "%s-%s" % (vel_block.name, dirnames[d]), vector3d_component)
+            dirnames[d], vector3d_component)
 
 # Write file
 filename = "python-example.h5"
