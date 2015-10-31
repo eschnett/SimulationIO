@@ -19,6 +19,7 @@ using std::map;
 using std::ostream;
 using std::shared_ptr;
 using std::string;
+using std::vector;
 using std::weak_ptr;
 
 struct DiscreteFieldBlockComponent
@@ -27,13 +28,20 @@ struct DiscreteFieldBlockComponent
   // Tensor component for a discrete field on a particular region
   weak_ptr<DiscreteFieldBlock> discretefieldblock; // parent
   shared_ptr<TensorComponent> tensorcomponent;     // without backlink
-  enum { type_empty, type_dataset, type_extlink, type_copy } data_type;
+  enum {
+    type_empty,
+    type_dataset,
+    type_extlink,
+    type_copy,
+    type_range
+  } data_type;
   H5::DataSpace data_dataspace;
   H5::DataType data_datatype;
   mutable H5::DataSet data_dataset;
   string data_extlink_filename, data_extlink_objname;
   H5::hid data_copy_loc;
   string data_copy_name;
+  vector<range> data_range;
 
   virtual bool invariant() const {
     bool inv =
@@ -54,11 +62,18 @@ struct DiscreteFieldBlockComponent
       if (dfbd.second.get() != this)
         inv &= dfbd.second->tensorcomponent.get() != tensorcomponent.get();
     inv &= (data_type == type_empty || data_type == type_dataset ||
-            data_type == type_extlink || data_type == type_copy) &&
+            data_type == type_extlink || data_type == type_copy ||
+            data_type == type_range) &&
            !data_extlink_filename.empty() == (data_type == type_extlink) &&
            !data_extlink_objname.empty() == (data_type == type_extlink) &&
            data_copy_loc.valid() == (data_type == type_copy) &&
-           !data_copy_name.empty() == (data_type == type_copy);
+           !data_copy_name.empty() == (data_type == type_copy) &&
+           !data_range.empty() == (data_type == type_range) &&
+           (int(data_range.size()) ==
+            discretefieldblock.lock()
+                ->discretizationblock->discretization.lock()
+                ->manifold.lock()
+                ->dimension) == (data_type == type_range);
     return inv;
   }
 
@@ -109,6 +124,7 @@ public:
   void setData(const H5::DataType &datatype, const H5::DataSpace &dataspace);
   void setData(const string &filename, const string &objname);
   void setData(const H5::H5Location &loc, const string &name);
+  void setData(const vector<range> &range_);
 
   virtual ostream &output(ostream &os, int level = 0) const;
   friend ostream &

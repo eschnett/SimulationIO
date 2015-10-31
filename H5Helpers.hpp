@@ -16,6 +16,12 @@
 
 namespace H5 {
 
+namespace detail {
+template <typename T> struct is_vector : std::false_type {};
+template <typename T, typename Allocator>
+struct is_vector<std::vector<T, Allocator>> : std::true_type {};
+}
+
 // Wrapper for hid_t that ensures correct HDF5 reference counting
 class hid {
   hid_t id;
@@ -153,22 +159,40 @@ inline FloatType getType(const long double &) {
 
 template <typename T>
 Attribute createAttribute(const H5Location &loc, const std::string &name,
-                          const T &value) {
+                          const T &value, const H5::DataType &type) {
+  static_assert(!std::is_same<T, std::string>::value, "");
+  static_assert(!detail::is_vector<T>::value, "");
+  assert(type.getSize() == sizeof value);
   auto attr = loc.createAttribute(name, getType(value), DataSpace());
-  attr.write(getType(value), &value);
+  attr.write(type, &value);
+  return attr;
+}
+
+template <typename T>
+Attribute createAttribute(const H5Location &loc, const std::string &name,
+                          const T &value) {
+  return createAttribute(loc, name, value, getType(value));
+}
+
+template <typename T>
+Attribute createAttribute(const H5Location &loc, const std::string &name,
+                          const std::vector<T> &values,
+                          const H5::DataType &type) {
+  static_assert(!std::is_same<T, std::string>::value, "");
+  static_assert(!detail::is_vector<T>::value, "");
+  assert(type.getSize() == sizeof values[0]);
+  const hsize_t dims = values.size();
+  auto attr = loc.createAttribute(name, type, DataSpace(1, &dims));
+  // HDF5 is overly cautious
+  if (!values.empty())
+    attr.write(type, values.data());
   return attr;
 }
 
 template <typename T>
 Attribute createAttribute(const H5Location &loc, const std::string &name,
                           const std::vector<T> &values) {
-  const hsize_t dims = values.size();
-  T dummy;
-  auto attr = loc.createAttribute(name, getType(dummy), DataSpace(1, &dims));
-  // HDF5 is overly cautious
-  if (!values.empty())
-    attr.write(getType(dummy), values.data());
-  return attr;
+  return createAttribute(loc, name, values, getType(values[0]));
 }
 
 inline Attribute createAttribute(const H5Location &loc, const std::string &name,
@@ -212,25 +236,43 @@ inline Attribute createAttribute(const H5Location &loc, const std::string &name,
 
 template <typename T>
 Attribute readAttribute(const H5Location &loc, const std::string &name,
-                        T &value) {
+                        T &value, const H5::DataType &type) {
+  static_assert(!std::is_same<T, std::string>::value, "");
+  static_assert(!detail::is_vector<T>::value, "");
+  assert(type.getSize() == sizeof value);
   auto attr = loc.openAttribute(name);
   auto space = attr.getSpace();
   assert(space.getSimpleExtentType() == H5S_SCALAR);
-  attr.read(getType(value), &value);
+  attr.read(type, &value);
   return attr;
 }
 
 template <typename T>
 Attribute readAttribute(const H5Location &loc, const std::string &name,
-                        std::vector<T> &values) {
+                        T &value) {
+  return readAttribute(loc, name, value, getType(value));
+}
+
+template <typename T>
+Attribute readAttribute(const H5Location &loc, const std::string &name,
+                        std::vector<T> &values, const H5::DataType &type) {
+  static_assert(!std::is_same<T, std::string>::value, "");
+  static_assert(!detail::is_vector<T>::value, "");
+  assert(type.getSize() == sizeof values[0]);
   auto attr = loc.openAttribute(name);
   auto space = attr.getSpace();
   auto npoints = space.getSimpleExtentNpoints();
   values.resize(npoints);
   // HDF5 is overly cautious
   if (!values.empty())
-    attr.read(getType(values[0]), values.data());
+    attr.read(type, values.data());
   return attr;
+}
+
+template <typename T>
+Attribute readAttribute(const H5Location &loc, const std::string &name,
+                        std::vector<T> &values) {
+  return readAttribute(loc, name, values, getType(values[0]));
 }
 
 inline Attribute readAttribute(const H5Location &loc, const std::string &name,
@@ -275,8 +317,8 @@ inline Attribute readAttribute(const H5Location &loc, const std::string &name,
 }
 
 inline Attribute readAttribute(const H5Location &loc, const std::string &name,
-                               const H5::EnumType &type,
-                               std::string &valuename) {
+                               std::string &valuename,
+                               const H5::EnumType &type) {
   auto attr = loc.openAttribute(name);
   auto space = attr.getSpace();
   assert(space.getSimpleExtentType() == H5S_SCALAR);
@@ -288,18 +330,57 @@ inline Attribute readAttribute(const H5Location &loc, const std::string &name,
 }
 
 template <typename T>
-T readAttribute(const H5Location &loc, const std::string &name) {
+typename std::enable_if<!detail::is_vector<T>::value, T>::type
+readAttribute(const H5Location &loc, const std::string &name,
+              const H5::DataType &type) {
+  static_assert(!std::is_same<T, std::string>::value, "");
+  static_assert(!detail::is_vector<T>::value, "");
+  T value;
+  readAttribute(loc, name, value, type);
+  return value;
+}
+
+template <typename T>
+typename std::enable_if<!detail::is_vector<T>::value, T>::type
+readAttribute(const H5Location &loc, const std::string &name,
+              const H5::EnumType &type) {
+  static_assert(std::is_same<T, std::string>::value, "");
+  static_assert(!detail::is_vector<T>::value, "");
+  T value;
+  readAttribute(loc, name, value, type);
+  return value;
+}
+
+template <typename T>
+typename std::enable_if<!detail::is_vector<T>::value, T>::type
+readAttribute(const H5Location &loc, const std::string &name) {
+  // static_assert(!std::is_same<T, std::string>::value, "");
+  static_assert(!detail::is_vector<T>::value, "");
   T value;
   readAttribute(loc, name, value);
   return value;
 }
 
 template <typename T>
-T readAttribute(const H5Location &loc, const std::string &name,
-                const H5::EnumType &type) {
-  T value;
-  readAttribute(loc, name, type, value);
-  return value;
+typename std::enable_if<detail::is_vector<T>::value, T>::type
+readAttribute(const H5Location &loc, const std::string &name,
+              const H5::DataType &type) {
+  auto attr = loc.openAttribute(name);
+  auto space = attr.getSpace();
+  auto size = space.getSimpleExtentNpoints();
+  T values(size);
+  assert(type.getSize() == sizeof values[0]);
+  readAttribute(loc, name, values, type);
+  return values;
+}
+
+template <typename T>
+typename std::enable_if<detail::is_vector<T>::value, T>::type
+readAttribute(const H5Location &loc, const std::string &name) {
+  static_assert(!std::is_same<T, std::string>::value, "");
+  static_assert(!detail::is_vector<T>::value, "");
+  T values;
+  return readAttribute<T>(loc, name, getType(values[0]), values);
 }
 
 template <typename T>

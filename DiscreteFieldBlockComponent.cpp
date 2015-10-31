@@ -28,13 +28,21 @@ void DiscreteFieldBlockComponent::read(
           ->field.lock()
           ->tensortype->tensorcomponents.at(
               H5::readGroupAttribute<string>(group, "tensorcomponent", "name"));
-  {
-    data_type = type_empty; // fallback
+  if (group.attrExists("data")) {
+    // "data" is an attribute
+    H5::readAttribute(group, "data", data_range,
+                      discretefieldblock->discretefield.lock()
+                          ->field.lock()
+                          ->project.lock()
+                          ->rangetype);
+    data_type = type_range;
+  } else {
     auto lapl = H5::take_hid(H5Pcreate(H5P_LINK_ACCESS));
     assert(lapl.valid());
     auto exists = H5Lexists(group.getLocId(), "data", lapl);
     assert(exists >= 0);
     if (exists) {
+      // "data" is a link
       // Check whether it is an external link
       bool have_extlink;
       H5::readExternalLink(group, "data", have_extlink, data_extlink_filename,
@@ -52,6 +60,9 @@ void DiscreteFieldBlockComponent::read(
         data_dataspace = data_dataset.getSpace();
         data_type = type_dataset;
       }
+    } else {
+      // "data" is not present
+      data_type = type_empty;
     }
   }
   tensorcomponent->noinsert(shared_from_this());
@@ -107,6 +118,13 @@ void DiscreteFieldBlockComponent::setData(const H5::H5Location &loc,
   data_copy_name = name;
 }
 
+void DiscreteFieldBlockComponent::setData(const vector<range> &range_) {
+  if (data_type != type_empty)
+    setData();
+  data_type = type_range;
+  data_range = range_;
+}
+
 ostream &DiscreteFieldBlockComponent::output(ostream &os, int level) const {
   os << indent(level) << "DiscreteFieldBlockComponent " << quote(name)
      << ": DiscreteFieldBlock " << quote(discretefieldblock.lock()->name)
@@ -127,6 +145,18 @@ ostream &DiscreteFieldBlockComponent::output(ostream &os, int level) const {
   case type_copy:
     os << "copy of (?):" << quote(data_copy_name) << "\n";
     break;
+  case type_range: {
+    os << "range: [";
+    for (int d = 0; d < int(data_range.size()); ++d) {
+      if (d > 0)
+        os << ",";
+      os << "(min=" << data_range.at(d).minimum
+         << ",max=" << data_range.at(d).maximum
+         << ",count=" << data_range.at(d).count << ")";
+    }
+    os << "]\n";
+    break;
+  }
   default:
     assert(0);
   }
@@ -169,6 +199,13 @@ void DiscreteFieldBlockComponent::write(const H5::CommonFG &loc,
     assert(!herr);
     break;
   }
+  case type_range:
+    H5::createAttribute(group, "data", data_range, discretefieldblock.lock()
+                                                       ->discretefield.lock()
+                                                       ->field.lock()
+                                                       ->project.lock()
+                                                       ->rangetype);
+    break;
   default:
     assert(0);
   }

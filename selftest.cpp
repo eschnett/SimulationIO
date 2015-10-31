@@ -350,7 +350,7 @@ TEST(Field, create) {
   const auto &conf1 = project->configurations.at("conf1");
   const auto &m1 = project->manifolds.at("m1");
   const auto &s1 = project->tangentspaces.at("s1");
-  const auto &s3d = project->tensortypes.at("Vector3D");
+  const auto &s3d = project->tensortypes.at("SymmetricTensor3D");
   auto f1 = project->createField("f1", conf1, m1, s1, s3d);
   EXPECT_EQ(1, project->fields.size());
   EXPECT_EQ(f1, project->fields.at("f1"));
@@ -368,7 +368,7 @@ TEST(Field, HDF5) {
     ostringstream buf;
     buf << *p1->fields.at("f1");
     EXPECT_EQ("Field \"f1\": Configuration \"conf1\" Manifold \"m1\" "
-              "TangentSpace \"s1\" TensorType \"Vector3D\"\n",
+              "TangentSpace \"s1\" TensorType \"SymmetricTensor3D\"\n",
               buf.str());
   }
   remove(filename);
@@ -542,7 +542,7 @@ TEST(DiscreteField, HDF5) {
     ostringstream buf;
     buf << *p1->fields.at("f1");
     EXPECT_EQ("Field \"f1\": Configuration \"conf1\" Manifold \"m1\" "
-              "TangentSpace \"s1\" TensorType \"Vector3D\"\n"
+              "TangentSpace \"s1\" TensorType \"SymmetricTensor3D\"\n"
               "  DiscreteField \"df1\": Configuration \"conf1\" Field \"f1\" "
               "Discretization \"d1\" Basis \"b1\"\n",
               buf.str());
@@ -615,30 +615,45 @@ TEST(DiscreteFieldBlockComponent, create) {
   const auto &df1 = f1->discretefields.at("df1");
   const auto &dfb1 = df1->discretefieldblocks.at("dfb1");
   const auto &tt1 = f1->tensortype;
-  const auto &bx1 = tt1->tensorcomponents.at("0");
-  const auto &by1 = tt1->tensorcomponents.at("1");
-  const auto &bz1 = tt1->tensorcomponents.at("2");
+  const auto &bxx1 = tt1->tensorcomponents.at("00");
+  const auto &bxy1 = tt1->tensorcomponents.at("01");
+  const auto &bxz1 = tt1->tensorcomponents.at("02");
+  const auto &byy1 = tt1->tensorcomponents.at("11");
   EXPECT_TRUE(dfb1->discretefieldblockcomponents.empty());
-  auto dfbd1 = dfb1->createDiscreteFieldBlockComponent("dfbd1", bx1);
-  auto dfbd2 = dfb1->createDiscreteFieldBlockComponent("dfbd2", by1);
-  auto dfbd3 = dfb1->createDiscreteFieldBlockComponent("dfbd3", bz1);
-  EXPECT_EQ(3, dfb1->discretefieldblockcomponents.size());
+  auto dfbd1 = dfb1->createDiscreteFieldBlockComponent("dfbd1", bxx1);
+  auto dfbd2 = dfb1->createDiscreteFieldBlockComponent("dfbd2", bxy1);
+  auto dfbd3 = dfb1->createDiscreteFieldBlockComponent("dfbd3", bxz1);
+  auto dfbd4 = dfb1->createDiscreteFieldBlockComponent("dfbd4", byy1);
+  EXPECT_EQ(4, dfb1->discretefieldblockcomponents.size());
   EXPECT_EQ(dfbd1, dfb1->discretefieldblockcomponents.at("dfbd1"));
   EXPECT_EQ(dfbd2, dfb1->discretefieldblockcomponents.at("dfbd2"));
   EXPECT_EQ(dfbd3, dfb1->discretefieldblockcomponents.at("dfbd3"));
+  EXPECT_EQ(dfbd4, dfb1->discretefieldblockcomponents.at("dfbd4"));
   EXPECT_EQ(DiscreteFieldBlockComponent::type_empty, dfbd1->data_type);
   EXPECT_EQ(DiscreteFieldBlockComponent::type_empty, dfbd2->data_type);
   EXPECT_EQ(DiscreteFieldBlockComponent::type_empty, dfbd3->data_type);
+  EXPECT_EQ(DiscreteFieldBlockComponent::type_empty, dfbd4->data_type);
+  dfbd1->setData("discretizationfieldblockcomponent.h5",
+                 project->name + "/tensortypes/Scalar3D");
+  dfbd1->setData();
   dfbd2->setData("discretizationfieldblockcomponent.h5",
                  project->name + "/tensortypes/Scalar3D");
   const auto datatype = H5::getType(0.0);
-  const int rank = 1;
-  const hsize_t dims[rank] = {10};
+  const int rank = 3;
+  const hsize_t dims[rank] = {9, 10, 11};
   auto dataspace = H5::DataSpace(rank, dims);
   dfbd3->setData(datatype, dataspace);
+  vector<Common::range> range(rank);
+  for (int d = 0; d < rank; ++d) {
+    range.at(d).minimum = -1.0;
+    range.at(d).maximum = +1.0;
+    range.at(d).count = dims[d];
+  }
+  dfbd4->setData(range);
   EXPECT_EQ(DiscreteFieldBlockComponent::type_empty, dfbd1->data_type);
   EXPECT_EQ(DiscreteFieldBlockComponent::type_extlink, dfbd2->data_type);
   EXPECT_EQ(DiscreteFieldBlockComponent::type_dataset, dfbd3->data_type);
+  EXPECT_EQ(DiscreteFieldBlockComponent::type_range, dfbd4->data_type);
 }
 
 TEST(DiscreteFieldBlockComponent, HDF5) {
@@ -658,16 +673,21 @@ TEST(DiscreteFieldBlockComponent, HDF5) {
         "DiscreteFieldBlock \"dfb1\": DiscreteField \"df1\" "
         "DiscretizationBlock \"db1\"\n"
         "  DiscreteFieldBlockComponent \"dfbd1\": DiscreteFieldBlock \"dfb1\" "
-        "TensorComponent \"0\"\n"
+        "TensorComponent \"00\"\n"
         "    data: empty\n"
         "  DiscreteFieldBlockComponent \"dfbd2\": DiscreteFieldBlock \"dfb1\" "
-        "TensorComponent \"1\"\n"
+        "TensorComponent \"01\"\n"
         "    data: external link to "
         "\"discretizationfieldblockcomponent.h5\":\"p1/tensortypes/"
         "Scalar3D\"\n"
         "  DiscreteFieldBlockComponent \"dfbd3\": DiscreteFieldBlock \"dfb1\" "
-        "TensorComponent \"2\"\n"
-        "    data: dataset\n",
+        "TensorComponent \"02\"\n"
+        "    data: dataset\n"
+        "  DiscreteFieldBlockComponent \"dfbd4\": DiscreteFieldBlock \"dfb1\" "
+        "TensorComponent \"11\"\n"
+        "    data: range: "
+        "[(min=-1,max=1,count=9),(min=-1,max=1,count=10),(min=-1,max=1,count="
+        "11)]\n",
         buf.str());
   }
   remove(filename);
