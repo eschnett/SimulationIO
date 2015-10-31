@@ -77,6 +77,12 @@ public:
     type_CoordinateSystem = 17,
     type_CoordinateField = 18,
   };
+
+  struct range {
+    double minimum;
+    double maximum;
+    double count;
+  };
 };
 }
 

@@ -44,6 +44,7 @@ struct Project : Common, std::enable_shared_from_this<Project> {
   // TODO: coordinatebasis
 
   mutable H5::EnumType enumtype;
+  mutable H5::CompType rangetype;
 
   virtual bool invariant() const { return Common::invariant(); }
 
