@@ -618,14 +618,14 @@ TEST(DiscreteFieldBlockComponent, create) {
   const auto &bx1 = tt1->tensorcomponents.at("0");
   const auto &by1 = tt1->tensorcomponents.at("1");
   const auto &bz1 = tt1->tensorcomponents.at("2");
-  EXPECT_TRUE(dfb1->discretefieldblockcomponent.empty());
+  EXPECT_TRUE(dfb1->discretefieldblockcomponents.empty());
   auto dfbd1 = dfb1->createDiscreteFieldBlockComponent("dfbd1", bx1);
   auto dfbd2 = dfb1->createDiscreteFieldBlockComponent("dfbd2", by1);
   auto dfbd3 = dfb1->createDiscreteFieldBlockComponent("dfbd3", bz1);
-  EXPECT_EQ(3, dfb1->discretefieldblockcomponent.size());
-  EXPECT_EQ(dfbd1, dfb1->discretefieldblockcomponent.at("dfbd1"));
-  EXPECT_EQ(dfbd2, dfb1->discretefieldblockcomponent.at("dfbd2"));
-  EXPECT_EQ(dfbd3, dfb1->discretefieldblockcomponent.at("dfbd3"));
+  EXPECT_EQ(3, dfb1->discretefieldblockcomponents.size());
+  EXPECT_EQ(dfbd1, dfb1->discretefieldblockcomponents.at("dfbd1"));
+  EXPECT_EQ(dfbd2, dfb1->discretefieldblockcomponents.at("dfbd2"));
+  EXPECT_EQ(dfbd3, dfb1->discretefieldblockcomponents.at("dfbd3"));
   EXPECT_EQ(DiscreteFieldBlockComponent::type_empty, dfbd1->data_type);
   EXPECT_EQ(DiscreteFieldBlockComponent::type_empty, dfbd2->data_type);
   EXPECT_EQ(DiscreteFieldBlockComponent::type_empty, dfbd3->data_type);
@@ -654,20 +654,21 @@ TEST(DiscreteFieldBlockComponent, HDF5) {
     buf << *p1->fields.at("f1")
                 ->discretefields.at("df1")
                 ->discretefieldblocks.at("dfb1");
-    EXPECT_EQ("DiscreteFieldBlock \"dfb1\": DiscreteField \"df1\" "
-              "DiscretizationBlock \"db1\"\n"
-              "  DiscreteFieldBlockComponent \"dfbd1\": DiscreteFieldBlock \"dfb1\" "
-              "TensorComponent \"0\"\n"
-              "    data: empty\n"
-              "  DiscreteFieldBlockComponent \"dfbd2\": DiscreteFieldBlock \"dfb1\" "
-              "TensorComponent \"1\"\n"
-              "    data: external link to "
-              "\"discretizationfieldblockcomponent.h5\":\"p1/tensortypes/"
-              "Scalar3D\"\n"
-              "  DiscreteFieldBlockComponent \"dfbd3\": DiscreteFieldBlock \"dfb1\" "
-              "TensorComponent \"2\"\n"
-              "    data: dataset\n",
-              buf.str());
+    EXPECT_EQ(
+        "DiscreteFieldBlock \"dfb1\": DiscreteField \"df1\" "
+        "DiscretizationBlock \"db1\"\n"
+        "  DiscreteFieldBlockComponent \"dfbd1\": DiscreteFieldBlock \"dfb1\" "
+        "TensorComponent \"0\"\n"
+        "    data: empty\n"
+        "  DiscreteFieldBlockComponent \"dfbd2\": DiscreteFieldBlock \"dfb1\" "
+        "TensorComponent \"1\"\n"
+        "    data: external link to "
+        "\"discretizationfieldblockcomponent.h5\":\"p1/tensortypes/"
+        "Scalar3D\"\n"
+        "  DiscreteFieldBlockComponent \"dfbd3\": DiscreteFieldBlock \"dfb1\" "
+        "TensorComponent \"2\"\n"
+        "    data: dataset\n",
+        buf.str());
   }
   remove(filename);
 }

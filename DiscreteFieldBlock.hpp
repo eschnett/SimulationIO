@@ -29,7 +29,7 @@ struct DiscreteFieldBlock : Common,
   weak_ptr<DiscreteField> discretefield;               // parent
   shared_ptr<DiscretizationBlock> discretizationblock; // with backlink
   map<string, shared_ptr<DiscreteFieldBlockComponent>>
-      discretefieldblockcomponent; // children
+      discretefieldblockcomponents; // children
 
   virtual bool invariant() const {
     return Common::invariant() && bool(discretefield.lock()) &&
@@ -84,7 +84,8 @@ public:
   shared_ptr<DiscreteFieldBlockComponent> createDiscreteFieldBlockComponent(
       const string &name, const shared_ptr<TensorComponent> &tensorcomponent);
   shared_ptr<DiscreteFieldBlockComponent>
-  createDiscreteFieldBlockComponent(const H5::CommonFG &loc, const string &entry);
+  createDiscreteFieldBlockComponent(const H5::CommonFG &loc,
+                                    const string &entry);
 };
 }
 

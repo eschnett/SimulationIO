@@ -25,7 +25,8 @@ struct TensorComponent : Common, std::enable_shared_from_this<TensorComponent> {
   weak_ptr<TensorType> tensortype; // parent
   int storage_index;
   vector<int> indexvalues;
-  NoBackLink<weak_ptr<DiscreteFieldBlockComponent>> discretefieldblockcomponent;
+  NoBackLink<weak_ptr<DiscreteFieldBlockComponent>>
+      discretefieldblockcomponents;
 
   virtual bool invariant() const {
     bool inv =
@@ -102,8 +103,8 @@ public:
 
 private:
   friend struct DiscreteFieldBlockComponent;
-  void
-  noinsert(const shared_ptr<DiscreteFieldBlockComponent> &discretefieldblockcomponent) {}
+  void noinsert(const shared_ptr<DiscreteFieldBlockComponent>
+                    &discretefieldblockcomponent) {}
 };
 }
 

@@ -174,7 +174,7 @@ struct DiscreteFieldBlock {
   std::weak_ptr<DiscreteField> discretefield;
   std::shared_ptr<DiscretizationBlock> discretizationblock;
   std::map<string, std::shared_ptr<DiscreteFieldBlockComponent> >
-    discretefieldblockcomponent;
+    discretefieldblockcomponents;
   bool invariant() const;
 
   std::shared_ptr<DiscreteFieldBlockComponent>

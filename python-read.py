@@ -17,14 +17,14 @@ file = H5.H5File(filename, H5.H5F_ACC_RDONLY)
 project = createProject(file)
 
 field = project.fields['GRID::r']
-discretefield = field.discretefields['GRID::r']
-discretefieldblock =
-    discretefield.discretefieldblocks['iteration.0-timelevel.0-m.0-rl.0']
-discretefieldblockcomponent =
-    discretefieldblock.discretefieldblockcomponent['scalar']
+discretefield = field.discretefields['GRID::r-iteration.0-timelevel.0']
+discretefieldblock = discretefield.discretefieldblocks[
+    'iteration.0-timelevel.0-m.0-rl.0']
+discretefieldblockcomponent = discretefieldblock.discretefieldblockcomponents[
+    'scalar']
 dataset = discretefieldblockcomponent.data_dataset
-path = discretefieldblockdata.getPath()
-name = discretefieldblockdata.getName()
+path = discretefieldblockcomponent.getPath()
+name = discretefieldblockcomponent.getName()
 
 # Note: Cannot pass HDF5 identifiers between H5 and h5py
 # data = h5py.Dataset(dataset.getId())
@@ -53,12 +53,12 @@ print "Average radius: %g" % ravg
 
 file = h5py.File(filename, 'r')
 field = file['fields']['GRID::r']
-discretefield = field['discretefields']['GRID::r']
-discretefieldblock =
-    discretefield['discretefieldblocks']['iteration.0-timelevel.0-m.0-rl.0']
-discretefieldblockcomponent =
-    discretefieldblock['discretefieldblockcomponent']['scalar']
-data = discretefieldblockcomponentdata']
+discretefield = field['discretefields']['GRID::r-iteration.0-timelevel.0']
+discretefieldblock = discretefield[
+    'discretefieldblocks']['iteration.0-timelevel.0-m.0-rl.0']
+discretefieldblockcomponent = discretefieldblock[
+    'discretefieldblockcomponents']['scalar']
+data = discretefieldblockcomponent['data']
 
 rsum = 0.0
 rcount = 0.0

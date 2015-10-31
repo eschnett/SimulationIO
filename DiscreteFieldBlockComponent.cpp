@@ -13,11 +13,11 @@ void DiscreteFieldBlockComponent::read(
     const shared_ptr<DiscreteFieldBlock> &discretefieldblock) {
   this->discretefieldblock = discretefieldblock;
   auto group = loc.openGroup(entry);
-  assert(H5::readAttribute<string>(group, "type",
-                                   discretefieldblock->discretefield.lock()
-                                       ->field.lock()
-                                       ->project.lock()
-                                       ->enumtype) == "DiscreteFieldBlockComponent");
+  assert(H5::readAttribute<string>(
+             group, "type", discretefieldblock->discretefield.lock()
+                                ->field.lock()
+                                ->project.lock()
+                                ->enumtype) == "DiscreteFieldBlockComponent");
   H5::readAttribute(group, "name", name);
   assert(H5::readGroupAttribute<string>(group, "discretefieldblock", "name") ==
          discretefieldblock->name);
@@ -63,7 +63,8 @@ string DiscreteFieldBlockComponent::getPath() const {
   ostringstream buf;
   buf << "fields/" << field.lock()->name << "/discretefields/"
       << discretefield.lock()->name << "/discretefieldblocks/"
-      << discretefieldblock.lock()->name << "/discretefieldblockcomponent/" << name;
+      << discretefieldblock.lock()->name << "/discretefieldblockcomponents/"
+      << name;
   return buf.str();
 }
 string DiscreteFieldBlockComponent::getName() const { return "data"; }
@@ -80,7 +81,7 @@ void DiscreteFieldBlockComponent::setData() {
 }
 
 void DiscreteFieldBlockComponent::setData(const H5::DataType &datatype,
-                                     const H5::DataSpace &dataspace) {
+                                          const H5::DataSpace &dataspace) {
   if (data_type != type_empty)
     setData();
   data_type = type_dataset;
@@ -89,7 +90,7 @@ void DiscreteFieldBlockComponent::setData(const H5::DataType &datatype,
 }
 
 void DiscreteFieldBlockComponent::setData(const string &filename,
-                                     const string &objname) {
+                                          const string &objname) {
   if (data_type != type_empty)
     setData();
   data_type = type_extlink;
@@ -98,7 +99,7 @@ void DiscreteFieldBlockComponent::setData(const string &filename,
 }
 
 void DiscreteFieldBlockComponent::setData(const H5::H5Location &loc,
-                                     const string &name) {
+                                          const string &name) {
   if (data_type != type_empty)
     setData();
   data_type = type_copy;
@@ -133,7 +134,7 @@ ostream &DiscreteFieldBlockComponent::output(ostream &os, int level) const {
 }
 
 void DiscreteFieldBlockComponent::write(const H5::CommonFG &loc,
-                                   const H5::H5Location &parent) const {
+                                        const H5::H5Location &parent) const {
   assert(invariant());
   auto group = loc.createGroup(name);
   H5::createAttribute(group, "type", discretefieldblock.lock()

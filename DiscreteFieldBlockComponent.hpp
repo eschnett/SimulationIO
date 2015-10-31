@@ -38,17 +38,19 @@ struct DiscreteFieldBlockComponent
   virtual bool invariant() const {
     bool inv =
         Common::invariant() && bool(discretefieldblock.lock()) &&
-        discretefieldblock.lock()->discretefieldblockcomponent.count(name) &&
-        discretefieldblock.lock()->discretefieldblockcomponent.at(name).get() ==
-            this &&
+        discretefieldblock.lock()->discretefieldblockcomponents.count(name) &&
+        discretefieldblock.lock()
+                ->discretefieldblockcomponents.at(name)
+                .get() == this &&
         bool(tensorcomponent) &&
-        tensorcomponent->discretefieldblockcomponent.nobacklink() &&
+        tensorcomponent->discretefieldblockcomponents.nobacklink() &&
         discretefieldblock.lock()
                 ->discretefield.lock()
                 ->field.lock()
                 ->tensortype.get() == tensorcomponent->tensortype.lock().get();
     // Ensure all discrete field block data have different tensor components
-    for (const auto &dfbd : discretefieldblock.lock()->discretefieldblockcomponent)
+    for (const auto &dfbd :
+         discretefieldblock.lock()->discretefieldblockcomponents)
       if (dfbd.second.get() != this)
         inv &= dfbd.second->tensorcomponent.get() != tensorcomponent.get();
     inv &= (data_type == type_empty || data_type == type_dataset ||
@@ -63,8 +65,10 @@ struct DiscreteFieldBlockComponent
   DiscreteFieldBlockComponent() = delete;
   DiscreteFieldBlockComponent(const DiscreteFieldBlockComponent &) = delete;
   DiscreteFieldBlockComponent(DiscreteFieldBlockComponent &&) = delete;
-  DiscreteFieldBlockComponent &operator=(const DiscreteFieldBlockComponent &) = delete;
-  DiscreteFieldBlockComponent &operator=(DiscreteFieldBlockComponent &&) = delete;
+  DiscreteFieldBlockComponent &
+  operator=(const DiscreteFieldBlockComponent &) = delete;
+  DiscreteFieldBlockComponent &
+  operator=(DiscreteFieldBlockComponent &&) = delete;
 
   friend struct DiscreteFieldBlock;
   DiscreteFieldBlockComponent(
@@ -88,7 +92,8 @@ private:
   static shared_ptr<DiscreteFieldBlockComponent>
   create(const H5::CommonFG &loc, const string &entry,
          const shared_ptr<DiscreteFieldBlock> &discretefieldblock) {
-    auto discretefieldblockcomponent = make_shared<DiscreteFieldBlockComponent>(hidden());
+    auto discretefieldblockcomponent =
+        make_shared<DiscreteFieldBlockComponent>(hidden());
     discretefieldblockcomponent->read(loc, entry, discretefieldblock);
     return discretefieldblockcomponent;
   }

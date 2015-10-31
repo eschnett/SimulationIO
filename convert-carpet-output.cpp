@@ -309,13 +309,13 @@ int main(int argc, char **argv) {
           auto discretefieldblock =
               discretefield->discretefieldblocks.at(discretizationblock->name);
           // Get discrete field block data
-          if (!discretefieldblock->discretefieldblockcomponent.count(
+          if (!discretefieldblock->discretefieldblockcomponents.count(
                   tensorcomponent->name)) {
             discretefieldblock->createDiscreteFieldBlockComponent(
                 tensorcomponent->name, tensorcomponent);
           }
           auto discretefieldblockcomponent =
-              discretefieldblock->discretefieldblockcomponent.at(
+              discretefieldblock->discretefieldblockcomponents.at(
                   tensorcomponent->name);
           switch (action) {
           case action_copy:
