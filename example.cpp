@@ -81,7 +81,6 @@ int main(int argc, char **argv) {
       const auto &scalar3d_component = scalar3d->storage_indices.at(0);
       auto component = block->createDiscreteFieldBlockComponent(
           "scalar", scalar3d_component);
-      // TODO: Write coordinate information
       (void)component;
     }
     coordinates.push_back(
@@ -107,13 +106,11 @@ int main(int argc, char **argv) {
     const auto &scalar3d_component = scalar3d->storage_indices.at(0);
     auto rho_component = rho_block->createDiscreteFieldBlockComponent(
         "scalar", scalar3d_component);
-    // TODO: write data
     (void)rho_component;
     for (int d = 0; d < dim; ++d) {
       const auto &vector3d_component = vector3d->storage_indices.at(d);
       auto vel_component = vel_block->createDiscreteFieldBlockComponent(
           dirnames[d], vector3d_component);
-      // TODO: write data
       (void)vel_component;
     }
   }
