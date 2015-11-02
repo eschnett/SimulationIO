@@ -46,7 +46,7 @@ void ParameterValue::read(const H5::CommonFG &loc, const string &entry,
 }
 
 void ParameterValue::setValue() { value_type = type_empty; }
-void ParameterValue::setValue(int i) {
+void ParameterValue::setValue(long long i) {
   value_int = i;
   value_type = type_int;
 }

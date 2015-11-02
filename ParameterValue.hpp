@@ -26,7 +26,7 @@ struct ParameterValue : Common, std::enable_shared_from_this<ParameterValue> {
   weak_ptr<Parameter> parameter;                       // parent
   map<string, weak_ptr<Configuration>> configurations; // backlinks
   enum { type_empty, type_int, type_double, type_string } value_type;
-  int value_int;
+  long long value_int;
   double value_double;
   string value_string;
 
@@ -68,7 +68,9 @@ public:
   virtual ~ParameterValue() {}
 
   void setValue();
-  void setValue(int i);
+  void setValue(long long i);
+  void setValue(int i) { setValue((long long)i); }
+  void setValue(long i) { setValue((long long)i); }
   void setValue(double d);
   void setValue(const string &s);
 
