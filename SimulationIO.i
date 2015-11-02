@@ -3,9 +3,9 @@
 %module SimulationIO
 
 %{
-  #include <H5Cpp.h>
-  #include "SimulationIO.hpp"
-  using namespace SimulationIO;
+#include <H5Cpp.h>
+#include "SimulationIO.hpp"
+using namespace SimulationIO;
 %}
 
 %include <std_map.i>
@@ -94,6 +94,7 @@ struct TensorType;
   std::map<int, std::shared_ptr<CoordinateField> >;
 %template(map_int_TensorComponent)
   std::map<int, std::shared_ptr<TensorComponent> >;
+%template(vector_double) std::vector<double>;
 %template(vector_int) std::vector<int>;
 
 struct Basis {
@@ -189,9 +190,19 @@ struct DiscreteFieldBlockComponent {
   std::shared_ptr<TensorComponent> tensorcomponent;
   H5::DataSet data_dataset;
   bool invariant() const;
+  void setData();
+  void setData(const H5::DataType &datatype, const H5::DataSpace& dataspace);
   string getPath() const;
   string getName() const;
-  };
+  %extend {
+    void writeData_int(const std::vector<int>& data) const {
+      self->writeData(data);
+    }
+    void writeData_double(const std::vector<double>& data) const {
+      self->writeData(data);
+    }
+  }
+};
 
 struct Discretization {
   string name;

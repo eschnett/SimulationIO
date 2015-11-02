@@ -118,8 +118,6 @@ private:
 public:
   virtual ~DiscreteFieldBlockComponent() {}
 
-  string getPath() const;
-  string getName() const;
   void setData();
   void setData(const H5::DataType &datatype, const H5::DataSpace &dataspace);
   void setData(const string &filename, const string &objname);
@@ -134,6 +132,11 @@ public:
   }
   virtual void write(const H5::CommonFG &loc,
                      const H5::H5Location &parent) const;
+
+  string getPath() const;
+  string getName() const;
+  // This expects that setData was called to create a dataset
+  template <typename T> void writeData(const vector<T> &data) const;
 };
 }
 

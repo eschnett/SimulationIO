@@ -2,6 +2,7 @@
 
 #include "H5Helpers.hpp"
 
+#include <algorithm>
 #include <sstream>
 
 namespace SimulationIO {
@@ -67,18 +68,6 @@ void DiscreteFieldBlockComponent::read(
   }
   tensorcomponent->noinsert(shared_from_this());
 }
-
-string DiscreteFieldBlockComponent::getPath() const {
-  const auto &discretefield = discretefieldblock.lock()->discretefield;
-  const auto &field = discretefield.lock()->field;
-  ostringstream buf;
-  buf << "fields/" << field.lock()->name << "/discretefields/"
-      << discretefield.lock()->name << "/discretefieldblocks/"
-      << discretefieldblock.lock()->name << "/discretefieldblockcomponents/"
-      << name;
-  return buf.str();
-}
-string DiscreteFieldBlockComponent::getName() const { return "data"; }
 
 void DiscreteFieldBlockComponent::setData() {
   data_type = type_empty;
@@ -210,4 +199,31 @@ void DiscreteFieldBlockComponent::write(const H5::CommonFG &loc,
     assert(0);
   }
 }
+
+string DiscreteFieldBlockComponent::getPath() const {
+  const auto &discretefield = discretefieldblock.lock()->discretefield;
+  const auto &field = discretefield.lock()->field;
+  ostringstream buf;
+  buf << "fields/" << field.lock()->name << "/discretefields/"
+      << discretefield.lock()->name << "/discretefieldblocks/"
+      << discretefieldblock.lock()->name << "/discretefieldblockcomponents/"
+      << name;
+  return buf.str();
+}
+string DiscreteFieldBlockComponent::getName() const { return "data"; }
+
+template <typename T>
+void DiscreteFieldBlockComponent::writeData(const vector<T> &data) const {
+  assert(data_type == type_dataset);
+  auto size = data_dataspace.getSimpleExtentNpoints();
+  assert(ptrdiff_t(data.size()) == size);
+  data_dataset.write(data.data(), H5::getType(data[0]));
+  auto minmaxit = std::minmax_element(data.begin(), data.end());
+  H5::createAttribute(data_dataset, "minimum", *minmaxit.first);
+  H5::createAttribute(data_dataset, "maximum", *minmaxit.second);
+}
+template void
+DiscreteFieldBlockComponent::writeData(const vector<int> &data) const;
+template void
+DiscreteFieldBlockComponent::writeData(const vector<double> &data) const;
 }
