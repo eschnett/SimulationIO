@@ -33,3 +33,36 @@ This repository contains a few sketches describing brainstorming results in vari
 - Create `Data` class by splitting off from `DiscreteFieldBlockComponent`
 - Range field should use a dataset instead of an attribute
 - In discrete manifold, distinguish between vertex, cell, and other centerings
+- Introduce min/max for discrete fields? For scalars only? Keep array for other tensor types, indexed by stored component? How are missing data indicated? nan?
+
+## Sub-Manifolds
+- Set of parent manifolds
+### Sub-Discretizations
+- Set of parent discretizations
+- If directions aligned:
+  - Map directions: int[sum-dim] -> [0..dim-1]
+  - Needs to handle points, lines, planes
+- If commensurate:
+  - Grid spacing ratio (rational)
+  - Offset (rational)
+  - Needs to handle AMR, multigrid, vertex/cell centering
+
+## Discretization blocks
+- If uniform:
+  - Offset
+  - Stride? Rotation? Flip? (Probably neither.)
+- For particles:
+  - Index offset?
+
+## Sub-Tangentspaces
+- Set of parent tangentspaces (?)
+### Sub-Bases
+- Set of parent bases
+- If directions aligned:
+  - Map directions
+  - Needs to handle (projections onto) points, lines, planes
+
+## Coordinates
+- Introduce unique types for the above concepts.
+- Want domain extents in terms of coordinate systems
+  - Add min/max attribute to coordinate systems? Or coordinate fields?
