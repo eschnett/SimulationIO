@@ -31,3 +31,5 @@ This repository contains a few sketches describing brainstorming results in vari
 - Replace H5 SWIG interface with standard Python HDF5 library
 - Allow coordinates that are not fields, but are e.g. uniform, or uniform per dimension
 - Create `Data` class by splitting off from `DiscreteFieldBlockComponent`
+- Range field should use a dataset instead of an attribute
+- In discrete manifold, distinguish between vertex, cell, and other centerings
