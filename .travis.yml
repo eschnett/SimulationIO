@@ -9,6 +9,7 @@ addons:
    packages:
      - lcov
      # - libhdf5-serial-dev   # This lacks the HDF5 C++ bindings
+     - python-numpy
      - swig
 before_install:
   - |
