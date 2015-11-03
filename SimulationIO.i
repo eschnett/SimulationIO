@@ -217,8 +217,24 @@ struct Discretization {
 
 struct DiscretizationBlock {
   string name;
+  // std::vector<int> offset;
+  %extend {
+    std::vector<int> getOffset() const {
+      std::vector<int> offset_(self->offset.size());
+      std::copy(self->offset.begin(), self->offset.end(), offset_.begin());
+      return offset_;
+    }
+  }
   std::weak_ptr<Discretization> discretization;
   bool invariant() const;
+  // void setOffset(const std::vector<int>& offset);
+  %extend {
+    void setOffset(const std::vector<int>& offset_) {
+      std::vector<hssize_t> offset(offset_.size());
+      std::copy(offset_.begin(), offset_.end(), offset.begin());
+      self->setOffset(offset);
+    }
+  }
 };
 
 struct Field {

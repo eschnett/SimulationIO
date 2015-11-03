@@ -55,11 +55,20 @@ int main(int argc, char **argv) {
   auto discretization =
       manifold->createDiscretization("uniform", configuration);
   vector<shared_ptr<DiscretizationBlock>> blocks;
-  for (int p = 0; p < ngrids; ++p) {
-    ostringstream name;
-    name << "grid." << p;
-    blocks.push_back(discretization->createDiscretizationBlock(name.str()));
-  }
+  for (int pk = 0; pk < npk; ++pk)
+    for (int pj = 0; pj < npj; ++pj)
+      for (int pi = 0; pi < npi; ++pi) {
+        const int p = pi + npi * (pj + npj * pk);
+        ostringstream name;
+        name << "grid." << p;
+        auto block = discretization->createDiscretizationBlock(name.str());
+        vector<hssize_t> offset(dim);
+        offset.at(0) = nli * pi;
+        offset.at(1) = nlj * pj;
+        offset.at(2) = nlk * pk;
+        block->setOffset(offset);
+        blocks.push_back(block);
+      }
 
   // Basis for TangentSpace
   auto basis = tangentspace->createBasis("Cartesian", configuration);

@@ -16,11 +16,23 @@ void DiscretizationBlock::read(
   H5::readAttribute(group, "name", name);
   assert(H5::readGroupAttribute<string>(group, "discretization", "name") ==
          discretization->name);
+  if (group.attrExists("offset"))
+    H5::readAttribute(group, "offset", offset);
 }
 
 ostream &DiscretizationBlock::output(ostream &os, int level) const {
   os << indent(level) << "DiscretizationBlock " << quote(name)
-     << ": Discretization " << quote(discretization.lock()->name) << "\n";
+     << ": Discretization " << quote(discretization.lock()->name);
+  if (!offset.empty()) {
+    os << " offset=[";
+    for (int d = 0; d < int(offset.size()); ++d) {
+      if (d > 0)
+        os << ",";
+      os << offset.at(d);
+    }
+    os << "]";
+  }
+  os << "\n";
   return os;
 }
 
@@ -34,5 +46,7 @@ void DiscretizationBlock::write(const H5::CommonFG &loc,
       "DiscretizationBlock");
   H5::createAttribute(group, "name", name);
   H5::createHardLink(group, "discretization", parent, ".");
+  if (!offset.empty())
+    H5::createAttribute(group, "offset", offset);
 }
 }

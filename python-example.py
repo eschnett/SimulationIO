@@ -42,8 +42,13 @@ tangentspace = project.createTangentSpace("space", configuration, dim)
 # Discretization for Manifold
 discretization = manifold.createDiscretization("uniform", configuration)
 blocks = []
-for p in range(ngrids):
-    blocks.append(discretization.createDiscretizationBlock("grid.%d" % p))
+for pk in range(npk):
+    for pj in range(npj):
+        for pi in range(npi):
+            p = pi + npi * (pj + npj * pk)
+            block = discretization.createDiscretizationBlock("grid.%d" % p)
+            block.setOffset([nli*pi, nlj*pj, nlk*pk])
+            blocks.append(block)
 
 # Basis for TangentSpace
 basis = tangentspace.createBasis("Cartesian", configuration)

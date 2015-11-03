@@ -4,9 +4,13 @@
 #include "Common.hpp"
 #include "Discretization.hpp"
 
+#include <H5Cpp.h>
+
+#include <cassert>
 #include <iostream>
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace SimulationIO {
 
@@ -14,6 +18,7 @@ using std::make_shared;
 using std::ostream;
 using std::shared_ptr;
 using std::string;
+using std::vector;
 using std::weak_ptr;
 
 struct DiscreteFieldBlock;
@@ -22,6 +27,7 @@ struct DiscretizationBlock : Common,
                              std::enable_shared_from_this<DiscretizationBlock> {
   // Discretization of a certain region, represented by contiguous data
   weak_ptr<Discretization> discretization; // parent
+  vector<hssize_t> offset;
   NoBackLink<weak_ptr<DiscreteFieldBlock>> discretefieldblocks;
 
   // bounding box? in terms of coordinates?
@@ -31,7 +37,10 @@ struct DiscretizationBlock : Common,
   virtual bool invariant() const {
     return Common::invariant() && bool(discretization.lock()) &&
            discretization.lock()->discretizationblocks.count(name) &&
-           discretization.lock()->discretizationblocks.at(name).get() == this;
+           discretization.lock()->discretizationblocks.at(name).get() == this &&
+           (offset.empty() ||
+            int(offset.size()) ==
+                discretization.lock()->manifold.lock()->dimension);
   }
 
   DiscretizationBlock() = delete;
@@ -63,6 +72,13 @@ private:
 
 public:
   virtual ~DiscretizationBlock() {}
+
+  void setOffset() { offset.clear(); }
+  void setOffset(const std::vector<hssize_t> &offset_) {
+    assert(int(offset_.size()) ==
+           discretization.lock()->manifold.lock()->dimension);
+    offset = offset_;
+  }
 
   virtual ostream &output(ostream &os, int level = 0) const;
   friend ostream &operator<<(ostream &os,
