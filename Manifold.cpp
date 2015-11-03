@@ -49,6 +49,8 @@ ostream &Manifold::output(ostream &os, int level) const {
      << quote(configuration->name) << " dim=" << dimension << "\n";
   for (const auto &d : discretizations)
     d.second->output(os, level + 1);
+  for (const auto &sd : subdiscretizations)
+    sd.second->output(os, level + 1);
   for (const auto &f : fields)
     os << indent(level + 1) << "Field " << quote(f.second.lock()->name) << "\n";
   for (const auto &cs : coordinatesystems)
