@@ -247,7 +247,11 @@ int main(int argc, char **argv) {
             blockname = buf.str();
           }
           if (!discretization->discretizationblocks.count(blockname)) {
-            discretization->createDiscretizationBlock(blockname);
+            auto discretizationblock =
+                discretization->createDiscretizationBlock(blockname);
+            vector<hssize_t> offset(dim);
+            H5::readAttribute(dataset, "iorigin", offset);
+            discretizationblock->setOffset(offset);
           }
           auto discretizationblock =
               discretization->discretizationblocks.at(blockname);
