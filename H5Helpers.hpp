@@ -155,6 +155,37 @@ inline FloatType getType(const long double &) {
   return FloatType(PredType::NATIVE_LDOUBLE);
 }
 
+// Convert a HDF5 datatype class to a string
+inline std::string className(H5T_class_t cls) {
+  switch (cls) {
+  case H5T_INTEGER:
+    return "integer";
+  case H5T_FLOAT:
+    return "float";
+  case H5T_TIME:
+    return "time";
+  case H5T_STRING:
+    return "string";
+  case H5T_BITFIELD:
+    return "bitfield";
+  case H5T_OPAQUE:
+    return "opaque";
+  case H5T_COMPOUND:
+    return "compound";
+  case H5T_REFERENCE:
+    return "reference";
+  case H5T_ENUM:
+    return "enum";
+  case H5T_VLEN:
+    return "vlen";
+  case H5T_ARRAY:
+    return "array";
+  default:
+    assert(0);
+  }
+  assert(0);
+}
+
 // Create attribute
 
 template <typename T>

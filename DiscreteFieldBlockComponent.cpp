@@ -123,10 +123,18 @@ ostream &DiscreteFieldBlockComponent::output(ostream &os, int level) const {
   case type_empty:
     os << "empty\n";
     break;
-  case type_dataset:
-#warning "TODO: output datatype, dataspace"
-    os << "dataset\n";
+  case type_dataset: {
+    auto cls = data_datatype.getClass();
+    auto clsname = H5::className(cls);
+    auto typesize = data_datatype.getSize();
+    assert(data_dataspace.isSimple());
+    const int dim = data_dataspace.getSimpleExtentNdims();
+    vector<hsize_t> size(dim);
+    data_dataspace.getSimpleExtentDims(size.data());
+    os << "dataset type=" << clsname << "(" << (8 * typesize)
+       << " bit) shape=" << size << "\n";
     break;
+  }
   case type_extlink:
     os << "external link to " << quote(data_extlink_filename) << ":"
        << quote(data_extlink_objname) << "\n";

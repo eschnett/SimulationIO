@@ -719,7 +719,7 @@ TEST(DiscreteFieldBlockComponent, HDF5) {
         "Scalar3D\"\n"
         "  DiscreteFieldBlockComponent \"dfbd3\": DiscreteFieldBlock \"dfb1\" "
         "TensorComponent \"02\"\n"
-        "    data: dataset\n"
+        "    data: dataset type=float(64 bit) shape=[9,10,11]\n"
         "  DiscreteFieldBlockComponent \"dfbd4\": DiscreteFieldBlock \"dfb1\" "
         "TensorComponent \"11\"\n"
         "    data: range: "
