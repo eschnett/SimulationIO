@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <iomanip>
 #include <iostream>
 #include <iterator>
 #include <map>
@@ -95,8 +96,8 @@ int main(int argc, char **argv) {
   auto tangentspace =
       project->createTangentSpace("space", global_configuration, dim);
   // Discretization for Manifold
-  auto discretization =
-      manifold->createDiscretization("grid", global_configuration);
+  map<int, vector<shared_ptr<Discretization>>>
+      discretizations; // [mapindex][reflevel]
   // Basis for TangentSpace
   auto basis = tangentspace->createBasis("Cartesian", global_configuration);
   for (int d = 0; d < dim; ++d) {
@@ -123,7 +124,8 @@ int main(int argc, char **argv) {
           vector<string> tokens;
           copy(istream_iterator<string>(namestream), istream_iterator<string>(),
                back_inserter(tokens));
-          const string varname = tokens.at(0);
+          // const string varname = tokens.at(0);
+          const string varname = H5::readAttribute<string>(dataset, "name");
           tokens.erase(tokens.begin());
           // Determine field name and tensor type
           string fieldname(varname);
@@ -150,7 +152,11 @@ int main(int argc, char **argv) {
             assert(0);
           }
           // Determine iteration, time level, map index, refinement level
-          int iteration = 0, timelevel = 0, mapindex = 0, refinementlevel = 0;
+          int iteration = 0, timelevel = 0, mapindex = 0, refinementlevel = 0,
+              component = 0;
+          bool is_multiblock = false, is_amr = false, is_parallel = false;
+          const int width_it = 10, width_tl = 1, width_m = 3, width_rl = 2,
+                    width_c = 8;
           for (const auto &token : tokens) {
             auto eqpos = token.find('=');
             string id = token.substr(0, eqpos);
@@ -161,37 +167,55 @@ int main(int argc, char **argv) {
             else if (id == "tl")
               variable = &timelevel;
             else if (id == "m")
-              variable = &mapindex;
+              variable = &mapindex, is_multiblock = true;
             else if (id == "rl")
-              variable = &refinementlevel;
+              variable = &refinementlevel, is_amr = true;
             else
               assert(0);
+#warning "TODO: determine component, is_parallel"
             istringstream buf(val);
             assert(!buf.eof());
             buf >> *variable;
             assert(buf.eof());
           }
+
+          assert(H5::readAttribute<int>(dataset, "group_timelevel") ==
+                 timelevel);
+          assert(H5::readAttribute<int>(dataset, "level") == refinementlevel);
+#warning "TODO: check attribute component?"
+          auto ioffset = H5::readAttribute<vector<int>>(dataset, "ioffset");
+          auto ioffsetdenom =
+              H5::readAttribute<vector<int>>(dataset, "ioffsetdenom");
+          assert(int(ioffset.size()) == manifold->dimension);
+          assert(int(ioffsetdenom.size()) == manifold->dimension);
+          vector<double> offset(manifold->dimension);
+          for (int d = 0; d < int(offset.size()); ++d)
+            offset.at(d) = double(ioffset.at(d)) / double(ioffsetdenom.at(d));
+
           // Output information
-          cout << "    field name: " << fieldname << "\n";
-          cout << "    tensor rank: " << tensorrank << "\n";
-          cout << "    tensor type: " << tensortypename << "\n";
-          cout << "    tensor indices: " << tensorindices << "\n";
-          cout << "    iteration: " << iteration << "\n";
-          cout << "    time level: " << timelevel << "\n";
-          cout << "    map: " << mapindex << "\n";
-          cout << "    refinement level: " << refinementlevel << "\n";
+          cout << "    field name: " << fieldname << "\n"
+               << "    tensor rank: " << tensorrank << "\n"
+               << "    tensor type: " << tensortypename << "\n"
+               << "    tensor indices: " << tensorindices << "\n"
+               << "    iteration: " << iteration << "\n"
+               << "    time level: " << timelevel << "\n"
+               << "    map: " << mapindex << "\n"
+               << "    refinement level: " << refinementlevel << "\n"
+               << "    component: " << component << "\n";
 
           // Get configuration
           string value_iteration_name;
           {
             ostringstream buf;
-            buf << parameter_iteration->name << "." << iteration;
+            buf << parameter_iteration->name << "." << setfill('0')
+                << setw(width_it) << iteration;
             value_iteration_name = buf.str();
           }
           string value_timelevel_name;
           {
             ostringstream buf;
-            buf << parameter_timelevel->name << "." << timelevel;
+            buf << parameter_timelevel->name << "." << setfill('0')
+                << setw(width_tl) << timelevel;
             value_timelevel_name = buf.str();
           }
           auto configurationname =
@@ -232,12 +256,51 @@ int main(int argc, char **argv) {
           }
           assert(tensorcomponent);
 
+          // Get discretization
+          if (!discretizations.count(mapindex)) {
+            discretizations[mapindex];
+          }
+          while (int(discretizations.at(mapindex).size()) <= refinementlevel) {
+            int rl = discretizations.at(mapindex).size();
+            string discretizationname;
+            {
+              ostringstream buf;
+              buf << "grid";
+              if (is_multiblock)
+                buf << "-map." << setfill('0') << setw(width_m) << mapindex;
+              if (is_amr)
+                buf << "-level." << setfill('0') << setw(width_rl) << rl;
+              discretizationname = buf.str();
+            }
+            auto discretization = manifold->createDiscretization(
+                discretizationname, configuration);
+            discretizations.at(mapindex).push_back(discretization);
+            if (rl > 0) {
+              string subdiscretizationname;
+              {
+                ostringstream buf;
+                buf << "level." << setfill('0') << setw(width_rl) << rl;
+                subdiscretizationname = buf.str();
+              }
+              vector<double> factor(manifold->dimension, 2);
+              auto subdiscretization = manifold->createSubDiscretization(
+                  subdiscretizationname,
+                  discretizations.at(mapindex).at(rl - 1),
+                  discretizations.at(mapindex).at(rl), factor, offset);
+              (void)subdiscretization;
+            }
+          }
+          const auto &discretization =
+              discretizations.at(mapindex).at(refinementlevel);
+
           // Get discretization block
           string blockname;
           {
             ostringstream buf;
-            buf << configuration->name << "-m." << mapindex << "-rl."
-                << refinementlevel;
+            // buf << configuration->name << "-m." << mapindex << "-rl."
+            //     << refinementlevel;
+            buf << configuration->name << "-c." << setfill('0') << setw(width_c)
+                << component;
             blockname = buf.str();
           }
           if (!discretization->discretizationblocks.count(blockname)) {
