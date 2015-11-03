@@ -47,13 +47,6 @@ This repository contains a few sketches describing brainstorming results in vari
   - Offset (rational)
   - Needs to handle AMR, multigrid, vertex/cell centering
 
-## Discretization blocks
-- If uniform:
-  - Offset
-  - Stride? Rotation? Flip? (Probably neither.)
-- For particles:
-  - Index offset?
-
 ## Sub-Tangentspaces
 - Set of parent tangentspaces (?)
 ### Sub-Bases
