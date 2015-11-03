@@ -133,7 +133,7 @@ for pk in range(npk):
                         coordx[li,lj,lk] = x
                         coordy[li,lj,lk] = y
                         coordz[li,lj,lk] = z
-                        datarho[li,lj,lk] =exp(-0.5 * r**2)
+                        datarho[li,lj,lk] = exp(-0.5 * r**2)
                         datavelx[li,lj,lk] = -y * r * exp(-0.5 * r**2)
                         datavely[li,lj,lk] = +x * r * exp(-0.5 * r**2)
                         datavelz[li,lj,lk] = 0.0;
