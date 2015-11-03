@@ -1,0 +1,49 @@
+ActiveThorns = "
+        Boundary
+        Carpet
+        CarpetIOF5
+        CarpetIOHDF5
+        CarpetLib
+        CartGrid3D
+        CoordBase
+        F5
+        Formaline
+        GSL
+        HDF5
+        InitBase
+        IOUtil
+        LoopControl
+        SymBase
+"
+
+
+
+Cactus::cctk_run_title             = "IOF5"
+Cactus::cctk_full_warnings         = yes
+Cactus::highlight_warning_messages = no
+
+Cactus::cctk_itlast = 2
+
+IO::out_dir = $parfile
+
+Carpet::domain_from_coordbase = yes
+CartGrid3D::type              = "coordbase"
+CoordBase::domainsize         = "minmax"
+CoordBase::xmin               = -1.0
+CoordBase::ymin               = -1.0
+CoordBase::zmin               = -1.0
+CoordBase::xmax               = +1.0
+CoordBase::ymax               = +1.0
+CoordBase::zmax               = +1.0
+CoordBase::dx                 =  0.25
+CoordBase::dy                 =  0.25
+CoordBase::dz                 =  0.25
+
+CarpetIOHDF5::out_every          = 2
+CarpetIOHDF5::one_file_per_group = yes
+CarpetIOHDF5::out_vars           = "grid::coordinates"
+
+CarpetIOF5::out_every = 2
+CarpetIOF5::out_vars  = "grid::coordinates"
+
+Formaline::output_source = no

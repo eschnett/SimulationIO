@@ -1,0 +1,55 @@
+ActiveThorns = "
+        Boundary
+        Carpet
+        CarpetIOF5
+        CarpetIOHDF5
+        CarpetLib
+        CarpetRegrid2
+        CartGrid3D
+        CoordBase
+        Coordinates
+        F5
+        Formaline
+        GSL
+        HDF5
+        InitBase
+        IOUtil
+        LoopControl
+        SymBase
+"
+
+
+
+Cactus::cctk_run_title             = "IOF5"
+Cactus::cctk_full_warnings         = yes
+Cactus::highlight_warning_messages = no
+
+Cactus::cctk_itlast = 0
+
+IO::out_dir = $parfile
+
+Carpet::domain_from_multipatch   = yes
+CartGrid3D::type                 = "multipatch"
+Coordinates::coordinate_system   = "Thornburg04"
+Coordinates::h_cartesian         = 0.25
+Coordinates::h_radial            = 0.25
+Coordinates::sphere_inner_radius = 1.0
+Coordinates::sphere_outer_radius = 3.0
+Coordinates::n_angular           = 8
+
+Carpet::max_refinement_levels = 10
+CarpetRegrid2::num_centres    =  1
+CarpetRegrid2::num_levels_1   =  3
+CarpetRegrid2::radius_1[1]    =  0.5
+CarpetRegrid2::radius_1[2]    =  0.2
+
+InitBase::initial_data_setup_method = "init_all_levels"
+
+CarpetIOHDF5::out_every          = 1
+CarpetIOHDF5::one_file_per_group = yes
+CarpetIOHDF5::out_vars           = "grid::coordinates"
+
+CarpetIOF5::out_every = 1
+CarpetIOF5::out_vars  = "grid::coordinates"
+
+Formaline::output_source = no

@@ -48,6 +48,6 @@ H5.py
 *_wrap.cpp
 python-example.h5
 SimulationIO.py
+iof5-*.h5
 
-cactus
 HDF5 PERFORMANCE
