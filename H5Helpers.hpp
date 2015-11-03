@@ -228,7 +228,8 @@ Attribute createAttribute(const H5Location &loc, const std::string &name,
 
 inline Attribute createAttribute(const H5Location &loc, const std::string &name,
                                  const std::string &value) {
-  auto type = StrType(PredType::C_S1, H5T_VARIABLE);
+  // auto type = StrType(PredType::C_S1, H5T_VARIABLE);
+  auto type = StrType(PredType::C_S1, value.size() + 1);
   auto attr = loc.createAttribute(name, type, DataSpace());
   attr.write(type, H5std_string(value));
   return attr;
@@ -311,9 +312,11 @@ inline Attribute readAttribute(const H5Location &loc, const std::string &name,
   auto attr = loc.openAttribute(name);
   auto space = attr.getSpace();
   assert(space.getSimpleExtentType() == H5S_SCALAR);
-  auto type = StrType(PredType::C_S1, H5T_VARIABLE);
+  // auto type = StrType(PredType::C_S1, H5T_VARIABLE);
+  auto type = attr.getStrType();
+  auto size = type.getSize();
   H5std_string buf;
-  attr.read(type, buf);
+  attr.read(StrType(PredType::C_S1, size), buf);
   value = buf;
   return attr;
 }
