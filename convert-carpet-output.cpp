@@ -175,13 +175,7 @@ int main(int argc, char **argv) {
           cout << "    field name: " << fieldname << "\n";
           cout << "    tensor rank: " << tensorrank << "\n";
           cout << "    tensor type: " << tensortypename << "\n";
-          cout << "    tensor indices: [";
-          for (int d = 0; d < int(tensorindices.size()); ++d) {
-            if (d > 0)
-              cout << ",";
-            cout << tensorindices[d];
-          }
-          cout << "]\n";
+          cout << "    tensor indices: " << tensorindices << "\n";
           cout << "    iteration: " << iteration << "\n";
           cout << "    time level: " << timelevel << "\n";
           cout << "    map: " << mapindex << "\n";

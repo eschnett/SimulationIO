@@ -23,16 +23,8 @@ void DiscretizationBlock::read(
 ostream &DiscretizationBlock::output(ostream &os, int level) const {
   os << indent(level) << "DiscretizationBlock " << quote(name)
      << ": Discretization " << quote(discretization.lock()->name);
-  if (!offset.empty()) {
-    os << " offset=[";
-    for (int d = 0; d < int(offset.size()); ++d) {
-      if (d > 0)
-        os << ",";
-      os << offset.at(d);
-    }
-    os << "]";
-  }
-  os << "\n";
+  if (!offset.empty())
+    os << " offset=" << offset << "\n";
   return os;
 }
 
