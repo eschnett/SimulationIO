@@ -97,7 +97,8 @@ int main(int argc, char **argv) {
       project->createTangentSpace("space", global_configuration, dim);
   // Discretization for Manifold
   map<int, vector<shared_ptr<Discretization>>>
-      discretizations; // [mapindex][reflevel]
+      discretizations;                   // [mapindex][reflevel]
+  map<int, vector<double>> root_ioffset; // [mapindex]
   // Basis for TangentSpace
   auto basis = tangentspace->createBasis("Cartesian", global_configuration);
   for (int d = 0; d < dim; ++d) {
@@ -183,14 +184,18 @@ int main(int argc, char **argv) {
                  timelevel);
           assert(H5::readAttribute<int>(dataset, "level") == refinementlevel);
 #warning "TODO: check attribute component?"
-          auto ioffset = H5::readAttribute<vector<int>>(dataset, "ioffset");
+          auto ioffsetnum = H5::readAttribute<vector<int>>(dataset, "ioffset");
           auto ioffsetdenom =
               H5::readAttribute<vector<int>>(dataset, "ioffsetdenom");
-          assert(int(ioffset.size()) == manifold->dimension);
+          assert(int(ioffsetnum.size()) == manifold->dimension);
           assert(int(ioffsetdenom.size()) == manifold->dimension);
-          vector<double> offset(manifold->dimension);
-          for (int d = 0; d < int(offset.size()); ++d)
-            offset.at(d) = double(ioffset.at(d)) / double(ioffsetdenom.at(d));
+          vector<double> ioffset(manifold->dimension);
+          for (int d = 0; d < int(ioffset.size()); ++d)
+            ioffset.at(d) =
+                double(ioffsetnum.at(d)) / double(ioffsetdenom.at(d));
+          if (refinementlevel == 0)
+            if (!root_ioffset.count(mapindex))
+              root_ioffset[mapindex] = ioffset;
 
           // Output information
           cout << "    field name: " << fieldname << "\n"
@@ -282,6 +287,9 @@ int main(int argc, char **argv) {
                 buf << "level." << setfill('0') << setw(width_rl) << rl;
                 subdiscretizationname = buf.str();
               }
+              vector<double> offset(manifold->dimension);
+              for (int d = 0; d < manifold->dimension; ++d)
+                offset.at(d) = ioffset.at(d) - root_ioffset.at(mapindex).at(d);
               vector<double> factor(manifold->dimension, 2);
               auto subdiscretization = manifold->createSubDiscretization(
                   subdiscretizationname,
@@ -297,8 +305,6 @@ int main(int argc, char **argv) {
           string blockname;
           {
             ostringstream buf;
-            // buf << configuration->name << "-m." << mapindex << "-rl."
-            //     << refinementlevel;
             buf << configuration->name << "-c." << setfill('0') << setw(width_c)
                 << component;
             blockname = buf.str();
