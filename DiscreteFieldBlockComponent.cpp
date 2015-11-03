@@ -179,9 +179,25 @@ void DiscreteFieldBlockComponent::write(const H5::CommonFG &loc,
   switch (data_type) {
   case type_empty: // do nothing
     break;
-  case type_dataset:
-    data_dataset = group.createDataSet("data", data_datatype, data_dataspace);
+  case type_dataset: {
+    auto proplist = H5::DSetCreatPropList();
+    proplist.setFletcher32();
+    assert(data_dataspace.isSimple());
+    const int dim = data_dataspace.getSimpleExtentNdims();
+    vector<hsize_t> size(dim);
+    data_dataspace.getSimpleExtentDims(size.data());
+    vector<hsize_t> chunksize(dim);
+    const hsize_t linear_size = 16; // 16^3 * 8 B = 32 kB
+    for (int d = 0; d < dim; ++d)
+      chunksize.at(d) = std::min(linear_size, size.at(d));
+    proplist.setChunk(dim, chunksize.data());
+    proplist.setShuffle(); // Shuffling improves compression
+    const int level = 1;   // Level 1 is fast, but still offers good compression
+    proplist.setDeflate(level);
+    data_dataset =
+        group.createDataSet("data", data_datatype, data_dataspace, proplist);
     break;
+  }
   case type_extlink:
     H5::createExternalLink(group, "data", data_extlink_filename,
                            data_extlink_objname);
