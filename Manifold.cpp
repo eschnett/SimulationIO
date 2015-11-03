@@ -3,6 +3,7 @@
 #include "CoordinateSystem.hpp"
 #include "Discretization.hpp"
 #include "Field.hpp"
+#include "SubDiscretization.hpp"
 
 #include "H5Helpers.hpp"
 
@@ -31,6 +32,10 @@ void Manifold::read(const H5::CommonFG &loc, const string &entry,
   H5::readGroup(group, "discretizations",
                 [&](const H5::Group &group, const string &name) {
                   createDiscretization(group, name);
+                });
+  H5::readGroup(group, "subdiscretizations",
+                [&](const H5::Group &group, const string &name) {
+                  createSubDiscretization(group, name);
                 });
   // Cannot check "fields", "coordinatesystems" since they have not been read
   // yet
@@ -66,6 +71,7 @@ void Manifold::write(const H5::CommonFG &loc,
                      name, group, ".");
   H5::createAttribute(group, "dimension", dimension);
   H5::createGroup(group, "discretizations", discretizations);
+  H5::createGroup(group, "subdiscretizations", subdiscretizations);
   group.createGroup("fields");
   group.createGroup("coordinatesystems");
 }
@@ -86,5 +92,29 @@ Manifold::createDiscretization(const H5::CommonFG &loc, const string &entry) {
   checked_emplace(discretizations, discretization->name, discretization);
   assert(discretization->invariant());
   return discretization;
+}
+
+shared_ptr<SubDiscretization> Manifold::createSubDiscretization(
+    const string &name, const shared_ptr<Discretization> &parent_discretization,
+    const shared_ptr<Discretization> &child_discretization,
+    const vector<double> &factor, const vector<double> &offset) {
+  auto subdiscretization =
+      SubDiscretization::create(name, shared_from_this(), parent_discretization,
+                                child_discretization, factor, offset);
+  checked_emplace(subdiscretizations, subdiscretization->name,
+                  subdiscretization);
+  assert(subdiscretization->invariant());
+  return subdiscretization;
+}
+
+shared_ptr<SubDiscretization>
+Manifold::createSubDiscretization(const H5::CommonFG &loc,
+                                  const string &entry) {
+  auto subdiscretization =
+      SubDiscretization::create(loc, entry, shared_from_this());
+  checked_emplace(subdiscretizations, subdiscretization->name,
+                  subdiscretization);
+  assert(subdiscretization->invariant());
+  return subdiscretization;
 }
 }

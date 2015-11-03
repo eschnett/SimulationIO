@@ -12,6 +12,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace SimulationIO {
 
@@ -20,20 +21,23 @@ using std::map;
 using std::ostream;
 using std::shared_ptr;
 using std::string;
+using std::vector;
 using std::weak_ptr;
 
 struct CoordinateSystem;
 struct Field;
 struct CoordinateSystem;
 struct Discretization;
+struct SubDiscretization;
 
 struct Manifold : Common, std::enable_shared_from_this<Manifold> {
   weak_ptr<Project> project;               // parent
   shared_ptr<Configuration> configuration; // with backlink
   int dimension;
-  map<string, shared_ptr<Discretization>> discretizations;   // children
-  map<string, weak_ptr<Field>> fields;                       // backlinks
-  map<string, weak_ptr<CoordinateSystem>> coordinatesystems; // backlinks
+  map<string, shared_ptr<Discretization>> discretizations;       // children
+  map<string, shared_ptr<SubDiscretization>> subdiscretizations; // children
+  map<string, weak_ptr<Field>> fields;                           // backlinks
+  map<string, weak_ptr<CoordinateSystem>> coordinatesystems;     // backlinks
 
   virtual bool invariant() const {
     bool inv = Common::invariant() && bool(project.lock()) &&
@@ -94,14 +98,21 @@ public:
                        const shared_ptr<Configuration> &configuration);
   shared_ptr<Discretization> createDiscretization(const H5::CommonFG &loc,
                                                   const string &entry);
+  shared_ptr<SubDiscretization> createSubDiscretization(
+      const string &name,
+      const shared_ptr<Discretization> &parent_discretization,
+      const shared_ptr<Discretization> &child_discretization,
+      const vector<double> &factor, const vector<double> &offset);
+  shared_ptr<SubDiscretization> createSubDiscretization(const H5::CommonFG &loc,
+                                                        const string &entry);
 
 private:
   friend struct CoordinateSystem;
-  friend struct Field;
   void insert(const string &name,
               const shared_ptr<CoordinateSystem> &coordinatesystem) {
     checked_emplace(coordinatesystems, name, coordinatesystem);
   }
+  friend struct Field;
   void insert(const string &name, const shared_ptr<Field> &field) {
     checked_emplace(fields, name, field);
   }

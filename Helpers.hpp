@@ -2,10 +2,12 @@
 #define HELPERS_HPP
 
 #include <cassert>
+#include <iostream>
 #include <map>
 #include <memory>
 #include <sstream>
 #include <string>
+#include <vector>
 #include <utility>
 
 namespace SimulationIO {
@@ -54,6 +56,19 @@ const int indentsize = 2;
 const char indentchar = ' ';
 inline std::string indent(int level) {
   return std::string(level * indentsize, indentchar);
+}
+
+// Output a vector
+template <typename T>
+std::ostream &operator<<(std::ostream &os, const std::vector<T> &values) {
+  os << "[";
+  for (std::size_t i = 0; i < values.size(); ++i) {
+    if (i > 0)
+      os << ",";
+    os << values.at(i);
+  }
+  os << "]";
+  return os;
 }
 }
 

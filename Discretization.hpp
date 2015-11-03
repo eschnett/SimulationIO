@@ -23,11 +23,14 @@ using std::weak_ptr;
 
 struct DiscreteField;
 struct DiscretizationBlock;
+struct SubDiscretization;
 
 struct Discretization : Common, std::enable_shared_from_this<Discretization> {
   weak_ptr<Manifold> manifold;             // parent
   shared_ptr<Configuration> configuration; // with backlink
   map<string, shared_ptr<DiscretizationBlock>> discretizationblocks; // children
+  map<string, weak_ptr<SubDiscretization>> child_discretizations;  // backlinks
+  map<string, weak_ptr<SubDiscretization>> parent_discretizations; // backlinks
   NoBackLink<weak_ptr<DiscreteField>> discretefields;
 
   virtual bool invariant() const {
@@ -86,6 +89,15 @@ public:
   createDiscretizationBlock(const H5::CommonFG &loc, const string &entry);
 
 private:
+  friend struct SubDiscretization;
+  void insertChild(const string &name,
+                   const shared_ptr<SubDiscretization> &subdiscretization) {
+    checked_emplace(child_discretizations, name, subdiscretization);
+  }
+  void insertParent(const string &name,
+                    const shared_ptr<SubDiscretization> &subdiscretization) {
+    checked_emplace(parent_discretizations, name, subdiscretization);
+  }
   friend struct DiscreteField;
   void noinsert(const shared_ptr<DiscreteField> &discretefield) {}
 };

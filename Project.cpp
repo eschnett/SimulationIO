@@ -121,6 +121,7 @@ void Project::createTypes() const {
   insertEnumField(enumtype, "Parameter", type_Parameter);
   insertEnumField(enumtype, "ParameterValue", type_ParameterValue);
   insertEnumField(enumtype, "Project", type_Project);
+  insertEnumField(enumtype, "SubDiscretization", type_SubDiscretization);
   insertEnumField(enumtype, "TangentSpace", type_TangentSpace);
   insertEnumField(enumtype, "TensorComponent", type_TensorComponent);
   insertEnumField(enumtype, "TensorType", type_TensorType);

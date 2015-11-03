@@ -51,6 +51,8 @@ void Discretization::write(const H5::CommonFG &loc,
                                 configuration->name + "/discretizations",
                      name, group, ".");
   H5::createGroup(group, "discretizationblocks", discretizationblocks);
+  group.createGroup("child_discretizations");
+  group.createGroup("parent_discretizations");
 }
 
 shared_ptr<DiscretizationBlock>

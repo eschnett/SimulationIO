@@ -406,8 +406,10 @@ TEST(Discretization, create) {
   EXPECT_TRUE(m1->discretizations.empty());
   const auto &conf1 = project->configurations.at("conf1");
   auto d1 = m1->createDiscretization("d1", conf1);
-  EXPECT_EQ(1, m1->discretizations.size());
+  auto d2 = m1->createDiscretization("d2", conf1);
+  EXPECT_EQ(2, m1->discretizations.size());
   EXPECT_EQ(d1, m1->discretizations.at("d1"));
+  EXPECT_EQ(d2, m1->discretizations.at("d2"));
 }
 
 TEST(Discretization, HDF5) {
@@ -421,9 +423,41 @@ TEST(Discretization, HDF5) {
     auto p1 = createProject(file);
     ostringstream buf;
     buf << *p1->manifolds.at("m1")->discretizations.at("d1");
+    buf << *p1->manifolds.at("m1")->discretizations.at("d2");
     EXPECT_EQ(
-        "Discretization \"d1\": Configuration \"conf1\" Manifold \"m1\"\n",
+        "Discretization \"d1\": Configuration \"conf1\" Manifold \"m1\"\n"
+        "Discretization \"d2\": Configuration \"conf1\" Manifold \"m1\"\n",
         buf.str());
+  }
+  remove(filename);
+}
+
+TEST(SubDiscretization, create) {
+  const auto &m1 = project->manifolds.at("m1");
+  const auto &d1 = m1->discretizations.at("d1");
+  const auto &d2 = m1->discretizations.at("d2");
+  EXPECT_TRUE(m1->subdiscretizations.empty());
+  vector<double> factor(m1->dimension, 1.0), offset(m1->dimension, 0.5);
+  const auto &sd1 = m1->createSubDiscretization("sd1", d1, d2, factor, offset);
+  EXPECT_EQ(1, m1->subdiscretizations.size());
+  EXPECT_EQ(sd1, m1->subdiscretizations.at("sd1"));
+}
+
+TEST(SubDiscretization, HDF5) {
+  auto filename = "subdiscretization.h5";
+  {
+    auto file = H5::H5File(filename, H5F_ACC_TRUNC);
+    project->write(file);
+  }
+  {
+    auto file = H5::H5File(filename, H5F_ACC_RDONLY);
+    auto p1 = createProject(file);
+    ostringstream buf;
+    buf << *p1->manifolds.at("m1")->subdiscretizations.at("sd1");
+    EXPECT_EQ("SubDiscretization \"sd1\": Manifold \"m1\" parent "
+              "Discretization \"d1\" child Discretization \"d2\" "
+              "factor=[1,1,1] offset=[0.5,0.5,0.5]\n",
+              buf.str());
   }
   remove(filename);
 }
@@ -433,6 +467,8 @@ TEST(DiscretizationBlock, create) {
   const auto &d1 = m1->discretizations.at("d1");
   EXPECT_TRUE(d1->discretizationblocks.empty());
   auto db1 = d1->createDiscretizationBlock("db1");
+  vector<hssize_t> offset(m1->dimension, 3);
+  db1->setOffset(offset);
   EXPECT_EQ(1, d1->discretizationblocks.size());
   EXPECT_EQ(db1, d1->discretizationblocks.at("db1"));
 }
@@ -448,9 +484,10 @@ TEST(DiscretizationBlock, HDF5) {
     auto p1 = createProject(file);
     ostringstream buf;
     buf << *p1->manifolds.at("m1")->discretizations.at("d1");
-    EXPECT_EQ("Discretization \"d1\": Configuration \"conf1\" Manifold \"m1\"\n"
-              "  DiscretizationBlock \"db1\": Discretization \"d1\"\n",
-              buf.str());
+    EXPECT_EQ(
+        "Discretization \"d1\": Configuration \"conf1\" Manifold \"m1\"\n"
+        "  DiscretizationBlock \"db1\": Discretization \"d1\" offset=[3,3,3]\n",
+        buf.str());
   }
   remove(filename);
 }

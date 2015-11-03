@@ -29,6 +29,7 @@
 #include "Parameter.hpp"
 #include "ParameterValue.hpp"
 #include "Project.hpp"
+#include "SubDiscretization.hpp"
 #include "TangentSpace.hpp"
 #include "TensorComponent.hpp"
 #include "TensorType.hpp"

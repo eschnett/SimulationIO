@@ -28,6 +28,7 @@ using namespace SimulationIO;
 %shared_ptr(Parameter);
 %shared_ptr(ParaemterValue);
 %shared_ptr(Project);
+%shared_ptr(SubDiscretization);
 %shared_ptr(TangentSpace);
 %shared_ptr(TensorComponent);
 %shared_ptr(TensorType);
@@ -54,6 +55,7 @@ struct Manifold;
 struct Parameter;
 struct ParameterValue;
 struct Project;
+struct SubDiscretization;
 struct TangentSpace;
 struct TensorComponent;
 struct TensorType;
@@ -83,6 +85,8 @@ struct TensorType;
 %template(map_string_ParameterValue)
   std::map<string, std::shared_ptr<ParameterValue> >;
 %template(map_string_Project) std::map<string, std::shared_ptr<Project> >;
+%template(map_string_SubDiscretization)
+  std::map<string, std::shared_ptr<SubDiscretization> >;
 %template(map_string_TangentSpace)
   std::map<string, std::shared_ptr<TangentSpace> >;
 %template(map_string_TensorComponent)
@@ -267,6 +271,14 @@ struct Manifold {
   std::shared_ptr<Discretization>
     createDiscretization(const string& name,
                          const std::shared_ptr<Configuration>& configuration);
+  std::shared_ptr<SubDiscretization>
+    createSubDiscretization(const string& name,
+                            const std::shared_ptr<Discretization>&
+                              parent_discretization,
+                            const std::shared_ptr<Discretization>&
+                              child_discretization,
+                            const std::vector<double>& factor,
+                            const std::vector<double>& offset);
 };
 
 struct Parameter {
@@ -324,6 +336,18 @@ struct Project {
 };
 std::shared_ptr<Project> createProject(const string& name);
 std::shared_ptr<Project> createProject(const H5::CommonFG &loc);
+
+struct SubDiscretization {
+  string name;
+  std::weak_ptr<Manifold> manifold;
+  std::shared_ptr<Discretization> parent_discretization;
+  std::shared_ptr<Discretization> child_discretization;
+  std::vector<double> factor;
+  std::vector<double> offset;
+  vector<double> child2parent(const vector<double> &child_idx) const;
+  vector<double> parent2child(const vector<double> &parent_idx) const;
+  bool invariant() const;
+};
 
 struct TangentSpace {
   string name;

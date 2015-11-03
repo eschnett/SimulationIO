@@ -24,6 +24,7 @@ SIO_SRCS = \
 	Parameter.cpp \
 	ParameterValue.cpp \
 	Project.cpp \
+	SubDiscretization.cpp \
 	TangentSpace.cpp \
 	TensorComponent.cpp \
 	TensorType.cpp

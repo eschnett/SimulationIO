@@ -76,6 +76,7 @@ public:
     type_ParameterValue = 16,
     type_CoordinateSystem = 17,
     type_CoordinateField = 18,
+    type_SubDiscretization = 19,
   };
 
   struct range {
