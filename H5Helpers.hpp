@@ -412,9 +412,10 @@ template <typename T>
 typename std::enable_if<detail::is_vector<T>::value, T>::type
 readAttribute(const H5Location &loc, const std::string &name) {
   static_assert(!std::is_same<T, std::string>::value, "");
-  static_assert(!detail::is_vector<T>::value, "");
+  static_assert(detail::is_vector<T>::value, "");
   T values;
-  return readAttribute<T>(loc, name, getType(values[0]), values);
+  readAttribute(loc, name, values);
+  return values;
 }
 
 template <typename T>
