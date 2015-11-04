@@ -4,6 +4,8 @@
 
 #include "H5Helpers.hpp"
 
+#include <algorithm>
+
 namespace SimulationIO {
 
 void SubDiscretization::read(const H5::CommonFG &loc, const string &entry,
@@ -29,7 +31,9 @@ void SubDiscretization::read(const H5::CommonFG &loc, const string &entry,
              string("child_discretization/parent_discretizations/") + name,
              "name") == name);
   H5::readAttribute(group, "factor", factor);
+  std::reverse(factor.begin(), factor.end());
   H5::readAttribute(group, "offset", offset);
+  std::reverse(offset.begin(), offset.end());
   parent_discretization->insertChild(name, shared_from_this());
   child_discretization->insertParent(name, shared_from_this());
 }
@@ -63,7 +67,11 @@ void SubDiscretization::write(const H5::CommonFG &loc,
                      string("manifold/discretizations/") +
                          child_discretization->name + "/parent_discretizations",
                      name, group, ".");
-  H5::createAttribute(group, "factor", factor);
-  H5::createAttribute(group, "offset", offset);
+  auto tmp_factor = factor;
+  std::reverse(tmp_factor.begin(), tmp_factor.end());
+  H5::createAttribute(group, "factor", tmp_factor);
+  auto tmp_offset = offset;
+  std::reverse(tmp_offset.begin(), tmp_offset.end());
+  H5::createAttribute(group, "offset", tmp_offset);
 }
 }

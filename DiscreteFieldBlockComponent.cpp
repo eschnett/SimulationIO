@@ -36,6 +36,7 @@ void DiscreteFieldBlockComponent::read(
                           ->field.lock()
                           ->project.lock()
                           ->rangetype);
+    std::reverse(data_range.begin(), data_range.end());
     data_type = type_range;
   } else {
     auto lapl = H5::take_hid(H5Pcreate(H5P_LINK_ACCESS));
@@ -131,6 +132,7 @@ ostream &DiscreteFieldBlockComponent::output(ostream &os, int level) const {
     const int dim = data_dataspace.getSimpleExtentNdims();
     vector<hsize_t> size(dim);
     data_dataspace.getSimpleExtentDims(size.data());
+    std::reverse(size.begin(), size.end());
     os << "dataset type=" << clsname << "(" << (8 * typesize)
        << " bit) shape=" << size << "\n";
     break;
@@ -212,13 +214,16 @@ void DiscreteFieldBlockComponent::write(const H5::CommonFG &loc,
     assert(!herr);
     break;
   }
-  case type_range:
-    H5::createAttribute(group, "data", data_range, discretefieldblock.lock()
-                                                       ->discretefield.lock()
-                                                       ->field.lock()
-                                                       ->project.lock()
-                                                       ->rangetype);
+  case type_range: {
+    auto tmp_range = data_range;
+    std::reverse(tmp_range.begin(), tmp_range.end());
+    H5::createAttribute(group, "data", tmp_range, discretefieldblock.lock()
+                                                      ->discretefield.lock()
+                                                      ->field.lock()
+                                                      ->project.lock()
+                                                      ->rangetype);
     break;
+  }
   default:
     assert(0);
   }

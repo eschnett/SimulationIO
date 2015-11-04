@@ -677,14 +677,14 @@ TEST(DiscreteFieldBlockComponent, create) {
                  project->name + "/tensortypes/Scalar3D");
   const auto datatype = H5::getType(0.0);
   const int rank = 3;
-  const hsize_t dims[rank] = {9, 10, 11};
+  const hsize_t dims[rank] = {11, 10, 9};
   auto dataspace = H5::DataSpace(rank, dims);
   dfbd3->setData(datatype, dataspace);
   vector<Common::range> range(rank);
   for (int d = 0; d < rank; ++d) {
     range.at(d).minimum = -1.0;
     range.at(d).maximum = +1.0;
-    range.at(d).count = dims[d];
+    range.at(d).count = dims[rank - 1 - d];
   }
   dfbd4->setData(range);
   EXPECT_EQ(DiscreteFieldBlockComponent::type_empty, dfbd1->data_type);

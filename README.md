@@ -35,6 +35,7 @@ This repository contains a few sketches describing brainstorming results in vari
 - In discrete manifold, distinguish between vertex, cell, and other centerings
 - Introduce min/max for discrete fields? For scalars only? Keep array for other tensor types, indexed by stored component? How are missing data indicated? nan?
 - use `*.s5` as file name suffix`
+- Create DataSpace from vector<int>
 
 ## Sub-Manifolds
 - Set of parent manifolds
