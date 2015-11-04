@@ -18,6 +18,9 @@ using namespace std;
 
 const char *const dirnames[] = {"x", "y", "z"};
 
+// Output field widths for various quantities
+const int width_it = 10, width_tl = 1, width_m = 3, width_rl = 2, width_c = 8;
+
 string get_basename(string filename) {
   auto dotpos = filename.rfind('.');
   if (dotpos != string::npos)
@@ -96,9 +99,10 @@ int main(int argc, char **argv) {
   auto tangentspace =
       project->createTangentSpace("space", global_configuration, dim);
   // Discretization for Manifold
-  map<int, vector<shared_ptr<Discretization>>>
-      discretizations;                   // [mapindex][reflevel]
-  map<int, vector<double>> root_ioffset; // [mapindex]
+  map<string, map<int, vector<shared_ptr<Discretization>>>>
+      discretizations; // [configuration][mapindex][reflevel]
+  map<string, map<int, map<int, vector<double>>>>
+      ioffsets; // [configuration][mapindex][reflevel]
   // Basis for TangentSpace
   auto basis = tangentspace->createBasis("Cartesian", global_configuration);
   for (int d = 0; d < dim; ++d) {
@@ -131,13 +135,17 @@ int main(int argc, char **argv) {
           // Determine field name and tensor type
           string fieldname(varname);
           vector<int> tensorindices;
-          while (!fieldname.empty() && *fieldname.rbegin() >= 'x' &&
-                 *fieldname.rbegin() <= 'z') {
-            tensorindices.push_back(*fieldname.rbegin() - 'x');
-            fieldname = fieldname.substr(0, fieldname.length() - 1);
-          }
-          while (!fieldname.empty() && *fieldname.rbegin() == ':') {
-            fieldname = fieldname.substr(0, fieldname.length() - 1);
+          if (fieldname.substr(0, 4) == "GRID") {
+            // Special case for coordinates: do nothing, treat them as scalars
+          } else {
+            while (!fieldname.empty() && *fieldname.rbegin() >= 'x' &&
+                   *fieldname.rbegin() <= 'z') {
+              tensorindices.push_back(*fieldname.rbegin() - 'x');
+              fieldname = fieldname.substr(0, fieldname.length() - 1);
+            }
+            while (!fieldname.empty() && *fieldname.rbegin() == ':') {
+              fieldname = fieldname.substr(0, fieldname.length() - 1);
+            }
           }
           assert(!fieldname.empty());
           reverse(tensorindices.begin(), tensorindices.end());
@@ -156,8 +164,6 @@ int main(int argc, char **argv) {
           int iteration = 0, timelevel = 0, mapindex = 0, refinementlevel = 0,
               component = 0;
           bool is_multiblock = false, is_amr = false, is_parallel = false;
-          const int width_it = 10, width_tl = 1, width_m = 3, width_rl = 2,
-                    width_c = 8;
           for (const auto &token : tokens) {
             auto eqpos = token.find('=');
             string id = token.substr(0, eqpos);
@@ -193,9 +199,6 @@ int main(int argc, char **argv) {
           for (int d = 0; d < int(ioffset.size()); ++d)
             ioffset.at(d) =
                 double(ioffsetnum.at(d)) / double(ioffsetdenom.at(d));
-          if (refinementlevel == 0)
-            if (!root_ioffset.count(mapindex))
-              root_ioffset[mapindex] = ioffset;
 
           // Output information
           cout << "    field name: " << fieldname << "\n"
@@ -234,7 +237,7 @@ int main(int argc, char **argv) {
                   value_iteration_name);
               value_iteration->setValue(iteration);
             }
-            auto value_iteration =
+            const auto &value_iteration =
                 parameter_iteration->parametervalues.at(value_iteration_name);
             configuration->insertParameterValue(value_iteration);
             if (!parameter_timelevel->parametervalues.count(
@@ -243,11 +246,12 @@ int main(int argc, char **argv) {
                   value_timelevel_name);
               value_timelevel->setValue(timelevel);
             }
-            auto value_timelevel =
+            const auto &value_timelevel =
                 parameter_timelevel->parametervalues.at(value_timelevel_name);
             configuration->insertParameterValue(value_timelevel);
           }
-          auto configuration = project->configurations.at(configurationname);
+          const auto &configuration =
+              project->configurations.at(configurationname);
 
           // Get tensor type
           auto tensortype = project->tensortypes.at(tensortypename);
@@ -262,15 +266,20 @@ int main(int argc, char **argv) {
           assert(tensorcomponent);
 
           // Get discretization
-          if (!discretizations.count(mapindex)) {
-            discretizations[mapindex];
-          }
-          while (int(discretizations.at(mapindex).size()) <= refinementlevel) {
-            int rl = discretizations.at(mapindex).size();
+          ioffsets[configuration->name][mapindex][refinementlevel] = ioffset;
+          if (!discretizations.count(configuration->name))
+            discretizations[configuration->name];
+          if (!discretizations.at(configuration->name).count(mapindex))
+            discretizations.at(configuration->name)[mapindex];
+          while (int(discretizations.at(configuration->name)
+                         .at(mapindex)
+                         .size()) <= refinementlevel) {
+            const int rl =
+                discretizations.at(configuration->name).at(mapindex).size();
             string discretizationname;
             {
               ostringstream buf;
-              buf << "grid";
+              buf << configuration->name;
               if (is_multiblock)
                 buf << "-map." << setfill('0') << setw(width_m) << mapindex;
               if (is_amr)
@@ -279,34 +288,19 @@ int main(int argc, char **argv) {
             }
             auto discretization = manifold->createDiscretization(
                 discretizationname, configuration);
-            discretizations.at(mapindex).push_back(discretization);
-            if (rl > 0) {
-              string subdiscretizationname;
-              {
-                ostringstream buf;
-                buf << "level." << setfill('0') << setw(width_rl) << rl;
-                subdiscretizationname = buf.str();
-              }
-              vector<double> offset(manifold->dimension);
-              for (int d = 0; d < manifold->dimension; ++d)
-                offset.at(d) = ioffset.at(d) - root_ioffset.at(mapindex).at(d);
-              vector<double> factor(manifold->dimension, 2);
-              auto subdiscretization = manifold->createSubDiscretization(
-                  subdiscretizationname,
-                  discretizations.at(mapindex).at(rl - 1),
-                  discretizations.at(mapindex).at(rl), factor, offset);
-              (void)subdiscretization;
-            }
+            discretizations.at(configuration->name)
+                .at(mapindex)
+                .push_back(discretization);
           }
-          const auto &discretization =
-              discretizations.at(mapindex).at(refinementlevel);
+          const auto &discretization = discretizations.at(configuration->name)
+                                           .at(mapindex)
+                                           .at(refinementlevel);
 
           // Get discretization block
           string blockname;
           {
             ostringstream buf;
-            buf << configuration->name << "-c." << setfill('0') << setw(width_c)
-                << component;
+            buf << "c." << setfill('0') << setw(width_c) << component;
             blockname = buf.str();
           }
           if (!discretization->discretizationblocks.count(blockname)) {
@@ -316,7 +310,7 @@ int main(int argc, char **argv) {
             H5::readAttribute(dataset, "iorigin", offset);
             discretizationblock->setOffset(offset);
           }
-          auto discretizationblock =
+          const auto &discretizationblock =
               discretization->discretizationblocks.at(blockname);
           // Get field
           if (!project->fields.count(fieldname)) {
@@ -324,7 +318,7 @@ int main(int argc, char **argv) {
                 project->createField(fieldname, global_configuration, manifold,
                                      tangentspace, tensortype);
           }
-          auto field = project->fields.at(fieldname);
+          const auto &field = project->fields.at(fieldname);
 
           // Get coordinates
           if (field->name == "GRID") {
@@ -338,15 +332,48 @@ int main(int argc, char **argv) {
               project->createCoordinateSystem(coordinatesystemname,
                                               configuration, manifold);
             }
-            auto coordinatesystem =
+            const auto &coordinatesystem =
                 project->coordinatesystems.at(coordinatesystemname);
-            // TODO: Handle scalar coordinate fields
             assert(tensortype->rank == 1);
             int direction = tensorcomponent->indexvalues.at(0);
             string coordinatefieldname;
             {
               ostringstream buf;
               buf << coordinatesystem->name << "-" << direction;
+              coordinatefieldname = buf.str();
+            }
+            if (!coordinatesystem->directions.count(direction)) {
+              coordinatesystem->createCoordinateField(coordinatefieldname,
+                                                      direction, field);
+            }
+          } else if (field->name == "GRID::x" || field->name == "GRID::y" ||
+                     field->name == "GRID::z") {
+            string coordinatesystemname;
+            {
+              ostringstream buf;
+              buf << "GRID-" << configuration->name;
+              coordinatesystemname = buf.str();
+            }
+            if (!project->coordinatesystems.count(coordinatesystemname)) {
+              project->createCoordinateSystem(coordinatesystemname,
+                                              configuration, manifold);
+            }
+            const auto &coordinatesystem =
+                project->coordinatesystems.at(coordinatesystemname);
+            assert(tensortype->rank == 0);
+            int direction = -1;
+            if (field->name == "GRID::x")
+              direction = 0;
+            else if (field->name == "GRID::y")
+              direction = 1;
+            else if (field->name == "GRID::z")
+              direction = 2;
+            else
+              assert(0);
+            string coordinatefieldname;
+            {
+              ostringstream buf;
+              buf << coordinatesystem->name << "-" << *field->name.rbegin();
               coordinatefieldname = buf.str();
             }
             if (!coordinatesystem->directions.count(direction)) {
@@ -366,7 +393,8 @@ int main(int argc, char **argv) {
             field->createDiscreteField(discretefieldname, configuration,
                                        discretization, basis);
           }
-          auto discretefield = field->discretefields.at(discretefieldname);
+          const auto &discretefield =
+              field->discretefields.at(discretefieldname);
           // Get discrete field block
           if (!discretefield->discretefieldblocks.count(
                   discretizationblock->name)) {
@@ -381,7 +409,7 @@ int main(int argc, char **argv) {
             discretefieldblock->createDiscreteFieldBlockComponent(
                 tensorcomponent->name, tensorcomponent);
           }
-          auto discretefieldblockcomponent =
+          const auto &discretefieldblockcomponent =
               discretefieldblock->discretefieldblockcomponents.at(
                   tensorcomponent->name);
           switch (action) {
@@ -397,6 +425,53 @@ int main(int argc, char **argv) {
           // Done
           return 0;
         });
+
+    // Create subdiscretizations
+    // We need to add these late since Cactus stores the refinement level
+    // offsets with respect to a (virtual) global grid, whereas we need the
+    // relative offsets between two refinement levels. We can only calculate
+    // these after both levels have been handled.
+    for (const auto &i0 : ioffsets) {
+      const auto &configurationname = i0.first;
+      const auto &ioffsets1 = i0.second;
+      for (const auto &i1 : ioffsets1) {
+        const auto &mapindex = i1.first;
+        const auto &ioffsets2 = i1.second;
+        for (const auto &i2 : ioffsets2) {
+          const auto &refinementlevel = i2.first;
+          const auto &ioffset = i2.second;
+
+          // Skip the coarsest grid that exists at this iteration
+          if (ioffsets2.count(refinementlevel - 1)) {
+            string subdiscretizationname;
+            {
+              ostringstream buf;
+              // TODO: Only output map for multi-block simulations
+              buf << configurationname << "-map." << setfill('0')
+                  << setw(width_m) << mapindex << "-level." << setfill('0')
+                  << setw(width_rl) << refinementlevel;
+              subdiscretizationname = buf.str();
+            }
+            if (!manifold->subdiscretizations.count(subdiscretizationname)) {
+              const auto &coarse_ioffset = ioffsets2.at(refinementlevel - 1);
+              vector<double> offset(ioffset.size());
+              for (int d = 0; d < int(offset.size()); ++d)
+                offset.at(d) = ioffset.at(d) - coarse_ioffset.at(d);
+              vector<double> factor(manifold->dimension, 2);
+              auto subdiscretization = manifold->createSubDiscretization(
+                  subdiscretizationname, discretizations.at(configurationname)
+                                             .at(mapindex)
+                                             .at(refinementlevel - 1),
+                  discretizations.at(configurationname)
+                      .at(mapindex)
+                      .at(refinementlevel),
+                  factor, offset);
+              (void)subdiscretization;
+            }
+          }
+        }
+      }
+    }
   }
 
   // Write file
