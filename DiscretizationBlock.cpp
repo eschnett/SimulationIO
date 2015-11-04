@@ -2,6 +2,8 @@
 
 #include "H5Helpers.hpp"
 
+#include <algorithm>
+
 namespace SimulationIO {
 
 void DiscretizationBlock::read(
@@ -18,6 +20,7 @@ void DiscretizationBlock::read(
          discretization->name);
   if (group.attrExists("offset"))
     H5::readAttribute(group, "offset", offset);
+  std::reverse(offset.begin(), offset.end());
 }
 
 ostream &DiscretizationBlock::output(ostream &os, int level) const {
@@ -38,7 +41,10 @@ void DiscretizationBlock::write(const H5::CommonFG &loc,
       "DiscretizationBlock");
   H5::createAttribute(group, "name", name);
   H5::createHardLink(group, "discretization", parent, ".");
-  if (!offset.empty())
-    H5::createAttribute(group, "offset", offset);
+  if (!offset.empty()) {
+    auto tmp_offset = offset;
+    std::reverse(tmp_offset.begin(), tmp_offset.end());
+    H5::createAttribute(group, "offset", tmp_offset);
+  }
 }
 }
