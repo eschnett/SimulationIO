@@ -36,6 +36,7 @@ This repository contains a few sketches describing brainstorming results in vari
 - Introduce min/max for discrete fields? For scalars only? Keep array for other tensor types, indexed by stored component? How are missing data indicated? nan?
 - use `*.s5` as file name suffix`
 - Create DataSpace from vector<int>
+- Add Discretization::shape (similar to offset)
 
 ## Sub-Manifolds
 - Set of parent manifolds

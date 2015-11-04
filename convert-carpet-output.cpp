@@ -386,8 +386,7 @@ int main(int argc, char **argv) {
           string discretefieldname;
           {
             ostringstream buf;
-            buf << fieldname << "-" << configuration->name << "-"
-                << discretization->name;
+            buf << fieldname << "-" << discretization->name;
             discretefieldname = buf.str();
           }
           if (!field->discretefields.count(discretefieldname)) {
