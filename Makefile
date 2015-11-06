@@ -37,7 +37,7 @@ ALL_SRCS = \
 	selftest.cpp
 ALL_EXE = \
 	benchmark convert-carpet-output list example selftest \
-	_H5.so _SimulationIO.so
+	_H5.so _RegionCalculus.so _SimulationIO.so
 
 HDF5_DIR = /opt/local
 HDF5_CPPFLAGS = -I$(HDF5_DIR)/include

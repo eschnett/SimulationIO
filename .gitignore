@@ -51,3 +51,4 @@ SimulationIO.py
 iof5-*.h5
 
 HDF5 PERFORMANCE
+RegionCalculus.py
