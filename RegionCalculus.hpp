@@ -32,7 +32,10 @@ template <> struct largeint<long> { typedef long long type; };
 
 template <typename T, int D> struct point {
   array<T, D> elt;
-  point() : point(T(0)) {}
+  point() {
+    for (int d = 0; d < D; ++d)
+      elt[d] = T(0);
+  }
   point(const array<T, D> &p) : elt(p) {}
   point(const vector<T> &p) {
     assert(p.size() == D);
