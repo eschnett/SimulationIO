@@ -8,6 +8,7 @@ ifneq ($(COVERAGE),)
 CXXFLAGS += --coverage
 endif
 
+RC_SRCS =
 SIO_SRCS = \
 	Basis.cpp \
 	BasisVector.cpp \
@@ -30,14 +31,18 @@ SIO_SRCS = \
 	TensorType.cpp
 ALL_SRCS = \
 	$(SIO_SRCS) \
+	$(RC_SRCS) \
 	benchmark.cpp \
 	convert-carpet-output.cpp \
 	example.cpp \
 	list.cpp \
-	selftest.cpp
+	test_RegionCalculus.cpp \
+	test_SimulationIO.cpp
+PYTHON_EXE = _H5.so _RegionCalculus.so _SimulationIO.so
 ALL_EXE = \
-	benchmark convert-carpet-output list example selftest \
-	_H5.so _RegionCalculus.so _SimulationIO.so
+	$(PYTHON_EXE) \
+	benchmark convert-carpet-output list example \
+	test_RegionCalculus test_SimulationIO
 
 HDF5_DIR = /opt/local
 HDF5_CPPFLAGS = -I$(HDF5_DIR)/include
@@ -67,11 +72,15 @@ gtest:
 gtest-all.o: gtest
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(GTEST_DIR)/src/gtest-all.cc
 
-selftest.o: gtest
-selftest: $(SIO_SRCS:%.cpp=%.o) selftest.o gtest-all.o
+test_RegionCalculus.o: gtest
+test_SimulationIO.o: gtest
+test_RegionCalculus: $(RC_SRCS:%.cpp=%.o) test_RegionCalculus.o gtest-all.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
-test: selftest
-	./selftest
+test_SimulationIO: $(SIO_SRCS:%.cpp=%.o) test_SimulationIO.o gtest-all.o
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
+test: test_RegionCalculus test_SimulationIO
+	./test_RegionCalculus
+	./test_SimulationIO
 
 benchmark: $(SIO_SRCS:%.cpp=%.o) benchmark.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
@@ -99,8 +108,8 @@ _%.so: %_wrap.o $(SIO_SRCS:%.cpp=%.o)
 %_wrap.cpp: %.i
 	swig -Wall -c++ -python $*.i
 	mv $*_wrap.cxx $*_wrap.cpp
-.PRECIOUS: H5_wrap.cpp SimulationIO_wrap.cpp
-.PRECIOUS: H5_wrap.o SimulationIO_wrap.o
+.PRECIOUS: $(PYTHON_EXE:_%.so=%_wrap.cpp)
+.PRECIOUS: $(PYTHON_EXE:_%.so=%_wrap.o)
 
 %.o: %.cpp
 	@$(RM) $*.o
@@ -127,11 +136,11 @@ clean:
 	$(RM) -r *.dSYM
 	$(RM) *.gcda *.gcno coverage.info
 	$(RM) gtest-all.o
-	$(RM) $(ALL_SRCS:%.cpp=%.o) $(ALL_SRCS:%.cpp=%.d)
-	$(RM) H5_wrap.cxx H5_wrap.cpp H5_wrap.d H5_wrap.o H5.py H5.pyc
-	$(RM) SimulationIO_wrap.cxx SimulationIO_wrap.cpp SimulationIO_wrap.d \
-		SimulationIO_wrap.o SimulationIO.py SimulationIO.pyc
-	$(RM) $(ALL_EXE)
+	$(RM) -- $(ALL_SRCS:%.cpp=%.o) $(ALL_SRCS:%.cpp=%.d)
+	$(RM) -- $(PYTHON_EXE:_%.so=%_wrap.cxx) $(PYTHON_EXE:_%.so=%_wrap.cpp)
+	$(RM) -- $(PYTHON_EXE:_%.so=%_wrap.d) $(PYTHON_EXE:_%.so=%_wrap.o)
+	$(RM) -- $(PYTHON_EXE:_%.so=%.py) $(PYTHON_EXE:_%.so=%.pyc)
+	$(RM) -- $(ALL_EXE)
 
 distclean: clean
 	$(RM) $(GTEST_DIR).tar.gz
