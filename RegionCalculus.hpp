@@ -30,7 +30,9 @@ template <> struct largeint<int> { typedef long long type; };
 template <> struct largeint<long> { typedef long long type; };
 }
 
-template <typename T, int D> struct point {
+template <typename T> struct dpoint { virtual bool all() const = 0; };
+
+template <typename T, int D> struct point final : dpoint<T> {
   array<T, D> elt;
   point() {
     for (int d = 0; d < D; ++d)
