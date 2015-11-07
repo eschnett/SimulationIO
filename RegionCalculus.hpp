@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <functional>
 #include <iostream>
 #include <limits>
 #include <memory>
@@ -178,6 +179,8 @@ template <typename T, int D> struct point {
   point<bool, D> operator>=(const point &p) const { return !(*this < p); }
   point<bool, D> operator<=(const point &p) const { return !(*this > p); }
 
+  bool less(const point &p) const { return elt < p.elt; }
+
   // Reductions
   bool all() const {
     bool r = true;
@@ -264,11 +267,22 @@ template <typename T, int D>
 typename point<T, D>::prod_t prod(const point<T, D> &p) {
   return p.prod();
 }
+}
+
+namespace std {
+template <typename T, int D> struct less<RegionCalculus::point<T, D>> {
+  bool operator()(const RegionCalculus::point<T, D> &p,
+                  const RegionCalculus::point<T, D> &q) const {
+    return p.less(q);
+  }
+};
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Box
 ////////////////////////////////////////////////////////////////////////////////
 
+namespace RegionCalculus {
 template <typename T, int D> struct box {
   point<T, D> lo, hi;
   box() = default;
@@ -316,6 +330,18 @@ template <typename T, int D> struct box {
     return all(lo == b.lo && hi == b.hi);
   }
   bool operator!=(const box &b) const { return !(*this == b); }
+  bool less(const box &b) const {
+    if (b.empty())
+      return false;
+    if (empty())
+      return true;
+    std::less<point<T, D>> cmp_less;
+    if (cmp_less(lo, b.lo))
+      return true;
+    if (cmp_less(b.lo, lo))
+      return false;
+    return cmp_less(hi, b.hi);
+  }
 
   // Set comparison operators
   bool contains(const point<T, D> &p) const {
@@ -479,11 +505,22 @@ template <typename T, int D> struct box {
   }
   friend ostream &operator<<(ostream &os, const box &b) { return b.output(os); }
 };
+}
+
+namespace std {
+template <typename T, int D> struct less<RegionCalculus::box<T, D>> {
+  bool operator()(const RegionCalculus::box<T, D> &p,
+                  const RegionCalculus::box<T, D> &q) const {
+    return p.less(q);
+  }
+};
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Region
 ////////////////////////////////////////////////////////////////////////////////
 
+namespace RegionCalculus {
 template <typename T, int D> struct region {
   vector<box<T, D>> boxes;
   region() = default;
@@ -502,6 +539,11 @@ template <typename T, int D> struct region {
     boxes.insert(boxes.end(), r.boxes.begin(), r.boxes.end());
   }
 
+  // Normalization
+  void normalize() {
+    std::sort(boxes.begin(), boxes.end(), std::less<box<T, D>>());
+  }
+
   // Invariant
   bool invariant() const {
     for (std::size_t i = 0; i < boxes.size(); ++i) {
@@ -509,6 +551,8 @@ template <typename T, int D> struct region {
         return false;
       for (std::size_t j = i + 1; j < boxes.size(); ++j) {
         if (!boxes[i].isdisjoint(boxes[j]))
+          return false;
+        if (!boxes[i].less(boxes[j]))
           return false;
       }
     }
@@ -540,12 +584,14 @@ template <typename T, int D> struct region {
       if (!nb.empty())
         nr.boxes.push_back(nb);
     }
+    nr.normalize();
     return nr;
   }
   region operator&(const region &r) const {
     region nr;
     for (const auto &b : r.boxes)
       nr.append(*this & b);
+    nr.normalize();
     return nr;
   }
   region intersection(const box<T, D> &b) const { return *this & b; }
@@ -555,12 +601,14 @@ template <typename T, int D> struct region {
     region nr;
     for (const auto &rb : boxes)
       nr.append(region(rb - b));
+    nr.normalize();
     return nr;
   }
   region operator-(const region &r) const {
     region nr = *this;
     for (const auto &b : r.boxes)
       nr = nr - b;
+    nr.normalize();
     return nr;
   }
   region difference(const box<T, D> &b) const { return *this - b; }
@@ -569,6 +617,7 @@ template <typename T, int D> struct region {
   region operator|(const region &r) const {
     region nr = *this - r;
     nr.append(r);
+    nr.normalize();
     return nr;
   }
   region setunion(const region &r) const { return *this | r; }
@@ -576,6 +625,7 @@ template <typename T, int D> struct region {
   region operator^(const region &r) const {
     region nr = *this - r;
     nr.append(r - *this);
+    nr.normalize();
     return nr;
   }
   region symmetric_difference(const region &r) const { return *this ^ r; }
@@ -614,6 +664,9 @@ template <typename T, int D> struct region {
   bool operator==(const region &r) const { return (*this ^ r).empty(); }
   bool operator!=(const region &r) const { return !(*this == r); }
 
+  bool equal_to(const region &r) const { return boxes == r.boxes; }
+  bool less(const region &r) const { return boxes < r.boxes; }
+
   // Output
   ostream &output(ostream &os) const {
     os << "{";
@@ -629,11 +682,29 @@ template <typename T, int D> struct region {
     return r.output(os);
   }
 };
+}
+
+namespace std {
+template <typename T, int D> struct equal_to<RegionCalculus::region<T, D>> {
+  bool operator()(const RegionCalculus::region<T, D> &p,
+                  const RegionCalculus::region<T, D> &q) const {
+    return p.equal_to(q);
+  }
+};
+
+template <typename T, int D> struct less<RegionCalculus::region<T, D>> {
+  bool operator()(const RegionCalculus::region<T, D> &p,
+                  const RegionCalculus::region<T, D> &q) const {
+    return p.less(q);
+  }
+};
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Dimension-independent wrappers
 ////////////////////////////////////////////////////////////////////////////////
 
+namespace RegionCalculus {
 template <typename T, typename... Args>
 unique_ptr<T> make_unique(Args &&... args) {
   return unique_ptr<T>(new T(std::forward<Args>(args)...));
