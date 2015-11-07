@@ -221,22 +221,30 @@ struct Discretization {
 
 struct DiscretizationBlock {
   string name;
-  // std::vector<int> offset;
+  // std::box_t region;
   %extend {
     std::vector<int> getOffset() const {
-      std::vector<int> offset_(self->offset.size());
-      std::copy(self->offset.begin(), self->offset.end(), offset_.begin());
-      return offset_;
+      std::vector<hssize_t> hoffset = self->region.lower();
+      std::vector<int> ioffset(hoffset.size());
+      std::copy(hoffset.begin(), hoffset.end(), ioffset.begin());
+      return ioffset;
+    }
+    std::vector<int> getShape() const {
+      std::vector<hssize_t> hoffset = self->region.shape();
+      std::vector<int> ioffset(hoffset.size());
+      std::copy(hoffset.begin(), hoffset.end(), ioffset.begin());
+      return ioffset;
     }
   }
   std::weak_ptr<Discretization> discretization;
   bool invariant() const;
-  // void setOffset(const std::vector<int>& offset);
   %extend {
-    void setOffset(const std::vector<int>& offset_) {
-      std::vector<hssize_t> offset(offset_.size());
-      std::copy(offset_.begin(), offset_.end(), offset.begin());
-      self->setOffset(offset);
+    void setRegion(const std::vector<int>& ioffset,
+                   const std::vector<int>& ishape) {
+      std::vector<hssize_t> hoffset(ioffset.size()), hshape(ishape.size());
+      std::copy(ioffset.begin(), ioffset.end(), hoffset.begin());
+      std::copy(ishape.begin(), ishape.end(), hshape.begin());
+      self->setRegion(box_t(hoffset, point_t(hoffset) + hshape));
     }
   }
 };

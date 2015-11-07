@@ -62,11 +62,14 @@ int main(int argc, char **argv) {
         ostringstream name;
         name << "grid." << p;
         auto block = discretization->createDiscretizationBlock(name.str());
-        vector<hssize_t> offset(dim);
+        vector<hssize_t> offset(dim), shape(dim);
         offset.at(0) = nli * pi;
         offset.at(1) = nlj * pj;
         offset.at(2) = nlk * pk;
-        block->setOffset(offset);
+        shape.at(0) = nli;
+        shape.at(1) = nlj;
+        shape.at(2) = nlk;
+        block->setRegion(box_t(offset, point_t(offset) + shape));
         blocks.push_back(block);
       }
 

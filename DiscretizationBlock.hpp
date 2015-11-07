@@ -3,6 +3,7 @@
 
 #include "Common.hpp"
 #include "Discretization.hpp"
+#include "RegionCalculus.hpp"
 
 #include <H5Cpp.h>
 
@@ -21,13 +22,18 @@ using std::string;
 using std::vector;
 using std::weak_ptr;
 
+typedef RegionCalculus::dpoint<hssize_t> point_t;
+typedef RegionCalculus::dbox<hssize_t> box_t;
+typedef RegionCalculus::dregion<hssize_t> region_t;
+
 struct DiscreteFieldBlock;
 
 struct DiscretizationBlock : Common,
                              std::enable_shared_from_this<DiscretizationBlock> {
   // Discretization of a certain region, represented by contiguous data
   weak_ptr<Discretization> discretization; // parent
-  vector<hssize_t> offset;
+  box_t region;
+  region_t active;
   NoBackLink<weak_ptr<DiscreteFieldBlock>> discretefieldblocks;
 
   // bounding box? in terms of coordinates?
@@ -38,9 +44,10 @@ struct DiscretizationBlock : Common,
     return Common::invariant() && bool(discretization.lock()) &&
            discretization.lock()->discretizationblocks.count(name) &&
            discretization.lock()->discretizationblocks.at(name).get() == this &&
-           (offset.empty() ||
-            int(offset.size()) ==
-                discretization.lock()->manifold.lock()->dimension);
+           (!bool(region) ||
+            (region.rank() ==
+                 discretization.lock()->manifold.lock()->dimension &&
+             !region.empty()));
   }
 
   DiscretizationBlock() = delete;
@@ -73,11 +80,12 @@ private:
 public:
   virtual ~DiscretizationBlock() {}
 
-  void setOffset() { offset.clear(); }
-  void setOffset(const std::vector<hssize_t> &offset_) {
-    assert(int(offset_.size()) ==
-           discretization.lock()->manifold.lock()->dimension);
-    offset = offset_;
+  void setRegion() { region.reset(); }
+  void setRegion(const box_t &region_) {
+    assert(region_.rank() ==
+               discretization.lock()->manifold.lock()->dimension &&
+           !region_.empty());
+    region = region_;
   }
 
   virtual ostream &output(ostream &os, int level = 0) const;

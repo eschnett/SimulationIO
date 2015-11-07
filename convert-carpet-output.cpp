@@ -306,9 +306,15 @@ int main(int argc, char **argv) {
           if (!discretization->discretizationblocks.count(blockname)) {
             auto discretizationblock =
                 discretization->createDiscretizationBlock(blockname);
-            vector<hssize_t> offset(dim);
+            vector<hssize_t> offset(dim), shape(dim);
             H5::readAttribute(dataset, "iorigin", offset);
-            discretizationblock->setOffset(offset);
+            auto dataspace = dataset.getSpace();
+            int rank = dataspace.getSimpleExtentNdims();
+            assert(rank == dim);
+            dataspace.getSimpleExtentDims((hsize_t *)(shape.data()));
+            std::reverse(shape.begin(), shape.end());
+            discretizationblock->setRegion(
+                box_t(offset, point_t(offset) + shape));
           }
           const auto &discretizationblock =
               discretization->discretizationblocks.at(blockname);

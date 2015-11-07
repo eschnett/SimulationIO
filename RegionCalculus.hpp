@@ -6,6 +6,7 @@
 #include <cassert>
 #include <iostream>
 #include <limits>
+#include <memory>
 #include <vector>
 
 #define REGIONCALCULUS_DEBUG 1
@@ -17,6 +18,7 @@ using std::array;
 using std::min;
 using std::max;
 using std::ostream;
+using std::unique_ptr;
 using std::vector;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -30,9 +32,7 @@ template <> struct largeint<int> { typedef long long type; };
 template <> struct largeint<long> { typedef long long type; };
 }
 
-template <typename T> struct dpoint { virtual bool all() const = 0; };
-
-template <typename T, int D> struct point final : dpoint<T> {
+template <typename T, int D> struct point {
   array<T, D> elt;
   point() {
     for (int d = 0; d < D; ++d)
@@ -281,6 +281,8 @@ template <typename T, int D> struct box {
 
   // Predicates
   bool empty() const { return any(hi <= lo); }
+  point<T, D> lower() const { return empty() ? point<T, D>(0) : lo; }
+  point<T, D> upper() const { return empty() ? point<T, D>(0) : hi; }
   point<T, D> shape() const { return max(hi - lo, point<T, D>(0)); }
   typedef typename point<T, D>::prod_t prod_t;
   prod_t size() const { return prod(shape()); }
@@ -624,6 +626,373 @@ template <typename T, int D> struct region {
     return os;
   }
   friend ostream &operator<<(ostream &os, const region &r) {
+    return r.output(os);
+  }
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// Dimension-independent wrappers
+////////////////////////////////////////////////////////////////////////////////
+
+template <typename T, typename... Args>
+unique_ptr<T> make_unique(Args &&... args) {
+  return unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
+
+// Virtual classes
+
+template <typename T> struct vpoint {
+  static unique_ptr<vpoint> make(int d);
+  static unique_ptr<vpoint> make(const vector<T> &val);
+  virtual unique_ptr<vpoint> copy() const = 0;
+
+  virtual operator vector<T>() const = 0;
+
+  virtual int rank() const = 0;
+
+  // virtual unique_ptr<vpoint<T>> posit() const = 0;
+  // virtual unique_ptr<vpoint<T>> negate() const = 0;
+
+  virtual unique_ptr<vpoint<T>> plus(const unique_ptr<vpoint<T>> &p) const = 0;
+  // virtual unique_ptr<vpoint<T>> minus(const vpoint<T> *p) const = 0;
+  // virtual unique_ptr<vpoint<T>> multiplies(const vpoint<T> *p) const = 0;
+
+  virtual ostream &output(ostream &os) const = 0;
+  friend ostream &operator<<(ostream &os, const vpoint &p) {
+    return p.output(os);
+  }
+};
+
+template <typename T> struct vbox {
+  virtual unique_ptr<vbox> copy() const = 0;
+
+  static unique_ptr<vbox> make(int d);
+  static unique_ptr<vbox> make(const unique_ptr<vpoint<T>> &lo,
+                               const unique_ptr<vpoint<T>> &hi);
+
+  virtual int rank() const = 0;
+  virtual bool empty() const = 0;
+  virtual unique_ptr<vpoint<T>> shape() const = 0;
+  virtual unique_ptr<vpoint<T>> lower() const = 0;
+  virtual unique_ptr<vpoint<T>> upper() const = 0;
+  typedef typename box<T, 0>::prod_t prod_t;
+  virtual prod_t size() const = 0;
+
+  // virtual unique_ptr<vbox> bounding_box(const vbox *b) const = 0;
+
+  virtual ostream &output(ostream &os) const = 0;
+  friend ostream &operator<<(ostream &os, const vbox &b) {
+    return b.output(os);
+  }
+};
+
+template <typename T> struct vregion {
+  static unique_ptr<vregion> make(int d);
+  virtual unique_ptr<vregion> copy() const = 0;
+
+  virtual int rank() const = 0;
+  virtual bool empty() const = 0;
+  typedef typename region<T, 0>::prod_t prod_t;
+  virtual prod_t size() const = 0;
+
+  virtual unique_ptr<vregion> bounding_box() const = 0;
+
+  virtual ostream &output(ostream &os) const = 0;
+  friend ostream &operator<<(ostream &os, const vregion &r) {
+    return r.output(os);
+  }
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Wrapper classes (using pointers)
+
+template <typename T, int D> struct wpoint : vpoint<T> {
+  point<T, D> val;
+
+  unique_ptr<vpoint<T>> copy() const { return make_unique<wpoint>(*this); }
+
+  wpoint(const vector<T> &p) : val(p) {}
+
+  operator vector<T>() const { return vector<T>(val); }
+
+  int rank() const { return D; }
+
+  unique_ptr<vpoint<T>> plus(const unique_ptr<vpoint<T>> &p) const {
+    return make_unique<wpoint>(val +
+                               dynamic_cast<const wpoint *>(p.get())->val);
+  }
+
+  ostream &output(ostream &os) const { return val.output(os); }
+  friend ostream &operator<<(ostream &os, const wpoint &p) {
+    return p.output(os);
+  }
+};
+
+template <typename T> unique_ptr<vpoint<T>> vpoint<T>::make(int d) {
+  switch (d) {
+  case 0:
+    return make_unique<wpoint<T, 0>>();
+  case 1:
+    return make_unique<wpoint<T, 1>>();
+  case 2:
+    return make_unique<wpoint<T, 2>>();
+  case 3:
+    return make_unique<wpoint<T, 3>>();
+  case 4:
+    return make_unique<wpoint<T, 4>>();
+  default:
+    assert(0);
+  }
+}
+
+template <typename T>
+unique_ptr<vpoint<T>> vpoint<T>::make(const vector<T> &val) {
+  switch (val.size()) {
+  case 0:
+    return make_unique<wpoint<T, 0>>(val);
+  case 1:
+    return make_unique<wpoint<T, 1>>(val);
+  case 2:
+    return make_unique<wpoint<T, 2>>(val);
+  case 3:
+    return make_unique<wpoint<T, 3>>(val);
+  case 4:
+    return make_unique<wpoint<T, 4>>(val);
+  default:
+    assert(0);
+  }
+}
+
+template <typename T, int D> struct wbox : vbox<T> {
+  box<T, D> val;
+
+  wbox(const wpoint<T, D> *lo, const wpoint<T, D> *hi)
+      : val(lo->val, hi->val) {}
+
+  unique_ptr<vbox<T>> copy() const { return make_unique<wbox>(*this); }
+
+  int rank() const { return D; }
+  bool empty() const { return val.empty(); }
+  unique_ptr<vpoint<T>> lower() const {
+    return make_unique<wpoint<T, D>>(val.lower());
+  }
+  unique_ptr<vpoint<T>> upper() const {
+    return make_unique<wpoint<T, D>>(val.upper());
+  }
+  unique_ptr<vpoint<T>> shape() const {
+    return make_unique<wpoint<T, D>>(val.shape());
+  }
+  typedef typename vbox<T>::prod_t prod_t;
+  prod_t size() const { return val.size(); }
+
+  // unique_ptr<wbox> bounding_box(const wbox *b) const {
+  //   return val.bounding_box(*b);
+  // }
+
+  ostream &output(ostream &os) const { return val.output(os); }
+  friend ostream &operator<<(ostream &os, const wbox &b) {
+    return b.output(os);
+  }
+};
+
+template <typename T> unique_ptr<vbox<T>> vbox<T>::make(int d) {
+  switch (d) {
+  case 0:
+    return make_unique<wbox<T, 0>>();
+  case 1:
+    return make_unique<wbox<T, 1>>();
+  case 2:
+    return make_unique<wbox<T, 2>>();
+  case 3:
+    return make_unique<wbox<T, 3>>();
+  case 4:
+    return make_unique<wbox<T, 4>>();
+  default:
+    assert(0);
+  }
+}
+
+template <typename T>
+unique_ptr<vbox<T>> vbox<T>::make(const unique_ptr<vpoint<T>> &lo,
+                                  const unique_ptr<vpoint<T>> &hi) {
+  switch (lo->rank()) {
+  case 0:
+    return make_unique<wbox<T, 0>>(
+        dynamic_cast<const wpoint<T, 0> *>(lo.get()),
+        dynamic_cast<const wpoint<T, 0> *>(hi.get()));
+  case 1:
+    return make_unique<wbox<T, 1>>(
+        dynamic_cast<const wpoint<T, 1> *>(lo.get()),
+        dynamic_cast<const wpoint<T, 1> *>(hi.get()));
+  case 2:
+    return make_unique<wbox<T, 2>>(
+        dynamic_cast<const wpoint<T, 2> *>(lo.get()),
+        dynamic_cast<const wpoint<T, 2> *>(hi.get()));
+  case 3:
+    return make_unique<wbox<T, 3>>(
+        dynamic_cast<const wpoint<T, 3> *>(lo.get()),
+        dynamic_cast<const wpoint<T, 3> *>(hi.get()));
+  case 4:
+    return make_unique<wbox<T, 4>>(
+        dynamic_cast<const wpoint<T, 4> *>(lo.get()),
+        dynamic_cast<const wpoint<T, 4> *>(hi.get()));
+  default:
+    assert(0);
+  }
+}
+
+template <typename T, int D> struct wregion : vregion<T> {
+  region<T, D> val;
+
+  unique_ptr<vregion<T>> copy() const {
+    return unique_ptr<vregion<T>>(new wregion(*this));
+  }
+
+  int rank() const { return D; }
+  bool empty() const { return val.empty(); }
+  typedef typename vregion<T>::prod_t prod_t;
+  prod_t size() const { return val.size(); }
+
+  unique_ptr<wbox<T, D>> bounding_box() const { return val.bounding_box(); }
+
+  ostream &output(ostream &os) const { return val.output(os); }
+  friend ostream &operator<<(ostream &os, const wregion &r) {
+    return r.output(os);
+  }
+};
+
+template <typename T> unique_ptr<vregion<T>> vregion<T>::make(int d) {
+  switch (d) {
+  case 0:
+    return new wregion<T, 0>();
+  case 1:
+    return new wregion<T, 1>();
+  case 2:
+    return new wregion<T, 2>();
+  case 3:
+    return new wregion<T, 3>();
+  case 4:
+    return new wregion<T, 4>();
+  default:
+    assert(0);
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Dimension-independent classes (hiding the pointers)
+
+template <typename T> struct dpoint {
+  unique_ptr<vpoint<T>> val;
+
+  dpoint() = default;
+
+  dpoint(int d) : val(vpoint<T>::make(d)) {}
+  dpoint(const vpoint<T> *val) : val(vpoint<T>::make(val)) {}
+  dpoint(unique_ptr<vpoint<T>> &&val) : val(std::move(val)) {}
+
+  dpoint(const dpoint &p) : val(p.val.copy()) {}
+  dpoint(dpoint &&p) = default;
+  dpoint &operator=(const dpoint &p) {
+    val = p.val->copy();
+    return *this;
+  }
+  dpoint &operator=(dpoint &&p) = default;
+
+  dpoint(const vector<T> &p) : val(vpoint<T>::make(p)) {}
+  operator vector<T>() const { return vector<T>(*val); }
+
+  operator bool() const { return bool(val); }
+  void reset() { val.reset(); }
+
+  int rank() const { return val->rank(); }
+
+  dpoint operator+() const { return dpoint(val->posit()); }
+  dpoint operator-() const { return dpoint(val->negate()); }
+
+  dpoint operator+(const dpoint &p) const { return dpoint(val->plus(p.val)); }
+  dpoint operator-(const dpoint &p) const { return dpoint(val->minus(p.val)); }
+  dpoint operator*(const dpoint &p) const {
+    return dpoint(val->multiplies(p.val));
+  }
+
+  ostream &output(ostream &os) const { return val->output(os); }
+  friend ostream &operator<<(ostream &os, const dpoint &p) {
+    return p.output(os);
+  }
+};
+
+template <typename T> struct dbox {
+  unique_ptr<vbox<T>> val;
+
+  dbox() = default;
+
+  dbox(int d) : val(vbox<T>::make(d)) {}
+  dbox(const vbox<T> *val) : val(vbox<T>::make(val)) {}
+  dbox(unique_ptr<vbox<T>> &&val) : val(std::move(val)) {}
+
+  dbox(const dbox &b) : val(b.val.copy()) {}
+  dbox(dbox &&b) = default;
+  dbox &operator=(const dbox &b) {
+    val = b.val->copy();
+    return *this;
+  }
+  dbox &operator=(dbox &&b) = default;
+
+  dbox(const dpoint<T> &lo, const dpoint<T> &hi)
+      : val(vbox<T>::make(lo.val, hi.val)) {}
+
+  operator bool() const { return bool(val); }
+  void reset() { val.reset(); }
+
+  int rank() const { return val->rank(); }
+  bool empty() const { return val->empty(); }
+  dpoint<T> lower() const { return dpoint<T>(val->lower()); }
+  dpoint<T> upper() const { return dpoint<T>(val->upper()); }
+  dpoint<T> shape() const { return dpoint<T>(val->shape()); }
+  typedef typename vbox<T>::prod_t prod_t;
+  prod_t size() const { return val->size(); }
+
+  dbox bounding_box(const dbox &b) const {
+    return dbox(val->bounding_box(b->val));
+  }
+
+  ostream &output(ostream &os) const { return val->output(os); }
+  friend ostream &operator<<(ostream &os, const dbox &b) {
+    return b.output(os);
+  }
+};
+
+template <typename T> struct dregion {
+  unique_ptr<vregion<T>> val;
+
+  dregion() = default;
+
+  dregion(int d) : val(vregion<T>::make(d)) {}
+  dregion(const vregion<T> *val) : val(vregion<T>::make(val)) {}
+  dregion(unique_ptr<vregion<T>> &&val) : val(std::move(val)) {}
+
+  dregion(const dregion &r) : val(r.val.copy()) {}
+  dregion(dregion &&r) = default;
+  dregion &operator=(const dregion &r) {
+    val = r.val->copy();
+    return *this;
+  }
+  dregion &operator=(dregion &&r) = default;
+
+  operator bool() const { return bool(val); }
+  void reset() { val.reset(); }
+
+  int rank() const { return val->rank(); }
+  bool empty() const { return val->empty(); }
+  typedef typename vregion<T>::prod_t prod_t;
+  prod_t size() const { return val->size(); }
+
+  dregion bounding_box() const { return dregion(val->bounding_box()); }
+
+  ostream &output(ostream &os) const { return val->output(os); }
+  friend ostream &operator<<(ostream &os, const dregion &r) {
     return r.output(os);
   }
 };
