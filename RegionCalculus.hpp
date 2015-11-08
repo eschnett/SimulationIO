@@ -31,6 +31,11 @@ template <typename T> struct largeint { typedef T type; };
 template <> struct largeint<short> { typedef long long type; };
 template <> struct largeint<int> { typedef long long type; };
 template <> struct largeint<long> { typedef long long type; };
+template <> struct largeint<unsigned short> {
+  typedef unsigned long long type;
+};
+template <> struct largeint<unsigned int> { typedef unsigned long long type; };
+template <> struct largeint<unsigned long> { typedef unsigned long long type; };
 }
 
 template <typename T, int D> struct point {
@@ -185,13 +190,13 @@ template <typename T, int D> struct point {
   bool all() const {
     bool r = true;
     for (int d = 0; d < D; ++d)
-      r &= elt[d];
+      r = r && elt[d];
     return r;
   }
   bool any() const {
     bool r = false;
     for (int d = 0; d < D; ++d)
-      r |= elt[d];
+      r = r || elt[d];
     return r;
   }
   T minval() const {
@@ -386,6 +391,7 @@ template <typename T, int D> struct box {
   }
   box intersection(const box &b) const { return *this & b; }
 
+private:
   void split(const point<T, D> &p, vector<box> &rs) const {
     assert(!empty());
 #if REGIONCALCULUS_DEBUG
@@ -423,6 +429,7 @@ template <typename T, int D> struct box {
 #endif
   }
 
+public:
   vector<box> operator-(const box &b) const {
     if (empty())
       return vector<box>();
@@ -526,15 +533,27 @@ template <typename T, int D> struct region {
   region() = default;
   region(const region &r) = default;
   region(region &&r) = default;
+
   region(const box<T, D> &b) {
     if (!b.empty())
       boxes.push_back(b);
+#if REGIONCALCULUS_DEBUG
+    assert(invariant());
+#endif
   }
-  region(const vector<box<T, D>> &bs) : boxes(bs) {}
-  region(vector<box<T, D>> &&bs) : boxes(std::move(bs)) {}
+  region(const vector<box<T, D>> &bs) : boxes(bs) {
+    normalize();
+    assert(invariant());
+  }
+  region(vector<box<T, D>> &&bs) : boxes(std::move(bs)) {
+    normalize();
+    assert(invariant());
+  }
+  operator vector<box<T, D>>() const { return boxes; }
   region &operator=(const region &r) = default;
   region &operator=(region &&r) = default;
 
+private:
   void append(const region &r) {
     boxes.insert(boxes.end(), r.boxes.begin(), r.boxes.end());
   }
@@ -544,6 +563,7 @@ template <typename T, int D> struct region {
     std::sort(boxes.begin(), boxes.end(), std::less<box<T, D>>());
   }
 
+public:
   // Invariant
   bool invariant() const {
     for (std::size_t i = 0; i < boxes.size(); ++i) {
@@ -585,6 +605,9 @@ template <typename T, int D> struct region {
         nr.boxes.push_back(nb);
     }
     nr.normalize();
+#if REGIONCALCULUS_DEBUG
+    assert(invariant());
+#endif
     return nr;
   }
   region operator&(const region &r) const {
@@ -592,6 +615,9 @@ template <typename T, int D> struct region {
     for (const auto &b : r.boxes)
       nr.append(*this & b);
     nr.normalize();
+#if REGIONCALCULUS_DEBUG
+    assert(invariant());
+#endif
     return nr;
   }
   region intersection(const box<T, D> &b) const { return *this & b; }
@@ -602,6 +628,9 @@ template <typename T, int D> struct region {
     for (const auto &rb : boxes)
       nr.append(region(rb - b));
     nr.normalize();
+#if REGIONCALCULUS_DEBUG
+    assert(invariant());
+#endif
     return nr;
   }
   region operator-(const region &r) const {
@@ -609,6 +638,9 @@ template <typename T, int D> struct region {
     for (const auto &b : r.boxes)
       nr = nr - b;
     nr.normalize();
+#if REGIONCALCULUS_DEBUG
+    assert(invariant());
+#endif
     return nr;
   }
   region difference(const box<T, D> &b) const { return *this - b; }
@@ -618,6 +650,9 @@ template <typename T, int D> struct region {
     region nr = *this - r;
     nr.append(r);
     nr.normalize();
+#if REGIONCALCULUS_DEBUG
+    assert(invariant());
+#endif
     return nr;
   }
   region setunion(const region &r) const { return *this | r; }
@@ -626,6 +661,9 @@ template <typename T, int D> struct region {
     region nr = *this - r;
     nr.append(r - *this);
     nr.normalize();
+#if REGIONCALCULUS_DEBUG
+    assert(invariant());
+#endif
     return nr;
   }
   region symmetric_difference(const region &r) const { return *this ^ r; }
@@ -713,21 +751,65 @@ unique_ptr<T> make_unique(Args &&... args) {
 // Virtual classes
 
 template <typename T> struct vpoint {
-  static unique_ptr<vpoint> make(int d);
-  static unique_ptr<vpoint> make(const vector<T> &val);
   virtual unique_ptr<vpoint> copy() const = 0;
 
+  static unique_ptr<vpoint> make(int d);
+  static unique_ptr<vpoint> make(int d, const T &x);
+  static unique_ptr<vpoint> make(const vector<T> &val);
   virtual operator vector<T>() const = 0;
+  template <typename U> static unique_ptr<vpoint> make(const vpoint<U> &p);
 
   virtual int rank() const = 0;
 
-  // virtual unique_ptr<vpoint<T>> posit() const = 0;
-  // virtual unique_ptr<vpoint<T>> negate() const = 0;
+  // Unary operators
+  virtual unique_ptr<vpoint> operator+() const = 0;
+  virtual unique_ptr<vpoint> operator-() const = 0;
+  virtual unique_ptr<vpoint> operator~() const = 0;
+  virtual unique_ptr<vpoint<bool>> operator!() const = 0;
 
-  virtual unique_ptr<vpoint<T>> plus(const unique_ptr<vpoint<T>> &p) const = 0;
-  // virtual unique_ptr<vpoint<T>> minus(const vpoint<T> *p) const = 0;
-  // virtual unique_ptr<vpoint<T>> multiplies(const vpoint<T> *p) const = 0;
+  // Assignment operators
+  virtual vpoint &operator+=(const vpoint &p) = 0;
+  virtual vpoint &operator-=(const vpoint &p) = 0;
+  virtual vpoint &operator*=(const vpoint &p) = 0;
+  virtual vpoint &operator&=(const vpoint &p) = 0;
+  virtual vpoint &operator|=(const vpoint &p) = 0;
+  virtual vpoint &operator^=(const vpoint &p) = 0;
 
+  // Binary operators
+  virtual unique_ptr<vpoint> operator+(const vpoint &p) const = 0;
+  virtual unique_ptr<vpoint> operator-(const vpoint &p) const = 0;
+  virtual unique_ptr<vpoint> operator*(const vpoint &p) const = 0;
+  virtual unique_ptr<vpoint> operator&(const vpoint &p) const = 0;
+  virtual unique_ptr<vpoint> operator|(const vpoint &p) const = 0;
+  virtual unique_ptr<vpoint> operator^(const vpoint &p) const = 0;
+  virtual unique_ptr<vpoint<bool>> operator&&(const vpoint &p) const = 0;
+  virtual unique_ptr<vpoint<bool>> operator||(const vpoint &p) const = 0;
+
+  // Unary functions
+  virtual unique_ptr<vpoint> abs() const = 0;
+
+  // Binary functions
+  virtual unique_ptr<vpoint> min(const vpoint &p) const = 0;
+  virtual unique_ptr<vpoint> max(const vpoint &p) const = 0;
+
+  // Comparison operators
+  virtual unique_ptr<vpoint<bool>> operator==(const vpoint &p) const = 0;
+  virtual unique_ptr<vpoint<bool>> operator!=(const vpoint &p) const = 0;
+  virtual unique_ptr<vpoint<bool>> operator<(const vpoint &p) const = 0;
+  virtual unique_ptr<vpoint<bool>> operator>(const vpoint &p) const = 0;
+  virtual unique_ptr<vpoint<bool>> operator<=(const vpoint &p) const = 0;
+  virtual unique_ptr<vpoint<bool>> operator>=(const vpoint &p) const = 0;
+
+  // Reductions
+  virtual bool any() const = 0;
+  virtual bool all() const = 0;
+  virtual T minval() const = 0;
+  virtual T maxval() const = 0;
+  virtual T sum() const = 0;
+  typedef typename point<T, 0>::prod_t prod_t;
+  virtual prod_t prod() const = 0;
+
+  // Output
   virtual ostream &output(ostream &os) const = 0;
   friend ostream &operator<<(ostream &os, const vpoint &p) {
     return p.output(os);
@@ -738,10 +820,11 @@ template <typename T> struct vbox {
   virtual unique_ptr<vbox> copy() const = 0;
 
   static unique_ptr<vbox> make(int d);
-  static unique_ptr<vbox> make(const unique_ptr<vpoint<T>> &lo,
-                               const unique_ptr<vpoint<T>> &hi);
+  static unique_ptr<vbox> make(const vpoint<T> &lo, const vpoint<T> &hi);
 
   virtual int rank() const = 0;
+
+  // Predicates
   virtual bool empty() const = 0;
   virtual unique_ptr<vpoint<T>> shape() const = 0;
   virtual unique_ptr<vpoint<T>> lower() const = 0;
@@ -749,8 +832,35 @@ template <typename T> struct vbox {
   typedef typename box<T, 0>::prod_t prod_t;
   virtual prod_t size() const = 0;
 
-  // virtual unique_ptr<vbox> bounding_box(const vbox *b) const = 0;
+  // Shift and scale operators
+  virtual vbox &operator>>=(const vpoint<T> &p) = 0;
+  virtual vbox &operator<<=(const vpoint<T> &p) = 0;
+  virtual vbox &operator*=(const vpoint<T> &p) = 0;
+  virtual unique_ptr<vbox> operator>>(const vpoint<T> &p) const = 0;
+  virtual unique_ptr<vbox> operator<<(const vpoint<T> &p) const = 0;
+  virtual unique_ptr<vbox> operator*(const vpoint<T> &p) const = 0;
 
+  // Comparison operators
+  virtual bool operator==(const vbox &b) const = 0;
+  virtual bool operator!=(const vbox &b) const = 0;
+  virtual bool less(const vbox &b) const = 0;
+
+  // Set comparison operators
+  virtual bool contains(const vpoint<T> &p) const = 0;
+  virtual bool isdisjoint(const vbox &b) const = 0;
+  virtual bool operator<=(const vbox &b) const = 0;
+  virtual bool operator>=(const vbox &b) const = 0;
+  virtual bool operator<(const vbox &b) const = 0;
+  virtual bool operator>(const vbox &b) const = 0;
+
+  // Set operations
+  virtual unique_ptr<vbox> bounding_box(const vbox &b) const = 0;
+  virtual unique_ptr<vbox> operator&(const vbox &b) const = 0;
+  // virtual unique_ptr<vbox> operator-(const vbox &b) const = 0;
+  // virtual unique_ptr<vbox> operator|(const vbox &b) const = 0;
+  // virtual unique_ptr<vbox> operator^(const vbox &b) const = 0;
+
+  // Output
   virtual ostream &output(ostream &os) const = 0;
   friend ostream &operator<<(ostream &os, const vbox &b) {
     return b.output(os);
@@ -758,16 +868,49 @@ template <typename T> struct vbox {
 };
 
 template <typename T> struct vregion {
-  static unique_ptr<vregion> make(int d);
   virtual unique_ptr<vregion> copy() const = 0;
 
+  static unique_ptr<vregion> make(int d);
+  static unique_ptr<vregion> make(const vbox<T> &b);
+  static unique_ptr<vregion> make(const vector<unique_ptr<vbox<T>>> &bs);
+  virtual operator vector<unique_ptr<vbox<T>>>() const = 0;
+
   virtual int rank() const = 0;
+
+  // Predicates
+  virtual bool invariant() const = 0;
   virtual bool empty() const = 0;
   typedef typename region<T, 0>::prod_t prod_t;
   virtual prod_t size() const = 0;
 
-  virtual unique_ptr<vregion> bounding_box() const = 0;
+  // Set operations
+  virtual unique_ptr<vbox<T>> bounding_box() const = 0;
+  virtual unique_ptr<vregion> operator&(const vbox<T> &b) const = 0;
+  virtual unique_ptr<vregion> operator&(const vregion &r) const = 0;
+  virtual unique_ptr<vregion> operator-(const vbox<T> &b) const = 0;
+  virtual unique_ptr<vregion> operator-(const vregion &r) const = 0;
+  virtual unique_ptr<vregion> operator|(const vbox<T> &b) const = 0;
+  virtual unique_ptr<vregion> operator|(const vregion &r) const = 0;
+  virtual unique_ptr<vregion> operator^(const vbox<T> &b) const = 0;
+  virtual unique_ptr<vregion> operator^(const vregion &r) const = 0;
 
+  // Set comparison operators
+  virtual bool contains(const vpoint<T> &p) const = 0;
+  virtual bool isdisjoint(const vbox<T> &b) const = 0;
+  virtual bool isdisjoint(const vregion &r) const = 0;
+
+  // Comparison operators
+  virtual bool operator<=(const vregion &r) const = 0;
+  virtual bool operator>=(const vregion &r) const = 0;
+  virtual bool operator<(const vregion &r) const = 0;
+  virtual bool operator>(const vregion &r) const = 0;
+  virtual bool operator==(const vregion &r) const = 0;
+  virtual bool operator!=(const vregion &r) const = 0;
+
+  virtual bool equal_to(const vregion &r) const = 0;
+  virtual bool less(const vregion &r) const = 0;
+
+  // Output
   virtual ostream &output(ostream &os) const = 0;
   friend ostream &operator<<(ostream &os, const vregion &r) {
     return r.output(os);
@@ -781,24 +924,361 @@ template <typename T> struct vregion {
 template <typename T, int D> struct wpoint : vpoint<T> {
   point<T, D> val;
 
+  wpoint(const wpoint &p) = default;
+  wpoint(wpoint &&p) = default;
+  wpoint &operator=(const wpoint &p) = default;
+  wpoint &operator=(wpoint &&p) = default;
   unique_ptr<vpoint<T>> copy() const { return make_unique<wpoint>(*this); }
 
-  wpoint(const vector<T> &p) : val(p) {}
+  wpoint(const point<T, D> &p) : val(p) {}
 
+  wpoint() : val() {}
+  wpoint(const T &x) : val(x) {}
+  wpoint(const array<T, D> &p) : val(p) {}
+  wpoint(const vector<T> &p) : val(p) {}
   operator vector<T>() const { return vector<T>(val); }
+  template <typename U> wpoint(const wpoint<U, D> &p) : val(p.val) {}
 
   int rank() const { return D; }
 
-  unique_ptr<vpoint<T>> plus(const unique_ptr<vpoint<T>> &p) const {
-    return make_unique<wpoint>(val +
-                               dynamic_cast<const wpoint *>(p.get())->val);
+  // Unary operators
+  unique_ptr<vpoint<T>> operator+() const { return make_unique<wpoint>(+val); }
+  unique_ptr<vpoint<T>> operator-() const { return make_unique<wpoint>(-val); }
+  unique_ptr<vpoint<T>> operator~() const { return make_unique<wpoint>(~val); }
+  unique_ptr<vpoint<bool>> operator!() const {
+    return make_unique<wpoint<bool, D>>(!val);
   }
 
+  // Assignment operators
+  vpoint<T> &operator+=(const vpoint<T> &p) {
+    val += dynamic_cast<const wpoint &>(p).val;
+    return *this;
+  }
+  vpoint<T> &operator-=(const vpoint<T> &p) {
+    val -= dynamic_cast<const wpoint &>(p).val;
+    return *this;
+  }
+  vpoint<T> &operator*=(const vpoint<T> &p) {
+    val *= dynamic_cast<const wpoint &>(p).val;
+    return *this;
+  }
+  vpoint<T> &operator&=(const vpoint<T> &p) {
+    val &= dynamic_cast<const wpoint &>(p).val;
+    return *this;
+  }
+  vpoint<T> &operator|=(const vpoint<T> &p) {
+    val |= dynamic_cast<const wpoint &>(p).val;
+    return *this;
+  }
+  vpoint<T> &operator^=(const vpoint<T> &p) {
+    val ^= dynamic_cast<const wpoint &>(p).val;
+    return *this;
+  }
+
+  // Binary operators
+  unique_ptr<vpoint<T>> operator+(const vpoint<T> &p) const {
+    return make_unique<wpoint>(val + dynamic_cast<const wpoint &>(p).val);
+  }
+  unique_ptr<vpoint<T>> operator-(const vpoint<T> &p) const {
+    return make_unique<wpoint>(val - dynamic_cast<const wpoint &>(p).val);
+  }
+  unique_ptr<vpoint<T>> operator*(const vpoint<T> &p) const {
+    return make_unique<wpoint>(val * dynamic_cast<const wpoint &>(p).val);
+  }
+  unique_ptr<vpoint<T>> operator&(const vpoint<T> &p) const {
+    return make_unique<wpoint>(val & dynamic_cast<const wpoint &>(p).val);
+  }
+  unique_ptr<vpoint<T>> operator|(const vpoint<T> &p) const {
+    return make_unique<wpoint>(val | dynamic_cast<const wpoint &>(p).val);
+  }
+  unique_ptr<vpoint<T>> operator^(const vpoint<T> &p) const {
+    return make_unique<wpoint>(val ^ dynamic_cast<const wpoint &>(p).val);
+  }
+  unique_ptr<vpoint<bool>> operator&&(const vpoint<T> &p) const {
+    return make_unique<wpoint<bool, D>>(val &&
+                                        dynamic_cast<const wpoint &>(p).val);
+  }
+  unique_ptr<vpoint<bool>> operator||(const vpoint<T> &p) const {
+    return make_unique<wpoint<bool, D>>(val ||
+                                        dynamic_cast<const wpoint &>(p).val);
+  }
+
+  // Unary functions
+  unique_ptr<vpoint<T>> abs() const { return make_unique<wpoint>(val.abs()); }
+
+  // Binary functions
+  unique_ptr<vpoint<T>> min(const vpoint<T> &p) const {
+    return make_unique<wpoint>(val.min(dynamic_cast<const wpoint &>(p).val));
+  }
+  unique_ptr<vpoint<T>> max(const vpoint<T> &p) const {
+    return make_unique<wpoint>(val.max(dynamic_cast<const wpoint &>(p).val));
+  }
+
+  // Comparison operators
+  unique_ptr<vpoint<bool>> operator==(const vpoint<T> &p) const {
+    return make_unique<wpoint<bool, D>>(val ==
+                                        dynamic_cast<const wpoint &>(p).val);
+  }
+  unique_ptr<vpoint<bool>> operator!=(const vpoint<T> &p) const {
+    return make_unique<wpoint<bool, D>>(val !=
+                                        dynamic_cast<const wpoint &>(p).val);
+  }
+  unique_ptr<vpoint<bool>> operator<(const vpoint<T> &p) const {
+    return make_unique<wpoint<bool, D>>(val <
+                                        dynamic_cast<const wpoint &>(p).val);
+  }
+  unique_ptr<vpoint<bool>> operator>(const vpoint<T> &p) const {
+    return make_unique<wpoint<bool, D>>(val >
+                                        dynamic_cast<const wpoint &>(p).val);
+  }
+  unique_ptr<vpoint<bool>> operator<=(const vpoint<T> &p) const {
+    return make_unique<wpoint<bool, D>>(val <=
+                                        dynamic_cast<const wpoint &>(p).val);
+  }
+  unique_ptr<vpoint<bool>> operator>=(const vpoint<T> &p) const {
+    return make_unique<wpoint<bool, D>>(val >=
+                                        dynamic_cast<const wpoint &>(p).val);
+  }
+
+  // Reductions
+  bool any() const { return val.any(); }
+  bool all() const { return val.all(); }
+  T minval() const { return val.minval(); }
+  T maxval() const { return val.maxval(); }
+  T sum() const { return val.sum(); }
+  typedef typename vpoint<T>::prod_t prod_t;
+  prod_t prod() const { return val.prod(); }
+
+  // Output
   ostream &output(ostream &os) const { return val.output(os); }
   friend ostream &operator<<(ostream &os, const wpoint &p) {
     return p.output(os);
   }
 };
+
+template <typename T, int D> struct wbox : vbox<T> {
+  box<T, D> val;
+
+  wbox(const wbox &b) = default;
+  wbox(wbox &&b) = default;
+  wbox &operator=(const wbox &b) = default;
+  wbox &operator=(wbox &&b) = default;
+  unique_ptr<vbox<T>> copy() const { return make_unique<wbox>(*this); }
+
+  wbox(const box<T, D> &b) : val(b) {}
+
+  wbox() : val() {}
+  wbox(const wpoint<T, D> &lo, const wpoint<T, D> &hi) : val(lo.val, hi.val) {}
+
+  int rank() const { return D; }
+
+  // Predicates
+  bool empty() const { return val.empty(); }
+  unique_ptr<vpoint<T>> lower() const {
+    return make_unique<wpoint<T, D>>(val.lower());
+  }
+  unique_ptr<vpoint<T>> upper() const {
+    return make_unique<wpoint<T, D>>(val.upper());
+  }
+  unique_ptr<vpoint<T>> shape() const {
+    return make_unique<wpoint<T, D>>(val.shape());
+  }
+  typedef typename vbox<T>::prod_t prod_t;
+  prod_t size() const { return val.size(); }
+
+  // Shift and scale operators
+  vbox<T> &operator>>=(const vpoint<T> &p) {
+    val >>= dynamic_cast<const wpoint<T, D> &>(p).val;
+    return *this;
+  }
+  vbox<T> &operator<<=(const vpoint<T> &p) {
+    val <<= dynamic_cast<const wpoint<T, D> &>(p).val;
+    return *this;
+  }
+  vbox<T> &operator*=(const vpoint<T> &p) {
+    val *= dynamic_cast<const wpoint<T, D> &>(p).val;
+    return *this;
+  }
+  unique_ptr<vbox<T>> operator>>(const vpoint<T> &p) const {
+    return make_unique<wbox>(val >> dynamic_cast<const wpoint<T, D> &>(p).val);
+  }
+  unique_ptr<vbox<T>> operator<<(const vpoint<T> &p) const {
+    return make_unique<wbox>(val << dynamic_cast<const wpoint<T, D> &>(p).val);
+  }
+  unique_ptr<vbox<T>> operator*(const vpoint<T> &p) const {
+    return make_unique<wbox>(val * dynamic_cast<const wpoint<T, D> &>(p).val);
+  }
+
+  // Comparison operators
+  bool operator==(const vbox<T> &b) const {
+    return val == dynamic_cast<const wbox<T, D> &>(b).val;
+  }
+  bool operator!=(const vbox<T> &b) const {
+    return val != dynamic_cast<const wbox<T, D> &>(b).val;
+  }
+  bool less(const vbox<T> &b) const {
+    return val.less(dynamic_cast<const wbox<T, D> &>(b).val);
+  }
+
+  // Set comparison operators
+  bool contains(const vpoint<T> &p) const {
+    return val.contains(dynamic_cast<const wpoint<T, D> &>(p).val);
+  }
+  bool isdisjoint(const vbox<T> &b) const {
+    return val.isdisjoint(dynamic_cast<const wbox &>(b).val);
+  }
+  bool operator<=(const vbox<T> &b) const {
+    return val <= dynamic_cast<const wbox &>(b).val;
+  }
+  bool operator>=(const vbox<T> &b) const {
+    return val >= dynamic_cast<const wbox &>(b).val;
+  }
+  bool operator<(const vbox<T> &b) const {
+    return val < dynamic_cast<const wbox &>(b).val;
+  }
+  bool operator>(const vbox<T> &b) const {
+    return val > dynamic_cast<const wbox &>(b).val;
+  }
+
+  // Set operations
+  unique_ptr<vbox<T>> bounding_box(const vbox<T> &b) const {
+    return make_unique<wbox>(
+        val.bounding_box(dynamic_cast<const wbox &>(b).val));
+  }
+  unique_ptr<vbox<T>> operator&(const vbox<T> &b) const {
+    return make_unique<wbox>(val & dynamic_cast<const wbox &>(b).val);
+  }
+  // unique_ptr<vbox<T>> operator-(const vbox<T> &b) const {
+  //   return make_unique<wbox>(val - dynamic_cast<const wbox &>(b).val);
+  // }
+  // unique_ptr<vbox<T>> operator|(const vbox<T> &b) const {
+  //   return make_unique<wbox>(val | dynamic_cast<const wbox &>(b).val);
+  // }
+  // unique_ptr<vbox<T>> operator^(const vbox<T> &b) const {
+  //   return make_unique<wbox>(val ^ dynamic_cast<const wbox &>(b).val);
+  // }
+
+  // Output
+  ostream &output(ostream &os) const { return val.output(os); }
+  friend ostream &operator<<(ostream &os, const wbox &b) {
+    return b.output(os);
+  }
+};
+
+template <typename T, int D> struct wregion : vregion<T> {
+  region<T, D> val;
+
+  wregion(const wregion &r) = default;
+  wregion(wregion &&r) = default;
+  wregion &operator=(const wregion &r) = default;
+  wregion &operator=(wregion &&r) = default;
+  unique_ptr<vregion<T>> copy() const {
+    return unique_ptr<vregion<T>>(new wregion(*this));
+  }
+
+  wregion(const region<T, D> &r) : val(r) {}
+  wregion(region<T, D> &&r) : val(std::move(r)) {}
+
+  wregion() = default;
+  wregion(const wbox<T, D> &b) : val(b.val) {}
+  wregion(const vector<unique_ptr<vbox<T>>> &bs) {
+    vector<box<T, D>> rs;
+    for (const auto &b : bs)
+      rs.push_back(dynamic_cast<const wbox<T, D> &>(b).val);
+    val = region<T, D>(rs);
+  }
+  operator vector<unique_ptr<vbox<T>>>() const {
+    vector<unique_ptr<vbox<T>>> bs;
+    for (const auto &b : val.boxes)
+      bs.push_back(make_unique<wbox<T, D>>(b));
+    return bs;
+  }
+
+  int rank() const { return D; }
+
+  // Predicates
+  bool invariant() const { return val.invariant(); }
+  bool empty() const { return val.empty(); }
+  typedef typename vregion<T>::prod_t prod_t;
+  prod_t size() const { return val.size(); }
+
+  // Set operations
+  unique_ptr<vbox<T>> bounding_box() const {
+    return make_unique<wbox<T, D>>(val.bounding_box());
+  }
+  unique_ptr<vregion<T>> operator&(const vbox<T> &b) const {
+    return make_unique<wregion>(val & dynamic_cast<const wbox<T, D> &>(b).val);
+  }
+  unique_ptr<vregion<T>> operator&(const vregion<T> &r) const {
+    return make_unique<wregion>(val & dynamic_cast<const wregion &>(r).val);
+  }
+  unique_ptr<vregion<T>> operator-(const vbox<T> &b) const {
+    return make_unique<wregion>(val - dynamic_cast<const wbox<T, D> &>(b).val);
+  }
+  unique_ptr<vregion<T>> operator-(const vregion<T> &r) const {
+    return make_unique<wregion>(val - dynamic_cast<const wregion &>(r).val);
+  }
+  unique_ptr<vregion<T>> operator|(const vbox<T> &b) const {
+    return make_unique<wregion>(val | dynamic_cast<const wbox<T, D> &>(b).val);
+  }
+  unique_ptr<vregion<T>> operator|(const vregion<T> &r) const {
+    return make_unique<wregion>(val | dynamic_cast<const wregion &>(r).val);
+  }
+  unique_ptr<vregion<T>> operator^(const vbox<T> &b) const {
+    return make_unique<wregion>(val ^ dynamic_cast<const wbox<T, D> &>(b).val);
+  }
+  unique_ptr<vregion<T>> operator^(const vregion<T> &r) const {
+    return make_unique<wregion>(val ^ dynamic_cast<const wregion &>(r).val);
+  }
+
+  // Set comparison operators
+  bool contains(const vpoint<T> &p) const {
+    return val.contains(dynamic_cast<const wpoint<T, D> &>(p).val);
+  }
+  bool isdisjoint(const vbox<T> &b) const {
+    return val.isdisjoint(dynamic_cast<const wbox<T, D> &>(b).val);
+  }
+  bool isdisjoint(const vregion<T> &r) const {
+    return val.isdisjoint(dynamic_cast<const wregion &>(r).val);
+  }
+
+  // Comparison operators
+  bool operator<=(const vregion<T> &r) const {
+    return val <= dynamic_cast<const wregion &>(r).val;
+  }
+  bool operator>=(const vregion<T> &r) const {
+    return val >= dynamic_cast<const wregion &>(r).val;
+  }
+  bool operator<(const vregion<T> &r) const {
+    return val < dynamic_cast<const wregion &>(r).val;
+  }
+  bool operator>(const vregion<T> &r) const {
+    return val > dynamic_cast<const wregion &>(r).val;
+  }
+  bool operator==(const vregion<T> &r) const {
+    return val == dynamic_cast<const wregion &>(r).val;
+  }
+  bool operator!=(const vregion<T> &r) const {
+    return val != dynamic_cast<const wregion &>(r).val;
+  }
+
+  bool equal_to(const vregion<T> &r) const {
+    return val.equal_to(dynamic_cast<const wregion &>(r).val);
+  }
+  bool less(const vregion<T> &r) const {
+    return val.less(dynamic_cast<const wregion &>(r).val);
+  }
+
+  // Output
+  ostream &output(ostream &os) const { return val.output(os); }
+  friend ostream &operator<<(ostream &os, const wregion &r) {
+    return r.output(os);
+  }
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Dispatching functions (replacements for constructors)
 
 template <typename T> unique_ptr<vpoint<T>> vpoint<T>::make(int d) {
   switch (d) {
@@ -812,6 +1292,23 @@ template <typename T> unique_ptr<vpoint<T>> vpoint<T>::make(int d) {
     return make_unique<wpoint<T, 3>>();
   case 4:
     return make_unique<wpoint<T, 4>>();
+  default:
+    assert(0);
+  }
+}
+
+template <typename T> unique_ptr<vpoint<T>> vpoint<T>::make(int d, const T &x) {
+  switch (d) {
+  case 0:
+    return make_unique<wpoint<T, 0>>(x);
+  case 1:
+    return make_unique<wpoint<T, 1>>(x);
+  case 2:
+    return make_unique<wpoint<T, 2>>(x);
+  case 3:
+    return make_unique<wpoint<T, 3>>(x);
+  case 4:
+    return make_unique<wpoint<T, 4>>(x);
   default:
     assert(0);
   }
@@ -835,37 +1332,24 @@ unique_ptr<vpoint<T>> vpoint<T>::make(const vector<T> &val) {
   }
 }
 
-template <typename T, int D> struct wbox : vbox<T> {
-  box<T, D> val;
-
-  wbox(const wpoint<T, D> *lo, const wpoint<T, D> *hi)
-      : val(lo->val, hi->val) {}
-
-  unique_ptr<vbox<T>> copy() const { return make_unique<wbox>(*this); }
-
-  int rank() const { return D; }
-  bool empty() const { return val.empty(); }
-  unique_ptr<vpoint<T>> lower() const {
-    return make_unique<wpoint<T, D>>(val.lower());
+template <typename T>
+template <typename U>
+unique_ptr<vpoint<T>> vpoint<T>::make(const vpoint<U> &p) {
+  switch (p.rank()) {
+  case 0:
+    return make_unique<wpoint<T, 0>>(dynamic_cast<const wpoint<U, 0> &>(p));
+  case 1:
+    return make_unique<wpoint<T, 1>>(dynamic_cast<const wpoint<U, 1> &>(p));
+  case 2:
+    return make_unique<wpoint<T, 2>>(dynamic_cast<const wpoint<U, 2> &>(p));
+  case 3:
+    return make_unique<wpoint<T, 3>>(dynamic_cast<const wpoint<U, 3> &>(p));
+  case 4:
+    return make_unique<wpoint<T, 4>>(dynamic_cast<const wpoint<U, 4> &>(p));
+  default:
+    assert(0);
   }
-  unique_ptr<vpoint<T>> upper() const {
-    return make_unique<wpoint<T, D>>(val.upper());
-  }
-  unique_ptr<vpoint<T>> shape() const {
-    return make_unique<wpoint<T, D>>(val.shape());
-  }
-  typedef typename vbox<T>::prod_t prod_t;
-  prod_t size() const { return val.size(); }
-
-  // unique_ptr<wbox> bounding_box(const wbox *b) const {
-  //   return val.bounding_box(*b);
-  // }
-
-  ostream &output(ostream &os) const { return val.output(os); }
-  friend ostream &operator<<(ostream &os, const wbox &b) {
-    return b.output(os);
-  }
-};
+}
 
 template <typename T> unique_ptr<vbox<T>> vbox<T>::make(int d) {
   switch (d) {
@@ -885,66 +1369,98 @@ template <typename T> unique_ptr<vbox<T>> vbox<T>::make(int d) {
 }
 
 template <typename T>
-unique_ptr<vbox<T>> vbox<T>::make(const unique_ptr<vpoint<T>> &lo,
-                                  const unique_ptr<vpoint<T>> &hi) {
-  switch (lo->rank()) {
+unique_ptr<vbox<T>> vbox<T>::make(const vpoint<T> &lo, const vpoint<T> &hi) {
+  switch (lo.rank()) {
   case 0:
-    return make_unique<wbox<T, 0>>(
-        dynamic_cast<const wpoint<T, 0> *>(lo.get()),
-        dynamic_cast<const wpoint<T, 0> *>(hi.get()));
+    return make_unique<wbox<T, 0>>(dynamic_cast<const wpoint<T, 0> &>(lo),
+                                   dynamic_cast<const wpoint<T, 0> &>(hi));
   case 1:
-    return make_unique<wbox<T, 1>>(
-        dynamic_cast<const wpoint<T, 1> *>(lo.get()),
-        dynamic_cast<const wpoint<T, 1> *>(hi.get()));
+    return make_unique<wbox<T, 1>>(dynamic_cast<const wpoint<T, 1> &>(lo),
+                                   dynamic_cast<const wpoint<T, 1> &>(hi));
   case 2:
-    return make_unique<wbox<T, 2>>(
-        dynamic_cast<const wpoint<T, 2> *>(lo.get()),
-        dynamic_cast<const wpoint<T, 2> *>(hi.get()));
+    return make_unique<wbox<T, 2>>(dynamic_cast<const wpoint<T, 2> &>(lo),
+                                   dynamic_cast<const wpoint<T, 2> &>(hi));
   case 3:
-    return make_unique<wbox<T, 3>>(
-        dynamic_cast<const wpoint<T, 3> *>(lo.get()),
-        dynamic_cast<const wpoint<T, 3> *>(hi.get()));
+    return make_unique<wbox<T, 3>>(dynamic_cast<const wpoint<T, 3> &>(lo),
+                                   dynamic_cast<const wpoint<T, 3> &>(hi));
   case 4:
-    return make_unique<wbox<T, 4>>(
-        dynamic_cast<const wpoint<T, 4> *>(lo.get()),
-        dynamic_cast<const wpoint<T, 4> *>(hi.get()));
+    return make_unique<wbox<T, 4>>(dynamic_cast<const wpoint<T, 4> &>(lo),
+                                   dynamic_cast<const wpoint<T, 4> &>(hi));
   default:
     assert(0);
   }
 }
 
-template <typename T, int D> struct wregion : vregion<T> {
-  region<T, D> val;
-
-  unique_ptr<vregion<T>> copy() const {
-    return unique_ptr<vregion<T>>(new wregion(*this));
-  }
-
-  int rank() const { return D; }
-  bool empty() const { return val.empty(); }
-  typedef typename vregion<T>::prod_t prod_t;
-  prod_t size() const { return val.size(); }
-
-  unique_ptr<wbox<T, D>> bounding_box() const { return val.bounding_box(); }
-
-  ostream &output(ostream &os) const { return val.output(os); }
-  friend ostream &operator<<(ostream &os, const wregion &r) {
-    return r.output(os);
-  }
-};
-
 template <typename T> unique_ptr<vregion<T>> vregion<T>::make(int d) {
   switch (d) {
   case 0:
-    return new wregion<T, 0>();
+    return make_unique<wregion<T, 0>>();
   case 1:
-    return new wregion<T, 1>();
+    return make_unique<wregion<T, 1>>();
   case 2:
-    return new wregion<T, 2>();
+    return make_unique<wregion<T, 2>>();
   case 3:
-    return new wregion<T, 3>();
+    return make_unique<wregion<T, 3>>();
   case 4:
-    return new wregion<T, 4>();
+    return make_unique<wregion<T, 4>>();
+  default:
+    assert(0);
+  }
+}
+
+template <typename T>
+unique_ptr<vregion<T>> vregion<T>::make(const vbox<T> &b) {
+  switch (b.rank()) {
+  case 0:
+    return make_unique<wregion<T, 0>>(dynamic_cast<const wbox<T, 0> &>(b));
+  case 1:
+    return make_unique<wregion<T, 1>>(dynamic_cast<const wbox<T, 1> &>(b));
+  case 2:
+    return make_unique<wregion<T, 2>>(dynamic_cast<const wbox<T, 2> &>(b));
+  case 3:
+    return make_unique<wregion<T, 3>>(dynamic_cast<const wbox<T, 3> &>(b));
+  case 4:
+    return make_unique<wregion<T, 4>>(dynamic_cast<const wbox<T, 4> &>(b));
+  default:
+    assert(0);
+  }
+}
+
+template <typename T>
+unique_ptr<vregion<T>> vregion<T>::make(const vector<unique_ptr<vbox<T>>> &bs) {
+  if (bs.empty())
+    return nullptr;
+  switch (bs[0]->rank()) {
+  case 0: {
+    vector<box<T, 0>> rs;
+    for (const auto &b : bs)
+      rs.push_back(dynamic_cast<const wbox<T, 0> &>(*b).val);
+    return make_unique<wregion<T, 0>>(rs);
+  }
+  case 1: {
+    vector<box<T, 1>> rs;
+    for (const auto &b : bs)
+      rs.push_back(dynamic_cast<const wbox<T, 1> &>(*b).val);
+    return make_unique<wregion<T, 1>>(rs);
+  }
+  case 2: {
+    vector<box<T, 2>> rs;
+    for (const auto &b : bs)
+      rs.push_back(dynamic_cast<const wbox<T, 2> &>(*b).val);
+    return make_unique<wregion<T, 2>>(rs);
+  }
+  case 3: {
+    vector<box<T, 3>> rs;
+    for (const auto &b : bs)
+      rs.push_back(dynamic_cast<const wbox<T, 3> &>(*b).val);
+    return make_unique<wregion<T, 3>>(rs);
+  }
+  case 4: {
+    vector<box<T, 4>> rs;
+    for (const auto &b : bs)
+      rs.push_back(dynamic_cast<const wbox<T, 4> &>(*b).val);
+    return make_unique<wregion<T, 4>>(rs);
+  }
   default:
     assert(0);
   }
@@ -959,10 +1475,6 @@ template <typename T> struct dpoint {
 
   dpoint() = default;
 
-  dpoint(int d) : val(vpoint<T>::make(d)) {}
-  dpoint(const vpoint<T> *val) : val(vpoint<T>::make(val)) {}
-  dpoint(unique_ptr<vpoint<T>> &&val) : val(std::move(val)) {}
-
   dpoint(const dpoint &p) : val(p.val.copy()) {}
   dpoint(dpoint &&p) = default;
   dpoint &operator=(const dpoint &p) {
@@ -971,39 +1483,145 @@ template <typename T> struct dpoint {
   }
   dpoint &operator=(dpoint &&p) = default;
 
+  template <int D>
+  dpoint(const point<T, D> &p)
+      : val(make_unique<wpoint<T, D>>(p)) {}
+  dpoint(const unique_ptr<vpoint<T>> &val) : val(vpoint<T>::make(val)) {}
+  dpoint(unique_ptr<vpoint<T>> &&val) : val(std::move(val)) {}
+
+  explicit dpoint(int d) : val(vpoint<T>::make(d)) {}
+  dpoint(int d, const T &x) : val(vpoint<T>::make(d, x)) {}
+  template <size_t D>
+  dpoint(const array<T, D> &p)
+      : val(make_unique<wpoint<T, D>>(p)) {}
   dpoint(const vector<T> &p) : val(vpoint<T>::make(p)) {}
   operator vector<T>() const { return vector<T>(*val); }
+  template <typename U>
+  dpoint(const dpoint<U> &p)
+      : val(vpoint<T>::make(*p.val)) {}
 
   operator bool() const { return bool(val); }
   void reset() { val.reset(); }
-
   int rank() const { return val->rank(); }
 
-  dpoint operator+() const { return dpoint(val->posit()); }
-  dpoint operator-() const { return dpoint(val->negate()); }
+  // Unary operators
+  dpoint operator+() const { return dpoint(+*val); }
+  dpoint operator-() const { return dpoint(-*val); }
+  dpoint operator~() const { return dpoint(~*val); }
+  dpoint<bool> operator!() const { return dpoint<bool>(!*val); }
 
-  dpoint operator+(const dpoint &p) const { return dpoint(val->plus(p.val)); }
-  dpoint operator-(const dpoint &p) const { return dpoint(val->minus(p.val)); }
-  dpoint operator*(const dpoint &p) const {
-    return dpoint(val->multiplies(p.val));
+  // Assignment operators
+  dpoint &operator+=(const dpoint &p) {
+    *val += *p.val;
+    return *this;
+  }
+  dpoint &operator-=(const dpoint &p) {
+    *val -= *p.val;
+    return *this;
+  }
+  dpoint &operator*=(const dpoint &p) {
+    *val *= *p.val;
+    return *this;
+  }
+  dpoint &operator&=(const dpoint &p) {
+    *val &= *p.val;
+    return *this;
+  }
+  dpoint &operator|=(const dpoint &p) {
+    *val |= *p.val;
+    return *this;
+  }
+  dpoint &operator^=(const dpoint &p) {
+    *val ^= *p.val;
+    return *this;
   }
 
+  // Binary operators
+  dpoint operator+(const dpoint &p) const { return dpoint(*val + *p.val); }
+  dpoint operator-(const dpoint &p) const { return dpoint(*val - *p.val); }
+  dpoint operator*(const dpoint &p) const { return dpoint(*val * *p.val); }
+  dpoint operator&(const dpoint &p) const { return dpoint(*val & *p.val); }
+  dpoint operator|(const dpoint &p) const { return dpoint(*val | *p.val); }
+  dpoint operator^(const dpoint &p) const { return dpoint(*val ^ *p.val); }
+  dpoint<bool> operator&&(const dpoint &p) const {
+    return dpoint<bool>(*val && *p.val);
+  }
+  dpoint<bool> operator||(const dpoint &p) const {
+    return dpoint<bool>(*val || *p.val);
+  }
+
+  // Unary functions
+  dpoint abs() const { return dpoint(val->abs()); }
+
+  // Binary functions
+  dpoint min(const dpoint &p) const { return dpoint(val->min(*p.val)); }
+  dpoint max(const dpoint &p) const { return dpoint(val->max(*p.val)); }
+
+  // Comparison operators
+  dpoint<bool> operator==(const dpoint &p) const {
+    return dpoint<bool>(*val == *p.val);
+  }
+  dpoint<bool> operator!=(const dpoint &p) const {
+    return dpoint<bool>(*val != *p.val);
+  }
+  dpoint<bool> operator<(const dpoint &p) const {
+    return dpoint<bool>(*val < *p.val);
+  }
+  dpoint<bool> operator>(const dpoint &p) const {
+    return dpoint<bool>(*val > *p.val);
+  }
+  dpoint<bool> operator<=(const dpoint &p) const {
+    return dpoint<bool>(*val <= *p.val);
+  }
+  dpoint<bool> operator>=(const dpoint &p) const {
+    return dpoint<bool>(*val >= *p.val);
+  }
+
+  bool less(const dpoint &p) const;
+
+  // Reductions
+  bool all() const { return val->all(); }
+  bool any() const { return val->any(); }
+  T minval() const { return val->minval(); }
+  T maxval() const { return val->maxval(); }
+  T sum() const { return val->sum(); }
+  typedef typename vpoint<T>::prod_t prod_t;
+  prod_t prod() const { return val->prod(); }
+
+  // Output
   ostream &output(ostream &os) const { return val->output(os); }
   friend ostream &operator<<(ostream &os, const dpoint &p) {
     return p.output(os);
   }
 };
 
+// Unary functions
+template <typename T> dpoint<T> abs(const dpoint<T> &p) { return p.abs(); }
+
+// Binary functions
+template <typename T> dpoint<T> min(const dpoint<T> &p, const dpoint<T> &q) {
+  return p.min(q);
+}
+template <typename T> dpoint<T> max(const dpoint<T> &p, const dpoint<T> &q) {
+  return p.max(q);
+}
+
+// Reductions
+template <typename T> bool all(const dpoint<T> &p) { return p.all(); }
+template <typename T> bool any(const dpoint<T> &p) { return p.any(); }
+template <typename T> T minval(const dpoint<T> &p) { return p.minval(); }
+template <typename T> T maxval(const dpoint<T> &p) { return p.maxval(); }
+template <typename T> T sum(const dpoint<T> &p) { return p.sum(); }
+template <typename T> typename dpoint<T>::prod_t prod(const dpoint<T> &p) {
+  return p.prod();
+}
+
 template <typename T> struct dbox {
   unique_ptr<vbox<T>> val;
 
   dbox() = default;
 
-  dbox(int d) : val(vbox<T>::make(d)) {}
-  dbox(const vbox<T> *val) : val(vbox<T>::make(val)) {}
-  dbox(unique_ptr<vbox<T>> &&val) : val(std::move(val)) {}
-
-  dbox(const dbox &b) : val(b.val.copy()) {}
+  dbox(const dbox &b) : val(b.val->copy()) {}
   dbox(dbox &&b) = default;
   dbox &operator=(const dbox &b) {
     val = b.val->copy();
@@ -1011,13 +1629,18 @@ template <typename T> struct dbox {
   }
   dbox &operator=(dbox &&b) = default;
 
+  dbox(const unique_ptr<vbox<T>> &val) : val(vbox<T>::make(val)) {}
+  dbox(unique_ptr<vbox<T>> &&val) : val(std::move(val)) {}
+
+  explicit dbox(int d) : val(vbox<T>::make(d)) {}
   dbox(const dpoint<T> &lo, const dpoint<T> &hi)
-      : val(vbox<T>::make(lo.val, hi.val)) {}
+      : val(vbox<T>::make(*lo.val, *hi.val)) {}
 
   operator bool() const { return bool(val); }
   void reset() { val.reset(); }
-
   int rank() const { return val->rank(); }
+
+  // Predicates
   bool empty() const { return val->empty(); }
   dpoint<T> lower() const { return dpoint<T>(val->lower()); }
   dpoint<T> upper() const { return dpoint<T>(val->upper()); }
@@ -1025,10 +1648,54 @@ template <typename T> struct dbox {
   typedef typename vbox<T>::prod_t prod_t;
   prod_t size() const { return val->size(); }
 
-  dbox bounding_box(const dbox &b) const {
-    return dbox(val->bounding_box(b->val));
+  // Shift and scale operators
+  dbox &operator>>=(const dpoint<T> &p) {
+    *val >>= *p.val;
+    return *this;
   }
+  dbox &operator<<=(const dpoint<T> &p) {
+    *val <<= *p.val;
+    return *this;
+  }
+  dbox &operator*=(const dpoint<T> &p) {
+    *val *= *p.val;
+    return *this;
+  }
+  dbox operator>>(const dpoint<T> &p) const { return dbox(*val >> *p.val); }
+  dbox operator<<(const dpoint<T> &p) const { return dbox(*val << *p.val); }
+  dbox operator*(const dpoint<T> &p) const { return dbox(*val * *p.val); }
 
+  // Comparison operators
+  bool operator==(const dbox &b) const { return *val == *b.val; }
+  bool operator!=(const dbox &b) const { return *val != *b.val; }
+  bool less(const dbox &b) const { return val->less(*b.val); }
+
+  // Set comparison operators
+  bool contains(const dpoint<T> &p) const { return val->contains(*p.val); }
+  bool isdisjoint(const dbox &b) const { return val->isdisjoint(*b.val); }
+  bool operator<=(const dbox &b) const { return *val <= *b.val; }
+  bool operator>=(const dbox &b) const { return *val >= *b.val; }
+  bool operator<(const dbox &b) const { return *val < *b.val; }
+  bool operator>(const dbox &b) const { return *val > *b.val; }
+  bool issubset(const dbox &b) const { return *this <= b; }
+  bool issuperset(const dbox &b) const { return *this >= b; }
+  bool is_strict_subset(const dbox &b) const { return *this < b; }
+  bool is_strict_superset(const dbox &b) const { return *this > b; }
+
+  // Set operations
+  dbox bounding_box(const dbox &b) const {
+    return dbox(val->bounding_box(b.val));
+  }
+  dbox operator&(const dbox &b) const { return dbox(*val & *b.val); }
+  // dbox operator-(const dbox &b) const { return dbox(*val - *b.val); }
+  // dbox operator|(const dbox &b) const { return dbox(*val | *b.val); }
+  // dbox operator^(const dbox &b) const { return dbox(*val ^ *b.val); }
+  dbox intersection(const dbox &b) const { return *this & b; }
+  // dbox difference(const dbox &b) const { return *this - b; }
+  // dbox setunion(const dbox &b) const { return *this | b; }
+  // dbox symmetric_difference(const dbox &b) const { return *this ^ b; }
+
+  // Output
   ostream &output(ostream &os) const { return val->output(os); }
   friend ostream &operator<<(ostream &os, const dbox &b) {
     return b.output(os);
@@ -1040,11 +1707,7 @@ template <typename T> struct dregion {
 
   dregion() = default;
 
-  dregion(int d) : val(vregion<T>::make(d)) {}
-  dregion(const vregion<T> *val) : val(vregion<T>::make(val)) {}
-  dregion(unique_ptr<vregion<T>> &&val) : val(std::move(val)) {}
-
-  dregion(const dregion &r) : val(r.val.copy()) {}
+  dregion(const dregion &r) : val(r.val->copy()) {}
   dregion(dregion &&r) = default;
   dregion &operator=(const dregion &r) {
     val = r.val->copy();
@@ -1052,16 +1715,72 @@ template <typename T> struct dregion {
   }
   dregion &operator=(dregion &&r) = default;
 
+  dregion(const vregion<T> *val) : val(vregion<T>::make(val)) {}
+  dregion(unique_ptr<vregion<T>> &&val) : val(std::move(val)) {}
+
+  explicit dregion(int d) : val(vregion<T>::make(d)) {}
+  dregion(const dbox<T> &b) : val(vregion<T>::make(*b.val)) {}
+  dregion(const vector<dbox<T>> &bs) {
+    vector<unique_ptr<vbox<T>>> rs;
+    for (const auto &b : bs)
+      rs.push_back(b.val->copy());
+    val = vregion<T>::make(rs);
+  }
+  operator vector<dbox<T>>() const {
+    vector<unique_ptr<vbox<T>>> bs(*val);
+    vector<dbox<T>> rs;
+    for (const auto &b : bs)
+      rs.push_back(dbox<T>(b));
+    return rs;
+  }
+
   operator bool() const { return bool(val); }
   void reset() { val.reset(); }
-
   int rank() const { return val->rank(); }
+
+  // Predicates
+  bool invariant() const { return val->invariant(); }
   bool empty() const { return val->empty(); }
   typedef typename vregion<T>::prod_t prod_t;
   prod_t size() const { return val->size(); }
 
+  // Set operations
   dregion bounding_box() const { return dregion(val->bounding_box()); }
+  dregion operator&(const dbox<T> &b) const { return dregion(*val & *b.val); }
+  dregion operator&(const dregion &r) const { return dregion(*val & *r.val); }
+  dregion operator-(const dbox<T> &b) const { return dregion(*val - *b.val); }
+  dregion operator-(const dregion &r) const { return dregion(*val - *r.val); }
+  dregion operator|(const dbox<T> &b) const { return dregion(*val | *b.val); }
+  dregion operator|(const dregion &r) const { return dregion(*val | *r.val); }
+  dregion operator^(const dbox<T> &b) const { return dregion(*val ^ *b.val); }
+  dregion operator^(const dregion &r) const { return dregion(*val ^ *r.val); }
+  dregion intersection(const dbox<T> &b) const { return *this & b; }
+  dregion intersection(const dregion &r) const { return *this & r; }
+  dregion difference(const dbox<T> &b) const { return *this - b; }
+  dregion difference(const dregion &r) const { return *this - r; }
+  dregion setunion(const dbox<T> &b) const { return *this | b; }
+  dregion setunion(const dregion &r) const { return *this | r; }
+  dregion symmetric_difference(const dbox<T> &b) const { return *this ^ b; }
+  dregion symmetric_difference(const dregion &r) const { return *this ^ r; }
 
+  // Set comparison operators
+  bool contains(const dpoint<T> &p) const { return val->contains(*p.val); }
+  bool isdisjoint(const dbox<T> &b) const { return val->isdisjoint(*b.val); }
+  bool isdisjoint(const dregion &r) const { return val->isdisjoint(*r.val); }
+
+  // Comparison operators
+  bool operator<=(const dregion &r) const { return *val <= *r.val; }
+  bool operator>=(const dregion &r) const { return *val >= *r.val; }
+  bool operator<(const dregion &r) const { return *val < *r.val; }
+  bool operator>(const dregion &r) const { return *val > *r.val; }
+  bool issubset(const dregion &r) const { return *this <= r; }
+  bool issuperset(const dregion &r) const { return *this >= r; }
+  bool is_strict_subset(const dregion &r) const { return *this < r; }
+  bool is_strict_superset(const dregion &r) const { return *this > r; }
+  bool operator==(const dregion &r) const { return *val == *r.val; }
+  bool operator!=(const dregion &r) const { return *val != *r.val; }
+
+  // Output
   ostream &output(ostream &os) const { return val->output(os); }
   friend ostream &operator<<(ostream &os, const dregion &r) {
     return r.output(os);
