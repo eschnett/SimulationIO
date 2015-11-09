@@ -1688,7 +1688,7 @@ template <typename T> struct dbox {
 
   // Set operations
   dbox bounding_box(const dbox &b) const {
-    return dbox(val->bounding_box(b.val));
+    return dbox(val->bounding_box(*b.val));
   }
   dbox operator&(const dbox &b) const { return dbox(*val & *b.val); }
   // dbox operator-(const dbox &b) const { return dbox(*val - *b.val); }
