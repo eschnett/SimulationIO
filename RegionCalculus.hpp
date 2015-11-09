@@ -1589,7 +1589,11 @@ template <typename T> struct dpoint {
   prod_t prod() const { return val->prod(); }
 
   // Output
-  ostream &output(ostream &os) const { return val->output(os); }
+  ostream &output(ostream &os) const {
+    if (!val)
+      return os << "dpoint()";
+    return val->output(os);
+  }
   friend ostream &operator<<(ostream &os, const dpoint &p) {
     return p.output(os);
   }
@@ -1696,7 +1700,11 @@ template <typename T> struct dbox {
   // dbox symmetric_difference(const dbox &b) const { return *this ^ b; }
 
   // Output
-  ostream &output(ostream &os) const { return val->output(os); }
+  ostream &output(ostream &os) const {
+    if (!val)
+      return os << "dbox()";
+    return val->output(os);
+  }
   friend ostream &operator<<(ostream &os, const dbox &b) {
     return b.output(os);
   }
@@ -1781,7 +1789,11 @@ template <typename T> struct dregion {
   bool operator!=(const dregion &r) const { return *val != *r.val; }
 
   // Output
-  ostream &output(ostream &os) const { return val->output(os); }
+  ostream &output(ostream &os) const {
+    if (!val)
+      return os << "dregion()";
+    return val->output(os);
+  }
   friend ostream &operator<<(ostream &os, const dregion &r) {
     return r.output(os);
   }
