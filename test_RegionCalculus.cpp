@@ -2,8 +2,10 @@
 
 #include <gtest/gtest.h>
 
+#include <functional>
 #include <sstream>
 
+using std::equal_to;
 using std::ostringstream;
 
 using namespace RegionCalculus;
@@ -27,6 +29,7 @@ TEST(RegionCalculus, point) {
   EXPECT_TRUE(all(-p1 == ~p0));
   EXPECT_TRUE(all(!p0));
   point p2(point(2));
+  EXPECT_TRUE(equal_to<point>()(p2, point(::point<long long, 3>(p2))));
   EXPECT_TRUE(all(p1 + p1 == p2));
   EXPECT_TRUE(all(p2 - p1 == p1));
   EXPECT_TRUE(all(p2 * p1 == p2));
@@ -62,6 +65,7 @@ TEST(RegionCalculus, box) {
   box b5 = b4 >> p1;
   box b3 = b4 << p1;
   box b6 = b3 * point(2);
+  EXPECT_EQ(b4, (box(::box<long long, 3>(b4))));
   EXPECT_TRUE(b4 == b4);
   EXPECT_TRUE(b4 != b5);
   EXPECT_TRUE(b4.contains(p1));
@@ -113,6 +117,7 @@ TEST(RegionCalculus, region) {
   point p2(2);
   box b2(p, p2);
   region r2(b2);
+  EXPECT_EQ(r2, (region(::region<long long, 3>(r2))));
   EXPECT_TRUE(r == r.intersection(r1));
   EXPECT_TRUE(r == r1.intersection(r));
   EXPECT_TRUE(r1 == r1.intersection(r2));
@@ -129,6 +134,12 @@ TEST(RegionCalculus, region) {
   EXPECT_TRUE(r1 == r1.symmetric_difference(r));
   EXPECT_TRUE(r1 == r.symmetric_difference(r1));
   EXPECT_TRUE(r == r1.symmetric_difference(r1));
+  vector<box> r12vals;
+  r12vals.push_back(b1);
+  r12vals.push_back(box(p1, p2));
+  region r12(r12vals);
+  vector<box> r12boxes = r12;
+  EXPECT_EQ(r12vals, r12boxes);
   vector<region> rs;
   rs.push_back(r);
   rs.push_back(r1);
@@ -136,9 +147,6 @@ TEST(RegionCalculus, region) {
   box b4(p, point(4));
   region r4(b4);
   rs.push_back(r4);
-  region r12;
-  r12.boxes.push_back(b1);
-  r12.boxes.push_back(box(p1, p2));
   rs.push_back(r12);
   rs.push_back(r2.difference(r1));
   rs.push_back(r2.symmetric_difference(r12));
@@ -203,6 +211,7 @@ TEST(RegionCalculus, dpoint) {
   EXPECT_TRUE(all(-p1 == ~p0));
   EXPECT_TRUE(all(!p0));
   dpoint p2(dpoint(dim, 2));
+  EXPECT_TRUE(equal_to<dpoint>()(p2, dpoint(::dpoint<long long>(p2))));
   EXPECT_TRUE(all(p1 + p1 == p2));
   EXPECT_TRUE(all(p2 - p1 == p1));
   EXPECT_TRUE(all(p2 * p1 == p2));
@@ -240,6 +249,7 @@ TEST(RegionCalculus, dbox) {
   dbox b5 = b4 >> p1;
   dbox b3 = b4 << p1;
   dbox b6 = b3 * dpoint(dim, 2);
+  EXPECT_EQ(b4, dbox(::dbox<long long>(b4)));
   EXPECT_TRUE(b4 == b4);
   EXPECT_TRUE(b4 != b5);
   EXPECT_TRUE(b4.contains(p1));
@@ -292,6 +302,7 @@ TEST(RegionCalculus, dregion) {
   dpoint p2(dim, 2);
   dbox b2(p, p2);
   dregion r2(b2);
+  EXPECT_EQ(r2, dregion(::dregion<long long>(r2)));
   EXPECT_TRUE(r == r.intersection(r1));
   EXPECT_TRUE(r == r1.intersection(r));
   EXPECT_TRUE(r1 == r1.intersection(r2));
@@ -308,6 +319,12 @@ TEST(RegionCalculus, dregion) {
   EXPECT_TRUE(r1 == r1.symmetric_difference(r));
   EXPECT_TRUE(r1 == r.symmetric_difference(r1));
   EXPECT_TRUE(r == r1.symmetric_difference(r1));
+  vector<dbox> r12vals;
+  r12vals.push_back(b1);
+  r12vals.push_back(dbox(p1, p2));
+  dregion r12(r12vals);
+  vector<dbox> r12boxes = r12;
+  EXPECT_EQ(r12vals, r12boxes);
   vector<dregion> rs;
   rs.push_back(r);
   rs.push_back(r1);
@@ -315,10 +332,6 @@ TEST(RegionCalculus, dregion) {
   dbox b4(p, dpoint(dim, 4));
   dregion r4(b4);
   rs.push_back(r4);
-  vector<dbox> r12vals;
-  r12vals.push_back(b1);
-  r12vals.push_back(dbox(p1, p2));
-  dregion r12(r12vals);
   rs.push_back(r12);
   rs.push_back(r2.difference(r1));
   rs.push_back(r2.symmetric_difference(r12));

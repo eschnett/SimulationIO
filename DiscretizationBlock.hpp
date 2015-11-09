@@ -44,10 +44,12 @@ struct DiscretizationBlock : Common,
     return Common::invariant() && bool(discretization.lock()) &&
            discretization.lock()->discretizationblocks.count(name) &&
            discretization.lock()->discretizationblocks.at(name).get() == this &&
-           (!bool(region) ||
+           (!region.valid() ||
             (region.rank() ==
                  discretization.lock()->manifold.lock()->dimension &&
-             !region.empty()));
+             !region.empty())) &&
+           (!active.valid() ||
+            active.rank() == discretization.lock()->manifold.lock()->dimension);
   }
 
   DiscretizationBlock() = delete;
@@ -82,7 +84,7 @@ public:
 
   void setRegion() { region.reset(); }
   void setRegion(const box_t &region_) {
-    assert(bool(region_) &&
+    assert(region_.valid() &&
            region_.rank() ==
                discretization.lock()->manifold.lock()->dimension &&
            !region_.empty());
@@ -92,7 +94,7 @@ public:
 
   void setActive() { active.reset(); }
   void setActive(const region_t &active_) {
-    assert(bool(active_) &&
+    assert(active_.valid() &&
            active_.rank() == discretization.lock()->manifold.lock()->dimension);
     active = active_;
   }

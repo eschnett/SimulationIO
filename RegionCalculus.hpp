@@ -184,6 +184,7 @@ template <typename T, int D> struct point {
   point<bool, D> operator>=(const point &p) const { return !(*this < p); }
   point<bool, D> operator<=(const point &p) const { return !(*this > p); }
 
+  bool equal_to(const point &p) const { return elt == p.elt; }
   bool less(const point &p) const { return elt < p.elt; }
 
   // Reductions
@@ -275,6 +276,12 @@ typename point<T, D>::prod_t prod(const point<T, D> &p) {
 }
 
 namespace std {
+template <typename T, int D> struct equal_to<RegionCalculus::point<T, D>> {
+  bool operator()(const RegionCalculus::point<T, D> &p,
+                  const RegionCalculus::point<T, D> &q) const {
+    return p.equal_to(q);
+  }
+};
 template <typename T, int D> struct less<RegionCalculus::point<T, D>> {
   bool operator()(const RegionCalculus::point<T, D> &p,
                   const RegionCalculus::point<T, D> &q) const {
@@ -297,6 +304,7 @@ template <typename T, int D> struct box {
   box(const vector<T> &lo, const vector<T> &hi) : lo(lo), hi(hi) {}
   box &operator=(const box &p) = default;
   box &operator=(box &&p) = default;
+  template <typename U> box(const box<U, D> &b) : lo(b.lo), hi(b.hi) {}
 
   // Predicates
   bool empty() const { return any(hi <= lo); }
@@ -552,6 +560,12 @@ template <typename T, int D> struct region {
   operator vector<box<T, D>>() const { return boxes; }
   region &operator=(const region &r) = default;
   region &operator=(region &&r) = default;
+  template <typename U> region(const region<U, D> &r) {
+    boxes.reserve(r.boxes.size());
+    for (const auto &b : r.boxes)
+      boxes.push_back(box<T, D>(b));
+    assert(invariant());
+  }
 
 private:
   void append(const region &r) {
@@ -702,7 +716,6 @@ public:
   bool operator==(const region &r) const { return (*this ^ r).empty(); }
   bool operator!=(const region &r) const { return !(*this == r); }
 
-  bool equal_to(const region &r) const { return boxes == r.boxes; }
   bool less(const region &r) const { return boxes < r.boxes; }
 
   // Output
@@ -723,13 +736,6 @@ public:
 }
 
 namespace std {
-template <typename T, int D> struct equal_to<RegionCalculus::region<T, D>> {
-  bool operator()(const RegionCalculus::region<T, D> &p,
-                  const RegionCalculus::region<T, D> &q) const {
-    return p.equal_to(q);
-  }
-};
-
 template <typename T, int D> struct less<RegionCalculus::region<T, D>> {
   bool operator()(const RegionCalculus::region<T, D> &p,
                   const RegionCalculus::region<T, D> &q) const {
@@ -800,6 +806,9 @@ template <typename T> struct vpoint {
   virtual unique_ptr<vpoint<bool>> operator<=(const vpoint &p) const = 0;
   virtual unique_ptr<vpoint<bool>> operator>=(const vpoint &p) const = 0;
 
+  virtual bool equal_to(const vpoint &p) const = 0;
+  virtual bool less(const vpoint &p) const = 0;
+
   // Reductions
   virtual bool any() const = 0;
   virtual bool all() const = 0;
@@ -821,6 +830,7 @@ template <typename T> struct vbox {
 
   static unique_ptr<vbox> make(int d);
   static unique_ptr<vbox> make(const vpoint<T> &lo, const vpoint<T> &hi);
+  template <typename U> static unique_ptr<vbox> make(const vbox<U> &p);
 
   virtual int rank() const = 0;
 
@@ -843,6 +853,7 @@ template <typename T> struct vbox {
   // Comparison operators
   virtual bool operator==(const vbox &b) const = 0;
   virtual bool operator!=(const vbox &b) const = 0;
+
   virtual bool less(const vbox &b) const = 0;
 
   // Set comparison operators
@@ -874,6 +885,7 @@ template <typename T> struct vregion {
   static unique_ptr<vregion> make(const vbox<T> &b);
   static unique_ptr<vregion> make(const vector<unique_ptr<vbox<T>>> &bs);
   virtual operator vector<unique_ptr<vbox<T>>>() const = 0;
+  template <typename U> static unique_ptr<vregion> make(const vregion<U> &p);
 
   virtual int rank() const = 0;
 
@@ -907,7 +919,6 @@ template <typename T> struct vregion {
   virtual bool operator==(const vregion &r) const = 0;
   virtual bool operator!=(const vregion &r) const = 0;
 
-  virtual bool equal_to(const vregion &r) const = 0;
   virtual bool less(const vregion &r) const = 0;
 
   // Output
@@ -1040,6 +1051,13 @@ template <typename T, int D> struct wpoint : vpoint<T> {
                                         dynamic_cast<const wpoint &>(p).val);
   }
 
+  bool equal_to(const vpoint<T> &p) const {
+    return val.equal_to(dynamic_cast<const wpoint &>(p).val);
+  }
+  bool less(const vpoint<T> &p) const {
+    return val.less(dynamic_cast<const wpoint &>(p).val);
+  }
+
   // Reductions
   bool any() const { return val.any(); }
   bool all() const { return val.all(); }
@@ -1069,6 +1087,7 @@ template <typename T, int D> struct wbox : vbox<T> {
 
   wbox() : val() {}
   wbox(const wpoint<T, D> &lo, const wpoint<T, D> &hi) : val(lo.val, hi.val) {}
+  template <typename U> wbox(const wbox<U, D> &p) : val(p.val) {}
 
   int rank() const { return D; }
 
@@ -1116,6 +1135,7 @@ template <typename T, int D> struct wbox : vbox<T> {
   bool operator!=(const vbox<T> &b) const {
     return val != dynamic_cast<const wbox<T, D> &>(b).val;
   }
+
   bool less(const vbox<T> &b) const {
     return val.less(dynamic_cast<const wbox<T, D> &>(b).val);
   }
@@ -1193,6 +1213,7 @@ template <typename T, int D> struct wregion : vregion<T> {
       bs.push_back(make_unique<wbox<T, D>>(b));
     return bs;
   }
+  template <typename U> wregion(const wregion<U, D> &p) : val(p.val) {}
 
   int rank() const { return D; }
 
@@ -1262,9 +1283,6 @@ template <typename T, int D> struct wregion : vregion<T> {
     return val != dynamic_cast<const wregion &>(r).val;
   }
 
-  bool equal_to(const vregion<T> &r) const {
-    return val.equal_to(dynamic_cast<const wregion &>(r).val);
-  }
   bool less(const vregion<T> &r) const {
     return val.less(dynamic_cast<const wregion &>(r).val);
   }
@@ -1391,6 +1409,25 @@ unique_ptr<vbox<T>> vbox<T>::make(const vpoint<T> &lo, const vpoint<T> &hi) {
   }
 }
 
+template <typename T>
+template <typename U>
+unique_ptr<vbox<T>> vbox<T>::make(const vbox<U> &b) {
+  switch (b.rank()) {
+  case 0:
+    return make_unique<wbox<T, 0>>(dynamic_cast<const wbox<U, 0> &>(b));
+  case 1:
+    return make_unique<wbox<T, 1>>(dynamic_cast<const wbox<U, 1> &>(b));
+  case 2:
+    return make_unique<wbox<T, 2>>(dynamic_cast<const wbox<U, 2> &>(b));
+  case 3:
+    return make_unique<wbox<T, 3>>(dynamic_cast<const wbox<U, 3> &>(b));
+  case 4:
+    return make_unique<wbox<T, 4>>(dynamic_cast<const wbox<U, 4> &>(b));
+  default:
+    assert(0);
+  }
+}
+
 template <typename T> unique_ptr<vregion<T>> vregion<T>::make(int d) {
   switch (d) {
   case 0:
@@ -1466,6 +1503,25 @@ unique_ptr<vregion<T>> vregion<T>::make(const vector<unique_ptr<vbox<T>>> &bs) {
   }
 }
 
+template <typename T>
+template <typename U>
+unique_ptr<vregion<T>> vregion<T>::make(const vregion<U> &r) {
+  switch (r.rank()) {
+  case 0:
+    return make_unique<wregion<T, 0>>(dynamic_cast<const wregion<U, 0> &>(r));
+  case 1:
+    return make_unique<wregion<T, 1>>(dynamic_cast<const wregion<U, 1> &>(r));
+  case 2:
+    return make_unique<wregion<T, 2>>(dynamic_cast<const wregion<U, 2> &>(r));
+  case 3:
+    return make_unique<wregion<T, 3>>(dynamic_cast<const wregion<U, 3> &>(r));
+  case 4:
+    return make_unique<wregion<T, 4>>(dynamic_cast<const wregion<U, 4> &>(r));
+  default:
+    assert(0);
+  }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // Dimension-independent classes (hiding the pointers)
@@ -1500,7 +1556,7 @@ template <typename T> struct dpoint {
   dpoint(const dpoint<U> &p)
       : val(vpoint<T>::make(*p.val)) {}
 
-  operator bool() const { return bool(val); }
+  bool valid() const { return bool(val); }
   void reset() { val.reset(); }
   int rank() const { return val->rank(); }
 
@@ -1577,7 +1633,8 @@ template <typename T> struct dpoint {
     return dpoint<bool>(*val >= *p.val);
   }
 
-  bool less(const dpoint &p) const;
+  bool equal_to(const dpoint &p) const { return val->equal_to(*p.val); }
+  bool less(const dpoint &p) const { return val->less(*p.val); }
 
   // Reductions
   bool all() const { return val->all(); }
@@ -1619,7 +1676,25 @@ template <typename T> T sum(const dpoint<T> &p) { return p.sum(); }
 template <typename T> typename dpoint<T>::prod_t prod(const dpoint<T> &p) {
   return p.prod();
 }
+}
 
+namespace std {
+template <typename T> struct equal_to<RegionCalculus::dpoint<T>> {
+  bool operator()(const RegionCalculus::dpoint<T> &p,
+                  const RegionCalculus::dpoint<T> &q) const {
+    return p.equal_to(q);
+  }
+};
+
+template <typename T> struct less<RegionCalculus::dpoint<T>> {
+  bool operator()(const RegionCalculus::dpoint<T> &p,
+                  const RegionCalculus::dpoint<T> &q) const {
+    return p.less(q);
+  }
+};
+}
+
+namespace RegionCalculus {
 template <typename T> struct dbox {
   unique_ptr<vbox<T>> val;
 
@@ -1639,8 +1714,9 @@ template <typename T> struct dbox {
   explicit dbox(int d) : val(vbox<T>::make(d)) {}
   dbox(const dpoint<T> &lo, const dpoint<T> &hi)
       : val(vbox<T>::make(*lo.val, *hi.val)) {}
+  template <typename U> dbox(const dbox<U> &p) : val(vbox<T>::make(*p.val)) {}
 
-  operator bool() const { return bool(val); }
+  bool valid() const { return bool(val); }
   void reset() { val.reset(); }
   int rank() const { return val->rank(); }
 
@@ -1709,7 +1785,18 @@ template <typename T> struct dbox {
     return b.output(os);
   }
 };
+}
 
+namespace std {
+template <typename T> struct less<RegionCalculus::dbox<T>> {
+  bool operator()(const RegionCalculus::dbox<T> &p,
+                  const RegionCalculus::dbox<T> &q) const {
+    return p.less(q);
+  }
+};
+}
+
+namespace RegionCalculus {
 template <typename T> struct dregion {
   unique_ptr<vregion<T>> val;
 
@@ -1734,15 +1821,24 @@ template <typename T> struct dregion {
       rs.push_back(b.val->copy());
     val = vregion<T>::make(rs);
   }
+  dregion(vector<dbox<T>> &&bs) {
+    vector<unique_ptr<vbox<T>>> rs;
+    for (auto &b : bs)
+      rs.push_back(std::move(b.val));
+    val = vregion<T>::make(rs);
+  }
   operator vector<dbox<T>>() const {
     vector<unique_ptr<vbox<T>>> bs(*val);
     vector<dbox<T>> rs;
-    for (const auto &b : bs)
-      rs.push_back(dbox<T>(b));
+    for (auto &b : bs)
+      rs.push_back(dbox<T>(std::move(b)));
     return rs;
   }
+  template <typename U>
+  dregion(const dregion<U> &p)
+      : val(vregion<T>::make(*p.val)) {}
 
-  operator bool() const { return bool(val); }
+  bool valid() const { return bool(val); }
   void reset() { val.reset(); }
   int rank() const { return val->rank(); }
 
@@ -1788,6 +1884,8 @@ template <typename T> struct dregion {
   bool operator==(const dregion &r) const { return *val == *r.val; }
   bool operator!=(const dregion &r) const { return *val != *r.val; }
 
+  bool less(const dregion &r) const { return val->less(*r.val); }
+
   // Output
   ostream &output(ostream &os) const {
     if (!val)
@@ -1796,6 +1894,15 @@ template <typename T> struct dregion {
   }
   friend ostream &operator<<(ostream &os, const dregion &r) {
     return r.output(os);
+  }
+};
+}
+
+namespace std {
+template <typename T> struct less<RegionCalculus::dregion<T>> {
+  bool operator()(const RegionCalculus::dregion<T> &p,
+                  const RegionCalculus::dregion<T> &q) const {
+    return p.less(q);
   }
 };
 }

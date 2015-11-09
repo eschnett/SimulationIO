@@ -4,8 +4,11 @@
 
 %{
 #include <H5Cpp.h>
+#include "RegionCalculus.hpp"
 #include "SimulationIO.hpp"
 using namespace SimulationIO;
+typedef RegionCalculus::dbox<int> ibox;
+typedef RegionCalculus::dregion<int> iregion;
 %}
 
 %include <std_map.i>
@@ -221,21 +224,22 @@ struct Discretization {
 
 struct DiscretizationBlock {
   string name;
-  // std::box_t region;
-  %extend {
-    std::vector<int> getOffset() const {
-      std::vector<hssize_t> hoffset = self->region.lower();
-      std::vector<int> ioffset(hoffset.size());
-      std::copy(hoffset.begin(), hoffset.end(), ioffset.begin());
-      return ioffset;
-    }
-    std::vector<int> getShape() const {
-      std::vector<hssize_t> hoffset = self->region.shape();
-      std::vector<int> ioffset(hoffset.size());
-      std::copy(hoffset.begin(), hoffset.end(), ioffset.begin());
-      return ioffset;
-    }
-  }
+  ibox region;
+  iregion active;
+  // %extend {
+  //   std::vector<int> getOffset() const {
+  //     std::vector<hssize_t> hoffset = self->region.lower();
+  //     std::vector<int> ioffset(hoffset.size());
+  //     std::copy(hoffset.begin(), hoffset.end(), ioffset.begin());
+  //     return ioffset;
+  //   }
+  //   std::vector<int> getShape() const {
+  //     std::vector<hssize_t> hoffset = self->region.shape();
+  //     std::vector<int> ioffset(hoffset.size());
+  //     std::copy(hoffset.begin(), hoffset.end(), ioffset.begin());
+  //     return ioffset;
+  //   }
+  // }
   std::weak_ptr<Discretization> discretization;
   bool invariant() const;
   %extend {

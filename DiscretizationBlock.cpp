@@ -15,7 +15,7 @@ void read_active(const H5::H5Location &group,
   // - C++ pads empty struct
   // - HDF5 cannot handle empty arrays
   static_assert(D > 0, "");
-  if (bool(active))
+  if (active.valid())
     return;
   vector<RegionCalculus::box<hssize_t, D>> boxes;
   const auto &boxtype = discretizationblock.discretization.lock()
@@ -71,9 +71,9 @@ void DiscretizationBlock::read(
 ostream &DiscretizationBlock::output(ostream &os, int level) const {
   os << indent(level) << "DiscretizationBlock " << quote(name)
      << ": Discretization " << quote(discretization.lock()->name);
-  if (bool(region))
+  if (region.valid())
     os << " region=" << region;
-  if (bool(active))
+  if (active.valid())
     os << " active=" << active;
   os << "\n";
   return os;
@@ -113,7 +113,7 @@ void DiscretizationBlock::write(const H5::CommonFG &loc,
       "DiscretizationBlock");
   H5::createAttribute(group, "name", name);
   H5::createHardLink(group, "discretization", parent, ".");
-  if (bool(region)) {
+  if (region.valid()) {
 #warning "TODO: write using boxtype HDF5 type"
     vector<hssize_t> offset = region.lower(), shape = region.shape();
     std::reverse(offset.begin(), offset.end());
@@ -121,7 +121,7 @@ void DiscretizationBlock::write(const H5::CommonFG &loc,
     std::reverse(shape.begin(), shape.end());
     H5::createAttribute(group, "shape", shape);
   }
-  if (bool(active)) {
+  if (active.valid()) {
     // TODO write_active<0>(group, *this, active);
     write_active<1>(group, *this, active);
     write_active<2>(group, *this, active);

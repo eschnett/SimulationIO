@@ -9,8 +9,8 @@
 typedef RegionCalculus::box<int,3> box3;
 typedef RegionCalculus::region<int,3> region3;
 
-typedef RegionCalculus::dbox<int> box_t;
-typedef RegionCalculus::dregion<int> region_t;
+typedef RegionCalculus::dbox<int> ibox;
+typedef RegionCalculus::dregion<int> iregion;
 %}
 
 %include <std_string.i>
@@ -18,12 +18,12 @@ typedef RegionCalculus::dregion<int> region_t;
 
 struct box3;
 struct region3;
-struct box_t;
-struct region_t;
+struct ibox;
+struct iregion;
 
 %template(vector_int) std::vector<int>;
 %template(vector_box3) std::vector<box3>;
-%template(vector_box_t) std::vector<box_t>;
+%template(vector_ibox) std::vector<ibox>;
 
 %rename("union") box3::setunion(const box3& b) const;
 struct box3 {
@@ -95,16 +95,15 @@ struct region3 {
   region3 symmetric_difference(const region3& r) const;
 };
 
-%rename("union") box_t::setunion(const region3& r) const;
-struct box_t {
-  box_t();
-  box_t(int d);
-  box_t(const std::vector<int>& lo, const std::vector<int>& hi);
+%rename("union") ibox::setunion(const ibox& b) const;
+struct ibox {
+  ibox();
+  ibox(int d);
+  ibox(const std::vector<int>& lo, const std::vector<int>& hi);
 
   // Predicates
-  %extend {
-    bool valid() const { return bool(self); }
-  }
+  bool valid() const;
+  int rank() const;
   bool empty() const;
   std::vector<int> lower() const;
   std::vector<int> upper() const;
@@ -112,88 +111,93 @@ struct box_t {
   int size() const;
 
   // Shift and scale operators
-  box_t& operator>>=(const std::vector<int>& p);
-  box_t& operator<<=(const std::vector<int>& p);
-  box_t& operator*=(const std::vector<int>& p);
-  box_t operator>>(const std::vector<int>& p) const;
-  box_t operator<<(const std::vector<int>& p) const;
-  box_t operator*(const std::vector<int>& p) const;
+  ibox& operator>>=(const std::vector<int>& p);
+  ibox& operator<<=(const std::vector<int>& p);
+  ibox& operator*=(const std::vector<int>& p);
+  ibox operator>>(const std::vector<int>& p) const;
+  ibox operator<<(const std::vector<int>& p) const;
+  ibox operator*(const std::vector<int>& p) const;
 
   // Comparison operators
-  bool operator==(const box_t& b) const;
-  bool operator!=(const box_t& b) const;
-  bool operator<=(const box_t& b) const;
-  bool operator>=(const box_t& b) const;
-  bool operator<(const box_t& b) const;
-  bool operator>(const box_t& b) const;
+  bool operator==(const ibox& b) const;
+  bool operator!=(const ibox& b) const;
+  bool operator<=(const ibox& b) const;
+  bool operator>=(const ibox& b) const;
+  bool operator<(const ibox& b) const;
+  bool operator>(const ibox& b) const;
   bool contains(const std::vector<int>& p) const;
-  bool isdisjoint(const box_t& b) const;
-  bool issubset(const box_t& b) const;
-  bool issuperset(const box_t& b) const;
-  bool is_strict_subset(const box_t& b) const;
-  bool is_strict_superset(const box_t& b) const;
+  bool isdisjoint(const ibox& b) const;
+  bool issubset(const ibox& b) const;
+  bool issuperset(const ibox& b) const;
+  bool is_strict_subset(const ibox& b) const;
+  bool is_strict_superset(const ibox& b) const;
 
   // Set operations
-  box_t bounding_box(const box_t& b) const;
-  box_t operator&(const box_t& b) const;
-  box_t intersection(const box_t& b) const;
+  ibox bounding_box(const ibox& b) const;
+  ibox operator&(const ibox& b) const;
+  ibox intersection(const ibox& b) const;
 
   // Output
   %extend {
     std::string __str__() const {
       std::ostringstream buf;
-      buf << self;
+      buf << *self;
       return buf.str();
     }
   }
 };
 
-%rename("union") box_t::setunion(const box_t& b) const;
-struct region_t {
-  region_t();
-  region_t(int d);
-  region_t(const box_t& b);
-  region_t(const std::vector<box_t>& bs);
+%rename("union") iregion::setunion(const iregion& r) const;
+struct iregion {
+  iregion();
+  iregion(int d);
+  iregion(const ibox& b);
+  iregion(const std::vector<ibox>& bs);
+  %extend {
+    std::vector<ibox> boxes() const {
+      std::vector<ibox> rs = *self;
+      return rs;
+    }
+  }
 
   // Predicates
-  %extend {
-    bool valid() const { return bool(self); }
-  }
+  bool valid() const;
+  int rank() const;
   bool empty() const;
   int size() const;
 
   // Set operations
-  region_t bounding_box() const;
-  region_t operator&(const region_t& r) const;
-  region_t operator-(const region_t& r) const;
-  region_t operator|(const region_t& r) const;
-  region_t operator^(const region_t& r) const;
-  region_t intersection(const region_t& r) const;
-  region_t difference(const region_t& r) const;
-  region_t setunion(const region_t& r) const;
-  region_t symmetric_difference(const region_t& r) const;
+  iregion bounding_box() const;
+  iregion operator&(const iregion& r) const;
+  iregion operator-(const iregion& r) const;
+  iregion operator|(const iregion& r) const;
+  iregion operator^(const iregion& r) const;
+  iregion intersection(const iregion& r) const;
+  iregion difference(const iregion& r) const;
+  iregion setunion(const iregion& r) const;
+  iregion symmetric_difference(const iregion& r) const;
 
   // Set comparison operators
   bool contains(const std::vector<int>& p) const;
-  bool isdisjoint(const region_t& r) const;
+  bool isdisjoint(const iregion& r) const;
 
   // Comparison operators
-  bool operator<=(const region_t& r) const;
-  bool operator>=(const region_t& r) const;
-  bool operator<(const region_t& r) const;
-  bool operator>(const region_t& r) const;
-  bool issubset(const region_t& r) const;
-  bool issuperset(const region_t& r) const;
-  bool is_strict_subset(const region_t& r) const;
-  bool is_strict_superset(const region_t& r) const;
-  bool operator==(const region_t& r) const;
-  bool operator!=(const region_t& r) const;
+  bool operator<=(const iregion& r) const;
+  bool operator>=(const iregion& r) const;
+  bool operator<(const iregion& r) const;
+  bool operator>(const iregion& r) const;
+  bool issubset(const iregion& r) const;
+  bool issuperset(const iregion& r) const;
+  bool is_strict_subset(const iregion& r) const;
+  bool is_strict_superset(const iregion& r) const;
+  bool operator==(const iregion& r) const;
+  bool operator!=(const iregion& r) const;
 
   // Output
   %extend {
     std::string __str__() const {
       std::ostringstream buf;
-      buf << self;
+      buf << *self;
       return buf.str();
     }
   }
