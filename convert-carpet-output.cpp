@@ -1,9 +1,13 @@
 #include "SimulationIO.hpp"
 
+#include "RegionCalculus.hpp"
+
 #include "H5Helpers.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cassert>
+#include <cctype>
 #include <iomanip>
 #include <iostream>
 #include <iterator>
@@ -15,6 +19,10 @@
 
 using namespace SimulationIO;
 using namespace std;
+
+typedef RegionCalculus::dpoint<hssize_t> dpoint;
+typedef RegionCalculus::dbox<hssize_t> dbox;
+typedef RegionCalculus::dregion<hssize_t> dregion;
 
 const char *const dirnames[] = {"x", "y", "z"};
 
@@ -30,6 +38,139 @@ string get_basename(string filename) {
     filename = filename.substr(slashpos + 1);
   return filename;
 }
+
+class expect {
+  string str;
+
+public:
+  expect(const string &str) : str(str) {}
+  expect(char ch) : str(1, ch) {}
+  istream &input(istream &is) const {
+    assert(bool(is));
+    for (auto ch : str) {
+      if (is.eof())
+        throw "Unexpected end of input";
+      char got = is.get();
+      assert(got == ch);
+      if (got != ch)
+        throw "Unexpectec input";
+      assert(bool(is));
+    }
+    return is;
+  }
+  friend istream &operator>>(istream &is, const expect &self) {
+    return self.input(is);
+  }
+};
+
+class skipuntil {
+  char ch;
+
+public:
+  skipuntil(char ch) : ch(ch) {}
+  istream &input(istream &is) const {
+    assert(is.good());
+    while (!is.eof() && is.peek() != ch) {
+      is.get();
+      assert(bool(is));
+    }
+    assert(is.good());
+    is.get();
+    assert(bool(is));
+    return is;
+  }
+  friend istream &operator>>(istream &is, const skipuntil &self) {
+    return self.input(is);
+  }
+};
+
+template <typename T, int D> struct vect {
+  array<T, D> elts;
+  istream &input(istream &is) {
+    is >> expect('[');
+    for (int d = 0; d < D; ++d) {
+      if (d > 0) {
+        is >> expect(',');
+      }
+      is >> elts[d];
+    }
+    is >> expect(']');
+    return is;
+  }
+  ostream &output(ostream &os) const {
+    os << "[";
+    for (int d = 0; d < D; ++d) {
+      if (d > 0)
+        os << ",";
+      os << elts[d];
+    }
+    os << "]";
+    return os;
+  }
+  friend istream &operator>>(istream &is, vect<T, D> &v) { return v.input(is); }
+  friend ostream &operator<<(ostream &os, const vect<T, D> &v) {
+    return v.output(os);
+  }
+};
+
+template <typename T, int D> struct bbox {
+  vect<T, D> lower, upper, stride;
+  istream &input(istream &is) {
+    vect<T, D> tmplo, tmphi, tmpsh;
+    long long tmpsz;
+    is >> expect('(') >> lower >> expect(':') >> upper >> expect(':') >>
+        stride >> expect('/') >> tmplo >> expect(':') >> tmphi >> expect('/') >>
+        tmpsh >> expect('/') >> tmpsz >> expect(')');
+    return is;
+  }
+  ostream &output(ostream &os) const {
+    return os << "(" << lower << ":" << upper << ":" << stride << ")";
+  }
+  friend istream &operator>>(istream &is, bbox<T, D> &b) { return b.input(is); }
+  friend ostream &operator<<(ostream &os, const bbox<T, D> &b) {
+    return b.output(os);
+  }
+};
+
+template <typename T, int D> struct bboxset {
+  vector<bbox<T, D>> elts;
+  istream &input(istream &is) {
+    elts.clear();
+    is >> expect("bboxset<") >> skipuntil('{');
+    if (is.peek() == '(') {
+      char got;
+      do {
+        bbox<T, D> elt;
+        is >> elt;
+        elts.push_back(elt);
+        got = is.get();
+      } while (got == ',');
+      assert(got == '}');
+    }
+    is >> skipuntil(')');
+    return is;
+  }
+  ostream &output(ostream &os) const {
+    os << "bboxset{";
+    for (size_t i = 0; i < elts.size(); ++i) {
+      if (i > 0)
+        os << ",";
+      os << elts[i];
+    }
+    os << "}";
+    return os;
+  }
+  friend istream &operator>>(istream &is, bboxset<T, D> &bs) {
+    return bs.input(is);
+  }
+  friend ostream &operator<<(ostream &os, const bboxset<T, D> &bs) {
+    return bs.output(os);
+  }
+};
+
+typedef vect<hssize_t, 3> ivect;
+typedef bbox<hssize_t, 3> ibbox;
+typedef bboxset<hssize_t, 3> ibboxset;
 
 int main(int argc, char **argv) {
 
@@ -136,7 +277,8 @@ int main(int argc, char **argv) {
           string fieldname(varname);
           vector<int> tensorindices;
           if (fieldname.substr(0, 4) == "GRID") {
-            // Special case for coordinates: do nothing, treat them as scalars
+            // Special case for coordinates: do nothing, treat them as
+            // scalars
           } else {
             while (!fieldname.empty() && *fieldname.rbegin() >= 'x' &&
                    *fieldname.rbegin() <= 'z') {
@@ -190,15 +332,34 @@ int main(int argc, char **argv) {
                  timelevel);
           assert(H5::readAttribute<int>(dataset, "level") == refinementlevel);
 #warning "TODO: check attribute component?"
-          auto ioffsetnum = H5::readAttribute<vector<int>>(dataset, "ioffset");
-          auto ioffsetdenom =
-              H5::readAttribute<vector<int>>(dataset, "ioffsetdenom");
-          assert(int(ioffsetnum.size()) == manifold->dimension);
-          assert(int(ioffsetdenom.size()) == manifold->dimension);
           vector<double> ioffset(manifold->dimension);
-          for (int d = 0; d < int(ioffset.size()); ++d)
-            ioffset.at(d) =
-                double(ioffsetnum.at(d)) / double(ioffsetdenom.at(d));
+          {
+            auto ioffsetnum =
+                H5::readAttribute<vector<int>>(dataset, "ioffset");
+            auto ioffsetdenom =
+                H5::readAttribute<vector<int>>(dataset, "ioffsetdenom");
+            assert(int(ioffsetnum.size()) == manifold->dimension);
+            assert(int(ioffsetdenom.size()) == manifold->dimension);
+            for (int d = 0; d < int(ioffset.size()); ++d)
+              ioffset.at(d) =
+                  double(ioffsetnum.at(d)) / double(ioffsetdenom.at(d));
+          }
+          dregion active;
+          {
+            string active_str = H5::readAttribute<string>(dataset, "active");
+            istringstream ibuf(active_str);
+            ibboxset active_bs;
+            ibuf >> active_bs;
+            vector<dbox> dbs;
+            for (const ibbox &b : active_bs.elts) {
+              dpoint lo(b.lower.elts);
+              dpoint up(b.upper.elts);
+              dpoint hi = up + dpoint(up.rank(), 1);
+              dbox db(lo, hi);
+              dbs.push_back(db);
+            }
+            active = dregion(dbs);
+          }
 
           // Output information
           cout << "    field name: " << fieldname << "\n"
@@ -315,6 +476,7 @@ int main(int argc, char **argv) {
             std::reverse(shape.begin(), shape.end());
             discretizationblock->setRegion(
                 box_t(offset, point_t(offset) + shape));
+            discretizationblock->setActive(active);
           }
           const auto &discretizationblock =
               discretization->discretizationblocks.at(blockname);
