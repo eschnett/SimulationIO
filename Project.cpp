@@ -10,10 +10,17 @@
 
 #include "H5Helpers.hpp"
 
+#include <algorithm>
+#include <sstream>
+#include <string>
 #include <vector>
 
 namespace SimulationIO {
 
+using std::max;
+using std::min;
+using std::ostringstream;
+using std::string;
 using std::vector;
 
 shared_ptr<Project> createProject(const string &name) {
@@ -130,18 +137,55 @@ void Project::createTypes() const {
   // count (non-negative). Here we use double precision for all three fields,
   // but other precisions are also possible. We use a floating point number to
   // describe the count for uniformity.
-  vector<size_t> offsets;
-  size_t size = 0;
-  offsets.push_back(size);
-  size += H5::getType(double()).getSize();
-  offsets.push_back(size);
-  size += H5::getType(double()).getSize();
-  offsets.push_back(size);
-  size += H5::getType(double()).getSize();
-  rangetype = H5::CompType(size);
-  rangetype.insertMember("minimum", offsets.at(0), H5::getType(double()));
-  rangetype.insertMember("maximum", offsets.at(1), H5::getType(double()));
-  rangetype.insertMember("count", offsets.at(2), H5::getType(double()));
+  {
+    vector<size_t> offsets;
+    size_t size = 0;
+    offsets.push_back(size);
+    size += H5::getType(double()).getSize();
+    offsets.push_back(size);
+    size += H5::getType(double()).getSize();
+    offsets.push_back(size);
+    size += H5::getType(double()).getSize();
+    rangetype = H5::CompType(size);
+    rangetype.insertMember("minimum", offsets.at(0), H5::getType(double()));
+    rangetype.insertMember("maximum", offsets.at(1), H5::getType(double()));
+    rangetype.insertMember("count", offsets.at(2), H5::getType(double()));
+  }
+
+  // point, box, and region are defined in RegionCalculus.hpp
+  pointtypes.clear();
+  boxtypes.clear();
+  regiontypes.clear();
+  for (int d = 0; d <= 4; ++d) {
+    // point_t
+    const hsize_t dim = max(1, d); // HDF5 requires at least 1 element
+    const hsize_t dims[1] = {dim};
+    // TODO: Handle d==0 correctly
+    auto pointtype = H5::ArrayType(H5::getType(hssize_t()), 1, dims);
+    pointtypes.push_back(pointtype);
+    // box_t
+    vector<size_t> offsets;
+    size_t size = 0;
+    offsets.push_back(size);
+    size += pointtype.getSize();
+    offsets.push_back(size);
+    size += pointtype.getSize();
+    auto boxtype = H5::CompType(size);
+    boxtype.insertMember("lower", offsets.at(0), pointtype);
+    boxtype.insertMember("upper", offsets.at(1), pointtype);
+    boxtypes.push_back(boxtype);
+    // region_t
+    auto regiontype = H5::VarLenType(&boxtype);
+    regiontypes.push_back(regiontype);
+  }
+}
+
+namespace {
+string itos(int d) {
+  ostringstream buf;
+  buf << d;
+  return buf.str();
+}
 }
 
 void Project::write(const H5::CommonFG &loc,
@@ -153,6 +197,12 @@ void Project::write(const H5::CommonFG &loc,
   auto typegroup = group.createGroup("types");
   enumtype.commit(typegroup, "SimulationIO");
   rangetype.commit(typegroup, "Range");
+  for (int d = 0; d < int(pointtypes.size()); ++d)
+    pointtypes.at(d).commit(typegroup, string("Point[") + itos(d) + "]");
+  for (int d = 0; d < int(boxtypes.size()); ++d)
+    boxtypes.at(d).commit(typegroup, string("Box[") + itos(d) + "]");
+  for (int d = 0; d < int(regiontypes.size()); ++d)
+    regiontypes.at(d).commit(typegroup, string("Region[") + itos(d) + "]");
   H5::createAttribute(group, "type", enumtype, "Project");
   H5::createAttribute(group, "name", name);
   // no link to parent

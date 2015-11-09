@@ -5,10 +5,13 @@
 
 #include "Common.hpp"
 
+#include "RegionCalculus.hpp"
+
 #include <iostream>
 #include <map>
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace SimulationIO {
 
@@ -17,6 +20,7 @@ using std::map;
 using std::ostream;
 using std::shared_ptr;
 using std::string;
+using std::vector;
 
 struct Project;
 
@@ -45,6 +49,10 @@ struct Project : Common, std::enable_shared_from_this<Project> {
 
   mutable H5::EnumType enumtype;
   mutable H5::CompType rangetype;
+
+  mutable vector<H5::ArrayType> pointtypes;
+  mutable vector<H5::CompType> boxtypes;
+  mutable vector<H5::VarLenType> regiontypes;
 
   virtual bool invariant() const { return Common::invariant(); }
 

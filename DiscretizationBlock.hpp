@@ -82,11 +82,21 @@ public:
 
   void setRegion() { region.reset(); }
   void setRegion(const box_t &region_) {
-    assert(region_.rank() ==
+    assert(bool(region_) &&
+           region_.rank() ==
                discretization.lock()->manifold.lock()->dimension &&
            !region_.empty());
     region = region_;
   }
+  box_t getRegion() const { return region; }
+
+  void setActive() { active.reset(); }
+  void setActive(const region_t &active_) {
+    assert(bool(active_) &&
+           active_.rank() == discretization.lock()->manifold.lock()->dimension);
+    active = active_;
+  }
+  region_t getActive() const { return active; }
 
   virtual ostream &output(ostream &os, int level = 0) const;
   friend ostream &operator<<(ostream &os,
