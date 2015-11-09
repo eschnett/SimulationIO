@@ -37,7 +37,7 @@ TEST(Project, create) {
 }
 
 TEST(Project, HDF5) {
-  auto filename = "project.h5";
+  auto filename = "project.s5";
   string orig;
   {
     auto file = H5::H5File(filename, H5F_ACC_TRUNC);
@@ -77,7 +77,7 @@ TEST(Parameter, create) {
 }
 
 TEST(Parameter, HDF5) {
-  auto filename = "parameter.h5";
+  auto filename = "parameter.s5";
   {
     auto file = H5::H5File(filename, H5F_ACC_TRUNC);
     project->write(file);
@@ -122,7 +122,7 @@ TEST(ParameterValue, create) {
 }
 
 TEST(ParameterValue, HDF5) {
-  auto filename = "parametervalue.h5";
+  auto filename = "parametervalue.s5";
   {
     auto file = H5::H5File(filename, H5F_ACC_TRUNC);
     project->write(file);
@@ -172,7 +172,7 @@ TEST(Configuration, create) {
 }
 
 TEST(Configuration, HDF5) {
-  auto filename = "configuration.h5";
+  auto filename = "configuration.s5";
   {
     auto file = H5::H5File(filename, H5F_ACC_TRUNC);
     project->write(file);
@@ -258,7 +258,7 @@ TEST(TensorTypes, SymmetricTensor3D) {
 }
 
 TEST(TensorTypes, HDF5) {
-  auto filename = "tensortypes.h5";
+  auto filename = "tensortypes.s5";
   {
     auto file = H5::H5File(filename, H5F_ACC_TRUNC);
     project->write(file);
@@ -306,7 +306,7 @@ TEST(Manifold, create) {
 }
 
 TEST(Manifold, HDF5) {
-  auto filename = "manifold.h5";
+  auto filename = "manifold.s5";
   {
     auto file = H5::H5File(filename, H5F_ACC_TRUNC);
     project->write(file);
@@ -330,7 +330,7 @@ TEST(TangentSpace, create) {
 }
 
 TEST(TangentSpace, HDF5) {
-  auto filename = "tangentspace.h5";
+  auto filename = "tangentspace.s5";
   {
     auto file = H5::H5File(filename, H5F_ACC_TRUNC);
     project->write(file);
@@ -358,7 +358,7 @@ TEST(Field, create) {
 }
 
 TEST(Field, HDF5) {
-  auto filename = "field.h5";
+  auto filename = "field.s5";
   {
     auto file = H5::H5File(filename, H5F_ACC_TRUNC);
     project->write(file);
@@ -385,7 +385,7 @@ TEST(CoordinateSystem, create) {
 }
 
 TEST(CoordinateSystem, HDF5) {
-  auto filename = "coordinatesystem.h5";
+  auto filename = "coordinatesystem.s5";
   {
     auto file = H5::H5File(filename, H5F_ACC_TRUNC);
     project->write(file);
@@ -414,7 +414,7 @@ TEST(Discretization, create) {
 }
 
 TEST(Discretization, HDF5) {
-  auto filename = "discretization.h5";
+  auto filename = "discretization.s5";
   {
     auto file = H5::H5File(filename, H5F_ACC_TRUNC);
     project->write(file);
@@ -445,7 +445,7 @@ TEST(SubDiscretization, create) {
 }
 
 TEST(SubDiscretization, HDF5) {
-  auto filename = "subdiscretization.h5";
+  auto filename = "subdiscretization.s5";
   {
     auto file = H5::H5File(filename, H5F_ACC_TRUNC);
     project->write(file);
@@ -479,7 +479,7 @@ TEST(DiscretizationBlock, create) {
 }
 
 TEST(DiscretizationBlock, HDF5) {
-  auto filename = "discretizationblock.h5";
+  auto filename = "discretizationblock.s5";
   {
     auto file = H5::H5File(filename, H5F_ACC_TRUNC);
     project->write(file);
@@ -507,7 +507,7 @@ TEST(Basis, create) {
 }
 
 TEST(Basis, HDF5) {
-  auto filename = "basis.h5";
+  auto filename = "basis.s5";
   {
     auto file = H5::H5File(filename, H5F_ACC_TRUNC);
     project->write(file);
@@ -540,7 +540,7 @@ TEST(BasisVector, create) {
 }
 
 TEST(BasisVector, HDF5) {
-  auto filename = "basisvector.h5";
+  auto filename = "basisvector.s5";
   {
     auto file = H5::H5File(filename, H5F_ACC_TRUNC);
     project->write(file);
@@ -573,7 +573,7 @@ TEST(DiscreteField, create) {
 }
 
 TEST(DiscreteField, HDF5) {
-  auto filename = "discretefield.h5";
+  auto filename = "discretefield.s5";
   {
     auto file = H5::H5File(filename, H5F_ACC_TRUNC);
     project->write(file);
@@ -602,7 +602,7 @@ TEST(CoordinateField, create) {
 }
 
 TEST(CoordinateField, HDF5) {
-  auto filename = "coordinatefield.h5";
+  auto filename = "coordinatefield.s5";
   {
     auto file = H5::H5File(filename, H5F_ACC_TRUNC);
     project->write(file);
@@ -633,7 +633,7 @@ TEST(DiscreteFieldBlock, create) {
 }
 
 TEST(DiscreteFieldBlock, HDF5) {
-  auto filename = "discretefieldblock.h5";
+  auto filename = "discretefieldblock.s5";
   {
     auto file = H5::H5File(filename, H5F_ACC_TRUNC);
     project->write(file);
@@ -675,10 +675,10 @@ TEST(DiscreteFieldBlockComponent, create) {
   EXPECT_EQ(DiscreteFieldBlockComponent::type_empty, dfbd2->data_type);
   EXPECT_EQ(DiscreteFieldBlockComponent::type_empty, dfbd3->data_type);
   EXPECT_EQ(DiscreteFieldBlockComponent::type_empty, dfbd4->data_type);
-  dfbd1->setData("discretizationfieldblockcomponent.h5",
+  dfbd1->setData("discretizationfieldblockcomponent.s5",
                  project->name + "/tensortypes/Scalar3D");
   dfbd1->setData();
-  dfbd2->setData("discretizationfieldblockcomponent.h5",
+  dfbd2->setData("discretizationfieldblockcomponent.s5",
                  project->name + "/tensortypes/Scalar3D");
   const auto datatype = H5::getType(0.0);
 #warning "TODO: get rank and shape from manifold and discretization block"
@@ -700,7 +700,7 @@ TEST(DiscreteFieldBlockComponent, create) {
 }
 
 TEST(DiscreteFieldBlockComponent, HDF5) {
-  auto filename = "discretizationfieldblockcomponent.h5";
+  auto filename = "discretizationfieldblockcomponent.s5";
   {
     auto file = H5::H5File(filename, H5F_ACC_TRUNC);
     project->write(file);
@@ -723,7 +723,7 @@ TEST(DiscreteFieldBlockComponent, HDF5) {
         "\"dfb1\" "
         "TensorComponent \"01\"\n"
         "    data: external link to "
-        "\"discretizationfieldblockcomponent.h5\":\"p1/tensortypes/"
+        "\"discretizationfieldblockcomponent.s5\":\"p1/tensortypes/"
         "Scalar3D\"\n"
         "  DiscreteFieldBlockComponent \"dfbd3\": DiscreteFieldBlock "
         "\"dfb1\" "

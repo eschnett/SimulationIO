@@ -139,7 +139,7 @@ int main(int argc, char **argv) {
   cout << *project;
 
   // Write file
-  auto filename = "example.h5";
+  auto filename = "example.s5";
   auto fapl = H5::FileAccPropList();
   fapl.setLibverBounds(H5F_LIBVER_LATEST, H5F_LIBVER_LATEST);
   auto file =

@@ -106,7 +106,7 @@ for p in range(ngrids):
         vel_component.setData(datatype, dataspace)
 
 # Write file
-filename = "python-example.h5"
+filename = "python-example.s5"
 file = H5.H5File(filename, H5.H5F_ACC_TRUNC)
 project.write(file)
 

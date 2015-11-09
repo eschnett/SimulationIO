@@ -88,7 +88,7 @@ int main(int argc, char **argv) {
   const auto t1 = std::chrono::system_clock::now();
 
   // Write file
-  auto filename = "benchmark.h5";
+  auto filename = "benchmark.s5";
   {
     auto fapl = H5::FileAccPropList();
     fapl.setLibverBounds(H5F_LIBVER_LATEST, H5F_LIBVER_LATEST);

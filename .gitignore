@@ -41,14 +41,14 @@ coverage.info
 *.gcda
 *.gcno
 *.d
-example.h5
-benchmark.h5
+example.s5
+benchmark.s5
 H5.py
 *.pyc
 *_wrap.cpp
-python-example.h5
+python-example.s5
 SimulationIO.py
-iof5-*.h5
+iof5-*.s5
 
 HDF5 PERFORMANCE
 RegionCalculus.py

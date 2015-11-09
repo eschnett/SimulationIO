@@ -10,7 +10,7 @@ import sys
 
 # Read metadata and data directly
 
-filename = "example.h5"
+filename = "example.s5"
 file = h5py.File(filename, 'r')
 
 rsum = 0.0
