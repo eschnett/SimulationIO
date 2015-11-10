@@ -111,6 +111,16 @@ template <typename T, int D> struct point {
       elt[d] *= p.elt[d];
     return *this;
   }
+  point &operator/=(const point &p) {
+    for (int d = 0; d < D; ++d)
+      elt[d] /= p.elt[d];
+    return *this;
+  }
+  point &operator%=(const point &p) {
+    for (int d = 0; d < D; ++d)
+      elt[d] %= p.elt[d];
+    return *this;
+  }
   point &operator&=(const point &p) {
     for (int d = 0; d < D; ++d)
       elt[d] &= p.elt[d];
@@ -131,6 +141,8 @@ template <typename T, int D> struct point {
   point operator+(const point &p) const { return point(*this) += p; }
   point operator-(const point &p) const { return point(*this) -= p; }
   point operator*(const point &p) const { return point(*this) *= p; }
+  point operator/(const point &p) const { return point(*this) /= p; }
+  point operator%(const point &p) const { return point(*this) %= p; }
   point operator&(const point &p) const { return point(*this) &= p; }
   point operator|(const point &p) const { return point(*this) |= p; }
   point operator^(const point &p) const { return point(*this) ^= p; }
@@ -777,6 +789,8 @@ template <typename T> struct vpoint {
   virtual vpoint &operator+=(const vpoint &p) = 0;
   virtual vpoint &operator-=(const vpoint &p) = 0;
   virtual vpoint &operator*=(const vpoint &p) = 0;
+  virtual vpoint &operator/=(const vpoint &p) = 0;
+  virtual vpoint &operator%=(const vpoint &p) = 0;
   virtual vpoint &operator&=(const vpoint &p) = 0;
   virtual vpoint &operator|=(const vpoint &p) = 0;
   virtual vpoint &operator^=(const vpoint &p) = 0;
@@ -785,6 +799,8 @@ template <typename T> struct vpoint {
   virtual unique_ptr<vpoint> operator+(const vpoint &p) const = 0;
   virtual unique_ptr<vpoint> operator-(const vpoint &p) const = 0;
   virtual unique_ptr<vpoint> operator*(const vpoint &p) const = 0;
+  virtual unique_ptr<vpoint> operator/(const vpoint &p) const = 0;
+  virtual unique_ptr<vpoint> operator%(const vpoint &p) const = 0;
   virtual unique_ptr<vpoint> operator&(const vpoint &p) const = 0;
   virtual unique_ptr<vpoint> operator|(const vpoint &p) const = 0;
   virtual unique_ptr<vpoint> operator^(const vpoint &p) const = 0;
@@ -973,6 +989,14 @@ template <typename T, int D> struct wpoint : vpoint<T> {
     val *= dynamic_cast<const wpoint &>(p).val;
     return *this;
   }
+  vpoint<T> &operator/=(const vpoint<T> &p) {
+    val /= dynamic_cast<const wpoint &>(p).val;
+    return *this;
+  }
+  vpoint<T> &operator%=(const vpoint<T> &p) {
+    val %= dynamic_cast<const wpoint &>(p).val;
+    return *this;
+  }
   vpoint<T> &operator&=(const vpoint<T> &p) {
     val &= dynamic_cast<const wpoint &>(p).val;
     return *this;
@@ -995,6 +1019,12 @@ template <typename T, int D> struct wpoint : vpoint<T> {
   }
   unique_ptr<vpoint<T>> operator*(const vpoint<T> &p) const {
     return make_unique<wpoint>(val * dynamic_cast<const wpoint &>(p).val);
+  }
+  unique_ptr<vpoint<T>> operator/(const vpoint<T> &p) const {
+    return make_unique<wpoint>(val / dynamic_cast<const wpoint &>(p).val);
+  }
+  unique_ptr<vpoint<T>> operator%(const vpoint<T> &p) const {
+    return make_unique<wpoint>(val % dynamic_cast<const wpoint &>(p).val);
   }
   unique_ptr<vpoint<T>> operator&(const vpoint<T> &p) const {
     return make_unique<wpoint>(val & dynamic_cast<const wpoint &>(p).val);
@@ -1590,6 +1620,14 @@ template <typename T> struct dpoint {
     *val *= *p.val;
     return *this;
   }
+  dpoint &operator/=(const dpoint &p) {
+    *val /= *p.val;
+    return *this;
+  }
+  dpoint &operator%=(const dpoint &p) {
+    *val %= *p.val;
+    return *this;
+  }
   dpoint &operator&=(const dpoint &p) {
     *val &= *p.val;
     return *this;
@@ -1607,6 +1645,8 @@ template <typename T> struct dpoint {
   dpoint operator+(const dpoint &p) const { return dpoint(*val + *p.val); }
   dpoint operator-(const dpoint &p) const { return dpoint(*val - *p.val); }
   dpoint operator*(const dpoint &p) const { return dpoint(*val * *p.val); }
+  dpoint operator/(const dpoint &p) const { return dpoint(*val / *p.val); }
+  dpoint operator%(const dpoint &p) const { return dpoint(*val % *p.val); }
   dpoint operator&(const dpoint &p) const { return dpoint(*val & *p.val); }
   dpoint operator|(const dpoint &p) const { return dpoint(*val | *p.val); }
   dpoint operator^(const dpoint &p) const { return dpoint(*val ^ *p.val); }
