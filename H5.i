@@ -11,6 +11,7 @@
 %include <std_string.i>
 %include <std_vector.i>
 
+%template(vector_double) std::vector<double>;
 %template(vector_int) std::vector<int>;
 
 enum {
@@ -19,12 +20,24 @@ enum {
 namespace H5 {
   struct DataSpace {
     %extend {
-      static DataSpace make(const std::vector<int>& dims) {
-        std::vector<hsize_t> dims1(dims.size());
-        std::copy(dims.begin(), dims.end(), dims1.begin());
-        return H5::DataSpace(dims1.size(), dims1.data());
+      static DataSpace make(const std::vector<int>& idims) {
+        std::vector<hsize_t> dims(dims.size());
+        std::copy(idims.begin(), idims.end(), dims.begin());
+        return H5::DataSpace(dims.size(), dims.data());
       }
     }
+    %extend {
+      std::vector<int> getSimpleExtentDims() const {
+        auto ndims = self->getSimpleExtentNdims();
+        std::vector<hsize_t> dims(ndims);
+        self->getSimpleExtentDims(dims.data());
+        std::vector<int> idims(ndims);
+        std::copy(dims.begin(), dims.end(), idims.begin());
+        return idims;
+      }
+    }
+    int getSimpleExtentNdims() const;
+    int getSimpleExtentNpoints() const;
   };
   %nodefaultctor PredType;
   struct PredType {
@@ -38,7 +51,26 @@ namespace H5 {
     DataType(const PredType& predtype);
   };
   struct DataSet {
-    int getId() const;
+    DataSpace getSpace() const;
+    DataType getDataType() const;
+    %extend {
+      std::vector<int> read_int() const {
+        auto dataspace = self->getSpace();
+        auto npoints = dataspace.getSimpleExtentNpoints();
+        std::vector<int> buf(npoints);
+        self->read(buf.data(), H5::DataType(H5::PredType::NATIVE_INT));
+        return buf;
+      }
+    }
+    %extend {
+      std::vector<double> read_double() const {
+        auto dataspace = self->getSpace();
+        auto npoints = dataspace.getSimpleExtentNpoints();
+        std::vector<double> buf(npoints);
+        self->read(buf.data(), H5::DataType(H5::PredType::NATIVE_DOUBLE));
+        return buf;
+      }
+    }
   };
   struct Group;
   %nodefaultctor CommonFG;
