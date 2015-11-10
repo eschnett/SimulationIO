@@ -21,7 +21,7 @@ namespace H5 {
   struct DataSpace {
     %extend {
       static DataSpace make(const std::vector<int>& idims) {
-        std::vector<hsize_t> dims(dims.size());
+        std::vector<hsize_t> dims(idims.size());
         std::copy(idims.begin(), idims.end(), dims.begin());
         return H5::DataSpace(dims.size(), dims.data());
       }
