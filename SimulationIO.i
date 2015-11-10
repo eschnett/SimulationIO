@@ -18,9 +18,9 @@ typedef RegionCalculus::dregion<int> iregion;
 
 %shared_ptr(Basis);
 %shared_ptr(BasisVector);
+%shared_ptr(Configuration);
 %shared_ptr(CoordinateField);
 %shared_ptr(CoordinateSystem);
-%shared_ptr(Configuration);
 %shared_ptr(DiscreteField);
 %shared_ptr(DiscreteFieldBlock);
 %shared_ptr(DiscreteFieldBlockComponent);
@@ -36,12 +36,30 @@ typedef RegionCalculus::dregion<int> iregion;
 %shared_ptr(TensorComponent);
 %shared_ptr(TensorType);
 
+namespace std {
+template<typename T> class weak_ptr {
+public:
+  typedef T element_type;
+
+  weak_ptr();
+  weak_ptr(const weak_ptr&);
+  weak_ptr(const shared_ptr<T>&);
+  template<typename U> weak_ptr(const weak_ptr<U>&);
+  template<typename U> weak_ptr(const shared_ptr<U>&);
+
+  void swap(weak_ptr&);
+  void reset();
+
+  long use_count() const;
+  bool expired() const;
+  shared_ptr<T> lock() const;
+};
+}
+
 // Note: SWIG's support for map and shared_ptr does not work with namespaces
 // using std::map;
 // using std::shared_ptr;
 using std::string;
-
-%nodefaultctor;
 
 struct Basis;
 struct BasisVector;
@@ -63,7 +81,54 @@ struct TangentSpace;
 struct TensorComponent;
 struct TensorType;
 
-%template(map_string_Basis) std::map<string, std::shared_ptr<Basis> >;
+%template(weak_ptr_Basis)
+  std::weak_ptr<Basis>;
+%template(weak_ptr_BasisVector)
+  std::weak_ptr<BasisVector>;
+%template(weak_ptr_CoordinateField)
+  std::weak_ptr<CoordinateField>;
+%template(weak_ptr_CoordinateSystem)
+  std::weak_ptr<CoordinateSystem>;
+%template(weak_ptr_Configuration)
+  std::weak_ptr<Configuration>;
+%template(weak_ptr_DiscreteField)
+  std::weak_ptr<DiscreteField>;
+%template(weak_ptr_DiscreteFieldBlock)
+  std::weak_ptr<DiscreteFieldBlock>;
+%template(weak_ptr_DiscreteFieldBlockComponent)
+  std::weak_ptr<DiscreteFieldBlockComponent>;
+%template(weak_ptr_Discretization)
+  std::weak_ptr<Discretization>;
+%template(weak_ptr_DiscretizationBlock)
+  std::weak_ptr<DiscretizationBlock>;
+%template(weak_ptr_Field)
+  std::weak_ptr<Field>;
+%template(weak_ptr_Manifold)
+  std::weak_ptr<Manifold>;
+%template(weak_ptr_Parameter)
+  std::weak_ptr<Parameter>;
+%template(weak_ptr_ParameterValue)
+  std::weak_ptr<ParameterValue>;
+%template(weak_ptr_Project)
+  std::weak_ptr<Project>;
+%template(weak_ptr_SubDiscretization)
+  std::weak_ptr<SubDiscretization>;
+%template(weak_ptr_TangentSpace)
+  std::weak_ptr<TangentSpace>;
+%template(weak_ptr_TensorComponent)
+  std::weak_ptr<TensorComponent>;
+%template(weak_ptr_TensorType)
+  std::weak_ptr<TensorType>;
+
+%template(map_int_BasisVector)
+  std::map<int, std::shared_ptr<BasisVector> >;
+%template(map_int_CoordinateField)
+  std::map<int, std::shared_ptr<CoordinateField> >;
+%template(map_int_TensorComponent)
+  std::map<int, std::shared_ptr<TensorComponent> >;
+
+%template(map_string_Basis)
+  std::map<string, std::shared_ptr<Basis> >;
 %template(map_string_BasisVector)
   std::map<string, std::shared_ptr<BasisVector> >;
 %template(map_string_CoordinateField)
@@ -82,9 +147,12 @@ struct TensorType;
   std::map<string, std::shared_ptr<Discretization> >;
 %template(map_string_DiscretizationBlock)
   std::map<string, std::shared_ptr<DiscretizationBlock> >;
-%template(map_string_Field) std::map<string, std::shared_ptr<Field> >;
-%template(map_string_Manifold) std::map<string, std::shared_ptr<Manifold> >;
-%template(map_string_Parameter) std::map<string, std::shared_ptr<Parameter> >;
+%template(map_string_Field)
+  std::map<string, std::shared_ptr<Field> >;
+%template(map_string_Manifold)
+  std::map<string, std::shared_ptr<Manifold> >;
+%template(map_string_Parameter)
+  std::map<string, std::shared_ptr<Parameter> >;
 %template(map_string_ParameterValue)
   std::map<string, std::shared_ptr<ParameterValue> >;
 %template(map_string_Project) std::map<string, std::shared_ptr<Project> >;
@@ -94,15 +162,52 @@ struct TensorType;
   std::map<string, std::shared_ptr<TangentSpace> >;
 %template(map_string_TensorComponent)
   std::map<string, std::shared_ptr<TensorComponent> >;
-%template(map_string_TensorType) std::map<string, std::shared_ptr<TensorType> >;
+%template(map_string_TensorType)
+  std::map<string, std::shared_ptr<TensorType> >;
 
-%template(map_int_BasisVector) std::map<int, std::shared_ptr<BasisVector> >;
-%template(map_int_CoordinateField)
-  std::map<int, std::shared_ptr<CoordinateField> >;
-%template(map_int_TensorComponent)
-  std::map<int, std::shared_ptr<TensorComponent> >;
+%template(map_string_weak_ptr_Basis)
+  std::map<string, std::weak_ptr<Basis> >;
+%template(map_string_weak_ptr_BasisVector)
+  std::map<string, std::weak_ptr<BasisVector> >;
+%template(map_string_weak_ptr_CoordinateField)
+  std::map<string, std::weak_ptr<CoordinateField> >;
+%template(map_string_weak_ptr_CoordinateSystem)
+  std::map<string, std::weak_ptr<CoordinateSystem> >;
+%template(map_string_weak_ptr_Configuration)
+  std::map<string, std::weak_ptr<Configuration> >;
+%template(map_string_weak_ptr_DiscreteField)
+  std::map<string, std::weak_ptr<DiscreteField> >;
+%template(map_string_weak_ptr_DiscreteFieldBlock)
+  std::map<string, std::weak_ptr<DiscreteFieldBlock> >;
+%template(map_string_weak_ptr_DiscreteFieldBlockComponent)
+  std::map<string, std::weak_ptr<DiscreteFieldBlockComponent> >;
+%template(map_string_weak_ptr_Discretization)
+  std::map<string, std::weak_ptr<Discretization> >;
+%template(map_string_weak_ptr_DiscretizationBlock)
+  std::map<string, std::weak_ptr<DiscretizationBlock> >;
+%template(map_string_weak_ptr_Field)
+  std::map<string, std::weak_ptr<Field> >;
+%template(map_string_weak_ptr_Manifold)
+  std::map<string, std::weak_ptr<Manifold> >;
+%template(map_string_weak_ptr_Parameter)
+  std::map<string, std::weak_ptr<Parameter> >;
+%template(map_string_weak_ptr_ParameterValue)
+  std::map<string, std::weak_ptr<ParameterValue> >;
+%template(map_string_weak_ptr_Project)
+  std::map<string, std::weak_ptr<Project> >;
+%template(map_string_weak_ptr_SubDiscretization)
+  std::map<string, std::weak_ptr<SubDiscretization> >;
+%template(map_string_weak_ptr_TangentSpace)
+  std::map<string, std::weak_ptr<TangentSpace> >;
+%template(map_string_weak_ptr_TensorComponent)
+  std::map<string, std::weak_ptr<TensorComponent> >;
+%template(map_string_weak_ptr_TensorType)
+  std::map<string, std::weak_ptr<TensorType> >;
+
 %template(vector_double) std::vector<double>;
 %template(vector_int) std::vector<int>;
+
+%nodefaultctor;
 
 struct Basis {
   string name;
@@ -199,6 +304,11 @@ struct DiscreteFieldBlockComponent {
   bool invariant() const;
   void setData();
   void setData(const H5::DataType &datatype, const H5::DataSpace& dataspace);
+  %extend {
+    H5::DataSet getData_DataSet() const {
+      return self->data_dataset;
+    }
+  }
   string getPath() const;
   string getName() const;
   %extend {
@@ -216,6 +326,8 @@ struct Discretization {
   std::weak_ptr<Manifold> manifold;
   std::shared_ptr<Configuration> configuration;
   std::map<string, std::shared_ptr<DiscretizationBlock> > discretizationblocks;
+  std::map<string, std::weak_ptr<SubDiscretization> > child_discretizations;
+  std::map<string, std::weak_ptr<SubDiscretization> > parent_discretizations;
   bool invariant() const;
 
   std::shared_ptr<DiscretizationBlock>
@@ -226,20 +338,6 @@ struct DiscretizationBlock {
   string name;
   ibox region;
   iregion active;
-  // %extend {
-  //   std::vector<int> getOffset() const {
-  //     std::vector<hssize_t> hoffset = self->region.lower();
-  //     std::vector<int> ioffset(hoffset.size());
-  //     std::copy(hoffset.begin(), hoffset.end(), ioffset.begin());
-  //     return ioffset;
-  //   }
-  //   std::vector<int> getShape() const {
-  //     std::vector<hssize_t> hoffset = self->region.shape();
-  //     std::vector<int> ioffset(hoffset.size());
-  //     std::copy(hoffset.begin(), hoffset.end(), ioffset.begin());
-  //     return ioffset;
-  //   }
-  // }
   std::weak_ptr<Discretization> discretization;
   bool invariant() const;
   %extend {
