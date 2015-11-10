@@ -333,17 +333,15 @@ int main(int argc, char **argv) {
           assert(H5::readAttribute<int>(dataset, "level") == refinementlevel);
 #warning "TODO: check attribute component?"
           vector<double> ioffset(manifold->dimension);
-          {
-            auto ioffsetnum =
-                H5::readAttribute<vector<int>>(dataset, "ioffset");
-            auto ioffsetdenom =
-                H5::readAttribute<vector<int>>(dataset, "ioffsetdenom");
-            assert(int(ioffsetnum.size()) == manifold->dimension);
-            assert(int(ioffsetdenom.size()) == manifold->dimension);
-            for (int d = 0; d < int(ioffset.size()); ++d)
-              ioffset.at(d) =
-                  double(ioffsetnum.at(d)) / double(ioffsetdenom.at(d));
-          }
+          auto ioffsetnum =
+              H5::readAttribute<vector<hssize_t>>(dataset, "ioffset");
+          auto ioffsetdenom =
+              H5::readAttribute<vector<hssize_t>>(dataset, "ioffsetdenom");
+          assert(int(ioffsetnum.size()) == manifold->dimension);
+          assert(int(ioffsetdenom.size()) == manifold->dimension);
+          for (int d = 0; d < int(ioffset.size()); ++d)
+            ioffset.at(d) =
+                double(ioffsetnum.at(d)) / double(ioffsetdenom.at(d));
           dregion active;
           {
             string active_str = H5::readAttribute<string>(dataset, "active");
@@ -353,9 +351,16 @@ int main(int argc, char **argv) {
             vector<dbox> dbs;
             for (const ibbox &b : active_bs.elts) {
               dpoint lo(b.lower.elts);
-              dpoint up(b.upper.elts);
-              dpoint hi = up + dpoint(up.rank(), 1);
-              dbox db(lo, hi);
+              dpoint hi(b.upper.elts);
+              const dpoint str(b.stride.elts);
+              hi += str;
+              const dpoint poffsetnum(ioffsetnum);
+              const dpoint poffsetdenom(ioffsetdenom);
+              assert(all(!(str % poffsetdenom)));
+              lo -= str * poffsetnum / poffsetdenom;
+              hi -= str * poffsetnum / poffsetdenom;
+              assert(all(!(lo % str) && (!hi % str)));
+              const dbox db(lo / str, hi / str);
               dbs.push_back(db);
             }
             active = dregion(dbs);
