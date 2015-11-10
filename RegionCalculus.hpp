@@ -1531,10 +1531,16 @@ template <typename T> struct dpoint {
 
   dpoint() = default;
 
-  dpoint(const dpoint &p) : val(p.val.copy()) {}
+  dpoint(const dpoint &p) {
+    if (p.val)
+      val = p.val.copy();
+  }
   dpoint(dpoint &&p) = default;
   dpoint &operator=(const dpoint &p) {
-    val = p.val->copy();
+    if (p.val)
+      val = p.val->copy();
+    else
+      val = nullptr;
     return *this;
   }
   dpoint &operator=(dpoint &&p) = default;
@@ -1542,7 +1548,11 @@ template <typename T> struct dpoint {
   template <int D>
   dpoint(const point<T, D> &p)
       : val(make_unique<wpoint<T, D>>(p)) {}
-  dpoint(const unique_ptr<vpoint<T>> &val) : val(vpoint<T>::make(val)) {}
+  dpoint(const vpoint<T> &p) : val(p.copy()) {}
+  dpoint(const unique_ptr<vpoint<T>> &val) {
+    if (val)
+      this->val = val->copy();
+  }
   dpoint(unique_ptr<vpoint<T>> &&val) : val(std::move(val)) {}
 
   explicit dpoint(int d) : val(vpoint<T>::make(d)) {}
@@ -1552,9 +1562,10 @@ template <typename T> struct dpoint {
       : val(make_unique<wpoint<T, D>>(p)) {}
   dpoint(const vector<T> &p) : val(vpoint<T>::make(p)) {}
   operator vector<T>() const { return vector<T>(*val); }
-  template <typename U>
-  dpoint(const dpoint<U> &p)
-      : val(vpoint<T>::make(*p.val)) {}
+  template <typename U> dpoint(const dpoint<U> &p) {
+    if (p.val)
+      val = vpoint<T>::make(*p.val);
+  }
 
   bool valid() const { return bool(val); }
   void reset() { val.reset(); }
@@ -1700,21 +1711,35 @@ template <typename T> struct dbox {
 
   dbox() = default;
 
-  dbox(const dbox &b) : val(b.val->copy()) {}
+  dbox(const dbox &b) {
+    if (b.val)
+      val = b.val->copy();
+  }
   dbox(dbox &&b) = default;
   dbox &operator=(const dbox &b) {
-    val = b.val->copy();
+    if (b.val)
+      val = b.val->copy();
+    else
+      val = nullptr;
     return *this;
   }
   dbox &operator=(dbox &&b) = default;
 
-  dbox(const unique_ptr<vbox<T>> &val) : val(vbox<T>::make(val)) {}
+  template <int D> dbox(const box<T, D> &b) : val(make_unique<wbox<T, D>>(b)) {}
+  dbox(const vbox<T> &b) : val(b.copy()) {}
+  dbox(const unique_ptr<vbox<T>> &val) {
+    if (val)
+      this->val = val->copy();
+  }
   dbox(unique_ptr<vbox<T>> &&val) : val(std::move(val)) {}
 
   explicit dbox(int d) : val(vbox<T>::make(d)) {}
   dbox(const dpoint<T> &lo, const dpoint<T> &hi)
       : val(vbox<T>::make(*lo.val, *hi.val)) {}
-  template <typename U> dbox(const dbox<U> &p) : val(vbox<T>::make(*p.val)) {}
+  template <typename U> dbox(const dbox<U> &p) {
+    if (p.val)
+      val = vbox<T>::make(*p.val);
+  }
 
   bool valid() const { return bool(val); }
   void reset() { val.reset(); }
@@ -1802,16 +1827,29 @@ template <typename T> struct dregion {
 
   dregion() = default;
 
-  dregion(const dregion &r) : val(r.val->copy()) {}
-  dregion(dregion &&r) = default;
+  dregion(const dregion &r) {
+    if (r.val)
+      val = r.val->copy();
+  }
+  // dregion(dregion &&r) = default;
   dregion &operator=(const dregion &r) {
-    val = r.val->copy();
+    if (r.val)
+      val = r.val->copy();
+    else
+      val = nullptr;
     return *this;
   }
-  dregion &operator=(dregion &&r) = default;
+  // dregion &operator=(dregion &&r) = default;
 
-  dregion(const vregion<T> *val) : val(vregion<T>::make(val)) {}
-  dregion(unique_ptr<vregion<T>> &&val) : val(std::move(val)) {}
+  template <int D>
+  dregion(const region<T, D> &r)
+      : val(make_unique<wregion<T, D>>(r)) {}
+  dregion(const vregion<T> &r) : val(r.copy()) {}
+  dregion(const unique_ptr<vregion<T>> &val) {
+    if (val)
+      this->val = val->copy();
+  }
+  // dregion(unique_ptr<vregion<T>> &&val) : val(std::move(val)) {}
 
   explicit dregion(int d) : val(vregion<T>::make(d)) {}
   dregion(const dbox<T> &b) : val(vregion<T>::make(*b.val)) {}
@@ -1821,12 +1859,12 @@ template <typename T> struct dregion {
       rs.push_back(b.val->copy());
     val = vregion<T>::make(rs);
   }
-  dregion(vector<dbox<T>> &&bs) {
-    vector<unique_ptr<vbox<T>>> rs;
-    for (auto &b : bs)
-      rs.push_back(std::move(b.val));
-    val = vregion<T>::make(rs);
-  }
+  // dregion(vector<dbox<T>> &&bs) {
+  //   vector<unique_ptr<vbox<T>>> rs;
+  //   for (auto &b : bs)
+  //     rs.push_back(std::move(b.val));
+  //   val = vregion<T>::make(rs);
+  // }
   operator vector<dbox<T>>() const {
     vector<unique_ptr<vbox<T>>> bs(*val);
     vector<dbox<T>> rs;
@@ -1834,9 +1872,10 @@ template <typename T> struct dregion {
       rs.push_back(dbox<T>(std::move(b)));
     return rs;
   }
-  template <typename U>
-  dregion(const dregion<U> &p)
-      : val(vregion<T>::make(*p.val)) {}
+  template <typename U> dregion(const dregion<U> &p) {
+    if (p.val)
+      val = vregion<T>::make(*p.val);
+  }
 
   bool valid() const { return bool(val); }
   void reset() { val.reset(); }

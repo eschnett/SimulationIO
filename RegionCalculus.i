@@ -155,6 +155,7 @@ struct iregion {
   iregion(const std::vector<ibox>& bs);
   %extend {
     std::vector<ibox> boxes() const {
+      std::cerr << "std::vector<ibox> boxes() const\n";
       std::vector<ibox> rs = *self;
       return rs;
     }
@@ -196,6 +197,7 @@ struct iregion {
   // Output
   %extend {
     std::string __str__() const {
+      std::cerr << "std::string __str__() const\n";
       std::ostringstream buf;
       buf << *self;
       return buf.str();
