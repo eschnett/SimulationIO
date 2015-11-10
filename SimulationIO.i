@@ -81,45 +81,6 @@ struct TangentSpace;
 struct TensorComponent;
 struct TensorType;
 
-%template(weak_ptr_Basis)
-  std::weak_ptr<Basis>;
-%template(weak_ptr_BasisVector)
-  std::weak_ptr<BasisVector>;
-%template(weak_ptr_CoordinateField)
-  std::weak_ptr<CoordinateField>;
-%template(weak_ptr_CoordinateSystem)
-  std::weak_ptr<CoordinateSystem>;
-%template(weak_ptr_Configuration)
-  std::weak_ptr<Configuration>;
-%template(weak_ptr_DiscreteField)
-  std::weak_ptr<DiscreteField>;
-%template(weak_ptr_DiscreteFieldBlock)
-  std::weak_ptr<DiscreteFieldBlock>;
-%template(weak_ptr_DiscreteFieldBlockComponent)
-  std::weak_ptr<DiscreteFieldBlockComponent>;
-%template(weak_ptr_Discretization)
-  std::weak_ptr<Discretization>;
-%template(weak_ptr_DiscretizationBlock)
-  std::weak_ptr<DiscretizationBlock>;
-%template(weak_ptr_Field)
-  std::weak_ptr<Field>;
-%template(weak_ptr_Manifold)
-  std::weak_ptr<Manifold>;
-%template(weak_ptr_Parameter)
-  std::weak_ptr<Parameter>;
-%template(weak_ptr_ParameterValue)
-  std::weak_ptr<ParameterValue>;
-%template(weak_ptr_Project)
-  std::weak_ptr<Project>;
-%template(weak_ptr_SubDiscretization)
-  std::weak_ptr<SubDiscretization>;
-%template(weak_ptr_TangentSpace)
-  std::weak_ptr<TangentSpace>;
-%template(weak_ptr_TensorComponent)
-  std::weak_ptr<TensorComponent>;
-%template(weak_ptr_TensorType)
-  std::weak_ptr<TensorType>;
-
 %template(map_int_BasisVector)
   std::map<int, std::shared_ptr<BasisVector> >;
 %template(map_int_CoordinateField)
@@ -206,6 +167,45 @@ struct TensorType;
 
 %template(vector_double) std::vector<double>;
 %template(vector_int) std::vector<int>;
+
+%template(weak_ptr_Basis)
+  std::weak_ptr<Basis>;
+%template(weak_ptr_BasisVector)
+  std::weak_ptr<BasisVector>;
+%template(weak_ptr_CoordinateField)
+  std::weak_ptr<CoordinateField>;
+%template(weak_ptr_CoordinateSystem)
+  std::weak_ptr<CoordinateSystem>;
+%template(weak_ptr_Configuration)
+  std::weak_ptr<Configuration>;
+%template(weak_ptr_DiscreteField)
+  std::weak_ptr<DiscreteField>;
+%template(weak_ptr_DiscreteFieldBlock)
+  std::weak_ptr<DiscreteFieldBlock>;
+%template(weak_ptr_DiscreteFieldBlockComponent)
+  std::weak_ptr<DiscreteFieldBlockComponent>;
+%template(weak_ptr_Discretization)
+  std::weak_ptr<Discretization>;
+%template(weak_ptr_DiscretizationBlock)
+  std::weak_ptr<DiscretizationBlock>;
+%template(weak_ptr_Field)
+  std::weak_ptr<Field>;
+%template(weak_ptr_Manifold)
+  std::weak_ptr<Manifold>;
+%template(weak_ptr_Parameter)
+  std::weak_ptr<Parameter>;
+%template(weak_ptr_ParameterValue)
+  std::weak_ptr<ParameterValue>;
+%template(weak_ptr_Project)
+  std::weak_ptr<Project>;
+%template(weak_ptr_SubDiscretization)
+  std::weak_ptr<SubDiscretization>;
+%template(weak_ptr_TangentSpace)
+  std::weak_ptr<TangentSpace>;
+%template(weak_ptr_TensorComponent)
+  std::weak_ptr<TensorComponent>;
+%template(weak_ptr_TensorType)
+  std::weak_ptr<TensorType>;
 
 %nodefaultctor;
 
