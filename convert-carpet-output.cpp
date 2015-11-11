@@ -305,7 +305,7 @@ int main(int argc, char **argv) {
           // Determine iteration, time level, map index, refinement level
           int iteration = 0, timelevel = 0, mapindex = 0, refinementlevel = 0,
               component = 0;
-          bool is_multiblock = false, is_amr = false, is_parallel = false;
+          bool is_multiblock = false, is_amr = false;
           for (const auto &token : tokens) {
             auto eqpos = token.find('=');
             string id = token.substr(0, eqpos);
@@ -319,9 +319,10 @@ int main(int argc, char **argv) {
               variable = &mapindex, is_multiblock = true;
             else if (id == "rl")
               variable = &refinementlevel, is_amr = true;
+            else if (id == "c")
+              variable = &component;
             else
               assert(0);
-#warning "TODO: determine component, is_parallel"
             istringstream buf(val);
             assert(!buf.eof());
             buf >> *variable;
@@ -331,7 +332,6 @@ int main(int argc, char **argv) {
           assert(H5::readAttribute<int>(dataset, "group_timelevel") ==
                  timelevel);
           assert(H5::readAttribute<int>(dataset, "level") == refinementlevel);
-#warning "TODO: check attribute component?"
           vector<double> ioffset(manifold->dimension);
           auto ioffsetnum =
               H5::readAttribute<vector<hssize_t>>(dataset, "ioffset");
@@ -353,13 +353,15 @@ int main(int argc, char **argv) {
               dpoint lo(b.lower.elts);
               dpoint hi(b.upper.elts);
               const dpoint str(b.stride.elts);
+              std::cout << "lo=" << lo << " hi=" << hi << " str=" << str
+                        << "\n";
               hi += str;
               const dpoint poffsetnum(ioffsetnum);
               const dpoint poffsetdenom(ioffsetdenom);
               assert(all(!(str % poffsetdenom)));
               lo -= str * poffsetnum / poffsetdenom;
               hi -= str * poffsetnum / poffsetdenom;
-              assert(all(!(lo % str) && (!hi % str)));
+              assert(all(!(lo % str) && !(hi % str)));
               const dbox db(lo / str, hi / str);
               dbs.push_back(db);
             }
