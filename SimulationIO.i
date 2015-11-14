@@ -445,7 +445,7 @@ struct Project {
                            const std::shared_ptr<Manifold>& manifold);
 };
 std::shared_ptr<Project> createProject(const string& name);
-std::shared_ptr<Project> createProject(const H5::CommonFG &loc);
+std::shared_ptr<Project> readProject(const H5::CommonFG &loc);
 
 struct SubDiscretization {
   string name;

@@ -23,7 +23,7 @@ void Discretization::read(const H5::CommonFG &loc, const string &entry,
          name);
   H5::readGroup(group, "discretizationblocks",
                 [&](const H5::Group &group, const string &name) {
-                  createDiscretizationBlock(group, name);
+                  readDiscretizationBlock(group, name);
                 });
   configuration->insert(name, shared_from_this());
 }
@@ -66,8 +66,8 @@ Discretization::createDiscretizationBlock(const string &name) {
 }
 
 shared_ptr<DiscretizationBlock>
-Discretization::createDiscretizationBlock(const H5::CommonFG &loc,
-                                          const string &entry) {
+Discretization::readDiscretizationBlock(const H5::CommonFG &loc,
+                                        const string &entry) {
   auto discretizationblock =
       DiscretizationBlock::create(loc, entry, shared_from_this());
   checked_emplace(discretizationblocks, discretizationblock->name,

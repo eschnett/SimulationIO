@@ -25,7 +25,7 @@ using std::vector;
 struct Project;
 
 shared_ptr<Project> createProject(const string &name);
-shared_ptr<Project> createProject(const H5::CommonFG &loc);
+shared_ptr<Project> readProject(const H5::CommonFG &loc);
 
 struct Parameter;
 struct Configuration;
@@ -62,7 +62,7 @@ struct Project : Common, std::enable_shared_from_this<Project> {
   Project &operator=(Project &&) = delete;
 
   friend shared_ptr<Project> createProject(const string &name);
-  friend shared_ptr<Project> createProject(const H5::CommonFG &loc);
+  friend shared_ptr<Project> readProject(const H5::CommonFG &loc);
   Project(hidden, const string &name) : Common(name) { createTypes(); }
   Project(hidden) : Common(hidden()) {}
 
@@ -100,38 +100,38 @@ public:
   void write(const H5::CommonFG &loc) const { write(loc, H5::H5File()); }
 
   shared_ptr<Parameter> createParameter(const string &name);
-  shared_ptr<Parameter> createParameter(const H5::CommonFG &loc,
-                                        const string &entry);
+  shared_ptr<Parameter> readParameter(const H5::CommonFG &loc,
+                                      const string &entry);
   shared_ptr<Configuration> createConfiguration(const string &name);
-  shared_ptr<Configuration> createConfiguration(const H5::CommonFG &loc,
-                                                const string &entry);
+  shared_ptr<Configuration> readConfiguration(const H5::CommonFG &loc,
+                                              const string &entry);
   shared_ptr<TensorType> createTensorType(const string &name, int dimension,
                                           int rank);
-  shared_ptr<TensorType> createTensorType(const H5::CommonFG &loc,
-                                          const string &entry);
+  shared_ptr<TensorType> readTensorType(const H5::CommonFG &loc,
+                                        const string &entry);
   shared_ptr<Manifold>
   createManifold(const string &name,
                  const shared_ptr<Configuration> &configuration, int dimension);
-  shared_ptr<Manifold> createManifold(const H5::CommonFG &loc,
-                                      const string &entry);
+  shared_ptr<Manifold> readManifold(const H5::CommonFG &loc,
+                                    const string &entry);
   shared_ptr<TangentSpace>
   createTangentSpace(const string &name,
                      const shared_ptr<Configuration> &configuration,
                      int dimension);
-  shared_ptr<TangentSpace> createTangentSpace(const H5::CommonFG &loc,
-                                              const string &entry);
+  shared_ptr<TangentSpace> readTangentSpace(const H5::CommonFG &loc,
+                                            const string &entry);
   shared_ptr<Field> createField(const string &name,
                                 const shared_ptr<Configuration> &configuration,
                                 const shared_ptr<Manifold> &manifold,
                                 const shared_ptr<TangentSpace> &tangentspace,
                                 const shared_ptr<TensorType> &tensortype);
-  shared_ptr<Field> createField(const H5::CommonFG &loc, const string &entry);
+  shared_ptr<Field> readField(const H5::CommonFG &loc, const string &entry);
   shared_ptr<CoordinateSystem>
   createCoordinateSystem(const string &name,
                          const shared_ptr<Configuration> &configuration,
                          const shared_ptr<Manifold> &manifold);
-  shared_ptr<CoordinateSystem> createCoordinateSystem(const H5::CommonFG &loc,
-                                                      const string &entry);
+  shared_ptr<CoordinateSystem> readCoordinateSystem(const H5::CommonFG &loc,
+                                                    const string &entry);
 };
 }
 

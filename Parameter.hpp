@@ -71,8 +71,8 @@ public:
                      const H5::H5Location &parent) const;
 
   shared_ptr<ParameterValue> createParameterValue(const string &name);
-  shared_ptr<ParameterValue> createParameterValue(const H5::CommonFG &loc,
-                                                  const string &entry);
+  shared_ptr<ParameterValue> readParameterValue(const H5::CommonFG &loc,
+                                                const string &entry);
 };
 }
 

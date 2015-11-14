@@ -48,7 +48,7 @@ TEST(Project, HDF5) {
   }
   {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);
-    auto p2 = createProject(file);
+    auto p2 = readProject(file);
     ostringstream buf;
     buf << *p2;
     EXPECT_EQ(orig, buf.str());
@@ -84,7 +84,7 @@ TEST(Parameter, HDF5) {
   }
   {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);
-    auto p1 = createProject(file);
+    auto p1 = readProject(file);
     ostringstream buf;
     buf << *p1->parameters.at("par1");
     buf << *p1->parameters.at("par2");
@@ -129,7 +129,7 @@ TEST(ParameterValue, HDF5) {
   }
   {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);
-    auto p1 = createProject(file);
+    auto p1 = readProject(file);
     ostringstream buf;
     buf << *p1->parameters.at("par1");
     buf << *p1->parameters.at("par2");
@@ -179,7 +179,7 @@ TEST(Configuration, HDF5) {
   }
   {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);
-    auto p1 = createProject(file);
+    auto p1 = readProject(file);
     ostringstream buf;
     buf << *p1->configurations.at("conf1");
     buf << *p1->configurations.at("conf2");
@@ -265,7 +265,7 @@ TEST(TensorTypes, HDF5) {
   }
   {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);
-    auto p1 = createProject(file);
+    auto p1 = readProject(file);
     ostringstream buf;
     for (const auto &tt : p1->tensortypes)
       buf << *tt.second;
@@ -313,7 +313,7 @@ TEST(Manifold, HDF5) {
   }
   {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);
-    auto p1 = createProject(file);
+    auto p1 = readProject(file);
     ostringstream buf;
     buf << *p1->manifolds.at("m1");
     EXPECT_EQ("Manifold \"m1\": Configuration \"conf1\" dim=3\n", buf.str());
@@ -337,7 +337,7 @@ TEST(TangentSpace, HDF5) {
   }
   {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);
-    auto p1 = createProject(file);
+    auto p1 = readProject(file);
     ostringstream buf;
     buf << *p1->tangentspaces.at("s1");
     EXPECT_EQ("TangentSpace \"s1\": Configuration \"conf1\" dim=3\n",
@@ -365,7 +365,7 @@ TEST(Field, HDF5) {
   }
   {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);
-    auto p1 = createProject(file);
+    auto p1 = readProject(file);
     ostringstream buf;
     buf << *p1->fields.at("f1");
     EXPECT_EQ("Field \"f1\": Configuration \"conf1\" Manifold \"m1\" "
@@ -392,7 +392,7 @@ TEST(CoordinateSystem, HDF5) {
   }
   {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);
-    auto p1 = createProject(file);
+    auto p1 = readProject(file);
     ostringstream buf;
     buf << *p1->coordinatesystems.at("cs1");
     EXPECT_EQ("CoordinateSystem \"cs1\": Configuration \"conf1\" Project "
@@ -421,7 +421,7 @@ TEST(Discretization, HDF5) {
   }
   {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);
-    auto p1 = createProject(file);
+    auto p1 = readProject(file);
     ostringstream buf;
     buf << *p1->manifolds.at("m1")->discretizations.at("d1");
     buf << *p1->manifolds.at("m1")->discretizations.at("d2");
@@ -452,7 +452,7 @@ TEST(SubDiscretization, HDF5) {
   }
   {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);
-    auto p1 = createProject(file);
+    auto p1 = readProject(file);
     ostringstream buf;
     buf << *p1->manifolds.at("m1")->subdiscretizations.at("sd1");
     EXPECT_EQ("SubDiscretization \"sd1\": Manifold \"m1\" parent "
@@ -486,7 +486,7 @@ TEST(DiscretizationBlock, HDF5) {
   }
   {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);
-    auto p1 = createProject(file);
+    auto p1 = readProject(file);
     ostringstream buf;
     buf << *p1->manifolds.at("m1")->discretizations.at("d1");
     EXPECT_EQ("Discretization \"d1\": Configuration \"conf1\" Manifold \"m1\"\n"
@@ -514,7 +514,7 @@ TEST(Basis, HDF5) {
   }
   {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);
-    auto p1 = createProject(file);
+    auto p1 = readProject(file);
     ostringstream buf;
     buf << *p1->tangentspaces.at("s1")->bases.at("b1");
     EXPECT_EQ("Basis \"b1\": Configuration \"conf1\" TangentSpace \"s1\"\n",
@@ -547,7 +547,7 @@ TEST(BasisVector, HDF5) {
   }
   {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);
-    auto p1 = createProject(file);
+    auto p1 = readProject(file);
     ostringstream buf;
     buf << *p1->tangentspaces.at("s1")->bases.at("b1");
     EXPECT_EQ("Basis \"b1\": Configuration \"conf1\" TangentSpace \"s1\"\n"
@@ -580,7 +580,7 @@ TEST(DiscreteField, HDF5) {
   }
   {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);
-    auto p1 = createProject(file);
+    auto p1 = readProject(file);
     ostringstream buf;
     buf << *p1->fields.at("f1");
     EXPECT_EQ("Field \"f1\": Configuration \"conf1\" Manifold \"m1\" "
@@ -609,7 +609,7 @@ TEST(CoordinateField, HDF5) {
   }
   {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);
-    auto p1 = createProject(file);
+    auto p1 = readProject(file);
     ostringstream buf;
     buf << *p1->coordinatesystems.at("cs1")->coordinatefields.at("csf1");
     EXPECT_EQ("CoordinateField \"csf1\": CoordinateSystem \"cs1\" "
@@ -640,7 +640,7 @@ TEST(DiscreteFieldBlock, HDF5) {
   }
   {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);
-    auto p1 = createProject(file);
+    auto p1 = readProject(file);
     ostringstream buf;
     buf << *p1->fields.at("f1")->discretefields.at("df1");
     EXPECT_EQ("DiscreteField \"df1\": Configuration \"conf1\" Field \"f1\" "
@@ -707,7 +707,7 @@ TEST(DiscreteFieldBlockComponent, HDF5) {
   }
   {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);
-    auto p1 = createProject(file);
+    auto p1 = readProject(file);
     ostringstream buf;
     buf << *p1->fields.at("f1")
                 ->discretefields.at("df1")

@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
     auto filename = argv[argi];
     try {
       auto file = H5::H5File(filename, H5F_ACC_RDONLY);
-      auto project = createProject(file);
+      auto project = readProject(file);
       cout << *project;
     } catch (H5::FileIException error) {
       cerr << "Could not open file " << quote(filename) << " for reading.\n";

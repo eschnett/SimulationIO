@@ -17,7 +17,7 @@ void Parameter::read(const H5::CommonFG &loc, const string &entry,
          project->name);
   H5::readGroup(group, "parametervalues",
                 [&](const H5::Group &group, const string &name) {
-                  createParameterValue(group, name);
+                  readParameterValue(group, name);
                 });
 }
 
@@ -46,7 +46,7 @@ shared_ptr<ParameterValue> Parameter::createParameterValue(const string &name) {
 }
 
 shared_ptr<ParameterValue>
-Parameter::createParameterValue(const H5::CommonFG &loc, const string &entry) {
+Parameter::readParameterValue(const H5::CommonFG &loc, const string &entry) {
   auto parametervalue = ParameterValue::create(loc, entry, shared_from_this());
   checked_emplace(parametervalues, parametervalue->name, parametervalue);
   assert(parametervalue->invariant());

@@ -24,7 +24,7 @@ void DiscreteFieldBlock::read(const H5::CommonFG &loc, const string &entry,
       H5::readGroupAttribute<string>(group, "discretizationblock", "name"));
   H5::readGroup(group, "discretefieldblockcomponents",
                 [&](const H5::Group &group, const string &name) {
-                  createDiscreteFieldBlockComponent(group, name);
+                  readDiscreteFieldBlockComponent(group, name);
                 });
   discretizationblock->noinsert(shared_from_this());
 }
@@ -68,8 +68,8 @@ DiscreteFieldBlock::createDiscreteFieldBlockComponent(
 }
 
 shared_ptr<DiscreteFieldBlockComponent>
-DiscreteFieldBlock::createDiscreteFieldBlockComponent(const H5::CommonFG &loc,
-                                                      const string &entry) {
+DiscreteFieldBlock::readDiscreteFieldBlockComponent(const H5::CommonFG &loc,
+                                                    const string &entry) {
   auto discretefieldblockcomponent =
       DiscreteFieldBlockComponent::create(loc, entry, shared_from_this());
   checked_emplace(discretefieldblockcomponents,

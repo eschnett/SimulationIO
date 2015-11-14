@@ -93,8 +93,8 @@ public:
   shared_ptr<CoordinateField>
   createCoordinateField(const string &name, int direction,
                         const shared_ptr<Field> &field);
-  shared_ptr<CoordinateField> createCoordinateField(const H5::CommonFG &loc,
-                                                    const string &entry);
+  shared_ptr<CoordinateField> readCoordinateField(const H5::CommonFG &loc,
+                                                  const string &entry);
 };
 }
 

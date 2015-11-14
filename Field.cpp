@@ -33,7 +33,7 @@ void Field::read(const H5::CommonFG &loc, const string &entry,
       H5::readGroupAttribute<string>(group, "tensortype", "name"));
   H5::readGroup(group, "discretefields",
                 [&](const H5::Group &group, const string &name) {
-                  createDiscreteField(group, name);
+                  readDiscreteField(group, name);
                 });
   configuration->insert(name, shared_from_this());
   manifold->insert(name, shared_from_this());
@@ -88,8 +88,8 @@ Field::createDiscreteField(const string &name,
   assert(discretefield->invariant());
   return discretefield;
 }
-shared_ptr<DiscreteField> Field::createDiscreteField(const H5::CommonFG &loc,
-                                                     const string &entry) {
+shared_ptr<DiscreteField> Field::readDiscreteField(const H5::CommonFG &loc,
+                                                   const string &entry) {
   auto discretefield = DiscreteField::create(loc, entry, shared_from_this());
   checked_emplace(discretefields, discretefield->name, discretefield);
   assert(discretefield->invariant());

@@ -21,7 +21,7 @@ void Basis::read(const H5::CommonFG &loc, const string &entry,
              group, string("configuration/bases/") + name, "name") == name);
   H5::readGroup(group, "basisvectors",
                 [&](const H5::Group &group, const string &name) {
-                  createBasisVector(group, name);
+                  readBasisVector(group, name);
                 });
 #warning "TODO: check group directions"
   configuration->insert(name, shared_from_this());
@@ -61,8 +61,8 @@ shared_ptr<BasisVector> Basis::createBasisVector(const string &name,
   return basisvector;
 }
 
-shared_ptr<BasisVector> Basis::createBasisVector(const H5::CommonFG &loc,
-                                                 const string &entry) {
+shared_ptr<BasisVector> Basis::readBasisVector(const H5::CommonFG &loc,
+                                               const string &entry) {
   auto basisvector = BasisVector::create(loc, entry, shared_from_this());
   checked_emplace(basisvectors, basisvector->name, basisvector);
   checked_emplace(directions, basisvector->direction, basisvector);

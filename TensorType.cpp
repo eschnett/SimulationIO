@@ -19,7 +19,7 @@ void TensorType::read(const H5::CommonFG &loc, const string &entry,
   H5::readAttribute(group, "rank", rank);
   H5::readGroup(group, "tensorcomponents",
                 [&](const H5::Group &group, const string &name) {
-                  createTensorComponent(group, name);
+                  readTensorComponent(group, name);
                 });
 #warning "TODO: check storage_indices"
 }
@@ -58,8 +58,7 @@ TensorType::createTensorComponent(const string &name, int stored_component,
 }
 
 shared_ptr<TensorComponent>
-TensorType::createTensorComponent(const H5::CommonFG &loc,
-                                  const string &entry) {
+TensorType::readTensorComponent(const H5::CommonFG &loc, const string &entry) {
   auto tensorcomponent =
       TensorComponent::create(loc, entry, shared_from_this());
   checked_emplace(tensorcomponents, tensorcomponent->name, tensorcomponent);

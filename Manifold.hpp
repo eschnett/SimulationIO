@@ -96,15 +96,15 @@ public:
   shared_ptr<Discretization>
   createDiscretization(const string &name,
                        const shared_ptr<Configuration> &configuration);
-  shared_ptr<Discretization> createDiscretization(const H5::CommonFG &loc,
-                                                  const string &entry);
+  shared_ptr<Discretization> readDiscretization(const H5::CommonFG &loc,
+                                                const string &entry);
   shared_ptr<SubDiscretization> createSubDiscretization(
       const string &name,
       const shared_ptr<Discretization> &parent_discretization,
       const shared_ptr<Discretization> &child_discretization,
       const vector<double> &factor, const vector<double> &offset);
-  shared_ptr<SubDiscretization> createSubDiscretization(const H5::CommonFG &loc,
-                                                        const string &entry);
+  shared_ptr<SubDiscretization> readSubDiscretization(const H5::CommonFG &loc,
+                                                      const string &entry);
 
 private:
   friend struct CoordinateSystem;

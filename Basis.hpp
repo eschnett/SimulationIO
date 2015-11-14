@@ -87,8 +87,8 @@ public:
                      const H5::H5Location &parent) const;
 
   shared_ptr<BasisVector> createBasisVector(const string &name, int direction);
-  shared_ptr<BasisVector> createBasisVector(const H5::CommonFG &loc,
-                                            const string &entry);
+  shared_ptr<BasisVector> readBasisVector(const H5::CommonFG &loc,
+                                          const string &entry);
 
 private:
   friend struct DiscreteField;

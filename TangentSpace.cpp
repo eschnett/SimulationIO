@@ -24,7 +24,7 @@ void TangentSpace::read(const H5::CommonFG &loc, const string &entry,
   H5::readAttribute(group, "dimension", dimension);
   H5::readGroup(group, "bases",
                 [&](const H5::Group &group, const string &name) {
-                  createBasis(group, name);
+                  readBasis(group, name);
                 });
   // Cannot check "fields" since fields have not been read yet
   // assert(H5::checkGroupNames(group, "fields", fields));
@@ -67,8 +67,8 @@ TangentSpace::createBasis(const string &name,
   return basis;
 }
 
-shared_ptr<Basis> TangentSpace::createBasis(const H5::CommonFG &loc,
-                                            const string &entry) {
+shared_ptr<Basis> TangentSpace::readBasis(const H5::CommonFG &loc,
+                                          const string &entry) {
   auto basis = Basis::create(loc, entry, shared_from_this());
   checked_emplace(bases, basis->name, basis);
   assert(basis->invariant());

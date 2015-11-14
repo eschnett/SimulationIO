@@ -86,7 +86,7 @@ public:
 
   shared_ptr<DiscretizationBlock> createDiscretizationBlock(const string &name);
   shared_ptr<DiscretizationBlock>
-  createDiscretizationBlock(const H5::CommonFG &loc, const string &entry);
+  readDiscretizationBlock(const H5::CommonFG &loc, const string &entry);
 
 private:
   friend struct SubDiscretization;

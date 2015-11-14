@@ -24,7 +24,7 @@ void CoordinateSystem::read(const H5::CommonFG &loc, const string &entry,
          name);
   H5::readGroup(group, "coordinatefields",
                 [&](const H5::Group &group, const string &name) {
-                  createCoordinateField(group, name);
+                  readCoordinateField(group, name);
                 });
 #warning "TODO: check group directions"
   configuration->insert(name, shared_from_this());
@@ -75,8 +75,8 @@ CoordinateSystem::createCoordinateField(const string &name, int direction,
 }
 
 shared_ptr<CoordinateField>
-CoordinateSystem::createCoordinateField(const H5::CommonFG &loc,
-                                        const string &entry) {
+CoordinateSystem::readCoordinateField(const H5::CommonFG &loc,
+                                      const string &entry) {
   auto coordinatefield =
       CoordinateField::create(loc, entry, shared_from_this());
   checked_emplace(coordinatefields, coordinatefield->name, coordinatefield);

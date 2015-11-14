@@ -113,8 +113,8 @@ public:
                       const shared_ptr<Configuration> &configuration,
                       const shared_ptr<Discretization> &discretization,
                       const shared_ptr<Basis> &basis);
-  shared_ptr<DiscreteField> createDiscreteField(const H5::CommonFG &loc,
-                                                const string &entry);
+  shared_ptr<DiscreteField> readDiscreteField(const H5::CommonFG &loc,
+                                              const string &entry);
 
 private:
   friend struct CoordinateField;

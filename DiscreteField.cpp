@@ -28,7 +28,7 @@ void DiscreteField::read(const H5::CommonFG &loc, const string &entry,
       H5::readGroupAttribute<string>(group, "basis", "name"));
   H5::readGroup(group, "discretefieldblocks",
                 [&](const H5::Group &group, const string &name) {
-                  createDiscreteFieldBlock(group, name);
+                  readDiscreteFieldBlock(group, name);
                 });
   configuration->insert(name, shared_from_this());
   discretization->noinsert(shared_from_this());
@@ -63,7 +63,7 @@ void DiscreteField::write(const H5::CommonFG &loc,
                          discretization->name);
   H5::createHardLink(group, "basis", parent,
                      string("tangentspace/bases/") + basis->name);
-  H5::createGroup(group, "discretefieldblocks", discretefieldblocks);
+  createGroup(group, "discretefieldblocks", discretefieldblocks);
 }
 
 shared_ptr<DiscreteFieldBlock> DiscreteField::createDiscreteFieldBlock(
@@ -78,8 +78,8 @@ shared_ptr<DiscreteFieldBlock> DiscreteField::createDiscreteFieldBlock(
 }
 
 shared_ptr<DiscreteFieldBlock>
-DiscreteField::createDiscreteFieldBlock(const H5::CommonFG &loc,
-                                        const string &entry) {
+DiscreteField::readDiscreteFieldBlock(const H5::CommonFG &loc,
+                                      const string &entry) {
   auto discretefieldblock =
       DiscreteFieldBlock::create(loc, entry, shared_from_this());
   checked_emplace(discretefieldblocks, discretefieldblock->name,

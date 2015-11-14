@@ -31,11 +31,11 @@ void Manifold::read(const H5::CommonFG &loc, const string &entry,
   H5::readAttribute(group, "dimension", dimension);
   H5::readGroup(group, "discretizations",
                 [&](const H5::Group &group, const string &name) {
-                  createDiscretization(group, name);
+                  readDiscretization(group, name);
                 });
   H5::readGroup(group, "subdiscretizations",
                 [&](const H5::Group &group, const string &name) {
-                  createSubDiscretization(group, name);
+                  readSubDiscretization(group, name);
                 });
   // Cannot check "fields", "coordinatesystems" since they have not been read
   // yet
@@ -88,8 +88,8 @@ Manifold::createDiscretization(const string &name,
   return discretization;
 }
 
-shared_ptr<Discretization>
-Manifold::createDiscretization(const H5::CommonFG &loc, const string &entry) {
+shared_ptr<Discretization> Manifold::readDiscretization(const H5::CommonFG &loc,
+                                                        const string &entry) {
   auto discretization = Discretization::create(loc, entry, shared_from_this());
   checked_emplace(discretizations, discretization->name, discretization);
   assert(discretization->invariant());
@@ -110,8 +110,7 @@ shared_ptr<SubDiscretization> Manifold::createSubDiscretization(
 }
 
 shared_ptr<SubDiscretization>
-Manifold::createSubDiscretization(const H5::CommonFG &loc,
-                                  const string &entry) {
+Manifold::readSubDiscretization(const H5::CommonFG &loc, const string &entry) {
   auto subdiscretization =
       SubDiscretization::create(loc, entry, shared_from_this());
   checked_emplace(subdiscretizations, subdiscretization->name,

@@ -102,7 +102,7 @@ int main(int argc, char **argv) {
   // Read file
   {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);
-    auto project2 = createProject(file);
+    auto project2 = readProject(file);
   }
 
   const auto t3 = std::chrono::system_clock::now();

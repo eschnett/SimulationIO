@@ -84,8 +84,7 @@ public:
   shared_ptr<DiscreteFieldBlockComponent> createDiscreteFieldBlockComponent(
       const string &name, const shared_ptr<TensorComponent> &tensorcomponent);
   shared_ptr<DiscreteFieldBlockComponent>
-  createDiscreteFieldBlockComponent(const H5::CommonFG &loc,
-                                    const string &entry);
+  readDiscreteFieldBlockComponent(const H5::CommonFG &loc, const string &entry);
 };
 }
 

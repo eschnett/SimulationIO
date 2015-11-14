@@ -95,8 +95,8 @@ public:
   shared_ptr<DiscreteFieldBlock> createDiscreteFieldBlock(
       const string &name,
       const shared_ptr<DiscretizationBlock> &discretizationblock);
-  shared_ptr<DiscreteFieldBlock>
-  createDiscreteFieldBlock(const H5::CommonFG &loc, const string &entry);
+  shared_ptr<DiscreteFieldBlock> readDiscreteFieldBlock(const H5::CommonFG &loc,
+                                                        const string &entry);
 };
 }
 
