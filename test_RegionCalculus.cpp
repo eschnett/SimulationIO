@@ -2,11 +2,14 @@
 
 #include <gtest/gtest.h>
 
+#include <cstdlib>
 #include <functional>
 #include <sstream>
 
 using std::equal_to;
 using std::ostringstream;
+
+int irand(int imax) { return rand() / (RAND_MAX / imax); }
 
 using namespace RegionCalculus;
 
@@ -163,6 +166,134 @@ TEST(RegionCalculus, region) {
       EXPECT_TRUE(rdifference.invariant());
       EXPECT_TRUE(rsetunion.invariant());
       EXPECT_TRUE(rsymmetric_difference.invariant());
+      EXPECT_TRUE(ri.issuperset(rintersection));
+      EXPECT_TRUE(rj.issuperset(rintersection));
+      EXPECT_TRUE(ri.issuperset(rdifference));
+      EXPECT_TRUE(rsetunion.issuperset(ri));
+      EXPECT_TRUE(rsetunion.issuperset(rj));
+      EXPECT_TRUE(rintersection.isdisjoint(rsymmetric_difference));
+      EXPECT_TRUE(rdifference.isdisjoint(rj));
+      EXPECT_TRUE(rsetunion.issuperset(rintersection));
+      EXPECT_TRUE(rsetunion.issuperset(rdifference));
+      EXPECT_TRUE(rsetunion.issuperset(rsymmetric_difference));
+      EXPECT_TRUE(rintersection.setunion(rsymmetric_difference) == rsetunion);
+      EXPECT_TRUE(rdifference.setunion(rj) == rsetunion);
+      EXPECT_TRUE(rintersection == rj.intersection(ri));
+      EXPECT_TRUE(rsetunion == rj.setunion(ri));
+      EXPECT_TRUE(rsymmetric_difference == rj.symmetric_difference(ri));
+      if (ri == rj) {
+        EXPECT_TRUE(rintersection == ri);
+        EXPECT_TRUE(rdifference.empty());
+        EXPECT_TRUE(rsetunion == ri);
+        EXPECT_TRUE(rsymmetric_difference.empty());
+      }
+    }
+  }
+  ostringstream buf;
+  buf << r12;
+  EXPECT_EQ("{([0,0,0]:[1,1,1]),([1,1,1]:[2,2,2])}", buf.str());
+}
+
+TEST(RegionCalculus, region2) {
+  typedef point<int, 3> point;
+  typedef box<int, 3> box;
+  typedef region2<int, 3> region2;
+  region2 r;
+  EXPECT_TRUE(r.invariant());
+  EXPECT_TRUE(r.empty());
+  point p;
+  point p1(1);
+  box b;
+  box b1(p, p1);
+  region2 r0(b);
+  EXPECT_TRUE(r0.invariant());
+  EXPECT_TRUE(r0.empty());
+  region2 r1(b1);
+  EXPECT_TRUE(r1.invariant());
+  EXPECT_FALSE(r1.empty());
+  EXPECT_TRUE(r == r);
+  EXPECT_TRUE(r1 == r1);
+  EXPECT_FALSE(r != r);
+  EXPECT_TRUE(r != r1);
+  point p2(2);
+  box b2(p, p2);
+  region2 r2(b2);
+  EXPECT_EQ(r2, region2(::region2<long long, 3>(r2)));
+  EXPECT_TRUE(r == r.intersection(r1));
+  EXPECT_TRUE(r == r1.intersection(r));
+  EXPECT_TRUE(r1 == r1.intersection(r2));
+  EXPECT_TRUE(r1 == r2.intersection(r1));
+  EXPECT_TRUE(r == r.difference(r));
+  EXPECT_TRUE(r1 == r1.difference(r));
+  EXPECT_TRUE(r == r.difference(r1));
+  EXPECT_TRUE(r == r1.difference(r1));
+  EXPECT_TRUE(r == r.setunion(r));
+  EXPECT_TRUE(r1 == r1.setunion(r));
+  EXPECT_TRUE(r1 == r.setunion(r1));
+  EXPECT_TRUE(r1 == r1.setunion(r1));
+  EXPECT_TRUE(r == r.symmetric_difference(r));
+  EXPECT_TRUE(r1 == r1.symmetric_difference(r));
+  EXPECT_TRUE(r1 == r.symmetric_difference(r1));
+  EXPECT_TRUE(r == r1.symmetric_difference(r1));
+  EXPECT_EQ(0, vector<box>(r).size());
+  EXPECT_EQ(1, vector<box>(r1).size());
+  EXPECT_EQ(1, vector<box>(r2).size());
+  auto r21 = r2 - r1;
+  vector<box> r21boxes(r21);
+  EXPECT_EQ(3, r21boxes.size());
+  EXPECT_EQ(box(point(1, 0, 0), point(2, 1, 1)), r21boxes.at(0));
+  EXPECT_EQ(box(point(0, 1, 0), point(2, 2, 1)), r21boxes.at(1));
+  EXPECT_EQ(box(point(0, 0, 1), point(2, 2, 2)), r21boxes.at(2));
+  vector<box> r12vals;
+  r12vals.push_back(b1);
+  r12vals.push_back(box(p1, p2));
+  region2 r12(r12vals);
+  vector<box> r12boxes = r12;
+  EXPECT_EQ(r12vals, r12boxes);
+  vector<region2> rs;
+  rs.push_back(r);
+  rs.push_back(r1);
+  rs.push_back(r2);
+  box b4(p, point(4));
+  region2 r4(b4);
+  rs.push_back(r4);
+  rs.push_back(r12);
+  rs.push_back(r2.difference(r1));
+  rs.push_back(r2.symmetric_difference(r12));
+  for (int i = 0; i < 10; ++i) {
+    vector<box> bs;
+    for (int n = irand(5); n >= 0; --n)
+      bs.push_back(box(point(irand(10), irand(10), irand(10)),
+                       point(irand(10), irand(10), irand(10))));
+    rs.push_back(region2(bs));
+  }
+  for (std::size_t i = 0; i < rs.size(); ++i) {
+    const auto &ri = rs[i];
+    EXPECT_TRUE(ri.invariant());
+    const auto ri_size = ri.size();
+    for (std::size_t j = 0; j < rs.size(); ++j) {
+      const auto &rj = rs[j];
+      const auto rj_size = rj.size();
+      auto rintersection = ri.intersection(rj);
+      auto rdifference = ri.difference(rj);
+      auto rsetunion = ri.setunion(rj);
+      auto rsymmetric_difference = ri.symmetric_difference(rj);
+      auto rintersection_size = rintersection.size();
+      auto rdifference_size = rdifference.size();
+      auto rsetunion_size = rsetunion.size();
+      auto rsymmetric_difference_size = rsymmetric_difference.size();
+      EXPECT_TRUE(rintersection.invariant());
+      EXPECT_TRUE(rdifference.invariant());
+      EXPECT_TRUE(rsetunion.invariant());
+      EXPECT_TRUE(rsymmetric_difference.invariant());
+      EXPECT_TRUE(rintersection_size <= ri_size &&
+                  rintersection_size <= rj_size);
+      EXPECT_TRUE(rdifference_size <= ri_size &&
+                  rdifference_size >= ri_size - rj_size);
+      EXPECT_TRUE(rsetunion_size >= ri_size && rsetunion_size >= rj_size &&
+                  rsetunion_size <= ri_size + rj_size);
+      EXPECT_TRUE(rsymmetric_difference_size <= ri_size + rj_size &&
+                  rsymmetric_difference_size >= abs(ri_size - rj_size));
       EXPECT_TRUE(ri.issuperset(rintersection));
       EXPECT_TRUE(rj.issuperset(rintersection));
       EXPECT_TRUE(ri.issuperset(rdifference));
