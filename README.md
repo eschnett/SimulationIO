@@ -23,15 +23,14 @@ This repository contains a few sketches describing brainstorming results in vari
 - Run benchmarks with large datasets
 - Add parallelism
 - Add sub-manifolds, sub-tangentspaces, etc.
-- Write a reader for some visualization toolkit
-  - may want to use Python wrappers for this
 - Allow writing just part of a project, or adding to / modifying a project
   - idea: whenever creating an HDF5 object, check whether it already exists; if so, check whether it looks as expected
 - Allow removing parts of a project, deleting it from a file?
 - Implement (value) equality comparison operators for our objects
-- Replace H5 SWIG interface with standard Python HDF5 library
+- Replace H5 SWIG interface with standard Python HDF5 library. To do this, obtain low-level HDF5 ids from Python, and create H5 objects from these.
 - Allow coordinates that are not fields, but are e.g. uniform, or uniform per dimension
 - Create `Data` class by splitting off from `DiscreteFieldBlockComponent`
+- Create `Value` class by splitting off from `ParameterValue`? Unify this with `Data`?
 - Range field should use a dataset instead of an attribute
 - In discrete manifold, distinguish between vertex, cell, and other centerings
 - Introduce min/max for discrete fields? For scalars only? Keep array for other tensor types, indexed by stored component? How are missing data indicated? nan?
