@@ -368,7 +368,7 @@ template <typename T, int D> struct box {
   box(const box &b) = default;
   box(box &&b) = default;
   box(const point<T, D> &lo, const point<T, D> &hi) : lo(lo), hi(hi) {}
-  explicit box(const point<T, D> &p) : lo(p), hi(p + 1) {}
+  explicit box(const point<T, D> &p) : lo(p), hi(p + point<T, D>(1)) {}
   box(const vector<T> &lo, const vector<T> &hi) : lo(lo), hi(hi) {}
   box &operator=(const box &p) = default;
   box &operator=(box &&p) = default;
@@ -921,11 +921,7 @@ template <typename T, int D> struct region2 {
     subregions[b.upper()[D - 1]] = subregion2_t(subbox);
     assert(invariant());
   }
-  region2(const point<T, D> &p) {
-    region2 res(box<T, D>(p));
-    using std::swap;
-    swap(subregions, res.subregions);
-  }
+  region2(const point<T, D> &p) { *this = region2(box<T, D>(p)); }
   template <typename U> region2(const region2<U, D> &r) {
     for (const auto &pos_subregion : r.subregions) {
       T pos(pos_subregion.first);
@@ -1174,9 +1170,7 @@ public:
   region2 difference(const region2 &other) const { return *this - other; }
 
   // Set comparison operators
-  bool contains(const point<T, D> &p) const {
-    return !isdisjoint(*this, region2(p));
-  }
+  bool contains(const point<T, D> &p) const { return !isdisjoint(region2(p)); }
   bool isdisjoint(const region2 &other) const {
     return (*this & other).empty();
   }

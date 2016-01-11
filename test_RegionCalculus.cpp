@@ -309,6 +309,15 @@ TEST(RegionCalculus, region2) {
       EXPECT_TRUE(rintersection == rj.intersection(ri));
       EXPECT_TRUE(rsetunion == rj.setunion(ri));
       EXPECT_TRUE(rsymmetric_difference == rj.symmetric_difference(ri));
+      for (int n = 0; n < 10; ++n) {
+        int i = irand(10), j = irand(10), k = irand(10);
+        point p(i, j, k);
+        EXPECT_EQ(ri.contains(p) & rj.contains(p), rintersection.contains(p));
+        EXPECT_EQ(ri.contains(p) & !rj.contains(p), rdifference.contains(p));
+        EXPECT_EQ(ri.contains(p) | rj.contains(p), rsetunion.contains(p));
+        EXPECT_EQ(ri.contains(p) ^ rj.contains(p),
+                  rsymmetric_difference.contains(p));
+      }
       if (ri == rj) {
         EXPECT_TRUE(rintersection == ri);
         EXPECT_TRUE(rdifference.empty());
