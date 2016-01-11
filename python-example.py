@@ -136,7 +136,7 @@ for pk in range(npk):
                         datarho[li,lj,lk] = exp(-0.5 * r**2)
                         datavelx[li,lj,lk] = -y * r * exp(-0.5 * r**2)
                         datavely[li,lj,lk] = +x * r * exp(-0.5 * r**2)
-                        datavelz[li,lj,lk] = 0.0;
+                        datavelz[li,lj,lk] = 0.0
             # Write coordinates
             for d in range(dim):
                 field = coordinates[d].field
