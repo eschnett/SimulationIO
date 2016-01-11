@@ -1,8 +1,8 @@
 CXX = g++
-CPPFLAGS = $(GTEST_CPPFLAGS) $(HDF5_CPPFLAGS) $(PYTHON_CPPFLAGS)
-CXXFLAGS = $(GTEST_CXXFLAGS) $(HDF5_CXXFLAGS) $(PYTHON_CXXFLAGS) -g -Wall -std=c++0x -fPIC
-LDFLAGS = $(GTEST_LDFLAGS) $(HDF5_LDFLAGS)
-LIBS = $(GTEST_LIBS) $(HDF5_LIBS)
+CPPFLAGS = $(GTEST_CPPFLAGS) $(HDF5_CPPFLAGS) $(MPI_CPPFLAGS) $(PYTHON_CPPFLAGS)
+CXXFLAGS = $(GTEST_CXXFLAGS) $(HDF5_CXXFLAGS) $(MPI_CXXFLAGS) $(PYTHON_CXXFLAGS) -g -Wall -std=c++0x -fPIC
+LDFLAGS = $(GTEST_LDFLAGS) $(HDF5_LDFLAGS) $(MPI_LDFLAGS)
+LIBS = $(GTEST_LIBS) $(HDF5_LIBS) $(MPI_LIBS)
 
 ifneq ($(COVERAGE),)
 CXXFLAGS += --coverage
@@ -49,6 +49,12 @@ HDF5_CPPFLAGS = -I$(HDF5_DIR)/include
 HDF5_CXXFLAGS =
 HDF5_LDFLAGS = -L$(HDF5_DIR)/lib -Wl,-rpath,$(HDF5_DIR)/lib
 HDF5_LIBS = -lhdf5_cpp -lhdf5
+
+MPI_DIR = /opt/local
+MPI_CPPFLAGS = -I$(MPI_DIR)/include/openmpi-gcc5
+MPI_CXXFLAGS =
+MPI_LDFLAGS = -L$(MPI_DIR)/lib/openmpi-gcc5 -Wl,-rpath,$(MPI_DIR)/lib/openmpi-gcc5
+MPI_LIBS = -lmpi_cxx -lmpi
 
 PYTHON_DIR = /opt/local/Library/Frameworks/Python.framework/Versions/2.7
 PYTHON_CPPFLAGS = -I$(PYTHON_DIR)/include/python2.7
