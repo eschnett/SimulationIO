@@ -46,6 +46,7 @@ benchmark.s5
 H5.py
 *.pyc
 *_wrap.cpp
+julia-example.s5
 python-example.s5
 SimulationIO.py
 iof5-*.s5
