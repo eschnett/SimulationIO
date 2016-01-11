@@ -36,6 +36,7 @@ This repository contains a few sketches describing brainstorming results in vari
 - Introduce min/max for discrete fields? For scalars only? Keep array for other tensor types, indexed by stored component? How are missing data indicated? nan?
 - Create DataSpace from vector<int>
 - Implement SILO writer (for VisIt) (or can this be a SILO wrapper?)
+- Measure performance of RegionCalculus
 
 ## Sub-Manifolds
 - Set of parent manifolds
