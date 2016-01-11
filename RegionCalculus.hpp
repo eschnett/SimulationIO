@@ -70,27 +70,23 @@ template <typename T, int D> struct point {
       r[d] = elt[d];
     return r;
   }
-  template <bool cond = D == 1, typename std::enable_if<cond>::type * = nullptr>
-  explicit point(const T &x) {
-    elt[0] = x;
-  }
   template <bool cond = D == 2, typename std::enable_if<cond>::type * = nullptr>
-  explicit point(const T &x, const T &y) {
-    elt[0] = x;
-    elt[1] = y;
+  explicit point(const T &x0, const T &x1) {
+    elt[0] = x0;
+    elt[1] = x1;
   }
   template <bool cond = D == 3, typename std::enable_if<cond>::type * = nullptr>
-  explicit point(const T &x, const T &y, const T &z) {
-    elt[0] = x;
-    elt[1] = y;
-    elt[2] = z;
+  explicit point(const T &x0, const T &x1, const T &x2) {
+    elt[0] = x0;
+    elt[1] = x1;
+    elt[2] = x2;
   }
   template <bool cond = D == 4, typename std::enable_if<cond>::type * = nullptr>
-  explicit point(const T &x, const T &y, const T &z, const T &t) {
-    elt[0] = x;
-    elt[1] = y;
-    elt[2] = z;
-    elt[3] = t;
+  explicit point(const T &x0, const T &x1, const T &x2, const T &x3) {
+    elt[0] = x0;
+    elt[1] = x1;
+    elt[2] = x2;
+    elt[3] = x3;
   }
   point &operator=(const point &p) = default;
   point &operator=(point &&p) = default;
