@@ -53,7 +53,10 @@ script:
   - make -j2 COVERAGE=1 HDF5_DIR="$HDF5_DIR" PYTHON_DIR="$PYTHON_DIR"
   - make -j2 test
   - ./example && ./list example.s5
+  - ls -l *H5*
+  - ldd _H5.so
   - ./python-example.py && ./list python-example.s5
+  # - ./julia-example.jl && ./list julia-example.s5
 after_success:
   - make -j2 coverage
   - codecov
