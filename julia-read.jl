@@ -5,11 +5,7 @@ using PyCall
 @pyimport H5
 @pyimport SimulationIO as SIO
 
-# import numpy as np
 using HDF5
-
-# from math import *
-# import sys
 
 
 
