@@ -666,7 +666,7 @@ public:
   bool empty() const { return boxes.empty(); }
   typedef typename point<T, D>::prod_t prod_t;
   prod_t size() const {
-    prod_t sz;
+    prod_t sz = T(0);
     for (const auto &b : boxes)
       sz += b.size();
     return sz;
@@ -959,7 +959,7 @@ private:
       const T pos = min(next_pos0, next_pos1);
       const bool active0 = next_pos0 == pos;
       const bool active1 = next_pos1 == pos;
-      const subregion2_t dummy;
+      subregion2_t dummy;
       const subregion2_t &subregion0 = active0 ? iter0->second : dummy;
       const subregion2_t &subregion1 = active1 ? iter1->second : dummy;
       if (active0)
@@ -1065,14 +1065,16 @@ public:
       // Convert subregion to boxes
       const vector<box<T, D - 1>> subboxes1(subregion);
 
-      auto iter0 = old_subboxes.begin(), iter1 = subboxes1.begin();
-      const auto end0 = old_subboxes.end(), end1 = subboxes1.end();
+      auto iter0 = old_subboxes.begin();
+      auto iter1 = subboxes1.begin();
+      const auto end0 = old_subboxes.end();
+      const auto end1 = subboxes1.end();
       assert(is_sorted(iter1, end1));
       map<box<T, D - 1>, T> subboxes;
       while (iter0 != end0 || iter1 != end1) {
         bool active0 = iter0 != end0;
         bool active1 = iter1 != end1;
-        const box<T, D - 1> dummy;
+        box<T, D - 1> dummy;
         const box<T, D - 1> &subbox0 = active0 ? iter0->first : dummy;
         const box<T, D - 1> &subbox1 = active1 ? *iter1 : dummy;
         // When both subboxes are active, keep only the first (as determined by
