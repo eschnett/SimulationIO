@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <cmath>
+#include <cstdlib>
 #include <functional>
 #include <iostream>
 #include <limits>
