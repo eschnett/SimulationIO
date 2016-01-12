@@ -9,6 +9,8 @@ addons:
    packages:
      - lcov
      # - libhdf5-serial-dev   # This lacks the HDF5 C++ bindings
+     - libopenmpi-dev
+     - openmpi-bin
      - python-numpy
      - swig
 before_install:
@@ -17,6 +19,7 @@ before_install:
       brew update
       brew install homebrew/science/hdf5
       brew install lcov
+      brew install open-mpi
       brew install swig
       export PYTHON_DIR="/System/Library/Frameworks/Python.framework/Versions/2.7"
     fi
@@ -40,6 +43,7 @@ before_install:
   - pip install --user codecov
   - gem install coveralls-lcov
   - h5ls --version
+  - mpirun --version
   - lcov --version
 language: cpp
 compiler:
