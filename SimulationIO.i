@@ -116,7 +116,8 @@ struct TensorType;
   std::map<string, std::shared_ptr<Parameter> >;
 %template(map_string_ParameterValue)
   std::map<string, std::shared_ptr<ParameterValue> >;
-%template(map_string_Project) std::map<string, std::shared_ptr<Project> >;
+%template(map_string_Project)
+  std::map<string, std::shared_ptr<Project> >;
 %template(map_string_SubDiscretization)
   std::map<string, std::shared_ptr<SubDiscretization> >;
 %template(map_string_TangentSpace)
@@ -206,6 +207,36 @@ struct TensorType;
   std::weak_ptr<TensorComponent>;
 %template(weak_ptr_TensorType)
   std::weak_ptr<TensorType>;
+
+
+
+%{
+template<typename K, typename T>
+const T& map_get(const std::map<K,T>& m, const K& k) { return m.at(k); }
+%}
+template<typename K, typename T>
+const T& map_get(const std::map<K,T>& m, const K& k) { return m.at(k); }
+
+%template(map_get_string_TensorType)
+  map_get<string, std::shared_ptr<TensorType> >;
+
+/*
+template<typename K, typename T>
+typename map<K,T>::const_iterator map_start(const std::map<K,T>& m) {
+  return m.begin();
+}
+template<typename K, typename T>
+bool map_done(const std::map<K,T>& m,
+              const typename std::map<K,T>::const_iterator& mi) {
+  return mi == m.end();
+}
+template<typename K, typename T>
+std::pair<T, typename std::map<K,T>::const_iterator>
+map_next(const std::map<K,T>& m,
+         const typename std::map<K,T>::const_iterator& mi) {
+  return std::make_pair(*mi, ++mi);
+}
+*/
 
 %nodefaultctor;
 
