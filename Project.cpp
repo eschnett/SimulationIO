@@ -70,6 +70,34 @@ void Project::read(const H5::CommonFG &loc) {
 }
 
 void Project::createStandardTensorTypes() {
+  auto s0d = createTensorType("Scalar0D", 0, 0);
+  s0d->createTensorComponent("scalar", 0, vector<int>{});
+
+  auto v0d = createTensorType("Vector0D", 0, 1);
+
+  auto st0d = createTensorType("SymmetricTensor0D", 0, 2);
+
+  auto s1d = createTensorType("Scalar1D", 1, 0);
+  s1d->createTensorComponent("scalar", 0, vector<int>{});
+
+  auto v1d = createTensorType("Vector1D", 1, 1);
+  v1d->createTensorComponent("0", 0, {0});
+
+  auto st1d = createTensorType("SymmetricTensor1D", 1, 2);
+  st1d->createTensorComponent("00", 0, {0, 0});
+
+  auto s2d = createTensorType("Scalar2D", 2, 0);
+  s2d->createTensorComponent("scalar", 0, vector<int>{});
+
+  auto v2d = createTensorType("Vector2D", 2, 1);
+  v2d->createTensorComponent("0", 0, {0});
+  v2d->createTensorComponent("1", 1, {1});
+
+  auto st2d = createTensorType("SymmetricTensor2D", 2, 2);
+  st2d->createTensorComponent("00", 0, {0, 0});
+  st2d->createTensorComponent("01", 1, {0, 1});
+  st2d->createTensorComponent("11", 2, {1, 1});
+
   auto s3d = createTensorType("Scalar3D", 3, 0);
   s3d->createTensorComponent("scalar", 0, vector<int>{});
 
@@ -85,6 +113,27 @@ void Project::createStandardTensorTypes() {
   st3d->createTensorComponent("11", 3, {1, 1});
   st3d->createTensorComponent("12", 4, {1, 2});
   st3d->createTensorComponent("22", 5, {2, 2});
+
+  auto s4d = createTensorType("Scalar4D", 4, 0);
+  s4d->createTensorComponent("scalar", 0, vector<int>{});
+
+  auto v4d = createTensorType("Vector4D", 4, 1);
+  v4d->createTensorComponent("0", 0, {0});
+  v4d->createTensorComponent("1", 1, {1});
+  v4d->createTensorComponent("2", 2, {2});
+  v4d->createTensorComponent("3", 3, {3});
+
+  auto st4d = createTensorType("SymmetricTensor4D", 4, 2);
+  st4d->createTensorComponent("00", 0, {0, 0});
+  st4d->createTensorComponent("01", 1, {0, 1});
+  st4d->createTensorComponent("02", 2, {0, 2});
+  st4d->createTensorComponent("03", 3, {0, 3});
+  st4d->createTensorComponent("11", 4, {1, 1});
+  st4d->createTensorComponent("12", 5, {1, 2});
+  st4d->createTensorComponent("13", 6, {1, 3});
+  st4d->createTensorComponent("22", 7, {2, 2});
+  st4d->createTensorComponent("23", 8, {2, 3});
+  st4d->createTensorComponent("33", 9, {3, 3});
 }
 
 ostream &Project::output(ostream &os, int level) const {
