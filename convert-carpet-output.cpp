@@ -343,7 +343,7 @@ int main(int argc, char **argv) {
             ioffset.at(d) =
                 double(ioffsetnum.at(d)) / double(ioffsetdenom.at(d));
           dregion active;
-          {
+          if (dataset.attrExists("active")) {
             string active_str = H5::readAttribute<string>(dataset, "active");
             istringstream ibuf(active_str);
             ibboxset active_bs;
@@ -353,8 +353,6 @@ int main(int argc, char **argv) {
               dpoint lo(b.lower.elts);
               dpoint hi(b.upper.elts);
               const dpoint str(b.stride.elts);
-              std::cout << "lo=" << lo << " hi=" << hi << " str=" << str
-                        << "\n";
               hi += str;
               const dpoint poffsetnum(ioffsetnum);
               const dpoint poffsetdenom(ioffsetdenom);
@@ -483,7 +481,9 @@ int main(int argc, char **argv) {
             std::reverse(shape.begin(), shape.end());
             discretizationblock->setRegion(
                 box_t(offset, point_t(offset) + shape));
-            discretizationblock->setActive(active);
+            if (active.valid()) {
+              discretizationblock->setActive(active);
+            }
           }
           const auto &discretizationblock =
               discretization->discretizationblocks.at(blockname);
