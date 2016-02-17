@@ -207,10 +207,12 @@ void DiscreteFieldBlockComponent::write(const H5::CommonFG &loc,
   case type_copy: {
     auto ocpypl = H5::take_hid(H5Pcreate(H5P_OBJECT_COPY));
     assert(ocpypl.valid());
+    herr_t herr = H5Pset_copy_object(ocpypl, H5O_COPY_WITHOUT_ATTR_FLAG);
+    assert(!herr);
     auto lcpl = H5::take_hid(H5Pcreate(H5P_LINK_CREATE));
     assert(lcpl.valid());
-    herr_t herr = H5Ocopy(data_copy_loc, data_copy_name.c_str(), group.getId(),
-                          "data", ocpypl, lcpl);
+    herr = H5Ocopy(data_copy_loc, data_copy_name.c_str(), group.getId(), "data",
+                   ocpypl, lcpl);
     assert(!herr);
     break;
   }
