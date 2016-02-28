@@ -197,7 +197,6 @@ struct iregion {
   // Output
   %extend {
     std::string __str__() const {
-      std::cerr << "std::string __str__() const\n";
       std::ostringstream buf;
       buf << *self;
       return buf.str();
