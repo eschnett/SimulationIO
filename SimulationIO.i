@@ -166,6 +166,45 @@ struct TensorType;
 %template(map_string_weak_ptr_TensorType)
   std::map<string, std::weak_ptr<TensorType> >;
 
+%template(shared_ptr_Basis)
+  std::shared_ptr<Basis>;
+%template(shared_ptr_BasisVector)
+  std::shared_ptr<BasisVector>;
+%template(shared_ptr_CoordinateField)
+  std::shared_ptr<CoordinateField>;
+%template(shared_ptr_CoordinateSystem)
+  std::shared_ptr<CoordinateSystem>;
+%template(shared_ptr_Configuration)
+  std::shared_ptr<Configuration>;
+%template(shared_ptr_DiscreteField)
+  std::shared_ptr<DiscreteField>;
+%template(shared_ptr_DiscreteFieldBlock)
+  std::shared_ptr<DiscreteFieldBlock>;
+%template(shared_ptr_DiscreteFieldBlockComponent)
+  std::shared_ptr<DiscreteFieldBlockComponent>;
+%template(shared_ptr_Discretization)
+  std::shared_ptr<Discretization>;
+%template(shared_ptr_DiscretizationBlock)
+  std::shared_ptr<DiscretizationBlock>;
+%template(shared_ptr_Field)
+  std::shared_ptr<Field>;
+%template(shared_ptr_Manifold)
+  std::shared_ptr<Manifold>;
+%template(shared_ptr_Parameter)
+  std::shared_ptr<Parameter>;
+%template(shared_ptr_ParameterValue)
+  std::shared_ptr<ParameterValue>;
+%template(shared_ptr_Project)
+  std::shared_ptr<Project>;
+%template(shared_ptr_SubDiscretization)
+  std::shared_ptr<SubDiscretization>;
+%template(shared_ptr_TangentSpace)
+  std::shared_ptr<TangentSpace>;
+%template(shared_ptr_TensorComponent)
+  std::shared_ptr<TensorComponent>;
+%template(shared_ptr_TensorType)
+  std::shared_ptr<TensorType>;
+
 %template(vector_double) std::vector<double>;
 %template(vector_int) std::vector<int>;
 
