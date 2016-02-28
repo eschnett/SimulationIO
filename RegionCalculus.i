@@ -168,7 +168,7 @@ struct iregion {
   int size() const;
 
   // Set operations
-  iregion bounding_box() const;
+  ibox bounding_box() const;
   iregion operator&(const iregion& r) const;
   iregion operator-(const iregion& r) const;
   iregion operator|(const iregion& r) const;

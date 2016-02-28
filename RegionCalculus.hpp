@@ -2402,7 +2402,7 @@ template <typename T> struct dregion {
   prod_t size() const { return val->size(); }
 
   // Set operations
-  dregion bounding_box() const { return dregion(val->bounding_box()); }
+  dbox<T> bounding_box() const { return dbox<T>(val->bounding_box()); }
   dregion operator&(const dbox<T> &b) const { return dregion(*val & *b.val); }
   dregion operator&(const dregion &r) const { return dregion(*val & *r.val); }
   dregion operator-(const dbox<T> &b) const { return dregion(*val - *b.val); }
