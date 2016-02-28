@@ -249,15 +249,20 @@ struct TensorType;
 
 
 
-%{
-template<typename K, typename T>
-const T& map_get(const std::map<K,T>& m, const K& k) { return m.at(k); }
-%}
-template<typename K, typename T>
-const T& map_get(const std::map<K,T>& m, const K& k) { return m.at(k); }
+// Use __getitem__ instead
+//TODO %{
+//TODO template<typename K, typename T>
+//TODO const T& map_get(const std::map<K,T>& m, const K& k) { return m.at(k); }
+//TODO %}
+//TODO template<typename K, typename T>
+//TODO const T& map_get(const std::map<K,T>& m, const K& k) { return m.at(k); }
 
-%template(map_get_string_TensorType)
-  map_get<string, std::shared_ptr<TensorType> >;
+//TODO %template(map_get_string_Parameter)
+//TODO   map_get<string, std::shared_ptr<Parameter> >;
+//TODO %template(map_get_string_ParameterValue)
+//TODO   map_get<string, std::shared_ptr<ParameterValue> >;
+//TODO %template(map_get_string_TensorType)
+//TODO   map_get<string, std::shared_ptr<TensorType> >;
 
 /*
 template<typename K, typename T>
