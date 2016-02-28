@@ -29,7 +29,7 @@ typedef RegionCalculus::dregion<int> iregion;
 %shared_ptr(Field);
 %shared_ptr(Manifold);
 %shared_ptr(Parameter);
-%shared_ptr(ParaemterValue);
+%shared_ptr(ParameterValue);
 %shared_ptr(Project);
 %shared_ptr(SubDiscretization);
 %shared_ptr(TangentSpace);
