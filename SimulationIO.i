@@ -85,6 +85,8 @@ struct TensorType;
   std::map<int, std::shared_ptr<BasisVector> >;
 %template(map_int_CoordinateField)
   std::map<int, std::shared_ptr<CoordinateField> >;
+%template(map_int_DiscreteFieldBlockComponent)
+  std::map<int, std::shared_ptr<DiscreteFieldBlockComponent> >;
 %template(map_int_TensorComponent)
   std::map<int, std::shared_ptr<TensorComponent> >;
 
@@ -363,6 +365,7 @@ struct DiscreteFieldBlock {
   std::shared_ptr<DiscretizationBlock> discretizationblock;
   std::map<string, std::shared_ptr<DiscreteFieldBlockComponent> >
     discretefieldblockcomponents;
+  std::map<int, std::shared_ptr<DiscreteFieldBlockComponent> > storage_indices;
   bool invariant() const;
 
   std::shared_ptr<DiscreteFieldBlockComponent>

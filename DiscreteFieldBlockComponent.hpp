@@ -61,7 +61,11 @@ struct DiscreteFieldBlockComponent
          discretefieldblock.lock()->discretefieldblockcomponents)
       if (dfbd.second.get() != this)
         inv &= dfbd.second->tensorcomponent.get() != tensorcomponent.get();
-    inv &= (data_type == type_empty || data_type == type_dataset ||
+    // Ensure mapping from storage_indices is correct
+    inv &= discretefieldblock.lock()
+                   ->storage_indices.at(tensorcomponent->storage_index)
+                   .get() == this &&
+           (data_type == type_empty || data_type == type_dataset ||
             data_type == type_extlink || data_type == type_copy ||
             data_type == type_range) &&
            !data_extlink_filename.empty() == (data_type == type_extlink) &&

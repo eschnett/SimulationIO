@@ -27,6 +27,7 @@ void DiscreteFieldBlock::read(const H5::CommonFG &loc, const string &entry,
                   readDiscreteFieldBlockComponent(group, name);
                 });
   discretizationblock->noinsert(shared_from_this());
+#warning "TODO: check storage_indices"
 }
 
 ostream &DiscreteFieldBlock::output(ostream &os, int level) const {
@@ -53,6 +54,7 @@ void DiscreteFieldBlock::write(const H5::CommonFG &loc,
                          discretizationblock->name);
   H5::createGroup(group, "discretefieldblockcomponents",
                   discretefieldblockcomponents);
+#warning "TODO: write storage_indices"
 }
 
 shared_ptr<DiscreteFieldBlockComponent>
@@ -62,6 +64,9 @@ DiscreteFieldBlock::createDiscreteFieldBlockComponent(
       name, shared_from_this(), tensorcomponent);
   checked_emplace(discretefieldblockcomponents,
                   discretefieldblockcomponent->name,
+                  discretefieldblockcomponent);
+  checked_emplace(storage_indices,
+                  discretefieldblockcomponent->tensorcomponent->storage_index,
                   discretefieldblockcomponent);
   assert(discretefieldblockcomponent->invariant());
   return discretefieldblockcomponent;
@@ -74,6 +79,9 @@ DiscreteFieldBlock::readDiscreteFieldBlockComponent(const H5::CommonFG &loc,
       DiscreteFieldBlockComponent::create(loc, entry, shared_from_this());
   checked_emplace(discretefieldblockcomponents,
                   discretefieldblockcomponent->name,
+                  discretefieldblockcomponent);
+  checked_emplace(storage_indices,
+                  discretefieldblockcomponent->tensorcomponent->storage_index,
                   discretefieldblockcomponent);
   assert(discretefieldblockcomponent->invariant());
   return discretefieldblockcomponent;

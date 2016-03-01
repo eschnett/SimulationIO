@@ -700,6 +700,7 @@ TEST(DiscreteFieldBlockComponent, create) {
   const auto &bxy1 = tt1->tensorcomponents.at("01");
   const auto &bxz1 = tt1->tensorcomponents.at("02");
   const auto &byy1 = tt1->tensorcomponents.at("11");
+  const auto &byz1 = tt1->tensorcomponents.at("12");
   EXPECT_TRUE(dfb1->discretefieldblockcomponents.empty());
   auto dfbd1 = dfb1->createDiscreteFieldBlockComponent("dfbd1", bxx1);
   auto dfbd2 = dfb1->createDiscreteFieldBlockComponent("dfbd2", bxy1);
@@ -710,6 +711,12 @@ TEST(DiscreteFieldBlockComponent, create) {
   EXPECT_EQ(dfbd2, dfb1->discretefieldblockcomponents.at("dfbd2"));
   EXPECT_EQ(dfbd3, dfb1->discretefieldblockcomponents.at("dfbd3"));
   EXPECT_EQ(dfbd4, dfb1->discretefieldblockcomponents.at("dfbd4"));
+  EXPECT_EQ(dfbd1, dfb1->storage_indices.at(bxx1->storage_index));
+  EXPECT_EQ(dfbd2, dfb1->storage_indices.at(bxy1->storage_index));
+  EXPECT_EQ(dfbd3, dfb1->storage_indices.at(bxz1->storage_index));
+  EXPECT_EQ(dfbd4, dfb1->storage_indices.at(byy1->storage_index));
+  EXPECT_EQ(dfb1->storage_indices.end(),
+            dfb1->storage_indices.find(byz1->storage_index));
   EXPECT_EQ(DiscreteFieldBlockComponent::type_empty, dfbd1->data_type);
   EXPECT_EQ(DiscreteFieldBlockComponent::type_empty, dfbd2->data_type);
   EXPECT_EQ(DiscreteFieldBlockComponent::type_empty, dfbd3->data_type);

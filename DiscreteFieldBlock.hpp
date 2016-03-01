@@ -30,13 +30,17 @@ struct DiscreteFieldBlock : Common,
   shared_ptr<DiscretizationBlock> discretizationblock; // with backlink
   map<string, shared_ptr<DiscreteFieldBlockComponent>>
       discretefieldblockcomponents; // children
+  map<int, shared_ptr<DiscreteFieldBlockComponent>> storage_indices;
 
   virtual bool invariant() const {
-    return Common::invariant() && bool(discretefield.lock()) &&
-           discretefield.lock()->discretefieldblocks.count(name) &&
-           discretefield.lock()->discretefieldblocks.at(name).get() == this &&
-           bool(discretizationblock) &&
-           discretizationblock->discretefieldblocks.nobacklink();
+    bool inv =
+        Common::invariant() && bool(discretefield.lock()) &&
+        discretefield.lock()->discretefieldblocks.count(name) &&
+        discretefield.lock()->discretefieldblocks.at(name).get() == this &&
+        bool(discretizationblock) &&
+        discretizationblock->discretefieldblocks.nobacklink() &&
+        discretefieldblockcomponents.size() == storage_indices.size();
+    return inv;
   }
 
   DiscreteFieldBlock() = delete;
