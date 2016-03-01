@@ -17,7 +17,19 @@
 enum {
   H5F_ACC_TRUNC, H5F_ACC_EXCL, H5F_ACC_RDONLY, H5F_ACC_RDWR, H5F_ACC_DEBUG
 };
+enum H5F_libver_t {
+  H5F_LIBVER_EARLIEST, H5F_LIBVER_18, H5F_LIBVER_LATEST
+};
+enum H5F_close_degree_t {
+  H5F_CLOSE_DEFAULT, H5F_CLOSE_WEAK, H5F_CLOSE_SEMI, H5F_CLOSE_STRONG
+};
 namespace H5 {
+  struct FileCreatPropList {
+  };
+  struct FileAccPropList {
+    void setFcloseDegree(H5F_close_degree_t degree);
+    void setLibverBounds(H5F_libver_t libver_low, H5F_libver_t libver_high);
+  };
   struct DataSpace {
     %extend {
       static DataSpace make(const std::vector<int>& idims) {
@@ -78,7 +90,12 @@ namespace H5 {
     Group createGroup(const std::string& name);
   };
   struct H5File: CommonFG {
-    H5File(const std::string& filename, unsigned int flags);
+    H5File();
+    H5File(const std::string& filename, unsigned int flags,
+      const FileCreatPropList& create_plist,
+      const FileAccPropList& access_plist);
+    void openFile(const std::string& filename, unsigned int flags,
+      const FileAccPropList& access_plist);
     void close();
   };
   struct Group: CommonFG {
