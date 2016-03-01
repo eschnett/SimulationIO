@@ -339,7 +339,7 @@ struct CoordinateSystem {
   std::shared_ptr<CoordinateField>
     createCoordinateField(string name,
                           int direction,
-                          std::shared_ptr<Field>& coordinatefield);
+                          std::shared_ptr<Field>& field);
 };
 
 struct DiscreteField {
