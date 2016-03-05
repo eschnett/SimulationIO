@@ -16,8 +16,28 @@ project1 = createProject("project1")
 
 createStandardTensorTypes(project1)
 @test length(tensortypes(project1)) == 15
-tensortype1 = tensortypes(project1)["Vector3D"]
-#TODO: check tensortypes and tensorcomponents
+tensortype1 = tensortypes(project1)["Scalar1D"]
+@test dimension(tensortype1) == 1
+@test rank(tensortype1) == 0
+tensortype2 = tensortypes(project1)["Vector2D"]
+@test dimension(tensortype2) == 2
+@test rank(tensortype2) == 1
+tensortype3 = tensortypes(project1)["SymmetricTensor3D"]
+@test dimension(tensortype3) == 3
+@test rank(tensortype3) == 2
+
+tensorcomponent1 = storage_indices(tensortype1)[0]
+@test name(get(tensortype(tensorcomponent1))) == name(tensortype1)
+@test storage_index(tensorcomponent1) == 0
+@test indexvalues(tensorcomponent1) == []
+tensorcomponent2 = storage_indices(tensortype2)[1]
+@test name(get(tensortype(tensorcomponent2))) == name(tensortype2)
+@test storage_index(tensorcomponent2) == 1
+@test indexvalues(tensorcomponent2) == [1]
+tensorcomponent3 = storage_indices(tensortype3)[2]
+@test name(get(tensortype(tensorcomponent3))) == name(tensortype3)
+@test storage_index(tensorcomponent3) == 2
+@test indexvalues(tensorcomponent3) == [0,2]
 
 parameter1 = createParameter(project1, "parameter1")
 @test length(parameters(project1)) == 1
@@ -26,20 +46,11 @@ parameter1 = createParameter(project1, "parameter1")
 @test isempty(parametervalues(parameter1))
 @test invariant(parameter1)
 
-#TODO parametervalue1 = createParameterValue(parameter1, "parametervalue1")
-#TODO @test length(parametervalues(parameter1)) == 1
-
-#TODO info(project1)
-#TODO info(parameter1)
-#TODO info(parametervalue1)
-#TODO parameter(parametervalue1)
-#TODO get(parameter(parametervalue1))
-#TODO name(get(parameter(parametervalue1)))
-#TODO name(parameter1)
-
-#TODO @test name(get(parameter(parametervalue1))) == name(parameter1)
-#TODO @test isempty(configurations(parametervalue1))
-#TODO @test invariant(parametervalue1)
+parametervalue1 = createParameterValue(parameter1, "parametervalue1")
+@test length(parametervalues(parameter1)) == 1
+@test name(get(parameter(parametervalue1))) == name(parameter1)
+@test isempty(configurations(parametervalue1))
+@test invariant(parametervalue1)
 
 configuration1 = createConfiguration(project1, "configuration1")
 @test length(configurations(project1)) == 1
@@ -76,11 +87,11 @@ tangentspace1 = createTangentSpace(project1, "tangentspace1", configuration1, 3)
 @test invariant(tangentspace1)
 
 field1 = createField(project1, "field1", configuration1, manifold1,
-    tangentspace1, tensortype1)
+    tangentspace1, tensortype3)
 @test length(fields(project1)) == 1
 @test name(field1) == "field1"
 @test name(get(project(field1))) == name(project1)
 @test name(configuration(field1)) == name(configuration1)
 @test name(manifold(field1)) == name(manifold1)
 @test name(tangentspace(field1)) == name(tangentspace1)
-@test name(tensortype(field1)) == name(tensortype1)
+@test name(tensortype(field1)) == name(tensortype3)

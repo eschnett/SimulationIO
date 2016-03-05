@@ -142,6 +142,10 @@ using PyCall2
 
 
 
+import Base: rank
+
+
+
 @wrap_type Basis
 @wrap_type BasisVector
 @wrap_type Configuration
