@@ -2,6 +2,9 @@
 
 using PyCall
 
+# Add current directory to Python module search path
+unshift!(PyVector(pyimport("sys")["path"]), "")
+
 @pyimport H5
 @pyimport RegionCalculus as RC
 @pyimport SimulationIO as SIO
@@ -128,7 +131,9 @@ for manifold in project[:manifolds][:values]()
         message("combined_region: $(combined_region[:__str__]())")
         combined_active = RC.iregion(manifold[:dimension])
         for active in actives
-            combined_active = combined_active[:union](active)
+            if active[:valid]()
+                combined_active = combined_active[:union](active)
+            end
         end
         message("combined_active: $(combined_region[:__str__]())")
 
@@ -332,6 +337,8 @@ for field2 in project2[:fields][:values]()
                         data
                 end
                 outdent()
+
+                close(dataset)
 
             end
         end
