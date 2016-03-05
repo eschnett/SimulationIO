@@ -251,39 +251,6 @@ struct TensorType;
 
 
 
-// Use __getitem__ instead
-//TODO %{
-//TODO template<typename K, typename T>
-//TODO const T& map_get(const std::map<K,T>& m, const K& k) { return m.at(k); }
-//TODO %}
-//TODO template<typename K, typename T>
-//TODO const T& map_get(const std::map<K,T>& m, const K& k) { return m.at(k); }
-
-//TODO %template(map_get_string_Parameter)
-//TODO   map_get<string, std::shared_ptr<Parameter> >;
-//TODO %template(map_get_string_ParameterValue)
-//TODO   map_get<string, std::shared_ptr<ParameterValue> >;
-//TODO %template(map_get_string_TensorType)
-//TODO   map_get<string, std::shared_ptr<TensorType> >;
-
-/*
-template<typename K, typename T>
-typename map<K,T>::const_iterator map_start(const std::map<K,T>& m) {
-  return m.begin();
-}
-template<typename K, typename T>
-bool map_done(const std::map<K,T>& m,
-              const typename std::map<K,T>::const_iterator& mi) {
-  return mi == m.end();
-}
-template<typename K, typename T>
-std::pair<T, typename std::map<K,T>::const_iterator>
-map_next(const std::map<K,T>& m,
-         const typename std::map<K,T>::const_iterator& mi) {
-  return std::make_pair(*mi, ++mi);
-}
-*/
-
 %nodefaultctor;
 
 struct Basis {
