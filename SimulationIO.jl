@@ -12,7 +12,7 @@ import Base: isempty, length
 isempty(map::PyMap) = isempty(map.pyobj)
 length(map::PyMap) = length(map.pyobj)
 import Base: getindex, haskey
-getindex{K,V}(map::PyMap{K,V}, key) = V(map_get(map.pyobj, K(key)))
+getindex{K,V}(map::PyMap{K,V}, key) = V(map.pyobj[:__getitem__](K(key)))
 haskey(map::PyMap, key) = map.pyobj[:count](K(key)) != 0
 #TODO import Base: start, next
 #TODO start{K,V}(map::PyMap{K,V}) = ... state
@@ -115,6 +115,19 @@ export H5F_ACC_RDONLY
 
 export H5File
 H5File(filename::AbstractString, acc) = H5.H5File(filename, acc)
+
+end
+
+
+
+module RegionCalculus
+
+using PyCall
+using PyCall2
+
+@pyimport RegionCalculus as RC
+
+@wrap_type IBox
 
 end
 
@@ -284,7 +297,7 @@ using PyCall2
 
 
 @wrap_field DiscretizationBlock.name::AbstractString
-#TODO @wrap_field DiscretizationBlock.region::IBox
+@wrap_field DiscretizationBlock.region::IBox
 #TODO @wrap_field DiscretizationBlock.active::IRegion
 @wrap_field DiscretizationBlock.discretization::PyWeakPtr{Discretization}
 
