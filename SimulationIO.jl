@@ -28,7 +28,7 @@ immutable PyWeakPtr{T}
 end
 import Base: isnull, get
 isnull{T}(ptr::PyWeakPtr{T}) = ptr.pyobj[:expired]()::Bool
-function get{T}(ptr::PyWeakPtr{T})
+function getindex{T}(ptr::PyWeakPtr{T})
     @assert !isnull(ptr)
     T(ptr.pyobj[:lock]())
  end
