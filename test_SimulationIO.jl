@@ -75,4 +75,12 @@ tangentspace1 = createTangentSpace(project1, "tangentspace1", configuration1, 3)
 @test isempty(fields(tangentspace1))
 @test invariant(tangentspace1)
 
-field1 = createField(project1, "field1", configuration1, manifold1, tangentspace1,
+field1 = createField(project1, "field1", configuration1, manifold1,
+    tangentspace1, tensortype1)
+@test length(fields(project1)) == 1
+@test name(field1) == "field1"
+@test name(get(project(field1))) == name(project1)
+@test name(configuration(field1)) == name(configuration1)
+@test name(manifold(field1)) == name(manifold1)
+@test name(tangentspace(field1)) == name(tangentspace1)
+@test name(tensortype(field1)) == name(tensortype1)
