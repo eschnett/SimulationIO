@@ -1,9 +1,11 @@
 module PyCall2
 
-export PyMap, PyWeakPtr
-export @wrap_type, @wrap_field, @wrap_memfun
+export PyWrapped, PyMap, PyWeakPtr
+export @wrap_type, @wrap_ctor, @wrap_field, @wrap_memfun
 
 using PyCall
+
+abstract PyWrapped
 
 immutable PyMap{K,V}
     pyobj::PyObject
@@ -35,15 +37,54 @@ function getindex{T}(ptr::PyWeakPtr{T})
 # get{T}(ptr::PyWeakPtr{T}, other) = T(if !isnull, other ...)
 
 unwrap(obj) = obj
+unwrap(objs::Array) = map(unwrap, objs)
+unwrap(objs::Tuple) = map(unwrap, objs)
+
+# wrap(::Type, obj) = obj
+# wrap{T<:PyWrapped}(::Type{T}, obj) = T(obj)
+
+# convert that also works for Vectors
+convert1{T}(::Type{T}, obj) = T(obj)
+convert1{T}(::Type{Vector{T}}, obj) = map(x -> convert1(T,x), collect(obj))
 
 macro wrap_type(decl::Symbol)
     typesym::Symbol = decl
     esc(quote
         export $typesym
-        immutable $typesym
+        immutable $typesym <: PyWrapped
             pyobj::PyObject
         end
         PyCall2.unwrap(obj::$typesym) = obj.pyobj
+    end)
+end
+
+macro wrap_ctor(decl::Expr)
+    @assert decl.head === :call
+    @assert decl.args[1].head === :(.)
+    @assert length(decl.args[1].args) == 2
+    pkg::Symbol = decl.args[1].args[1]
+    @assert decl.args[1].args[2].head === :quote
+    @assert length(decl.args[1].args[2].args) == 1
+    typesym::Symbol = decl.args[1].args[2].args[1]
+    args = decl.args[2:end]
+    argnames = []
+    argtypes = []
+    for arg in args
+        if isa(arg, Symbol)
+            push!(argnames, arg)
+            push!(argtypes, :Any)
+        else
+            @assert isa(arg, Expr)
+            @assert arg.head === :(::)
+            @assert length(arg.args) == 2
+            push!(argnames, arg.args[1])
+            push!(argtypes, arg.args[2])
+        end
+    end
+    esc(quote
+        $typesym($(args...)) =
+            $typesym($pkg.$typesym($([:(PyCall2.unwrap($argname))
+                                      for argname in argnames]...)))
     end)
 end
 
@@ -60,7 +101,7 @@ macro wrap_field(decl::Expr)
     esc(quote
         export $fieldsym
         $fieldsym(obj::$objtypesym) =
-            $rettype(obj.pyobj[$(QuoteNode(fieldsym))])
+            PyCall2.convert1($rettype, obj.pyobj[$(QuoteNode(fieldsym))])
     end)
 end
 
@@ -93,9 +134,8 @@ macro wrap_memfun(decl::Expr)
 
     esc(quote
         export $memfunsym
-        $(Expr(:call, memfunsym, :(obj::$objtypesym),
-                declargs...)) =
-            $rettypesym(
+        $(Expr(:call, memfunsym, :(obj::$objtypesym), declargs...)) =
+            PyCall2.convert1($rettypesym,
                 $(Expr(:call, :(obj.pyobj[$(QuoteNode(memfunsym))]),
                     callargs...)))
     end)
@@ -127,7 +167,116 @@ using PyCall2
 
 @pyimport RegionCalculus as RC
 
-@wrap_type IBox
+import Base: -, *, &, |, $, <<, >>, ==, !=, <=, >=, <, >
+import Base: contains, isempty, rank, show, size
+
+
+
+@wrap_type ibox
+typealias IBox ibox
+export IBox
+
+@wrap_ctor RC.ibox()
+@wrap_ctor RC.ibox(d::Int)
+@wrap_ctor RC.ibox(lo::Vector{Int}, hi::Vector{Int})
+
+@wrap_memfun IBox.valid()::Bool
+@wrap_memfun IBox.rank()::Int
+@wrap_memfun IBox.empty()::Bool
+isempty(b::IBox) = empty(b)
+@wrap_memfun IBox.lower()::Vector{Int}
+@wrap_memfun IBox.upper()::Vector{Int}
+@wrap_memfun IBox.shape()::Vector{Int}
+@wrap_memfun IBox.size()::Int
+
+@wrap_memfun IBox.__rshift__(p::Vector{Int})::IBox
+>>(b::IBox, p::Vector{Int}) = __rshift__(b, p)
+@wrap_memfun IBox.__lshift__(p::Vector{Int})::IBox
+<<(b::IBox, p::Vector{Int}) = __lshift__(b, p)
+@wrap_memfun IBox.__mul__(p::Vector{Int})::IBox
+*(b::IBox, p::Vector{Int}) = __mul__(b, p)
+
+@wrap_memfun IBox.__eq__(b::IBox)::Bool
+==(b1::IBox, b2::IBox) = __eq__(b1, b2)
+@wrap_memfun IBox.__ne__(b::IBox)::Bool
+!=(b1::IBox, b2::IBox) = __ne__(b1, b2)
+@wrap_memfun IBox.__le__(b::IBox)::Bool
+<=(b1::IBox, b2::IBox) = __le__(b1, b2)
+@wrap_memfun IBox.__ge__(b::IBox)::Bool
+>=(b1::IBox, b2::IBox) = __ge__(b1, b2)
+@wrap_memfun IBox.__lt__(b::IBox)::Bool
+<(b1::IBox, b2::IBox) = __lt__(b1, b2)
+@wrap_memfun IBox.__gt__(b::IBox)::Bool
+>(b1::IBox, b2::IBox) = __gt__(b1, b2)
+@wrap_memfun IBox.contains(p::Vector{Int})::Bool
+@wrap_memfun IBox.isdisjoint(b::IBox)::Bool
+@wrap_memfun IBox.issubset(b::IBox)::Bool
+@wrap_memfun IBox.issuperset(b::IBox)::Bool
+@wrap_memfun IBox.is_strict_subset(b::IBox)::Bool
+@wrap_memfun IBox.is_strict_superset(b::IBox)::Bool
+
+@wrap_memfun IBox.bounding_box(b::IBox)::IBox
+@wrap_memfun IBox.__and__(b::IBox)::IBox
+(&)(b1::IBox, b2::IBox) = __and__(b1, b2)
+@wrap_memfun IBox.intersection(p::IBox)::IBox
+
+@wrap_memfun IBox.__str__()::AbstractString
+show(io::IO, b::IBox) = print(io, __str__(b))
+
+
+
+@wrap_type iregion
+typealias IRegion iregion
+export IRegion
+
+@wrap_ctor RC.iregion()
+@wrap_ctor RC.iregion(d::Int)
+@wrap_ctor RC.iregion(b::IBox)
+@wrap_ctor RC.iregion(bs::Vector{IBox})
+@wrap_memfun IRegion.boxes()::Vector{IBox}
+
+@wrap_memfun IRegion.valid()::Bool
+@wrap_memfun IRegion.rank()::Int
+@wrap_memfun IRegion.empty()::Bool
+isempty(r::IRegion) = empty(r)
+@wrap_memfun IRegion.size()::Int
+
+@wrap_memfun IRegion.bounding_box()::IBox
+@wrap_memfun IRegion.__and__(r::IRegion)::IRegion
+(&)(r1::IRegion, r2::IRegion) = __and__(r1, r2)
+@wrap_memfun IRegion.__sub__(r::IRegion)::IRegion
+(-)(r1::IRegion, r2::IRegion) = __sub__(r1, r2)
+@wrap_memfun IRegion.__or__(r::IRegion)::IRegion
+(|)(r1::IRegion, r2::IRegion) = __or__(r1, r2)
+@wrap_memfun IRegion.__xor__(r::IRegion)::IRegion
+($)(r1::IRegion, r2::IRegion) = __xor__(r1, r2)
+@wrap_memfun IRegion.intersection(r::IRegion)::IRegion
+@wrap_memfun IRegion.difference(r::IRegion)::IRegion
+@wrap_memfun IRegion.union(r::IRegion)::IRegion
+@wrap_memfun IRegion.symmetric_difference(r::IRegion)::IRegion
+
+@wrap_memfun IRegion.contains(p::Vector{Int})::Bool
+@wrap_memfun IRegion.isdisjoint(r::IRegion)::Bool
+
+@wrap_memfun IRegion.__le__(r::IRegion)::Bool
+<=(r1::IRegion, r2::IRegion) = __le__(r1, r2)
+@wrap_memfun IRegion.__ge__(r::IRegion)::Bool
+>=(r1::IRegion, r2::IRegion) = __ge__(r1, r2)
+@wrap_memfun IRegion.__lt__(r::IRegion)::Bool
+<(r1::IRegion, r2::IRegion) = __lt__(r1, r2)
+@wrap_memfun IRegion.__gt__(r::IRegion)::Bool
+>(r1::IRegion, r2::IRegion) = __gt__(r1, r2)
+@wrap_memfun IRegion.issubset(r::IRegion)::Bool
+@wrap_memfun IRegion.issuperset(r::IRegion)::Bool
+@wrap_memfun IRegion.is_strict_subset(r::IRegion)::Bool
+@wrap_memfun IRegion.is_strict_superset(r::IRegion)::Bool
+@wrap_memfun IRegion.__eq__(r::IRegion)::Bool
+==(r1::IRegion, r2::IRegion) = __eq__(r1, r2)
+@wrap_memfun IRegion.__ne__(r::IRegion)::Bool
+!=(r1::IRegion, r2::IRegion) = __ne__(r1, r2)
+
+@wrap_memfun IRegion.__str__()::AbstractString
+show(io::IO, r::IRegion) = print(io, __str__(r))
 
 end
 

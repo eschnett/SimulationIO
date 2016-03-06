@@ -1,7 +1,96 @@
 unshift!(LOAD_PATH, ".")
 
 using SimulationIO
+using H5
+using RegionCalculus
 using Base.Test
+
+
+
+b1 = IBox()
+b2 = IBox(3)
+b3 = IBox([0,0,0], [1,1,1])
+@test string(b1) == "dbox()"
+@test string(b2) == "([0,0,0]:[0,0,0])"
+@test string(b3) == "([0,0,0]:[1,1,1])"
+@test !valid(b1)
+@test valid(b2)
+@test valid(b3)
+@test rank(b2) == 3
+@test rank(b3) == 3
+@test isempty(b2)
+@test !isempty(b3)
+@test lower(b3) == [0,0,0]
+@test upper(b3) == [1,1,1]
+@test shape(b3) == [1,1,1]
+@test size(b2) == 0
+@test size(b3) == 1
+@test isempty(b2 >> [1,2,3])
+@test string(b3 >> [1,2,3]) == "([1,2,3]:[2,3,4])"
+@test string(b3 << [1,2,3]) == "([-1,-2,-3]:[0,-1,-2])"
+@test string(b3 * [1,2,3]) == "([0,0,0]:[1,2,3])"
+@test b2 == b2
+@test b3 == b3
+@test b2 != b3
+@test b2 <= b3
+@test b3 >= b2
+@test b2 < b3
+@test b3 > b2
+@test !contains(b2, [0,0,0])
+@test contains(b3, [0,0,0])
+@test !contains(b3, [1,1,1])
+@test isdisjoint(b3, b3 >> [1,1,1])
+@test bounding_box(b3, b3 >> [1,1,1]) == IBox([0,0,0], [2,2,2])
+@test b3 & (b3 * [2,2,2]) == b3
+
+r1 = IRegion()
+r2 = IRegion(3)
+r3 = IRegion(b3)
+r4 = IRegion([b3, b3 >> [1,1,1]])
+@test string(r1) == "dregion()"
+@test string(r2) == "{}"
+@test string(r3) == "{([0,0,0]:[1,1,1])}"
+@test string(r4) == "{([0,0,0]:[1,1,1]),([1,1,1]:[2,2,2])}"
+@test !valid(r1)
+@test valid(r2)
+@test valid(r3)
+@test valid(r4)
+@test rank(r2) == 3
+@test rank(r3) == 3
+@test rank(r4) == 3
+@test isempty(r2)
+@test !isempty(r3)
+@test !isempty(r4)
+@test size(r2) == 0
+@test size(r3) == 1
+@test size(r4) == 2
+@test isempty(bounding_box(r2))
+@test bounding_box(r3) == b3
+@test bounding_box(r4) == b3 * [2,2,2]
+@test r3 & r4 == r3
+@test r4 - r3 == IRegion(b3 >> [1,1,1])
+@test r3 - r4 == r2
+@test r3 | r4 == r4
+@test r4 $ r3 == IRegion(b3 >> [1,1,1])
+@test contains(r3, [0,0,0])
+@test contains(r4, [1,1,1])
+@test !contains(r2, [1,1,1])
+@test !contains(r3, [1,1,1])
+@test isdisjoint(r3, r2)
+@test r2 <= r2
+@test r3 <= r4
+@test r2 >= r2
+@test r4 >= r3
+@test r2 < r3
+@test r3 < r4
+@test r3 > r2
+@test r4 > r3
+@test r2 == r2
+@test r2 == r2
+@test r2 != r3
+@test r2 != r4
+
+
 
 project1 = createProject("project1")
 @test name(project1) == "project1"
