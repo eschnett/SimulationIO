@@ -107,7 +107,9 @@ for p in range(ngrids):
 
 # Write file
 filename = "python-example.s5"
-file = H5.H5File(filename, H5.H5F_ACC_TRUNC)
+fapl = H5.FileAccPropList()
+fapl.setLibverBounds(H5.H5F_LIBVER_LATEST, H5.H5F_LIBVER_LATEST)
+file = H5.H5File(filename, H5.H5F_ACC_TRUNC, H5.FileCreatPropList(), fapl)
 project.write(file)
 
 # Write data

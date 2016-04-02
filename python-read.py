@@ -15,7 +15,8 @@ import sys
 
 # Read project
 filename = "example.s5"
-file = H5.H5File(filename, H5.H5F_ACC_RDONLY)
+file = H5.H5File(filename, H5.H5F_ACC_RDONLY, H5.FileCreatPropList(),
+                 H5.FileAccPropList())
 project = readProject(file)
 file = h5py.File(filename, 'r')
 
