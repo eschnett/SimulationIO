@@ -91,9 +91,13 @@ namespace H5 {
   };
   struct H5File: CommonFG {
     H5File();
+    H5File(const std::string& filename, unsigned int flags);
+    H5File(const std::string& filename, unsigned int flags,
+      const FileCreatPropList& create_plist);
     H5File(const std::string& filename, unsigned int flags,
       const FileCreatPropList& create_plist,
       const FileAccPropList& access_plist);
+    void openFile(const std::string& filename, unsigned int flags);
     void openFile(const std::string& filename, unsigned int flags,
       const FileAccPropList& access_plist);
     void close();
