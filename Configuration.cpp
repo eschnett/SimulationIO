@@ -91,6 +91,8 @@ void Configuration::write(const H5::CommonFG &loc,
                                   "/parametervalues/" + val.second->name +
                                   "/configurations",
                        name, group, ".");
+    // TODO: Create soft links instead of hard links to avoid
+    // confusion when reading HDF5 files
   }
   group.createGroup("bases");
   group.createGroup("coordinatesystems");

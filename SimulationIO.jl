@@ -1,3 +1,6 @@
+# TODO: Split this file (and its tests) into separate files, one for
+# each module
+
 module PyCall2
 
 export PyWrapped, PyMap, PyWeakPtr

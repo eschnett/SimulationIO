@@ -491,6 +491,10 @@ struct Project {
 };
 std::shared_ptr<Project> createProject(const string& name);
 std::shared_ptr<Project> readProject(const H5::CommonFG &loc);
+// TODO: Support
+//    import h5py
+//    h5py.File(name,readwritetype).id.id
+// Do this as well for all other functions taking HDF5 objects as arguments.
 
 struct SubDiscretization {
   string name;
