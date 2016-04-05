@@ -7,8 +7,8 @@
 #include <memory>
 #include <sstream>
 #include <string>
-#include <vector>
 #include <utility>
+#include <vector>
 
 namespace SimulationIO {
 

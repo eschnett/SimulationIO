@@ -2050,8 +2050,7 @@ template <typename T> struct dpoint {
   dpoint &operator=(dpoint &&p) = default;
 
   template <int D>
-  dpoint(const point<T, D> &p)
-      : val(make_unique<wpoint<T, D>>(p)) {}
+  dpoint(const point<T, D> &p) : val(make_unique<wpoint<T, D>>(p)) {}
   dpoint(const vpoint<T> &p) : val(p.copy()) {}
   dpoint(const unique_ptr<vpoint<T>> &val) {
     if (val)
@@ -2062,8 +2061,7 @@ template <typename T> struct dpoint {
   explicit dpoint(int d) : val(vpoint<T>::make(d)) {}
   dpoint(int d, const T &x) : val(vpoint<T>::make(d, x)) {}
   template <size_t D>
-  dpoint(const array<T, D> &p)
-      : val(make_unique<wpoint<T, D>>(p)) {}
+  dpoint(const array<T, D> &p) : val(make_unique<wpoint<T, D>>(p)) {}
   dpoint(const vector<T> &p) : val(vpoint<T>::make(p)) {}
   operator vector<T>() const { return vector<T>(*val); }
   template <typename U> dpoint(const dpoint<U> &p) {
@@ -2356,8 +2354,7 @@ template <typename T> struct dregion {
   // dregion &operator=(dregion &&r) = default;
 
   template <int D>
-  dregion(const region<T, D> &r)
-      : val(make_unique<wregion<T, D>>(r)) {}
+  dregion(const region<T, D> &r) : val(make_unique<wregion<T, D>>(r)) {}
   dregion(const vregion<T> &r) : val(r.copy()) {}
   dregion(const unique_ptr<vregion<T>> &val) {
     if (val)

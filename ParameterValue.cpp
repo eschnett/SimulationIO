@@ -1,7 +1,7 @@
 #include "ParameterValue.hpp"
 
-#include "Parameter.hpp"
 #include "Configuration.hpp"
+#include "Parameter.hpp"
 
 #include "H5Helpers.hpp"
 
@@ -61,7 +61,8 @@ void ParameterValue::setValue(const string &s) {
 
 ostream &ParameterValue::output(ostream &os, int level) const {
   os << indent(level) << "ParameterValue " << quote(name) << ": Parameter "
-     << quote(parameter.lock()->name) << "\n" << indent(level + 1) << "value: ";
+     << quote(parameter.lock()->name) << "\n"
+     << indent(level + 1) << "value: ";
   switch (value_type) {
   case type_empty:
     os << "empty";

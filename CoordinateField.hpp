@@ -1,8 +1,8 @@
 #ifndef COORDINATEFIELD_HPP
 #define COORDINATEFIELD_HPP
 
-#include "CoordinateSystem.hpp"
 #include "Common.hpp"
+#include "CoordinateSystem.hpp"
 #include "Field.hpp"
 
 #include <H5Cpp.h>

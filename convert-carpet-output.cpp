@@ -213,7 +213,8 @@ int main(int argc, char **argv) {
     have_error = true;
   }
   if (have_error) {
-    cerr << "Synposis:\n" << argv[0]
+    cerr << "Synposis:\n"
+         << argv[0]
          << " [--copy|--extlink] <output file name> {<input file name>}\n";
     return 1;
   }
