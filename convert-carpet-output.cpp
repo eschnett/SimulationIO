@@ -277,20 +277,46 @@ int main(int argc, char **argv) {
           // Determine field name and tensor type
           string fieldname(varname);
           vector<int> tensorindices;
-          if (fieldname.substr(0, 4) == "GRID") {
+          if (fieldname.substr(0, 5) == "GRID:") {
             // Special case for coordinates: do nothing, treat them as
             // scalars
           } else {
-            while (!fieldname.empty() && *fieldname.rbegin() >= 'x' &&
-                   *fieldname.rbegin() <= 'z') {
-              tensorindices.push_back(*fieldname.rbegin() - 'x');
-              fieldname = fieldname.substr(0, fieldname.length() - 1);
+            // There are three different conventions to represent
+            // tensors in Cactus:
+            // 1. Suffix x, y, z
+            // 2. Suffix [0], [1], [2]
+            // 3. Suffix 1, 2, 3
+            ptrdiff_t pos = fieldname.length() - 1;
+            if (pos >= 0) {
+              if (fieldname[pos] >= 'x' && fieldname[pos] <= 'z') {
+                while (pos >= 0 && fieldname[pos] >= 'x' &&
+                       fieldname[pos] <= 'z') {
+                  tensorindices.push_back(fieldname[pos] - 'x');
+                  --pos;
+                }
+              } else if (fieldname[pos] >= '1' && fieldname[pos] <= '9') {
+                while (pos >= 0 && fieldname[pos] >= '1' &&
+                       fieldname[pos] <= '9') {
+                  tensorindices.push_back(fieldname[pos] - '1');
+                  --pos;
+                }
+              } else if (fieldname[pos] == ']') {
+                --pos;
+                assert(pos >= 0);
+                assert(fieldname[pos] >= '0' && fieldname[pos] <= '9');
+                tensorindices.push_back(fieldname[pos] - '0');
+                --pos;
+                assert(pos >= 0);
+                assert(fieldname[pos] == '[');
+                --pos;
+              }
             }
-            while (!fieldname.empty() && *fieldname.rbegin() == ':') {
-              fieldname = fieldname.substr(0, fieldname.length() - 1);
+            while (pos >= 0 && fieldname[pos] == ':') {
+              --pos;
             }
+            assert(pos >= 0);
+            fieldname = fieldname.substr(0, pos + 1);
           }
-          assert(!fieldname.empty());
           reverse(tensorindices.begin(), tensorindices.end());
           const int tensorrank = tensorindices.size();
           string tensortypename;
