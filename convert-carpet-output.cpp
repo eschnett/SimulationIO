@@ -243,7 +243,7 @@ int main(int argc, char **argv) {
   // Discretization for Manifold
   map<string, map<int, vector<shared_ptr<Discretization>>>>
       discretizations; // [configuration][mapindex][reflevel]
-  map<string, map<int, map<int, vector<double>>>>
+  map<string, map<int, map<int, vector<double>>>> ideltas,
       ioffsets; // [configuration][mapindex][reflevel]
   // Basis for TangentSpace
   auto basis = tangentspace->createBasis("Cartesian", global_configuration);
@@ -359,6 +359,11 @@ int main(int argc, char **argv) {
           assert(H5::readAttribute<int>(dataset, "group_timelevel") ==
                  timelevel);
           assert(H5::readAttribute<int>(dataset, "level") == refinementlevel);
+          vector<double> idelta(manifold->dimension);
+          auto idelta1 = H5::readAttribute<vector<hssize_t>>(dataset, "delta");
+          assert(int(idelta1.size()) == manifold->dimension);
+          for (int d = 0; d < int(idelta.size()); ++d)
+            idelta.at(d) = double(idelta1.at(d));
           vector<double> ioffset(manifold->dimension);
           auto ioffsetnum =
               H5::readAttribute<vector<hssize_t>>(dataset, "ioffset");
@@ -459,6 +464,7 @@ int main(int argc, char **argv) {
           assert(tensorcomponent);
 
           // Get discretization
+          ideltas[configuration->name][mapindex][refinementlevel] = idelta;
           ioffsets[configuration->name][mapindex][refinementlevel] = ioffset;
           if (!discretizations.count(configuration->name))
             discretizations[configuration->name];
@@ -636,30 +642,44 @@ int main(int argc, char **argv) {
     for (const auto &i0 : ioffsets) {
       const auto &configurationname = i0.first;
       const auto &ioffsets1 = i0.second;
+      const auto &ideltas1 = ideltas.at(configurationname);
       for (const auto &i1 : ioffsets1) {
         const auto &mapindex = i1.first;
         const auto &ioffsets2 = i1.second;
+        const auto &ideltas2 = ideltas1.at(mapindex);
         for (const auto &i2 : ioffsets2) {
           const auto &refinementlevel = i2.first;
           const auto &ioffset = i2.second;
+          const auto &idelta = ideltas2.at(refinementlevel);
 
           // Skip the coarsest grid that exists at this iteration
           if (ioffsets2.count(refinementlevel - 1)) {
             string subdiscretizationname;
             {
               ostringstream buf;
-              // TODO: Only output map for multi-block simulations
               buf << configurationname << "-map." << setfill('0')
                   << setw(width_m) << mapindex << "-level." << setfill('0')
                   << setw(width_rl) << refinementlevel;
               subdiscretizationname = buf.str();
             }
             if (!manifold->subdiscretizations.count(subdiscretizationname)) {
+              // origin0 = origin + delta0 * offset0
+              // origin1 = origin + delta1 * offset1
+              // x0 = origin0 + i0 * delta0
+              // x1 = origin1 + i1 * delta1
+              // x0 = x1
+              // (i1 + offset1) * delta1 = (i0 + offset0) * delta0
+              // i1 = (offset0 + i0) * delta0 / delta1 - offset1
+              // i1 = offset0 * delta0 / delta1 - offset1 + i0 * delta0 / delta1
+              const auto &coarse_idelta = ideltas2.at(refinementlevel - 1);
               const auto &coarse_ioffset = ioffsets2.at(refinementlevel - 1);
+              vector<double> factor(manifold->dimension);
+              for (int d = 0; d < int(factor.size()); ++d)
+                factor.at(d) = coarse_idelta.at(d) / idelta.at(d);
               vector<double> offset(ioffset.size());
               for (int d = 0; d < int(offset.size()); ++d)
-                offset.at(d) = ioffset.at(d) - coarse_ioffset.at(d);
-              vector<double> factor(manifold->dimension, 2);
+                offset.at(d) =
+                    ioffset.at(d) - factor.at(d) * coarse_ioffset.at(d);
               auto subdiscretization = manifold->createSubDiscretization(
                   subdiscretizationname, discretizations.at(configurationname)
                                              .at(mapindex)
