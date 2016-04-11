@@ -360,7 +360,7 @@ int main(int argc, char **argv) {
                  timelevel);
           assert(H5::readAttribute<int>(dataset, "level") == refinementlevel);
           vector<double> idelta(manifold->dimension);
-          auto idelta1 = H5::readAttribute<vector<hssize_t>>(dataset, "delta");
+          auto idelta1 = H5::readAttribute<vector<double>>(dataset, "delta");
           assert(int(idelta1.size()) == manifold->dimension);
           for (int d = 0; d < int(idelta.size()); ++d)
             idelta.at(d) = double(idelta1.at(d));
@@ -673,7 +673,7 @@ int main(int argc, char **argv) {
               // i1 = offset0 * delta0 / delta1 - offset1 + i0 * delta0 / delta1
               const auto &coarse_idelta = ideltas2.at(refinementlevel - 1);
               const auto &coarse_ioffset = ioffsets2.at(refinementlevel - 1);
-              vector<double> factor(manifold->dimension);
+              vector<double> factor(idelta.size());
               for (int d = 0; d < int(factor.size()); ++d)
                 factor.at(d) = coarse_idelta.at(d) / idelta.at(d);
               vector<double> offset(ioffset.size());
