@@ -329,7 +329,7 @@ inline Attribute readAttribute(const H5Location &loc, const std::string &name,
   auto type = DataType(PredType::STD_REF_OBJ);
   hobj_ref_t reference;
   attr.read(type, &reference);
-  auto hid = H5Rdereference(loc.getId(), H5R_OBJECT, &reference);
+  auto hid = H5Rdereference1(loc.getId(), H5R_OBJECT, &reference);
   assert(hid >= 0);
   H5O_type_t obj_type;
   auto herr = H5Rget_obj_type(loc.getId(), H5R_OBJECT, &reference, &obj_type);
