@@ -380,7 +380,6 @@ struct iregion {
   iregion(const std::vector<ibox>& bs);
   %extend {
     std::vector<ibox> boxes() const {
-      std::cerr << "std::vector<ibox> boxes() const\n";
       std::vector<ibox> rs = *self;
       return rs;
     }
