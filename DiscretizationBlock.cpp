@@ -23,6 +23,7 @@ void read_active(const H5::H5Location &group,
                             ->project.lock()
                             ->boxtypes.at(D);
   assert(sizeof(boxes[0]) == boxtype.getSize());
+#if 0
   H5E_auto2_t func;
   void *client_data;
   H5::Exception::getAutoPrint(func, &client_data);
@@ -35,7 +36,14 @@ void read_active(const H5::H5Location &group,
   } catch (H5::AttributeIException ex) {
     // do nothing
   }
-  H5::Exception::setAutoPrint(func, &client_data);
+  H5::Exception::setAutoPrint(func, client_data);
+#endif
+  if (group.attrExists("active")) {
+    H5::readAttribute(group, "active", boxes, boxtype);
+    active = region_t(
+        RegionCalculus::make_unique<RegionCalculus::wregion<hssize_t, D>>(
+            RegionCalculus::region<hssize_t, D>(std::move(boxes))));
+  }
 }
 }
 
