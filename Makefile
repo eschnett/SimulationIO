@@ -125,11 +125,11 @@ _%.so: %_wrap.o $(SIO_SRCS:%.cpp=%.o)
 
 # Taken from <http://mad-scientist.net/make/autodep.html> as written by Paul D.
 # Smith <psmith@gnu.org>, originally developed by Tom Tromey <tromey@cygnus.com>
-PROCESS_DEPENDENCIES = \
-  { \
-  	perl -p -e 's{$*.o.tmp}{$*.o}g' < $*.o.d && \
-  	perl -p -e 's{\#.*}{};s{^[^:]*: *}{};s{ *\\$$}{};s{$$}{ :}' < $*.o.d; \
-  } > $*.d && \
+PROCESS_DEPENDENCIES =							  \
+  {									  \
+    perl -p -e 's{$*.o.tmp}{$*.o}g' < $*.o.d &&				  \
+    perl -p -e 's{\#.*}{};s{^[^:]*: *}{};s{ *\\$$}{};s{$$}{ :}' < $*.o.d; \
+  } > $*.d &&								  \
   $(RM) $*.o.d
 -include $(ALL_SRCS:%.cpp=%.d)
 
