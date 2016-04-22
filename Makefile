@@ -71,7 +71,7 @@ all: $(ALL_EXE)
 
 gtest:
 	$(RM) $@
-	curl -o $(GTEST_DIR).tar.gz https://github.com/google/googletest/archive/release-1.7.0.tar.gz
+	curl -Lv -o $(GTEST_DIR).tar.gz https://github.com/google/googletest/archive/release-1.7.0.tar.gz
 	$(RM) -r $(GTEST_DIR)
 	tar xzf $(GTEST_DIR).tar.gz
 	:> $@
