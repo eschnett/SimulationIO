@@ -283,6 +283,9 @@ int main(int argc, char **argv) {
           if (startswith(fieldname, "GRID:")) {
             // Special case for coordinates: do nothing, treat them as
             // scalars
+          } else if (startswith(fieldname, "RADHYDRO2::ustate")) {
+            // Special case, treat these variables as scalars
+            // TODO: Handle this in a clean way
           } else {
             // There are three different conventions to represent
             // tensors in Cactus:
