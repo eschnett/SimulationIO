@@ -29,6 +29,10 @@ const char *const dirnames[] = {"x", "y", "z"};
 // Output field widths for various quantities
 const int width_it = 10, width_tl = 1, width_m = 3, width_rl = 2, width_c = 8;
 
+bool startswith(const string &str, const string &prefix) {
+  return str.substr(0, prefix.length()) == prefix;
+}
+
 string get_basename(string filename) {
   auto dotpos = filename.rfind('.');
   if (dotpos != string::npos)
@@ -213,8 +217,7 @@ int main(int argc, char **argv) {
     have_error = true;
   }
   if (have_error) {
-    cerr << "Synposis:\n"
-         << argv[0]
+    cerr << "Synposis:\n" << argv[0]
          << " [--copy|--extlink] <output file name> {<input file name>}\n";
     return 1;
   }
@@ -277,7 +280,7 @@ int main(int argc, char **argv) {
           // Determine field name and tensor type
           string fieldname(varname);
           vector<int> tensorindices;
-          if (fieldname.substr(0, 5) == "GRID:") {
+          if (startswith(fieldname, "GRID:")) {
             // Special case for coordinates: do nothing, treat them as
             // scalars
           } else {
@@ -291,20 +294,26 @@ int main(int argc, char **argv) {
               if (fieldname[pos] >= 'x' && fieldname[pos] <= 'z') {
                 while (pos >= 0 && fieldname[pos] >= 'x' &&
                        fieldname[pos] <= 'z') {
-                  tensorindices.push_back(fieldname[pos] - 'x');
+                  int ti = fieldname[pos] - 'x';
+                  assert(ti >= 0 && ti < dim);
+                  tensorindices.push_back(ti);
                   --pos;
                 }
               } else if (fieldname[pos] >= '1' && fieldname[pos] <= '9') {
                 while (pos >= 0 && fieldname[pos] >= '1' &&
                        fieldname[pos] <= '9') {
-                  tensorindices.push_back(fieldname[pos] - '1');
+                  int ti = fieldname[pos] - '1';
+                  assert(ti >= 0 && ti < dim);
+                  tensorindices.push_back(ti);
                   --pos;
                 }
               } else if (fieldname[pos] == ']') {
                 --pos;
                 assert(pos >= 0);
                 assert(fieldname[pos] >= '0' && fieldname[pos] <= '9');
-                tensorindices.push_back(fieldname[pos] - '0');
+                int ti = fieldname[pos] - '0';
+                assert(ti >= 0 && ti < dim);
+                tensorindices.push_back(ti);
                 --pos;
                 assert(pos >= 0);
                 assert(fieldname[pos] == '[');
