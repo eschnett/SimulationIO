@@ -186,6 +186,64 @@ inline std::string className(H5T_class_t cls) {
   assert(0);
 }
 
+// Describe the structure of an HDF5 datatype
+inline std::string dump(const H5::DataType &type) {
+  switch (type.getClass()) {
+  case H5T_INTEGER:
+    return "integer";
+  case H5T_FLOAT:
+    return "float";
+  case H5T_TIME:
+    return "time";
+  case H5T_STRING:
+    return "string";
+  case H5T_BITFIELD:
+    return "bitfield";
+  case H5T_OPAQUE:
+    return "opaque";
+  case H5T_COMPOUND: {
+    const H5::CompType &comptype(*static_cast<const H5::CompType *>(&type));
+    std::ostringstream buf;
+    buf << "compound{";
+    int n = comptype.getNmembers();
+    for (int i = 0; i < n; ++i) {
+      std::string mname = comptype.getMemberName(i);
+      // TODO: get member offset
+      H5::DataType mtype = comptype.getMemberDataType(i);
+      buf << mname << ":" << dump(mtype) << ";";
+    }
+    buf << "}";
+    return buf.str();
+  }
+  case H5T_REFERENCE:
+    return "reference";
+  case H5T_ENUM:
+    return "enum";
+  case H5T_VLEN:
+    return "vlen";
+  case H5T_ARRAY: {
+    const H5::ArrayType &arraytype(*static_cast<const H5::ArrayType *>(&type));
+    std::ostringstream buf;
+    int ndims = H5Tget_array_ndims(arraytype.getId());
+    std::vector<hsize_t> dims(ndims);
+    int iret = H5Tget_array_dims(arraytype.getId(), dims.data());
+    assert(iret == ndims);
+    // H5::DataType etype = ???;
+    buf << /*dump(etype)*/ "[unknown-element-type]"
+        << ":array[";
+    for (int d = 0; d < ndims; ++d) {
+      if (d > 0)
+        buf << ",";
+      buf << dims[d];
+    }
+    buf << "]";
+    return buf.str();
+  }
+  default:
+    assert(0);
+  }
+}
+
 // Create attribute
 
 template <typename T>
