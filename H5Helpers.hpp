@@ -353,6 +353,9 @@ Attribute readAttribute(const H5Location &loc, const std::string &name,
   auto space = attr.getSpace();
   auto npoints = space.getSimpleExtentNpoints();
   values.resize(npoints);
+  // auto ftype = attr.getDataType();
+  // if (!(ftype == type))
+  //   throw H5::DataTypeIException("H5::readAttribute", "datatype mismatch");
   // HDF5 is overly cautious
   if (!values.empty())
     attr.read(type, values.data());
