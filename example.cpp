@@ -70,6 +70,7 @@ int main(int argc, char **argv) {
         shape.at(1) = nlj;
         shape.at(2) = nlk;
         block->setRegion(box_t(offset, point_t(offset) + shape));
+        block->setActive(region_t(box_t(offset, point_t(offset) + shape)));
         blocks.push_back(block);
       }
 
