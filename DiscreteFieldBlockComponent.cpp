@@ -29,14 +29,11 @@ void DiscreteFieldBlockComponent::read(
           ->field.lock()
           ->tensortype->tensorcomponents.at(
               H5::readGroupAttribute<string>(group, "tensorcomponent", "name"));
-  if (group.attrExists("data")) {
+  if (group.attrExists("data_origin")) {
     // "data" is an attribute
-    H5::readAttribute(group, "data", data_range,
-                      discretefieldblock->discretefield.lock()
-                          ->field.lock()
-                          ->project.lock()
-                          ->rangetype);
-    std::reverse(data_range.begin(), data_range.end());
+    H5::readAttribute(group, "data_origin", data_range_origin);
+    H5::readAttribute(group, "data_delta", data_range_delta);
+    std::reverse(data_range_delta.begin(), data_range_delta.end());
     data_type = type_range;
   } else {
     auto lapl = H5::take_hid(H5Pcreate(H5P_LINK_ACCESS));
@@ -108,11 +105,13 @@ void DiscreteFieldBlockComponent::setData(const H5::H5Location &loc,
   data_copy_name = name;
 }
 
-void DiscreteFieldBlockComponent::setData(const vector<range> &range_) {
+void DiscreteFieldBlockComponent::setData(double origin,
+                                          const vector<double> &delta) {
   if (data_type != type_empty)
     setData();
   data_type = type_range;
-  data_range = range_;
+  data_range_origin = origin;
+  data_range_delta = delta;
 }
 
 ostream &DiscreteFieldBlockComponent::output(ostream &os, int level) const {
@@ -145,13 +144,11 @@ ostream &DiscreteFieldBlockComponent::output(ostream &os, int level) const {
     os << "copy of (?):" << quote(data_copy_name) << "\n";
     break;
   case type_range: {
-    os << "range: [";
-    for (int d = 0; d < int(data_range.size()); ++d) {
+    os << "range origin=" << data_range_origin << " delta=[";
+    for (int d = 0; d < int(data_range_delta.size()); ++d) {
       if (d > 0)
         os << ",";
-      os << "(min=" << data_range.at(d).minimum
-         << ",max=" << data_range.at(d).maximum
-         << ",count=" << data_range.at(d).count << ")";
+      os << data_range_delta.at(d);
     }
     os << "]\n";
     break;
@@ -217,13 +214,10 @@ void DiscreteFieldBlockComponent::write(const H5::CommonFG &loc,
     break;
   }
   case type_range: {
-    auto tmp_range = data_range;
-    std::reverse(tmp_range.begin(), tmp_range.end());
-    H5::createAttribute(group, "data", tmp_range, discretefieldblock.lock()
-                                                      ->discretefield.lock()
-                                                      ->field.lock()
-                                                      ->project.lock()
-                                                      ->rangetype);
+    auto delta = data_range_delta;
+    std::reverse(delta.begin(), delta.end());
+    H5::createAttribute(group, "data_origin", data_range_origin);
+    H5::createAttribute(group, "data_delta", delta);
     break;
   }
   default:
@@ -241,7 +235,11 @@ string DiscreteFieldBlockComponent::getPath() const {
       << name;
   return buf.str();
 }
-string DiscreteFieldBlockComponent::getName() const { return "data"; }
+string DiscreteFieldBlockComponent::getName() const {
+  assert(data_type == type_dataset || data_type == type_extlink ||
+         data_type == type_copy);
+  return "data";
+}
 
 template <typename T>
 void DiscreteFieldBlockComponent::writeData(const vector<T> &data) const {
@@ -249,6 +247,8 @@ void DiscreteFieldBlockComponent::writeData(const vector<T> &data) const {
   auto size = data_dataspace.getSimpleExtentNpoints();
   assert(ptrdiff_t(data.size()) == size);
   data_dataset.write(data.data(), H5::getType(data[0]));
+  // TODO: Add function to add / update minimum and maximum; call it after
+  // copying
   auto minmaxit = std::minmax_element(data.begin(), data.end());
   H5::createAttribute(data_dataset, "minimum", *minmaxit.first);
   H5::createAttribute(data_dataset, "maximum", *minmaxit.second);

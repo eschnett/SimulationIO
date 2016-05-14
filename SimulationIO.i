@@ -341,21 +341,64 @@ struct DiscreteFieldBlock {
                                         tensorcomponent);
 };
 
+%shared_ptr(DataSet);
+%shared_ptr(DataRange);
+%inline %{
+  struct DataSet;
+  struct DataRange;
+%}
+%template(shared_ptr_DataSet) std::shared_ptr<DataSet>;
+%template(shared_ptr_DataRange) std::shared_ptr<DataRange>;
+%inline %{
+  struct DataSet {
+    string path, name;
+  };
+  struct DataRange {
+    double origin;
+    std::vector<double> delta;
+  };
+%}
+
 struct DiscreteFieldBlockComponent {
   string name;
   std::weak_ptr<DiscreteFieldBlock> discretefieldblock;
   std::shared_ptr<TensorComponent> tensorcomponent;
-  H5::DataSet data_dataset;
+  enum {
+    type_empty,
+    type_dataset,
+    type_extlink,
+    type_copy,
+    type_range
+  } data_type;
   bool invariant() const;
-  void setData();
   void setData(const H5::DataType &datatype, const H5::DataSpace& dataspace);
+  void setData(const string& filename, const string& objname);
+  // void setData(H5::hid loc, const string& name);
+  void setData(double origin, const std::vector<double>& delta);
   %extend {
-    H5::DataSet getData_DataSet() const {
-      return self->data_dataset;
+    std::shared_ptr<DataSet> getData_dataset() const {
+      if (self->data_type == DiscreteFieldBlockComponent::type_dataset ||
+          self->data_type == DiscreteFieldBlockComponent::type_extlink ||
+          self->data_type == DiscreteFieldBlockComponent::type_copy) {
+        DataSet ds;
+        ds.path = self->getPath();
+        ds.name = self->getName();
+        return std::make_shared<DataSet>(std::move(ds));
+      }
+      return nullptr;
+    }
+    std::shared_ptr<DataRange> getData_range() const {
+      if (self->data_type == DiscreteFieldBlockComponent::type_range) {
+        DataRange dr;
+        dr.origin = self->data_range_origin;
+        dr.delta = self->data_range_delta;
+        return std::make_shared<DataRange>(std::move(dr));
+      }
+      return nullptr;
     }
   }
-  string getPath() const;
-  string getName() const;
+  // string getPath() const;
+  // string getName() const;
   %extend {
     void writeData_int(const std::vector<int>& data) const {
       self->writeData(data);
@@ -503,8 +546,8 @@ struct SubDiscretization {
   std::shared_ptr<Discretization> child_discretization;
   std::vector<double> factor;
   std::vector<double> offset;
-  vector<double> child2parent(const vector<double> &child_idx) const;
-  vector<double> parent2child(const vector<double> &parent_idx) const;
+  std::vector<double> child2parent(const std::vector<double> &child_idx) const;
+  std::vector<double> parent2child(const std::vector<double> &parent_idx) const;
   bool invariant() const;
 };
 

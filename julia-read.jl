@@ -12,7 +12,7 @@ using HDF5
 # Read metadata via SimulationIO, then access data via path
 
 # Read project
-filename = "example.s5"
+filename = "julia-example.s5"
 file = H5.H5File(filename, H5.H5F_ACC_RDONLY)
 project = SIO.readProject(file)
 file = h5open(filename, "r")
@@ -29,11 +29,13 @@ discretefield = get(field[:discretefields], "rho")
 for discretefieldblockname in discretefield[:discretefieldblocks]
     discretefieldblock =
         get(discretefield[:discretefieldblocks], discretefieldblockname)
-        discretefieldblockcomponent =
-            get(discretefieldblock[:discretefieldblockcomponents], "scalar")
-            dataset = discretefieldblockcomponent[:data_dataset]
-            path = discretefieldblockcomponent[:getPath]()
-            name = discretefieldblockcomponent[:getName]()
+    discretefieldblockcomponent =
+        get(discretefieldblock[:discretefieldblockcomponents], "scalar")
+    @assert discretefieldblockcomponent[:data_type] ==
+        SIO.DiscreteFieldBlockComponent[:type_dataset]
+    dataset = discretefieldblockcomponent[:getData_dataset]()
+    path = dataset[:path]
+    name = dataset[:name]
 
     # Note: Cannot pass HDF5 identifiers between H5 and HDF5
     # data = h5py.Dataset(dataset.getId())

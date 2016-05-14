@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 import H5
+from RegionCalculus import *
 from SimulationIO import *
 
 import numpy as np
@@ -14,7 +15,7 @@ import sys
 # Read metadata via SimulationIO, then access data via path
 
 # Read project
-filename = "example.s5"
+filename = "python-example.s5"
 file = H5.H5File(filename, H5.H5F_ACC_RDONLY, H5.FileCreatPropList(),
                  H5.FileAccPropList())
 project = readProject(file)
@@ -32,9 +33,20 @@ discretefield = field.discretefields['rho']
 for discretefieldblockname in discretefield.discretefieldblocks:
     discretefieldblock = discretefield.discretefieldblocks[discretefieldblockname]
     discretefieldblockcomponent = discretefieldblock.discretefieldblockcomponents['scalar']
-    dataset = discretefieldblockcomponent.data_dataset
-    path = discretefieldblockcomponent.getPath()
-    name = discretefieldblockcomponent.getName()
+    assert discretefieldblockcomponent.data_type == DiscreteFieldBlockComponent.type_dataset
+    dataset = discretefieldblockcomponent.getData_dataset()
+    path = dataset.path
+    name = dataset.name
+
+
+
+    # discretizationblock = discretefieldblock.discretizationblock
+    # region = discretizationblock.region
+    # print "region=", region
+    # active = discretizationblock.active
+    # print "active=", active
+
+
 
     # Note: Cannot pass HDF5 identifiers between H5 and h5py
     # data = h5py.Dataset(dataset.getId())

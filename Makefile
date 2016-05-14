@@ -112,7 +112,7 @@ _%.so: %_wrap.o $(SIO_SRCS:%.cpp=%.o)
 	$(CXX) $(make-dynamiclib) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $(PYTHON_LDFLAGS) -o $@ $^ $(LIBS) $(PYTHON_LIBS)
 
 %_wrap.cpp: %.i
-	swig -Wall -c++ -python $*.i
+	swig -v -Wall -Wextra -c++ -python $*.i
 	mv $*_wrap.cxx $*_wrap.cpp
 .PRECIOUS: $(PYTHON_EXE:_%.so=%_wrap.cpp)
 .PRECIOUS: $(PYTHON_EXE:_%.so=%_wrap.o)

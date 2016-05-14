@@ -732,13 +732,12 @@ TEST(DiscreteFieldBlockComponent, create) {
   const hsize_t dims[rank] = {11, 10, 9};
   auto dataspace = H5::DataSpace(rank, dims);
   dfbd3->setData(datatype, dataspace);
-  vector<Common::range> range(rank);
+  double origin = -1.0;
+  vector<double> delta(rank);
   for (int d = 0; d < rank; ++d) {
-    range.at(d).minimum = -1.0;
-    range.at(d).maximum = +1.0;
-    range.at(d).count = dims[rank - 1 - d];
+    delta.at(d) = 2.0 / dims[rank - 1 - d];
   }
-  dfbd4->setData(range);
+  dfbd4->setData(origin, delta);
   EXPECT_EQ(DiscreteFieldBlockComponent::type_empty, dfbd1->data_type);
   EXPECT_EQ(DiscreteFieldBlockComponent::type_extlink, dfbd2->data_type);
   EXPECT_EQ(DiscreteFieldBlockComponent::type_dataset, dfbd3->data_type);
@@ -760,27 +759,16 @@ TEST(DiscreteFieldBlockComponent, HDF5) {
                 ->discretefieldblocks.at("dfb1");
     EXPECT_EQ(
         "DiscreteFieldBlock \"dfb1\": DiscreteField \"df1\" "
-        "DiscretizationBlock \"db1\"\n"
-        "  DiscreteFieldBlockComponent \"dfbd1\": DiscreteFieldBlock "
-        "\"dfb1\" "
-        "TensorComponent \"00\"\n"
-        "    data: empty\n"
-        "  DiscreteFieldBlockComponent \"dfbd2\": DiscreteFieldBlock "
-        "\"dfb1\" "
-        "TensorComponent \"01\"\n"
-        "    data: external link to "
+        "DiscretizationBlock \"db1\"\n  DiscreteFieldBlockComponent \"dfbd1\": "
+        "DiscreteFieldBlock \"dfb1\" TensorComponent \"00\"\n    data: empty\n "
+        " DiscreteFieldBlockComponent \"dfbd2\": DiscreteFieldBlock \"dfb1\" "
+        "TensorComponent \"01\"\n    data: external link to "
         "\"discretizationfieldblockcomponent.s5\":\"p1/tensortypes/"
-        "Scalar3D\"\n"
-        "  DiscreteFieldBlockComponent \"dfbd3\": DiscreteFieldBlock "
-        "\"dfb1\" "
-        "TensorComponent \"02\"\n"
-        "    data: dataset type=float(64 bit) shape=[9,10,11]\n"
-        "  DiscreteFieldBlockComponent \"dfbd4\": DiscreteFieldBlock "
-        "\"dfb1\" "
-        "TensorComponent \"11\"\n"
-        "    data: range: "
-        "[(min=-1,max=1,count=9),(min=-1,max=1,count=10),(min=-1,max=1,count="
-        "11)]\n",
+        "Scalar3D\"\n  DiscreteFieldBlockComponent \"dfbd3\": "
+        "DiscreteFieldBlock \"dfb1\" TensorComponent \"02\"\n    data: dataset "
+        "type=float(64 bit) shape=[9,10,11]\n  DiscreteFieldBlockComponent "
+        "\"dfbd4\": DiscreteFieldBlock \"dfb1\" TensorComponent \"11\"\n    "
+        "data: range origin=-1 delta=[0.222222,0.2,0.181818]\n",
         buf.str());
   }
   remove(filename);

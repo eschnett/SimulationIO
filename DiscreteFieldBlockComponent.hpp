@@ -41,7 +41,8 @@ struct DiscreteFieldBlockComponent
   string data_extlink_filename, data_extlink_objname;
   H5::hid data_copy_loc;
   string data_copy_name;
-  vector<range> data_range;
+  double data_range_origin;
+  vector<double> data_range_delta;
 
   virtual bool invariant() const {
     bool inv =
@@ -72,8 +73,8 @@ struct DiscreteFieldBlockComponent
            !data_extlink_objname.empty() == (data_type == type_extlink) &&
            data_copy_loc.valid() == (data_type == type_copy) &&
            !data_copy_name.empty() == (data_type == type_copy) &&
-           !data_range.empty() == (data_type == type_range) &&
-           (int(data_range.size()) ==
+           !data_range_delta.empty() == (data_type == type_range) &&
+           (int(data_range_delta.size()) ==
             discretefieldblock.lock()
                 ->discretizationblock->discretization.lock()
                 ->manifold.lock()
@@ -126,7 +127,7 @@ public:
   void setData(const H5::DataType &datatype, const H5::DataSpace &dataspace);
   void setData(const string &filename, const string &objname);
   void setData(const H5::H5Location &loc, const string &name);
-  void setData(const vector<range> &range_);
+  void setData(double origin, const vector<double> &delta);
 
   virtual ostream &output(ostream &os, int level = 0) const;
   friend ostream &

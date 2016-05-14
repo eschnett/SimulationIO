@@ -217,7 +217,8 @@ int main(int argc, char **argv) {
     have_error = true;
   }
   if (have_error) {
-    cerr << "Synposis:\n" << argv[0]
+    cerr << "Synposis:\n"
+         << argv[0]
          << " [--copy|--extlink] <output file name> {<input file name>}\n";
     return 1;
   }
@@ -368,14 +369,19 @@ int main(int argc, char **argv) {
             assert(buf.eof());
           }
 
+          // metadata
           assert(H5::readAttribute<int>(dataset, "group_timelevel") ==
                  timelevel);
           assert(H5::readAttribute<int>(dataset, "level") == refinementlevel);
+          // local coordinates
+          auto origin = H5::readAttribute<vector<double>>(dataset, "origin");
+          assert(int(origin.size()) == manifold->dimension);
+          auto delta = H5::readAttribute<vector<double>>(dataset, "delta");
+          assert(int(delta.size()) == manifold->dimension);
+          // subdiscretizations
           vector<double> idelta(manifold->dimension);
-          auto idelta1 = H5::readAttribute<vector<double>>(dataset, "delta");
-          assert(int(idelta1.size()) == manifold->dimension);
           for (int d = 0; d < int(idelta.size()); ++d)
-            idelta.at(d) = double(idelta1.at(d));
+            idelta.at(d) = double(delta.at(d));
           vector<double> ioffset(manifold->dimension);
           auto ioffsetnum =
               H5::readAttribute<vector<hssize_t>>(dataset, "ioffset");
@@ -386,6 +392,7 @@ int main(int argc, char **argv) {
           for (int d = 0; d < int(ioffset.size()); ++d)
             ioffset.at(d) =
                 double(ioffsetnum.at(d)) / double(ioffsetdenom.at(d));
+          // active region
           dregion active;
           if (dataset.attrExists("active")) {
             string active_str = H5::readAttribute<string>(dataset, "active");
@@ -532,6 +539,81 @@ int main(int argc, char **argv) {
           }
           const auto &discretizationblock =
               discretization->discretizationblocks.at(blockname);
+
+          // Get local coordinates
+          {
+            string coordinatesystemname;
+            {
+              ostringstream buf;
+              buf << "cctkGH.space";
+              if (is_multiblock)
+                buf << "-map." << setfill('0') << setw(width_m) << mapindex;
+              coordinatesystemname = buf.str();
+            }
+            const auto &tangentspacename = coordinatesystemname;
+            const auto &basisname = tangentspacename;
+            if (!project->coordinatesystems.count(coordinatesystemname)) {
+              const auto &coordinatesystem = project->createCoordinateSystem(
+                  coordinatesystemname, global_configuration, manifold);
+              const auto &tangentspace = project->createTangentSpace(
+                  tangentspacename, global_configuration, manifold->dimension);
+              tangentspace->createBasis(coordinatesystemname,
+                                        global_configuration);
+            }
+            const auto &coordinatesystem =
+                project->coordinatesystems.at(coordinatesystemname);
+            const auto &tangentspace =
+                project->tangentspaces.at(tangentspacename);
+            const auto &basis = tangentspace->bases.at(basisname);
+            const auto &tensortype = project->tensortypes.at("Scalar3D");
+            assert(tensortype->tensorcomponents.size() == 1);
+            const auto &tensorcomponent =
+                tensortype->tensorcomponents.begin()->second;
+            for (int direction = 0; direction < tangentspace->dimension;
+                 ++direction) {
+              string fieldname;
+              {
+                ostringstream buf;
+                buf << coordinatesystemname << "[" << direction << "]";
+                fieldname = buf.str();
+              }
+              const auto &coordinatefieldname = fieldname;
+              const auto &discretefieldname = fieldname;
+              if (!project->fields.count(fieldname)) {
+                const auto &field = project->createField(
+                    coordinatefieldname, global_configuration, manifold,
+                    tangentspace, tensortype);
+                coordinatesystem->createCoordinateField(fieldname, direction,
+                                                        field);
+                field->createDiscreteField(discretefieldname,
+                                           global_configuration, discretization,
+                                           basis);
+              }
+              const auto &field = project->fields.at(fieldname);
+              const auto &discretefield =
+                  field->discretefields.at(discretefieldname);
+
+              const auto &discretefieldblockname = discretizationblock->name;
+              const auto &discretefieldblockcomponentname =
+                  tensorcomponent->name;
+              if (!discretefield->discretefieldblocks.count(
+                      discretefieldblockname)) {
+                const auto &discretefieldblock =
+                    discretefield->createDiscreteFieldBlock(
+                        discretizationblock->name, discretizationblock);
+                const auto &discretefieldblockcomponent =
+                    discretefieldblock->createDiscreteFieldBlockComponent(
+                        discretefieldblockcomponentname, tensorcomponent);
+
+                vector<hssize_t> count = discretizationblock->region.shape();
+                double data_origin = origin.at(direction);
+                vector<double> data_delta(manifold->dimension, 0.0);
+                data_delta.at(direction) = delta.at(direction);
+                discretefieldblockcomponent->setData(data_origin, data_delta);
+              }
+            }
+          }
+
           // Get field
           if (!project->fields.count(fieldname)) {
             auto field =
@@ -540,7 +622,7 @@ int main(int argc, char **argv) {
           }
           const auto &field = project->fields.at(fieldname);
 
-          // Get coordinates
+          // Get global coordinates
           if (field->name == "GRID") {
             string coordinatesystemname;
             {

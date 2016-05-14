@@ -78,12 +78,6 @@ public:
     type_CoordinateField = 18,
     type_SubDiscretization = 19,
   };
-
-  struct range {
-    double minimum;
-    double maximum;
-    double count;
-  };
 };
 }
 
