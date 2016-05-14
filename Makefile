@@ -51,9 +51,9 @@ HDF5_LDFLAGS = -L$(HDF5_DIR)/lib -Wl,-rpath,$(HDF5_DIR)/lib
 HDF5_LIBS = -lhdf5_cpp -lhdf5
 
 MPI_DIR = /opt/local
-MPI_CPPFLAGS = -I$(MPI_DIR)/include/openmpi-gcc5
+MPI_CPPFLAGS = -I$(MPI_DIR)/include/openmpi-gcc6
 MPI_CXXFLAGS =
-MPI_LDFLAGS = -L$(MPI_DIR)/lib/openmpi-gcc5 -Wl,-rpath,$(MPI_DIR)/lib/openmpi-gcc5
+MPI_LDFLAGS = -L$(MPI_DIR)/lib/openmpi-gcc6 -Wl,-rpath,$(MPI_DIR)/lib/openmpi-gcc6
 MPI_LIBS = -lmpi_cxx -lmpi
 
 PYTHON_DIR = /opt/local/Library/Frameworks/Python.framework/Versions/2.7
