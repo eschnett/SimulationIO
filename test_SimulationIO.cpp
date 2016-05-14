@@ -67,9 +67,9 @@ TEST(Project, setup) {
 
 TEST(Parameter, create) {
   EXPECT_TRUE(project->parameters.empty());
-  const auto &par1 = project->createParameter("par1");
-  const auto &par2 = project->createParameter("par2");
-  const auto &par3 = project->createParameter("par3");
+  auto par1 = project->createParameter("par1");
+  auto par2 = project->createParameter("par2");
+  auto par3 = project->createParameter("par3");
   EXPECT_EQ(3, project->parameters.size());
   EXPECT_EQ(par1, project->parameters.at("par1"));
   EXPECT_EQ(par2, project->parameters.at("par2"));
@@ -98,9 +98,9 @@ TEST(Parameter, HDF5) {
 }
 
 TEST(ParameterValue, create) {
-  const auto &par1 = project->parameters.at("par1");
-  const auto &par2 = project->parameters.at("par2");
-  const auto &par3 = project->parameters.at("par3");
+  auto par1 = project->parameters.at("par1");
+  auto par2 = project->parameters.at("par2");
+  auto par3 = project->parameters.at("par3");
   EXPECT_TRUE(par1->parametervalues.empty());
   EXPECT_TRUE(par2->parametervalues.empty());
   EXPECT_TRUE(par3->parametervalues.empty());
@@ -152,12 +152,12 @@ TEST(ParameterValue, HDF5) {
 
 TEST(Configuration, create) {
   EXPECT_TRUE(project->configurations.empty());
-  const auto &conf1 = project->createConfiguration("conf1");
-  const auto &conf2 = project->createConfiguration("conf2");
-  const auto &par1 = project->parameters.at("par1");
-  const auto &par2 = project->parameters.at("par2");
-  const auto &val1 = par1->parametervalues.at("val1");
-  const auto &val2 = par2->parametervalues.at("val2");
+  auto conf1 = project->createConfiguration("conf1");
+  auto conf2 = project->createConfiguration("conf2");
+  auto par1 = project->parameters.at("par1");
+  auto par2 = project->parameters.at("par2");
+  auto val1 = par1->parametervalues.at("val1");
+  auto val2 = par2->parametervalues.at("val2");
   EXPECT_EQ(2, project->configurations.size());
   EXPECT_EQ(conf1, project->configurations.at("conf1"));
   EXPECT_EQ(conf2, project->configurations.at("conf2"));
@@ -193,7 +193,7 @@ TEST(Configuration, HDF5) {
 }
 
 TEST(TensorTypes, Scalar3D) {
-  const auto &tt = project->tensortypes.at("Scalar3D");
+  auto tt = project->tensortypes.at("Scalar3D");
   EXPECT_TRUE(bool(tt));
   EXPECT_EQ(3, tt->dimension);
   EXPECT_EQ(0, tt->rank);
@@ -210,7 +210,7 @@ TEST(TensorTypes, Scalar3D) {
 }
 
 TEST(TensorTypes, Vector3D) {
-  const auto &tt = project->tensortypes.at("Vector3D");
+  auto tt = project->tensortypes.at("Vector3D");
   EXPECT_TRUE(bool(tt));
   EXPECT_EQ(3, tt->dimension);
   EXPECT_EQ(1, tt->rank);
@@ -231,7 +231,7 @@ TEST(TensorTypes, Vector3D) {
 }
 
 TEST(TensorTypes, SymmetricTensor3D) {
-  const auto &tt = project->tensortypes.at("SymmetricTensor3D");
+  auto tt = project->tensortypes.at("SymmetricTensor3D");
   EXPECT_TRUE(bool(tt));
   EXPECT_EQ(3, tt->dimension);
   EXPECT_EQ(2, tt->rank);
@@ -338,7 +338,7 @@ TEST(TensorTypes, HDF5) {
 
 TEST(Manifold, create) {
   EXPECT_TRUE(project->manifolds.empty());
-  const auto &conf1 = project->configurations.at("conf1");
+  auto conf1 = project->configurations.at("conf1");
   auto m1 = project->createManifold("m1", conf1, 3);
   EXPECT_EQ(1, project->manifolds.size());
   EXPECT_EQ(m1, project->manifolds.at("m1"));
@@ -362,8 +362,8 @@ TEST(Manifold, HDF5) {
 
 TEST(TangentSpace, create) {
   EXPECT_TRUE(project->tangentspaces.empty());
-  const auto &conf1 = project->configurations.at("conf1");
-  const auto &s1 = project->createTangentSpace("s1", conf1, 3);
+  auto conf1 = project->configurations.at("conf1");
+  auto s1 = project->createTangentSpace("s1", conf1, 3);
   EXPECT_EQ(1, project->tangentspaces.size());
   EXPECT_EQ(s1, project->tangentspaces.at("s1"));
 }
@@ -387,10 +387,10 @@ TEST(TangentSpace, HDF5) {
 
 TEST(Field, create) {
   EXPECT_TRUE(project->fields.empty());
-  const auto &conf1 = project->configurations.at("conf1");
-  const auto &m1 = project->manifolds.at("m1");
-  const auto &s1 = project->tangentspaces.at("s1");
-  const auto &s3d = project->tensortypes.at("SymmetricTensor3D");
+  auto conf1 = project->configurations.at("conf1");
+  auto m1 = project->manifolds.at("m1");
+  auto s1 = project->tangentspaces.at("s1");
+  auto s3d = project->tensortypes.at("SymmetricTensor3D");
   auto f1 = project->createField("f1", conf1, m1, s1, s3d);
   EXPECT_EQ(1, project->fields.size());
   EXPECT_EQ(f1, project->fields.at("f1"));
@@ -416,8 +416,8 @@ TEST(Field, HDF5) {
 
 TEST(CoordinateSystem, create) {
   EXPECT_TRUE(project->coordinatesystems.empty());
-  const auto &conf1 = project->configurations.at("conf1");
-  const auto &m1 = project->manifolds.at("m1");
+  auto conf1 = project->configurations.at("conf1");
+  auto m1 = project->manifolds.at("m1");
   auto cs1 = project->createCoordinateSystem("cs1", conf1, m1);
   EXPECT_EQ(1, project->coordinatesystems.size());
   EXPECT_EQ(cs1, project->coordinatesystems.at("cs1"));
@@ -442,9 +442,9 @@ TEST(CoordinateSystem, HDF5) {
 }
 
 TEST(Discretization, create) {
-  const auto &m1 = project->manifolds.at("m1");
+  auto m1 = project->manifolds.at("m1");
   EXPECT_TRUE(m1->discretizations.empty());
-  const auto &conf1 = project->configurations.at("conf1");
+  auto conf1 = project->configurations.at("conf1");
   auto d1 = m1->createDiscretization("d1", conf1);
   auto d2 = m1->createDiscretization("d2", conf1);
   EXPECT_EQ(2, m1->discretizations.size());
@@ -473,12 +473,12 @@ TEST(Discretization, HDF5) {
 }
 
 TEST(SubDiscretization, create) {
-  const auto &m1 = project->manifolds.at("m1");
-  const auto &d1 = m1->discretizations.at("d1");
-  const auto &d2 = m1->discretizations.at("d2");
+  auto m1 = project->manifolds.at("m1");
+  auto d1 = m1->discretizations.at("d1");
+  auto d2 = m1->discretizations.at("d2");
   EXPECT_TRUE(m1->subdiscretizations.empty());
   vector<double> factor(m1->dimension, 1.0), offset(m1->dimension, 0.5);
-  const auto &sd1 = m1->createSubDiscretization("sd1", d1, d2, factor, offset);
+  auto sd1 = m1->createSubDiscretization("sd1", d1, d2, factor, offset);
   EXPECT_EQ(1, m1->subdiscretizations.size());
   EXPECT_EQ(sd1, m1->subdiscretizations.at("sd1"));
 }
@@ -503,8 +503,8 @@ TEST(SubDiscretization, HDF5) {
 }
 
 TEST(DiscretizationBlock, create) {
-  const auto &m1 = project->manifolds.at("m1");
-  const auto &d1 = m1->discretizations.at("d1");
+  auto m1 = project->manifolds.at("m1");
+  auto d1 = m1->discretizations.at("d1");
   EXPECT_TRUE(d1->discretizationblocks.empty());
   auto db1 = d1->createDiscretizationBlock("db1");
   vector<hssize_t> offset(m1->dimension, 3);
@@ -537,8 +537,8 @@ TEST(DiscretizationBlock, HDF5) {
 }
 
 TEST(Basis, create) {
-  const auto &conf1 = project->configurations.at("conf1");
-  const auto &s1 = project->tangentspaces.at("s1");
+  auto conf1 = project->configurations.at("conf1");
+  auto s1 = project->tangentspaces.at("s1");
   EXPECT_TRUE(s1->bases.empty());
   auto b1 = s1->createBasis("b1", conf1);
   EXPECT_EQ(1, s1->bases.size());
@@ -563,8 +563,8 @@ TEST(Basis, HDF5) {
 }
 
 TEST(BasisVector, create) {
-  const auto &s1 = project->tangentspaces.at("s1");
-  const auto &b1 = s1->bases.at("b1");
+  auto s1 = project->tangentspaces.at("s1");
+  auto b1 = s1->bases.at("b1");
   EXPECT_TRUE(b1->basisvectors.empty());
   auto bx1 = b1->createBasisVector("x", 0);
   auto by1 = b1->createBasisVector("y", 1);
@@ -599,12 +599,12 @@ TEST(BasisVector, HDF5) {
 }
 
 TEST(DiscreteField, create) {
-  const auto &f1 = project->fields.at("f1");
-  const auto &conf1 = project->configurations.at("conf1");
-  const auto &m1 = f1->manifold;
-  const auto &d1 = m1->discretizations.at("d1");
-  const auto &s1 = f1->tangentspace;
-  const auto &b1 = s1->bases.at("b1");
+  auto f1 = project->fields.at("f1");
+  auto conf1 = project->configurations.at("conf1");
+  auto m1 = f1->manifold;
+  auto d1 = m1->discretizations.at("d1");
+  auto s1 = f1->tangentspace;
+  auto b1 = s1->bases.at("b1");
   EXPECT_TRUE(f1->discretefields.empty());
   auto df1 = f1->createDiscreteField("df1", conf1, d1, b1);
   EXPECT_EQ(1, f1->discretefields.size());
@@ -632,8 +632,8 @@ TEST(DiscreteField, HDF5) {
 }
 
 TEST(CoordinateField, create) {
-  const auto &cs1 = project->coordinatesystems.at("cs1");
-  const auto &f1 = project->fields.at("f1");
+  auto cs1 = project->coordinatesystems.at("cs1");
+  auto f1 = project->fields.at("f1");
   EXPECT_TRUE(cs1->coordinatefields.empty());
   auto csf1 = cs1->createCoordinateField("csf1", 0, f1);
   EXPECT_EQ(1, cs1->coordinatefields.size());
@@ -661,10 +661,10 @@ TEST(CoordinateField, HDF5) {
 }
 
 TEST(DiscreteFieldBlock, create) {
-  const auto &f1 = project->fields.at("f1");
-  const auto &df1 = f1->discretefields.at("df1");
-  const auto &d1 = df1->discretization;
-  const auto &db1 = d1->discretizationblocks.at("db1");
+  auto f1 = project->fields.at("f1");
+  auto df1 = f1->discretefields.at("df1");
+  auto d1 = df1->discretization;
+  auto db1 = d1->discretizationblocks.at("db1");
   EXPECT_TRUE(df1->discretefieldblocks.empty());
   auto dfb1 = df1->createDiscreteFieldBlock("dfb1", db1);
   EXPECT_EQ(1, df1->discretefieldblocks.size());
@@ -692,15 +692,15 @@ TEST(DiscreteFieldBlock, HDF5) {
 }
 
 TEST(DiscreteFieldBlockComponent, create) {
-  const auto &f1 = project->fields.at("f1");
-  const auto &df1 = f1->discretefields.at("df1");
-  const auto &dfb1 = df1->discretefieldblocks.at("dfb1");
-  const auto &tt1 = f1->tensortype;
-  const auto &bxx1 = tt1->tensorcomponents.at("00");
-  const auto &bxy1 = tt1->tensorcomponents.at("01");
-  const auto &bxz1 = tt1->tensorcomponents.at("02");
-  const auto &byy1 = tt1->tensorcomponents.at("11");
-  const auto &byz1 = tt1->tensorcomponents.at("12");
+  auto f1 = project->fields.at("f1");
+  auto df1 = f1->discretefields.at("df1");
+  auto dfb1 = df1->discretefieldblocks.at("dfb1");
+  auto tt1 = f1->tensortype;
+  auto bxx1 = tt1->tensorcomponents.at("00");
+  auto bxy1 = tt1->tensorcomponents.at("01");
+  auto bxz1 = tt1->tensorcomponents.at("02");
+  auto byy1 = tt1->tensorcomponents.at("11");
+  auto byz1 = tt1->tensorcomponents.at("12");
   EXPECT_TRUE(dfb1->discretefieldblockcomponents.empty());
   auto dfbd1 = dfb1->createDiscreteFieldBlockComponent("dfbd1", bxx1);
   auto dfbd2 = dfb1->createDiscreteFieldBlockComponent("dfbd2", bxy1);

@@ -226,8 +226,8 @@ void DiscreteFieldBlockComponent::write(const H5::CommonFG &loc,
 }
 
 string DiscreteFieldBlockComponent::getPath() const {
-  const auto &discretefield = discretefieldblock.lock()->discretefield;
-  const auto &field = discretefield.lock()->field;
+  auto discretefield = discretefieldblock.lock()->discretefield;
+  auto field = discretefield.lock()->field;
   ostringstream buf;
   buf << "fields/" << field.lock()->name << "/discretefields/"
       << discretefield.lock()->name << "/discretefieldblocks/"

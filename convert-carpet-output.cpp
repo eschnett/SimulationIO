@@ -454,7 +454,7 @@ int main(int argc, char **argv) {
                   value_iteration_name);
               value_iteration->setValue(iteration);
             }
-            const auto &value_iteration =
+            auto value_iteration =
                 parameter_iteration->parametervalues.at(value_iteration_name);
             configuration->insertParameterValue(value_iteration);
             if (!parameter_timelevel->parametervalues.count(
@@ -463,12 +463,11 @@ int main(int argc, char **argv) {
                   value_timelevel_name);
               value_timelevel->setValue(timelevel);
             }
-            const auto &value_timelevel =
+            auto value_timelevel =
                 parameter_timelevel->parametervalues.at(value_timelevel_name);
             configuration->insertParameterValue(value_timelevel);
           }
-          const auto &configuration =
-              project->configurations.at(configurationname);
+          auto configuration = project->configurations.at(configurationname);
 
           // Get tensor type
           auto tensortype = project->tensortypes.at(tensortypename);
@@ -510,9 +509,9 @@ int main(int argc, char **argv) {
                 .at(mapindex)
                 .push_back(discretization);
           }
-          const auto &discretization = discretizations.at(configuration->name)
-                                           .at(mapindex)
-                                           .at(refinementlevel);
+          auto discretization = discretizations.at(configuration->name)
+                                    .at(mapindex)
+                                    .at(refinementlevel);
 
           // Get discretization block
           string blockname;
@@ -537,7 +536,7 @@ int main(int argc, char **argv) {
               discretizationblock->setActive(active);
             }
           }
-          const auto &discretizationblock =
+          auto discretizationblock =
               discretization->discretizationblocks.at(blockname);
 
           // Get local coordinates
@@ -550,25 +549,23 @@ int main(int argc, char **argv) {
                 buf << "-map." << setfill('0') << setw(width_m) << mapindex;
               coordinatesystemname = buf.str();
             }
-            const auto &tangentspacename = coordinatesystemname;
-            const auto &basisname = tangentspacename;
+            auto tangentspacename = coordinatesystemname;
+            auto basisname = tangentspacename;
             if (!project->coordinatesystems.count(coordinatesystemname)) {
-              const auto &coordinatesystem = project->createCoordinateSystem(
+              auto coordinatesystem = project->createCoordinateSystem(
                   coordinatesystemname, global_configuration, manifold);
-              const auto &tangentspace = project->createTangentSpace(
+              auto tangentspace = project->createTangentSpace(
                   tangentspacename, global_configuration, manifold->dimension);
               tangentspace->createBasis(coordinatesystemname,
                                         global_configuration);
             }
-            const auto &coordinatesystem =
+            auto coordinatesystem =
                 project->coordinatesystems.at(coordinatesystemname);
-            const auto &tangentspace =
-                project->tangentspaces.at(tangentspacename);
-            const auto &basis = tangentspace->bases.at(basisname);
-            const auto &tensortype = project->tensortypes.at("Scalar3D");
+            auto tangentspace = project->tangentspaces.at(tangentspacename);
+            auto basis = tangentspace->bases.at(basisname);
+            auto tensortype = project->tensortypes.at("Scalar3D");
             assert(tensortype->tensorcomponents.size() == 1);
-            const auto &tensorcomponent =
-                tensortype->tensorcomponents.begin()->second;
+            auto tensorcomponent = tensortype->tensorcomponents.begin()->second;
             for (int direction = 0; direction < tangentspace->dimension;
                  ++direction) {
               string fieldname;
@@ -577,10 +574,10 @@ int main(int argc, char **argv) {
                 buf << coordinatesystemname << "[" << direction << "]";
                 fieldname = buf.str();
               }
-              const auto &coordinatefieldname = fieldname;
-              const auto &discretefieldname = fieldname;
+              auto coordinatefieldname = fieldname;
+              auto discretefieldname = fieldname;
               if (!project->fields.count(fieldname)) {
-                const auto &field = project->createField(
+                auto field = project->createField(
                     coordinatefieldname, global_configuration, manifold,
                     tangentspace, tensortype);
                 coordinatesystem->createCoordinateField(fieldname, direction,
@@ -589,19 +586,17 @@ int main(int argc, char **argv) {
                                            global_configuration, discretization,
                                            basis);
               }
-              const auto &field = project->fields.at(fieldname);
-              const auto &discretefield =
-                  field->discretefields.at(discretefieldname);
+              auto field = project->fields.at(fieldname);
+              auto discretefield = field->discretefields.at(discretefieldname);
 
-              const auto &discretefieldblockname = discretizationblock->name;
-              const auto &discretefieldblockcomponentname =
-                  tensorcomponent->name;
+              auto discretefieldblockname = discretizationblock->name;
+              auto discretefieldblockcomponentname = tensorcomponent->name;
               if (!discretefield->discretefieldblocks.count(
                       discretefieldblockname)) {
-                const auto &discretefieldblock =
+                auto discretefieldblock =
                     discretefield->createDiscreteFieldBlock(
                         discretizationblock->name, discretizationblock);
-                const auto &discretefieldblockcomponent =
+                auto discretefieldblockcomponent =
                     discretefieldblock->createDiscreteFieldBlockComponent(
                         discretefieldblockcomponentname, tensorcomponent);
 
@@ -620,7 +615,7 @@ int main(int argc, char **argv) {
                 project->createField(fieldname, global_configuration, manifold,
                                      tangentspace, tensortype);
           }
-          const auto &field = project->fields.at(fieldname);
+          auto field = project->fields.at(fieldname);
 
           // Get global coordinates
           if (field->name == "GRID") {
@@ -634,7 +629,7 @@ int main(int argc, char **argv) {
               project->createCoordinateSystem(coordinatesystemname,
                                               configuration, manifold);
             }
-            const auto &coordinatesystem =
+            auto coordinatesystem =
                 project->coordinatesystems.at(coordinatesystemname);
             assert(tensortype->rank == 1);
             int direction = tensorcomponent->indexvalues.at(0);
@@ -660,7 +655,7 @@ int main(int argc, char **argv) {
               project->createCoordinateSystem(coordinatesystemname,
                                               configuration, manifold);
             }
-            const auto &coordinatesystem =
+            auto coordinatesystem =
                 project->coordinatesystems.at(coordinatesystemname);
             assert(tensortype->rank == 0);
             int direction = -1;
@@ -695,8 +690,7 @@ int main(int argc, char **argv) {
             field->createDiscreteField(discretefieldname, configuration,
                                        discretization, basis);
           }
-          const auto &discretefield =
-              field->discretefields.at(discretefieldname);
+          auto discretefield = field->discretefields.at(discretefieldname);
           // Get discrete field block
           if (!discretefield->discretefieldblocks.count(
                   discretizationblock->name)) {
@@ -711,7 +705,7 @@ int main(int argc, char **argv) {
             discretefieldblock->createDiscreteFieldBlockComponent(
                 tensorcomponent->name, tensorcomponent);
           }
-          const auto &discretefieldblockcomponent =
+          auto discretefieldblockcomponent =
               discretefieldblock->discretefieldblockcomponents.at(
                   tensorcomponent->name);
           switch (action) {
@@ -736,15 +730,15 @@ int main(int argc, char **argv) {
     for (const auto &i0 : ioffsets) {
       const auto &configurationname = i0.first;
       const auto &ioffsets1 = i0.second;
-      const auto &ideltas1 = ideltas.at(configurationname);
+      auto ideltas1 = ideltas.at(configurationname);
       for (const auto &i1 : ioffsets1) {
         const auto &mapindex = i1.first;
         const auto &ioffsets2 = i1.second;
-        const auto &ideltas2 = ideltas1.at(mapindex);
+        auto ideltas2 = ideltas1.at(mapindex);
         for (const auto &i2 : ioffsets2) {
           const auto &refinementlevel = i2.first;
           const auto &ioffset = i2.second;
-          const auto &idelta = ideltas2.at(refinementlevel);
+          auto idelta = ideltas2.at(refinementlevel);
 
           // Skip the coarsest grid that exists at this iteration
           if (ioffsets2.count(refinementlevel - 1)) {
@@ -765,8 +759,8 @@ int main(int argc, char **argv) {
               // (i1 + offset1) * delta1 = (i0 + offset0) * delta0
               // i1 = (offset0 + i0) * delta0 / delta1 - offset1
               // i1 = offset0 * delta0 / delta1 - offset1 + i0 * delta0 / delta1
-              const auto &coarse_idelta = ideltas2.at(refinementlevel - 1);
-              const auto &coarse_ioffset = ioffsets2.at(refinementlevel - 1);
+              auto coarse_idelta = ideltas2.at(refinementlevel - 1);
+              auto coarse_ioffset = ioffsets2.at(refinementlevel - 1);
               vector<double> factor(idelta.size());
               for (int d = 0; d < int(factor.size()); ++d)
                 factor.at(d) = coarse_idelta.at(d) / idelta.at(d);

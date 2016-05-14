@@ -18,10 +18,10 @@ void read_active(const H5::H5Location &group,
   if (active.valid())
     return;
   vector<RegionCalculus::box<hssize_t, D>> boxes;
-  const auto &boxtype = discretizationblock.discretization.lock()
-                            ->manifold.lock()
-                            ->project.lock()
-                            ->boxtypes.at(D);
+  auto boxtype = discretizationblock.discretization.lock()
+                     ->manifold.lock()
+                     ->project.lock()
+                     ->boxtypes.at(D);
   assert(sizeof(boxes[0]) == boxtype.getSize());
 #if 1
   // Read the attribute if it exists, and if it has the right type
@@ -102,14 +102,13 @@ void write_active(const H5::H5Location &group,
   static_assert(D > 0, "");
   if (active.rank() != D)
     return;
-  const auto &boxes =
-      dynamic_cast<const RegionCalculus::wregion<hssize_t, D> *>(
-          active.val.get())
-          ->val.boxes;
-  const auto &boxtype = discretizationblock.discretization.lock()
-                            ->manifold.lock()
-                            ->project.lock()
-                            ->boxtypes.at(D);
+  auto boxes = dynamic_cast<const RegionCalculus::wregion<hssize_t, D> *>(
+                   active.val.get())
+                   ->val.boxes;
+  auto boxtype = discretizationblock.discretization.lock()
+                     ->manifold.lock()
+                     ->project.lock()
+                     ->boxtypes.at(D);
   assert(sizeof(boxes[0]) == boxtype.getSize());
   H5::createAttribute(group, "active", boxes, boxtype);
 }

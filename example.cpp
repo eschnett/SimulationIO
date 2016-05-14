@@ -93,7 +93,7 @@ int main(int argc, char **argv) {
     for (int p = 0; p < ngrids; ++p) {
       auto block = discretefield->createDiscreteFieldBlock(
           discretefield->name + "-" + blocks.at(p)->name, blocks.at(p));
-      const auto &scalar3d_component = scalar3d->storage_indices.at(0);
+      auto scalar3d_component = scalar3d->storage_indices.at(0);
       auto component = block->createDiscreteFieldBlockComponent(
           "scalar", scalar3d_component);
       const hsize_t dims[dim] = {nlk, nlj, nli};
@@ -124,12 +124,12 @@ int main(int argc, char **argv) {
     auto vel_block = discretized_vel->createDiscreteFieldBlock(
         vel->name + "-" + blocks.at(i)->name, blocks.at(i));
     // Create tensor components for this region
-    const auto &scalar3d_component = scalar3d->storage_indices.at(0);
+    auto scalar3d_component = scalar3d->storage_indices.at(0);
     auto rho_component = rho_block->createDiscreteFieldBlockComponent(
         "scalar", scalar3d_component);
     rho_component->setData(datatype, dataspace);
     for (int d = 0; d < dim; ++d) {
-      const auto &vector3d_component = vector3d->storage_indices.at(d);
+      auto vector3d_component = vector3d->storage_indices.at(d);
       auto vel_component = vel_block->createDiscreteFieldBlockComponent(
           dirnames[d], vector3d_component);
       vel_component->setData(datatype, dataspace);
@@ -175,32 +175,29 @@ int main(int argc, char **argv) {
             }
         // Write coordinates
         for (int d = 0; d < dim; ++d) {
-          const auto &field = coordinates[d]->field;
-          const auto &discretefield = field->discretefields.at(field->name);
-          const auto &block = discretefield->discretefieldblocks.at(
+          auto field = coordinates[d]->field;
+          auto discretefield = field->discretefields.at(field->name);
+          auto block = discretefield->discretefieldblocks.at(
               discretefield->name + "-" + blocks.at(p)->name);
-          const auto &component =
-              block->discretefieldblockcomponents.at("scalar");
+          auto component = block->discretefieldblockcomponents.at("scalar");
           component->writeData(d == 0 ? coordx : d == 1 ? coordy : coordz);
         }
         // Write rho
         {
-          const auto &field = rho;
-          const auto &discretefield = field->discretefields.at(field->name);
-          const auto &block = discretefield->discretefieldblocks.at(
+          auto field = rho;
+          auto discretefield = field->discretefields.at(field->name);
+          auto block = discretefield->discretefieldblocks.at(
               discretefield->name + "-" + blocks.at(p)->name);
-          const auto &component =
-              block->discretefieldblockcomponents.at("scalar");
+          auto component = block->discretefieldblockcomponents.at("scalar");
           component->writeData(datarho);
         }
         // Write velocity
         for (int d = 0; d < dim; ++d) {
-          const auto &field = vel;
-          const auto &discretefield = field->discretefields.at(field->name);
-          const auto &block = discretefield->discretefieldblocks.at(
+          auto field = vel;
+          auto discretefield = field->discretefields.at(field->name);
+          auto block = discretefield->discretefieldblocks.at(
               discretefield->name + "-" + blocks.at(p)->name);
-          const auto &component =
-              block->discretefieldblockcomponents.at(dirnames[d]);
+          auto component = block->discretefieldblockcomponents.at(dirnames[d]);
           component->writeData(d == 0 ? datavelx : d == 1 ? datavely
                                                           : datavelz);
         }
