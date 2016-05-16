@@ -757,19 +757,23 @@ TEST(DiscreteFieldBlockComponent, HDF5) {
     buf << *p1->fields.at("f1")
                 ->discretefields.at("df1")
                 ->discretefieldblocks.at("dfb1");
-    EXPECT_EQ(
-        "DiscreteFieldBlock \"dfb1\": DiscreteField \"df1\" "
-        "DiscretizationBlock \"db1\"\n  DiscreteFieldBlockComponent \"dfbd1\": "
-        "DiscreteFieldBlock \"dfb1\" TensorComponent \"00\"\n    data: empty\n "
-        " DiscreteFieldBlockComponent \"dfbd2\": DiscreteFieldBlock \"dfb1\" "
-        "TensorComponent \"01\"\n    data: external link to "
-        "\"discretizationfieldblockcomponent.s5\":\"p1/tensortypes/"
-        "Scalar3D\"\n  DiscreteFieldBlockComponent \"dfbd3\": "
-        "DiscreteFieldBlock \"dfb1\" TensorComponent \"02\"\n    data: dataset "
-        "type=float(64 bit) shape=[9,10,11]\n  DiscreteFieldBlockComponent "
-        "\"dfbd4\": DiscreteFieldBlock \"dfb1\" TensorComponent \"11\"\n    "
-        "data: range origin=-1 delta=[0.222222,0.2,0.181818]\n",
-        buf.str());
+    EXPECT_EQ("DiscreteFieldBlock \"dfb1\": DiscreteField \"df1\" "
+              "DiscretizationBlock \"db1\"\n"
+              "  DiscreteFieldBlockComponent \"dfbd1\": DiscreteFieldBlock "
+              "\"dfb1\" TensorComponent \"00\"\n"
+              "    data: empty\n"
+              "  DiscreteFieldBlockComponent \"dfbd2\": DiscreteFieldBlock "
+              "\"dfb1\" TensorComponent \"01\"\n"
+              "    data: external link to "
+              "\"discretizationfieldblockcomponent.s5\":\"p1/tensortypes/"
+              "Scalar3D\"\n"
+              "  DiscreteFieldBlockComponent \"dfbd3\": DiscreteFieldBlock "
+              "\"dfb1\" TensorComponent \"02\"\n"
+              "    data: copy of (?):\"data\"\n"
+              "  DiscreteFieldBlockComponent \"dfbd4\": DiscreteFieldBlock "
+              "\"dfb1\" TensorComponent \"11\"\n"
+              "    data: range origin=-1 delta=[0.222222,0.2,0.181818]\n",
+              buf.str());
   }
   remove(filename);
 }
