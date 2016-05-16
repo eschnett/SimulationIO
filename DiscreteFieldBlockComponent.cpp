@@ -54,10 +54,13 @@ void DiscreteFieldBlockComponent::read(
         herr = H5Oget_info_by_name(group.getLocId(), "data", &info, lapl);
         assert(!herr);
         assert(info.type == H5O_TYPE_DATASET);
-        data_dataset = group.openDataSet("data");
-        data_datatype = H5::DataType(H5Dget_type(data_dataset.getId()));
-        data_dataspace = data_dataset.getSpace();
-        data_type = type_dataset;
+        // data_dataset = group.openDataSet("data");
+        // data_datatype = H5::DataType(H5Dget_type(data_dataset.getId()));
+        // data_dataspace = data_dataset.getSpace();
+        // data_type = type_dataset;
+        data_copy_loc = group.getLocId();
+        data_copy_name = "data";
+        data_type = type_copy;
       }
     } else {
       // "data" is not present
