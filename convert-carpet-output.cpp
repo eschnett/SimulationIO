@@ -754,7 +754,7 @@ int main(int argc, char **argv) {
               for (int d = 0; d < int(offset.size()); ++d)
                 offset.at(d) =
                     ioffset.at(d) - factor.at(d) * coarse_ioffset.at(d);
-              auto subdiscretization = manifold->createSubDiscretization(
+              manifold->createSubDiscretization(
                   subdiscretizationname, discretizations.at(configurationname)
                                              .at(mapindex)
                                              .at(refinementlevel - 1),
@@ -762,7 +762,6 @@ int main(int argc, char **argv) {
                       .at(mapindex)
                       .at(refinementlevel),
                   factor, offset);
-              (void)subdiscretization;
             }
           }
         }
