@@ -93,9 +93,8 @@ template <typename T, int D> struct vect {
   istream &input(istream &is) {
     is >> expect('[');
     for (int d = 0; d < D; ++d) {
-      if (d > 0) {
+      if (d > 0)
         is >> expect(',');
-      }
       is >> elts[d];
     }
     is >> expect(']');
@@ -206,11 +205,10 @@ int main(int argc, char **argv) {
         break;
       }
     } else {
-      if (outputfilename.empty()) {
+      if (outputfilename.empty())
         outputfilename = argvi;
-      } else {
+      else
         inputfilenames.push_back(argvi);
-      }
     }
   }
   if (inputfilenames.empty()) {
@@ -222,9 +220,8 @@ int main(int argc, char **argv) {
          << " [--copy|--extlink] <output file name> {<input file name>}\n";
     return 1;
   }
-  if (action == action_unset) {
+  if (action == action_unset)
     action = action_copy;
-  }
 
   const string basename = get_basename(outputfilename);
   assert(!basename.empty());
@@ -324,24 +321,22 @@ int main(int argc, char **argv) {
                 --pos;
               }
             }
-            while (pos >= 0 && fieldname[pos] == ':') {
+            while (pos >= 0 && fieldname[pos] == ':')
               --pos;
-            }
             assert(pos >= 0);
             fieldname = fieldname.substr(0, pos + 1);
           }
           reverse(tensorindices.begin(), tensorindices.end());
           const int tensorrank = tensorindices.size();
           string tensortypename;
-          if (tensorrank == 0) {
+          if (tensorrank == 0)
             tensortypename = "Scalar3D";
-          } else if (tensorrank == 1) {
+          else if (tensorrank == 1)
             tensortypename = "Vector3D";
-          } else if (tensorrank == 2) {
+          else if (tensorrank == 2)
             tensortypename = "SymmetricTensor3D";
-          } else {
+          else
             assert(0);
-          }
           // Determine iteration, time level, map index, refinement level
           int iteration = 0, timelevel = 0, mapindex = 0, refinementlevel = 0,
               component = 0;
@@ -610,11 +605,9 @@ int main(int argc, char **argv) {
           }
 
           // Get field
-          if (!project->fields.count(fieldname)) {
-            auto field =
-                project->createField(fieldname, global_configuration, manifold,
-                                     tangentspace, tensortype);
-          }
+          if (!project->fields.count(fieldname))
+            project->createField(fieldname, global_configuration, manifold,
+                                 tangentspace, tensortype);
           auto field = project->fields.at(fieldname);
 
           // Get global coordinates
@@ -625,10 +618,9 @@ int main(int argc, char **argv) {
               buf << field->name << "-" << configuration->name;
               coordinatesystemname = buf.str();
             }
-            if (!project->coordinatesystems.count(coordinatesystemname)) {
+            if (!project->coordinatesystems.count(coordinatesystemname))
               project->createCoordinateSystem(coordinatesystemname,
                                               configuration, manifold);
-            }
             auto coordinatesystem =
                 project->coordinatesystems.at(coordinatesystemname);
             assert(tensortype->rank == 1);
@@ -639,10 +631,9 @@ int main(int argc, char **argv) {
               buf << coordinatesystem->name << "-" << direction;
               coordinatefieldname = buf.str();
             }
-            if (!coordinatesystem->directions.count(direction)) {
+            if (!coordinatesystem->directions.count(direction))
               coordinatesystem->createCoordinateField(coordinatefieldname,
                                                       direction, field);
-            }
           } else if (field->name == "GRID::x" || field->name == "GRID::y" ||
                      field->name == "GRID::z") {
             string coordinatesystemname;
@@ -651,10 +642,9 @@ int main(int argc, char **argv) {
               buf << "GRID-" << configuration->name;
               coordinatesystemname = buf.str();
             }
-            if (!project->coordinatesystems.count(coordinatesystemname)) {
+            if (!project->coordinatesystems.count(coordinatesystemname))
               project->createCoordinateSystem(coordinatesystemname,
                                               configuration, manifold);
-            }
             auto coordinatesystem =
                 project->coordinatesystems.at(coordinatesystemname);
             assert(tensortype->rank == 0);
@@ -673,10 +663,9 @@ int main(int argc, char **argv) {
               buf << coordinatesystem->name << "-" << *field->name.rbegin();
               coordinatefieldname = buf.str();
             }
-            if (!coordinatesystem->directions.count(direction)) {
+            if (!coordinatesystem->directions.count(direction))
               coordinatesystem->createCoordinateField(coordinatefieldname,
                                                       direction, field);
-            }
           }
 
           // Get discrete field
@@ -686,25 +675,22 @@ int main(int argc, char **argv) {
             buf << fieldname << "-" << discretization->name;
             discretefieldname = buf.str();
           }
-          if (!field->discretefields.count(discretefieldname)) {
+          if (!field->discretefields.count(discretefieldname))
             field->createDiscreteField(discretefieldname, configuration,
                                        discretization, basis);
-          }
           auto discretefield = field->discretefields.at(discretefieldname);
           // Get discrete field block
           if (!discretefield->discretefieldblocks.count(
-                  discretizationblock->name)) {
+                  discretizationblock->name))
             discretefield->createDiscreteFieldBlock(discretizationblock->name,
                                                     discretizationblock);
-          }
           auto discretefieldblock =
               discretefield->discretefieldblocks.at(discretizationblock->name);
           // Get discrete field block data
           if (!discretefieldblock->discretefieldblockcomponents.count(
-                  tensorcomponent->name)) {
+                  tensorcomponent->name))
             discretefieldblock->createDiscreteFieldBlockComponent(
                 tensorcomponent->name, tensorcomponent);
-          }
           auto discretefieldblockcomponent =
               discretefieldblock->discretefieldblockcomponents.at(
                   tensorcomponent->name);
