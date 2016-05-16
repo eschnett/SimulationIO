@@ -48,9 +48,14 @@ void DiscreteFieldBlock::write(const H5::CommonFG &loc,
       discretefield.lock()->field.lock()->project.lock()->enumtype,
       "DiscreteFieldBlock");
   H5::createAttribute(group, "name", name);
-  H5::createHardLink(group, "discretefield", parent, ".");
-  H5::createHardLink(group, "discretizationblock", parent,
-                     string("discretization/discretizationblocks/") +
+  // H5::createHardLink(group, "discretefield", parent, ".");
+  H5::createHardLink(group, "..", parent, ".");
+  H5::createSoftLink(group, "discretefield", "..");
+  // H5::createHardLink(group, "discretizationblock", parent,
+  //                    string("discretization/discretizationblocks/") +
+  //                        discretizationblock->name);
+  H5::createSoftLink(group, "discretizationblock",
+                     string("../discretization/discretizationblocks/") +
                          discretizationblock->name);
   H5::createGroup(group, "discretefieldblockcomponents",
                   discretefieldblockcomponents);

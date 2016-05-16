@@ -79,7 +79,9 @@ void Configuration::write(const H5::CommonFG &loc,
   auto group = loc.createGroup(name);
   H5::createAttribute(group, "type", project.lock()->enumtype, "Configuration");
   H5::createAttribute(group, "name", name);
-  H5::createHardLink(group, "project", parent, ".");
+  // H5::createHardLink(group, "project", parent, ".");
+  H5::createHardLink(group, "..", parent, ".");
+  H5::createSoftLink(group, "project", "..");
   auto val_group = group.createGroup("parametervalues");
   for (const auto &val : parametervalues) {
     H5::createHardLink(val_group, val.second->name, parent,
@@ -91,8 +93,6 @@ void Configuration::write(const H5::CommonFG &loc,
                                   "/parametervalues/" + val.second->name +
                                   "/configurations",
                        name, group, ".");
-    // TODO: Create soft links instead of hard links to avoid
-    // confusion when reading HDF5 files
   }
   group.createGroup("bases");
   group.createGroup("coordinatesystems");

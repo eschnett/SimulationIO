@@ -56,24 +56,34 @@ void Field::write(const H5::CommonFG &loc, const H5::H5Location &parent) const {
   auto group = loc.createGroup(name);
   H5::createAttribute(group, "type", project.lock()->enumtype, "Field");
   H5::createAttribute(group, "name", name);
-  H5::createHardLink(group, "project", parent, ".");
-  H5::createHardLink(group, "configuration", parent,
-                     string("configurations/") + configuration->name);
+  // H5::createHardLink(group, "project", parent, ".");
+  H5::createHardLink(group, "..", parent, ".");
+  H5::createSoftLink(group, "project", "..");
+  // H5::createHardLink(group, "configuration", parent,
+  //                    string("configurations/") + configuration->name);
+  H5::createSoftLink(group, "configuration",
+                     string("../configurations/") + configuration->name);
   H5::createHardLink(group, string("project/configurations/") +
                                 configuration->name + "/fields",
                      name, group, ".");
-  H5::createHardLink(group, "manifold", parent,
-                     string("manifolds/") + manifold->name);
+  // H5::createHardLink(group, "manifold", parent,
+  //                    string("manifolds/") + manifold->name);
+  H5::createSoftLink(group, "manifold",
+                     string("../manifolds/") + manifold->name);
   H5::createHardLink(group,
                      string("project/manifolds/") + manifold->name + "/fields",
                      name, group, ".");
-  H5::createHardLink(group, "tangentspace", parent,
-                     string("tangentspaces/") + tangentspace->name);
+  // H5::createHardLink(group, "tangentspace", parent,
+  //                    string("tangentspaces/") + tangentspace->name);
+  H5::createSoftLink(group, "tangentspace",
+                     string("../tangentspaces/") + tangentspace->name);
   H5::createHardLink(group, string("project/tangentspaces/") +
                                 tangentspace->name + "/fields",
                      name, group, ".");
-  H5::createHardLink(group, "tensortype", parent,
-                     string("tensortypes/") + tensortype->name);
+  // H5::createHardLink(group, "tensortype", parent,
+  //                    string("tensortypes/") + tensortype->name);
+  H5::createSoftLink(group, "tensortype",
+                     string("../tensortypes/") + tensortype->name);
   H5::createGroup(group, "discretefields", discretefields);
 }
 

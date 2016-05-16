@@ -41,9 +41,13 @@ void CoordinateField::write(const H5::CommonFG &loc,
       coordinatesystem.lock()->manifold->project.lock()->enumtype,
       "CoordinateField");
   H5::createAttribute(group, "name", name);
-  H5::createHardLink(group, "coordinatesystem", parent, ".");
+  // H5::createHardLink(group, "coordinatesystem", parent, ".");
+  H5::createHardLink(group, "..", parent, ".");
+  H5::createSoftLink(group, "coordinatesystem", "..");
   H5::createAttribute(group, "direction", direction);
-  H5::createHardLink(group, "field", parent,
-                     string("project/fields/") + field->name);
+  // H5::createHardLink(group, "field", parent,
+  //                    string("project/fields/") + field->name);
+  H5::createSoftLink(group, "field",
+                     string("../project/fields/") + field->name);
 }
 }

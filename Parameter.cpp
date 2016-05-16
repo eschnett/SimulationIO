@@ -34,7 +34,9 @@ void Parameter::write(const H5::CommonFG &loc,
   auto group = loc.createGroup(name);
   H5::createAttribute(group, "type", project.lock()->enumtype, "Parameter");
   H5::createAttribute(group, "name", name);
-  H5::createHardLink(group, "project", parent, ".");
+  // H5::createHardLink(group, "project", parent, ".");
+  H5::createHardLink(group, "..", parent, ".");
+  H5::createSoftLink(group, "project", "..");
   H5::createGroup(group, "parametervalues", parametervalues);
 }
 

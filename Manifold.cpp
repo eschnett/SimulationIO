@@ -65,9 +65,13 @@ void Manifold::write(const H5::CommonFG &loc,
   auto group = loc.createGroup(name);
   H5::createAttribute(group, "type", project.lock()->enumtype, "Manifold");
   H5::createAttribute(group, "name", name);
-  H5::createHardLink(group, "project", parent, ".");
-  H5::createHardLink(group, "configuration", parent,
-                     string("configurations/") + configuration->name);
+  // H5::createHardLink(group, "project", parent, ".");
+  H5::createHardLink(group, "..", parent, ".");
+  H5::createSoftLink(group, "project", "..");
+  // H5::createHardLink(group, "configuration", parent,
+  //                    string("configurations/") + configuration->name);
+  H5::createSoftLink(group, "configuration",
+                     string("../configurations/") + configuration->name);
   H5::createHardLink(group, string("project/configurations/") +
                                 configuration->name + "/manifolds",
                      name, group, ".");

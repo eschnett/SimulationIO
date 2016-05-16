@@ -32,7 +32,9 @@ void BasisVector::write(const H5::CommonFG &loc,
       basis.lock()->tangentspace.lock()->project.lock()->enumtype,
       "BasisVector");
   H5::createAttribute(group, "name", name);
-  H5::createHardLink(group, "basis", parent, ".");
+  // H5::createHardLink(group, "basis", parent, ".");
+  H5::createHardLink(group, "..", parent, ".");
+  H5::createSoftLink(group, "basis", "..");
   H5::createAttribute(group, "direction", direction);
 }
 }

@@ -170,10 +170,16 @@ void DiscreteFieldBlockComponent::write(const H5::CommonFG &loc,
                                          ->enumtype,
                       "DiscreteFieldBlockComponent");
   H5::createAttribute(group, "name", name);
-  H5::createHardLink(group, "discretefieldblock", parent, ".");
-  H5::createHardLink(
-      group, "tensorcomponent", parent,
-      string("discretefield/field/tensortype/tensorcomponents/") +
+  // H5::createHardLink(group, "discretefieldblock", parent, ".");
+  H5::createHardLink(group, "..", parent, ".");
+  H5::createSoftLink(group, "discretefieldblock", "..");
+  // H5::createHardLink(
+  //     group, "tensorcomponent", parent,
+  //     string("discretefield/field/tensortype/tensorcomponents/") +
+  //         tensorcomponent->name);
+  H5::createSoftLink(
+      group, "tensorcomponent",
+      string("../discretefield/field/tensortype/tensorcomponents/") +
           tensorcomponent->name);
   switch (data_type) {
   case type_empty: // do nothing

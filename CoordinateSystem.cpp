@@ -48,14 +48,20 @@ void CoordinateSystem::write(const H5::CommonFG &loc,
   H5::createAttribute(group, "type", project.lock()->enumtype,
                       "CoordinateSystem");
   H5::createAttribute(group, "name", name);
-  H5::createHardLink(group, "project", parent, ".");
-  H5::createHardLink(group, "configuration", parent,
-                     string("configurations/") + configuration->name);
+  // H5::createHardLink(group, "project", parent, ".");
+  H5::createHardLink(group, "..", parent, ".");
+  H5::createSoftLink(group, "project", "..");
+  // H5::createHardLink(group, "configuration", parent,
+  //                    string("configurations/") + configuration->name);
+  H5::createSoftLink(group, "configuration",
+                     string("../configurations/") + configuration->name);
   H5::createHardLink(group, string("project/configurations/") +
                                 configuration->name + "/coordinatesystems",
                      name, group, ".");
-  H5::createHardLink(group, "manifold", parent,
-                     string("manifolds/") + manifold->name);
+  // H5::createHardLink(group, "manifold", parent,
+  //                    string("manifolds/") + manifold->name);
+  H5::createSoftLink(group, "manifold",
+                     string("../manifolds/") + manifold->name);
   H5::createHardLink(group, string("project/manifolds/") + manifold->name +
                                 "/coordinatesystems",
                      name, group, ".");

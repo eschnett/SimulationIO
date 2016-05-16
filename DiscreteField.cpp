@@ -52,17 +52,28 @@ void DiscreteField::write(const H5::CommonFG &loc,
   H5::createAttribute(group, "type", field.lock()->project.lock()->enumtype,
                       "DiscreteField");
   H5::createAttribute(group, "name", name);
-  H5::createHardLink(group, "field", parent, ".");
-  H5::createHardLink(group, "configuration", parent,
-                     string("project/configurations/") + configuration->name);
+  // H5::createHardLink(group, "field", parent, ".");
+  H5::createHardLink(group, "..", parent, ".");
+  H5::createSoftLink(group, "field", "..");
+  // H5::createHardLink(group, "configuration", parent,
+  //                    string("project/configurations/") +
+  //                    configuration->name);
+  H5::createSoftLink(group, "configuration",
+                     string("../project/configurations/") +
+                         configuration->name);
   H5::createHardLink(group, string("field/project/configurations/") +
                                 configuration->name + "/discretefields",
                      name, group, ".");
-  H5::createHardLink(group, "discretization", parent,
-                     string("manifold/discretizations/") +
+  // H5::createHardLink(group, "discretization", parent,
+  //                    string("manifold/discretizations/") +
+  //                        discretization->name);
+  H5::createSoftLink(group, "discretization",
+                     string("../manifold/discretizations/") +
                          discretization->name);
-  H5::createHardLink(group, "basis", parent,
-                     string("tangentspace/bases/") + basis->name);
+  // H5::createHardLink(group, "basis", parent,
+  //                    string("tangentspace/bases/") + basis->name);
+  H5::createSoftLink(group, "basis",
+                     string("../tangentspace/bases/") + basis->name);
   createGroup(group, "discretefieldblocks", discretefieldblocks);
 }
 

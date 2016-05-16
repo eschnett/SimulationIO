@@ -517,6 +517,28 @@ inline herr_t createHardLink(const CommonFG &link_loc,
                         obj_name);
 }
 
+// Create a soft link
+// Note argument order: first link location, then link target
+inline herr_t createSoftLink(const CommonFG &link_loc,
+                             const std::string &link_name,
+                             const std::string &obj_path) {
+  auto lcpl = take_hid(H5Pcreate(H5P_LINK_CREATE));
+  assert(lcpl.valid());
+  auto lapl = take_hid(H5Pcreate(H5P_LINK_ACCESS));
+  assert(lapl.valid());
+  auto herr = H5Lcreate_soft(obj_path.c_str(), link_loc.getLocId(),
+                             link_name.c_str(), lcpl, lapl);
+  assert(herr >= 0);
+  return herr;
+}
+
+inline herr_t createSoftLink(const CommonFG &link_loc,
+                             const std::string &link_path,
+                             const std::string &link_name,
+                             const std::string &obj_path) {
+  return createSoftLink(link_loc.openGroup(link_path), link_name, obj_path);
+}
+
 // Create an external link
 // Note argument order: first link location, then link target
 inline herr_t createExternalLink(const CommonFG &link_loc,

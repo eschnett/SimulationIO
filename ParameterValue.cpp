@@ -90,8 +90,11 @@ void ParameterValue::write(const H5::CommonFG &loc,
   H5::createAttribute(group, "type", parameter.lock()->project.lock()->enumtype,
                       "ParameterValue");
   H5::createAttribute(group, "name", name);
-  H5::createHardLink(group, "parameter", parent,
-                     string("project/parameters/") + parameter.lock()->name);
+  // H5::createHardLink(group, "parameter", parent,
+  //                    string("project/parameters/") + parameter.lock()->name);
+  // H5::createHardLink(group, "parameter", parent, ".");
+  H5::createHardLink(group, "..", parent, ".");
+  H5::createSoftLink(group, "parameter", "..");
   switch (value_type) {
   case type_empty:
     // do nothing

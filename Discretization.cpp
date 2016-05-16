@@ -44,9 +44,15 @@ void Discretization::write(const H5::CommonFG &loc,
   H5::createAttribute(group, "type", manifold.lock()->project.lock()->enumtype,
                       "Discretization");
   H5::createAttribute(group, "name", name);
-  H5::createHardLink(group, "manifold", parent, ".");
-  H5::createHardLink(group, "configuration", parent,
-                     string("project/configurations/") + configuration->name);
+  // H5::createHardLink(group, "manifold", parent, ".");
+  H5::createHardLink(group, "..", parent, ".");
+  H5::createSoftLink(group, "manifold", "..");
+  // H5::createHardLink(group, "configuration", parent,
+  //                    string("project/configurations/") +
+  //                    configuration->name);
+  H5::createSoftLink(group, "configuration",
+                     string("../project/configurations/") +
+                         configuration->name);
   H5::createHardLink(group, string("manifold/project/configurations/") +
                                 configuration->name + "/discretizations",
                      name, group, ".");

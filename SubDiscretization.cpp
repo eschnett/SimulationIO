@@ -54,15 +54,25 @@ void SubDiscretization::write(const H5::CommonFG &loc,
   H5::createAttribute(group, "type", manifold.lock()->project.lock()->enumtype,
                       "SubDiscretization");
   H5::createAttribute(group, "name", name);
-  H5::createHardLink(group, "manifold", parent, ".");
-  H5::createHardLink(group, "parent_discretization", parent,
-                     string("discretizations/") + parent_discretization->name);
+  // H5::createHardLink(group, "manifold", parent, ".");
+  H5::createHardLink(group, "..", parent, ".");
+  H5::createSoftLink(group, "manifold", "..");
+  // H5::createHardLink(group, "parent_discretization", parent,
+  //                    string("discretizations/") +
+  //                    parent_discretization->name);
+  H5::createSoftLink(group, "parent_discretization",
+                     string("../discretizations/") +
+                         parent_discretization->name);
   H5::createHardLink(group,
                      string("manifold/discretizations/") +
                          parent_discretization->name + "/child_discretizations",
                      name, group, ".");
-  H5::createHardLink(group, "child_discretization", parent,
-                     string("discretizations/") + child_discretization->name);
+  // H5::createHardLink(group, "child_discretization", parent,
+  //                    string("discretizations/") +
+  //                    child_discretization->name);
+  H5::createSoftLink(group, "child_discretization",
+                     string("../discretizations/") +
+                         child_discretization->name);
   H5::createHardLink(group,
                      string("manifold/discretizations/") +
                          child_discretization->name + "/parent_discretizations",

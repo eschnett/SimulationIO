@@ -123,7 +123,9 @@ void DiscretizationBlock::write(const H5::CommonFG &loc,
       discretization.lock()->manifold.lock()->project.lock()->enumtype,
       "DiscretizationBlock");
   H5::createAttribute(group, "name", name);
-  H5::createHardLink(group, "discretization", parent, ".");
+  // H5::createHardLink(group, "discretization", parent, ".");
+  H5::createHardLink(group, "..", parent, ".");
+  H5::createSoftLink(group, "discretization", "..");
   if (region.valid()) {
 #warning "TODO: write using boxtype HDF5 type"
     vector<hssize_t> offset = region.lower(), shape = region.shape();

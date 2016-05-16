@@ -33,7 +33,9 @@ void TensorComponent::write(const H5::CommonFG &loc,
                       tensortype.lock()->project.lock()->enumtype,
                       "TensorComponent");
   H5::createAttribute(group, "name", name);
-  H5::createHardLink(group, "tensortype", parent, ".");
+  // H5::createHardLink(group, "tensortype", parent, ".");
+  H5::createHardLink(group, "..", parent, ".");
+  H5::createSoftLink(group, "tensortype", "..");
   H5::createAttribute(group, "storage_index", storage_index);
   H5::createAttribute(group, "indexvalues", indexvalues);
 }

@@ -42,9 +42,15 @@ void Basis::write(const H5::CommonFG &loc, const H5::H5Location &parent) const {
   H5::createAttribute(group, "type",
                       tangentspace.lock()->project.lock()->enumtype, "Basis");
   H5::createAttribute(group, "name", name);
-  H5::createHardLink(group, "tangentspace", parent, ".");
-  H5::createHardLink(group, "configuration", parent,
-                     string("project/configurations/") + configuration->name);
+  // H5::createHardLink(group, "tangentspace", parent, ".");
+  H5::createHardLink(group, "..", parent, ".");
+  H5::createSoftLink(group, "tangentspace", "..");
+  // H5::createHardLink(group, "configuration", parent,
+  //                    string("project/configurations/") +
+  //                    configuration->name);
+  H5::createSoftLink(group, "configuration",
+                     string("../project/configurations/") +
+                         configuration->name);
   H5::createHardLink(group, string("tangentspace/project/configurations/") +
                                 configuration->name + "/bases",
                      name, group, ".");
