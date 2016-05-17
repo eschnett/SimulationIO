@@ -697,80 +697,80 @@ int main(int argc, char **argv) {
           // Done
           return 0;
         });
+  }
 
-    // Create subdiscretizations
-    // We need to add these late since Cactus stores the refinement level
-    // offsets with respect to a (virtual) global grid, whereas we need the
-    // relative offsets between two refinement levels. We can only calculate
-    // these after both levels have been handled.
-    for (auto &i0 : ioffsets) {
-      auto &configurationname = i0.first;
-      auto &ioffsets1 = i0.second;
-      auto ideltas1 = ideltas.at(configurationname);
-      for (auto &i1 : ioffsets1) {
-        const auto &mapindex = i1.first;
-        auto &ioffsets2 = i1.second;
-        auto &ideltas2 = ideltas1.at(mapindex);
+  // Create subdiscretizations
+  // We need to add these late since Cactus stores the refinement
+  // level offsets with respect to a (virtual) global grid, whereas we
+  // need the relative offsets between two refinement levels. We can
+  // only calculate these after both levels have been handled.
+  for (auto &i0 : ioffsets) {
+    auto &configurationname = i0.first;
+    auto &ioffsets1 = i0.second;
+    auto ideltas1 = ideltas.at(configurationname);
+    for (auto &i1 : ioffsets1) {
+      const auto &mapindex = i1.first;
+      auto &ioffsets2 = i1.second;
+      auto &ideltas2 = ideltas1.at(mapindex);
 
-        // Invent missing information
-        int minrefinementlevel = numeric_limits<int>::max();
-        for (const auto &i2 : ioffsets2) {
-          const auto &refinementlevel = i2.first;
-          minrefinementlevel = min(minrefinementlevel, refinementlevel);
+      // Invent missing information
+      int minrefinementlevel = numeric_limits<int>::max();
+      for (const auto &i2 : ioffsets2) {
+        const auto &refinementlevel = i2.first;
+        minrefinementlevel = min(minrefinementlevel, refinementlevel);
+      }
+      if (minrefinementlevel != numeric_limits<int>::max()) {
+        auto minioffset = ioffsets2.at(minrefinementlevel);
+        auto minidelta = ideltas2.at(minrefinementlevel);
+        for (int refinementlevel = 1; refinementlevel < minrefinementlevel;
+             ++refinementlevel) {
+          assert(!ioffsets2.count(refinementlevel));
+          assert(!ideltas2.count(refinementlevel));
+          ioffsets2[refinementlevel] = minioffset; // arbitrary choice
+          ideltas2[refinementlevel] = minidelta;   // arbitrary choice
         }
-        if (minrefinementlevel != numeric_limits<int>::max()) {
-          auto minioffset = ioffsets2.at(minrefinementlevel);
-          auto minidelta = ideltas2.at(minrefinementlevel);
-          for (int refinementlevel = 1; refinementlevel < minrefinementlevel;
-               ++refinementlevel) {
-            assert(!ioffsets2.count(refinementlevel));
-            assert(!ideltas2.count(refinementlevel));
-            ioffsets2[refinementlevel] = minioffset; // arbitrary choice
-            ideltas2[refinementlevel] = minidelta;   // arbitrary choice
-          }
-        }
+      }
 
-        // Create subdiscretizations
-        for (const auto &i2 : ioffsets2) {
-          const auto &refinementlevel = i2.first;
-          const auto &ioffset = i2.second;
-          const auto &idelta = ideltas2.at(refinementlevel);
-          // Skip the coarsest grid that exists at this iteration
-          if (ioffsets2.count(refinementlevel - 1)) {
-            string subdiscretizationname = [&] {
-              ostringstream buf;
-              buf << configurationname << "-map." << setfill('0')
-                  << setw(width_m) << mapindex << "-level." << setfill('0')
-                  << setw(width_rl) << refinementlevel;
-              return buf.str();
-            }();
-            if (!manifold->subdiscretizations.count(subdiscretizationname)) {
-              // origin0 = origin + delta0 * offset0
-              // origin1 = origin + delta1 * offset1
-              // x0 = origin0 + i0 * delta0
-              // x1 = origin1 + i1 * delta1
-              // x0 = x1
-              // (i1 + offset1) * delta1 = (i0 + offset0) * delta0
-              // i1 = (offset0 + i0) * delta0 / delta1 - offset1
-              // i1 = offset0 * delta0 / delta1 - offset1 + i0 * delta0 / delta1
-              const auto &coarse_idelta = ideltas2.at(refinementlevel - 1);
-              const auto &coarse_ioffset = ioffsets2.at(refinementlevel - 1);
-              vector<double> factor(idelta.size());
-              for (int d = 0; d < int(factor.size()); ++d)
-                factor.at(d) = coarse_idelta.at(d) / idelta.at(d);
-              vector<double> offset(ioffset.size());
-              for (int d = 0; d < int(offset.size()); ++d)
-                offset.at(d) =
-                    ioffset.at(d) - factor.at(d) * coarse_ioffset.at(d);
-              manifold->createSubDiscretization(
-                  subdiscretizationname, discretizations.at(configurationname)
-                                             .at(mapindex)
-                                             .at(refinementlevel - 1),
-                  discretizations.at(configurationname)
-                      .at(mapindex)
-                      .at(refinementlevel),
-                  factor, offset);
-            }
+      // Create subdiscretizations
+      for (const auto &i2 : ioffsets2) {
+        const auto &refinementlevel = i2.first;
+        const auto &ioffset = i2.second;
+        const auto &idelta = ideltas2.at(refinementlevel);
+        // Skip the coarsest grid that exists at this iteration
+        if (ioffsets2.count(refinementlevel - 1)) {
+          string subdiscretizationname = [&] {
+            ostringstream buf;
+            buf << configurationname << "-map." << setfill('0') << setw(width_m)
+                << mapindex << "-level." << setfill('0') << setw(width_rl)
+                << refinementlevel;
+            return buf.str();
+          }();
+          if (!manifold->subdiscretizations.count(subdiscretizationname)) {
+            // origin0 = origin + delta0 * offset0
+            // origin1 = origin + delta1 * offset1
+            // x0 = origin0 + i0 * delta0
+            // x1 = origin1 + i1 * delta1
+            // x0 = x1
+            // (i1 + offset1) * delta1 = (i0 + offset0) * delta0
+            // i1 = (offset0 + i0) * delta0 / delta1 - offset1
+            // i1 = offset0 * delta0 / delta1 - offset1 + i0 * delta0 / delta1
+            const auto &coarse_idelta = ideltas2.at(refinementlevel - 1);
+            const auto &coarse_ioffset = ioffsets2.at(refinementlevel - 1);
+            vector<double> factor(idelta.size());
+            for (int d = 0; d < int(factor.size()); ++d)
+              factor.at(d) = coarse_idelta.at(d) / idelta.at(d);
+            vector<double> offset(ioffset.size());
+            for (int d = 0; d < int(offset.size()); ++d)
+              offset.at(d) =
+                  ioffset.at(d) - factor.at(d) * coarse_ioffset.at(d);
+            manifold->createSubDiscretization(
+                subdiscretizationname, discretizations.at(configurationname)
+                                           .at(mapindex)
+                                           .at(refinementlevel - 1),
+                discretizations.at(configurationname)
+                    .at(mapindex)
+                    .at(refinementlevel),
+                factor, offset);
           }
         }
       }
