@@ -18,10 +18,9 @@ using std::string;
 shared_ptr<Project> read(const string &filename) {
   try {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);
-    auto project = readProject(file);
-    return project;
+    return readProject(file);
   } catch (H5::FileIException error) {
-    cerr << "Could not read file " << quote(filename) << ".\n";
+    cerr << "Could not read file " << quote(filename) << "\n";
     exit(2);
   }
 }
@@ -34,13 +33,12 @@ void write(const shared_ptr<Project> &project, const string &filename) {
                            H5::FileCreatPropList::DEFAULT, fapl);
     project->write(file);
   } catch (H5::FileIException error) {
-    cerr << "Could not write file " << quote(filename) << ".\n";
+    cerr << "Could not write file " << quote(filename) << "\n";
     exit(2);
   }
 }
 
 int main(int argc, char **argv) {
-
   if (argc != 3) {
     cerr << "Synopsis:\n" << argv[0] << " {<src-filename>} {<dst-filename>}\n";
     exit(1);
