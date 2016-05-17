@@ -425,20 +425,18 @@ int main(int argc, char **argv) {
                << "    component: " << component << "\n";
 
           // Get configuration
-          string value_iteration_name;
-          {
+          string value_iteration_name = [&] {
             ostringstream buf;
             buf << parameter_iteration->name << "." << setfill('0')
                 << setw(width_it) << iteration;
-            value_iteration_name = buf.str();
-          }
-          string value_timelevel_name;
-          {
+            return buf.str();
+          }();
+          string value_timelevel_name = [&] {
             ostringstream buf;
             buf << parameter_timelevel->name << "." << setfill('0')
                 << setw(width_tl) << timelevel;
-            value_timelevel_name = buf.str();
-          }
+            return buf.str();
+          }();
           auto configurationname =
               value_iteration_name + "-" + value_timelevel_name;
           if (!project->configurations.count(configurationname)) {
@@ -489,16 +487,15 @@ int main(int argc, char **argv) {
                          .size()) <= refinementlevel) {
             const int rl =
                 discretizations.at(configuration->name).at(mapindex).size();
-            string discretizationname;
-            {
+            string discretizationname = [&] {
               ostringstream buf;
               buf << configuration->name;
               if (is_multiblock)
                 buf << "-map." << setfill('0') << setw(width_m) << mapindex;
               if (is_amr)
                 buf << "-level." << setfill('0') << setw(width_rl) << rl;
-              discretizationname = buf.str();
-            }
+              return buf.str();
+            }();
             auto discretization = manifold->createDiscretization(
                 discretizationname, configuration);
             discretizations.at(configuration->name)
@@ -510,12 +507,11 @@ int main(int argc, char **argv) {
                                     .at(refinementlevel);
 
           // Get discretization block
-          string blockname;
-          {
+          string blockname = [&] {
             ostringstream buf;
             buf << "c." << setfill('0') << setw(width_c) << component;
-            blockname = buf.str();
-          }
+            return buf.str();
+          }();
           if (!discretization->discretizationblocks.count(blockname)) {
             auto discretizationblock =
                 discretization->createDiscretizationBlock(blockname);
@@ -537,14 +533,13 @@ int main(int argc, char **argv) {
 
           // Get local coordinates
           {
-            string coordinatesystemname;
-            {
+            string coordinatesystemname = [&] {
               ostringstream buf;
               buf << "cctkGH.space";
               if (is_multiblock)
                 buf << "-map." << setfill('0') << setw(width_m) << mapindex;
-              coordinatesystemname = buf.str();
-            }
+              return buf.str();
+            }();
             auto tangentspacename = coordinatesystemname;
             auto basisname = tangentspacename;
             if (!project->coordinatesystems.count(coordinatesystemname)) {
@@ -564,12 +559,11 @@ int main(int argc, char **argv) {
             auto tensorcomponent = tensortype->tensorcomponents.begin()->second;
             for (int direction = 0; direction < tangentspace->dimension;
                  ++direction) {
-              string fieldname;
-              {
+              string fieldname = [&] {
                 ostringstream buf;
                 buf << coordinatesystemname << "[" << direction << "]";
-                fieldname = buf.str();
-              }
+                return buf.str();
+              }();
               auto coordinatefieldname = fieldname;
               auto discretefieldname = fieldname;
               if (!project->fields.count(fieldname)) {
@@ -613,12 +607,11 @@ int main(int argc, char **argv) {
 
           // Get global coordinates
           if (field->name == "GRID") {
-            string coordinatesystemname;
-            {
+            string coordinatesystemname = [&] {
               ostringstream buf;
               buf << field->name << "-" << configuration->name;
-              coordinatesystemname = buf.str();
-            }
+              return buf.str();
+            }();
             if (!project->coordinatesystems.count(coordinatesystemname))
               project->createCoordinateSystem(coordinatesystemname,
                                               configuration, manifold);
@@ -626,23 +619,21 @@ int main(int argc, char **argv) {
                 project->coordinatesystems.at(coordinatesystemname);
             assert(tensortype->rank == 1);
             int direction = tensorcomponent->indexvalues.at(0);
-            string coordinatefieldname;
-            {
+            string coordinatefieldname = [&] {
               ostringstream buf;
               buf << coordinatesystem->name << "-" << direction;
-              coordinatefieldname = buf.str();
-            }
+              return buf.str();
+            }();
             if (!coordinatesystem->directions.count(direction))
               coordinatesystem->createCoordinateField(coordinatefieldname,
                                                       direction, field);
           } else if (field->name == "GRID::x" || field->name == "GRID::y" ||
                      field->name == "GRID::z") {
-            string coordinatesystemname;
-            {
+            string coordinatesystemname = [&] {
               ostringstream buf;
               buf << "GRID-" << configuration->name;
-              coordinatesystemname = buf.str();
-            }
+              return buf.str();
+            }();
             if (!project->coordinatesystems.count(coordinatesystemname))
               project->createCoordinateSystem(coordinatesystemname,
                                               configuration, manifold);
@@ -658,24 +649,22 @@ int main(int argc, char **argv) {
               direction = 2;
             else
               assert(0);
-            string coordinatefieldname;
-            {
+            string coordinatefieldname = [&] {
               ostringstream buf;
               buf << coordinatesystem->name << "-" << *field->name.rbegin();
-              coordinatefieldname = buf.str();
-            }
+              return buf.str();
+            }();
             if (!coordinatesystem->directions.count(direction))
               coordinatesystem->createCoordinateField(coordinatefieldname,
                                                       direction, field);
           }
 
           // Get discrete field
-          string discretefieldname;
-          {
+          string discretefieldname = [&] {
             ostringstream buf;
             buf << fieldname << "-" << discretization->name;
-            discretefieldname = buf.str();
-          }
+            return buf.str();
+          }();
           if (!field->discretefields.count(discretefieldname))
             field->createDiscreteField(discretefieldname, configuration,
                                        discretization, basis);
@@ -748,14 +737,13 @@ int main(int argc, char **argv) {
           const auto &idelta = ideltas2.at(refinementlevel);
           // Skip the coarsest grid that exists at this iteration
           if (ioffsets2.count(refinementlevel - 1)) {
-            string subdiscretizationname;
-            {
+            string subdiscretizationname = [&] {
               ostringstream buf;
               buf << configurationname << "-map." << setfill('0')
                   << setw(width_m) << mapindex << "-level." << setfill('0')
                   << setw(width_rl) << refinementlevel;
-              subdiscretizationname = buf.str();
-            }
+              return buf.str();
+            }();
             if (!manifold->subdiscretizations.count(subdiscretizationname)) {
               // origin0 = origin + delta0 * offset0
               // origin1 = origin + delta1 * offset1
