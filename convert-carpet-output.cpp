@@ -11,6 +11,7 @@
 #include <iomanip>
 #include <iostream>
 #include <iterator>
+#include <limits>
 #include <map>
 #include <memory>
 #include <sstream>
@@ -713,19 +714,38 @@ int main(int argc, char **argv) {
     // offsets with respect to a (virtual) global grid, whereas we need the
     // relative offsets between two refinement levels. We can only calculate
     // these after both levels have been handled.
-    for (const auto &i0 : ioffsets) {
-      const auto &configurationname = i0.first;
-      const auto &ioffsets1 = i0.second;
+    for (auto &i0 : ioffsets) {
+      auto &configurationname = i0.first;
+      auto &ioffsets1 = i0.second;
       auto ideltas1 = ideltas.at(configurationname);
-      for (const auto &i1 : ioffsets1) {
+      for (auto &i1 : ioffsets1) {
         const auto &mapindex = i1.first;
-        const auto &ioffsets2 = i1.second;
-        auto ideltas2 = ideltas1.at(mapindex);
+        auto &ioffsets2 = i1.second;
+        auto &ideltas2 = ideltas1.at(mapindex);
+
+        // Invent missing information
+        int minrefinementlevel = numeric_limits<int>::max();
+        for (const auto &i2 : ioffsets2) {
+          const auto &refinementlevel = i2.first;
+          minrefinementlevel = min(minrefinementlevel, refinementlevel);
+        }
+        if (minrefinementlevel != numeric_limits<int>::max()) {
+          auto minioffset = ioffsets2.at(minrefinementlevel);
+          auto minidelta = ideltas2.at(minrefinementlevel);
+          for (int refinementlevel = 1; refinementlevel < minrefinementlevel;
+               ++refinementlevel) {
+            assert(!ioffsets2.count(refinementlevel));
+            assert(!ideltas2.count(refinementlevel));
+            ioffsets2[refinementlevel] = minioffset; // arbitrary choice
+            ideltas2[refinementlevel] = minidelta;   // arbitrary choice
+          }
+        }
+
+        // Create subdiscretizations
         for (const auto &i2 : ioffsets2) {
           const auto &refinementlevel = i2.first;
           const auto &ioffset = i2.second;
-          auto idelta = ideltas2.at(refinementlevel);
-
+          const auto &idelta = ideltas2.at(refinementlevel);
           // Skip the coarsest grid that exists at this iteration
           if (ioffsets2.count(refinementlevel - 1)) {
             string subdiscretizationname;
@@ -745,8 +765,8 @@ int main(int argc, char **argv) {
               // (i1 + offset1) * delta1 = (i0 + offset0) * delta0
               // i1 = (offset0 + i0) * delta0 / delta1 - offset1
               // i1 = offset0 * delta0 / delta1 - offset1 + i0 * delta0 / delta1
-              auto coarse_idelta = ideltas2.at(refinementlevel - 1);
-              auto coarse_ioffset = ioffsets2.at(refinementlevel - 1);
+              const auto &coarse_idelta = ideltas2.at(refinementlevel - 1);
+              const auto &coarse_ioffset = ioffsets2.at(refinementlevel - 1);
               vector<double> factor(idelta.size());
               for (int d = 0; d < int(factor.size()); ++d)
                 factor.at(d) = coarse_idelta.at(d) / idelta.at(d);
