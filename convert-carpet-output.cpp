@@ -172,6 +172,27 @@ typedef vect<hssize_t, 3> ivect;
 typedef bbox<hssize_t, 3> ibbox;
 typedef bboxset<hssize_t, 3> ibboxset;
 
+namespace std {
+// TODO: Move this to Helpers.hpp?
+template <typename T> istream &operator>>(istream &is, vector<T> &v) {
+  v.clear();
+  is >> expect('[');
+  bool isfirst = true;
+  for (char ch = is.peek(); ch != ']'; ch = is.peek()) {
+    if (!isfirst)
+      is >> expect(',');
+    isfirst = false;
+    v.push_back([&] {
+      T elt;
+      is >> elt;
+      return elt;
+    }());
+  }
+  is >> expect(']');
+  return is;
+}
+}
+
 int main(int argc, char **argv) {
 
   bool have_error = false;
@@ -249,10 +270,52 @@ int main(int argc, char **argv) {
     basis->createBasisVector(dirnames[d], d);
   }
 
+  bool need_active_regions = false;
+  vector<vector<vector<vector<hssize_t>>>> grid_ghosts;  // [mapindex][reflevel]
+  vector<vector<vector<vector<hssize_t>>>> grid_buffers; // [mapindex][reflevel]
+  vector<vector<vector<vector<hssize_t>>>> grid_domain;  // [mapindex][reflevel]
+
   for (const auto &inputfilename : inputfilenames) {
     cout << "Reading file " << inputfilename << "...\n";
 
     auto inputfile = H5::H5File(inputfilename, H5F_ACC_RDONLY);
+
+    if (grid_ghosts.empty()) {
+      cout << "  reading Parameters and Global Attributes...\n";
+      auto globals = inputfile.openGroup("Parameters and Global Attributes");
+      auto dataset = globals.openDataSet("Grid Structure v5");
+      auto space = dataset.getSpace();
+      assert(space.getSimpleExtentType() == H5S_SCALAR);
+      auto type = dataset.getStrType();
+      auto size = type.getSize();
+      H5std_string buf;
+      dataset.read(buf, H5::StrType(H5::PredType::C_S1, size));
+      string grid_structure = buf;
+      // vector<vector<vector<region_t>>> grid_superstructure;
+      // vector<vector<vector<region_t>>> grid_structure;
+      // vector<vector<vector<double>>> grid_times;
+      // vector<vector<vector<double>>> grid_delta_times;
+      // vector<vector<vector<vector<int>>>> grid_ghosts;
+      // vector<vector<vector<vector<int>>>> grid_buffers;
+      // vector<vector<int>> grid_prolongation_orders;
+
+      string ghosts_pattern = "grid_ghosts:";
+      auto ghosts_pos = grid_structure.find(ghosts_pattern);
+      assert(ghosts_pos != string::npos);
+      istringstream(
+          grid_structure.substr(ghosts_pos + ghosts_pattern.length())) >>
+          grid_ghosts;
+      cout << "grid_ghosts=" << grid_ghosts << "\n";
+
+      string buffers_pattern = "grid_buffers:";
+      auto buffers_pos = grid_structure.find(buffers_pattern);
+      assert(buffers_pos != string::npos);
+      istringstream(
+          grid_structure.substr(buffers_pos + buffers_pattern.length())) >>
+          grid_buffers;
+      cout << "grid_buffers=" << grid_buffers << "\n";
+    }
+
     hsize_t idx = 0;
     H5::iterateElems(
         inputfile, H5_INDEX_NAME, H5_ITER_NATIVE, &idx,
@@ -522,6 +585,33 @@ int main(int argc, char **argv) {
 
             if (active.valid()) {
               discretizationblock->setActive(active);
+            } else {
+              need_active_regions = true;
+              // Record location of outer boundary (of this level)
+              vector<hssize_t> bbox;
+              H5::readAttribute(dataset, "cctk_bbox", bbox);
+              assert(bbox.size() == 2 * dim);
+              if (int(grid_domain.size()) <= mapindex)
+                grid_domain.resize(mapindex + 1);
+              if (int(grid_domain.at(mapindex).size()) <= refinementlevel)
+                grid_domain.at(mapindex).resize(refinementlevel + 1);
+              auto &level_domain = grid_domain.at(mapindex).at(refinementlevel);
+              level_domain.resize(2);
+              for (int f = 0; f < 2; ++f) {
+                level_domain.at(f).resize(dim, numeric_limits<hssize_t>::min());
+                for (int d = 0; d < dim; ++d) {
+                  if (bbox.at(2 * d + f)) {
+                    auto &loc = level_domain.at(f).at(d);
+                    const auto &box = discretizationblock->box;
+                    vector<hssize_t> vals = f == 0 ? box.lower() : box.upper();
+                    const auto &val = vals.at(d);
+                    assert(val != numeric_limits<hssize_t>::min());
+                    if (loc == numeric_limits<hssize_t>::min())
+                      loc = val;
+                    assert(loc == val);
+                  }
+                }
+              }
             }
           }
           auto discretizationblock =
@@ -693,6 +783,60 @@ int main(int argc, char **argv) {
           // Done
           return 0;
         });
+  }
+
+  if (need_active_regions) {
+    cout << "Calculating active regions...\n";
+    // Calculate active regions
+    for (const auto &i0 : discretizations) {
+      // const auto &configuration = i0.first;
+      for (const auto &i1 : i0.second) {
+        const auto &mapindex = i1.first;
+        for (size_t reflevel = 0; reflevel < i1.second.size(); ++reflevel) {
+          const auto &discretization = i1.second.at(reflevel);
+          cout << "  discretization: " << discretization->name << "\n";
+          const auto &buffers = grid_buffers.at(mapindex).at(reflevel);
+          const auto &domain = grid_domain.at(mapindex).at(reflevel);
+          region_t region(dim);
+          for (const auto &i1 : discretization->discretizationblocks) {
+            const auto &discretizationblock = i1.second;
+            region = region | discretizationblock->box;
+          }
+          cout << "    region: " << region << "\n";
+          point_t lower_buffers = buffers.at(0);
+          point_t upper_buffers = buffers.at(1);
+          auto max_buffers = max(maxval(lower_buffers), maxval(upper_buffers));
+          assert(max_buffers >= 0);
+          auto region_box = region.bounding_box();
+          vector<hssize_t> region_lower = region_box.lower();
+          vector<hssize_t> region_upper = region_box.upper();
+          vector<hssize_t> domain_lower = domain.at(0);
+          vector<hssize_t> domain_upper = domain.at(1);
+          for (int d = 0; d < dim; ++d) {
+            if (domain_lower.at(d) == numeric_limits<hssize_t>::min())
+              domain_lower.at(d) = region_lower.at(d) - 4 * max_buffers;
+            if (domain_upper.at(d) == numeric_limits<hssize_t>::min())
+              domain_upper.at(d) = region_upper.at(d) + 4 * max_buffers;
+          }
+          auto effective_domain =
+              box_t(point_t(domain_lower), point_t(domain_upper));
+          cout << "    effective_domain: " << effective_domain << "\n";
+          region_t effective_boundary =
+              region_t(effective_domain.grow(4 * max_buffers)) -
+              effective_domain;
+          region_t active = region &
+                            (region | effective_boundary)
+                                .shrink(lower_buffers, upper_buffers);
+          cout << "    active: " << active << "\n";
+          for (const auto &i2 : discretization->discretizationblocks) {
+            const auto &discretizationblock = i2.second;
+            if (!discretizationblock->active.valid())
+              discretizationblock->setActive(
+                  region_t(discretizationblock->box) & active);
+          }
+        }
+      }
+    }
   }
 
   // Create subdiscretizations
