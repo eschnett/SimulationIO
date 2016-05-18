@@ -512,7 +512,7 @@ TEST(DiscretizationBlock, create) {
   shape.at(0) = 9;
   shape.at(1) = 10;
   shape.at(2) = 11;
-  db1->setRegion(box_t(offset, shape));
+  db1->setBox(box_t(offset, shape));
   EXPECT_EQ(1, d1->discretizationblocks.size());
   EXPECT_EQ(db1, d1->discretizationblocks.at("db1"));
 }
@@ -530,7 +530,7 @@ TEST(DiscretizationBlock, HDF5) {
     buf << *p1->manifolds.at("m1")->discretizations.at("d1");
     EXPECT_EQ("Discretization \"d1\": Configuration \"conf1\" Manifold \"m1\"\n"
               "  DiscretizationBlock \"db1\": Discretization \"d1\" "
-              "region=([3,3,3]:[9,10,11])\n",
+              "box=([3,3,3]:[9,10,11])\n",
               buf.str());
   }
   remove(filename);

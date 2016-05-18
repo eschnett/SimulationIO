@@ -32,7 +32,7 @@ struct DiscretizationBlock : Common,
                              std::enable_shared_from_this<DiscretizationBlock> {
   // Discretization of a certain region, represented by contiguous data
   weak_ptr<Discretization> discretization; // parent
-  box_t region;
+  box_t box;
   region_t active;
   NoBackLink<weak_ptr<DiscreteFieldBlock>> discretefieldblocks;
 
@@ -44,10 +44,9 @@ struct DiscretizationBlock : Common,
     return Common::invariant() && bool(discretization.lock()) &&
            discretization.lock()->discretizationblocks.count(name) &&
            discretization.lock()->discretizationblocks.at(name).get() == this &&
-           (!region.valid() ||
-            (region.rank() ==
-                 discretization.lock()->manifold.lock()->dimension &&
-             !region.empty())) &&
+           (!box.valid() ||
+            (box.rank() == discretization.lock()->manifold.lock()->dimension &&
+             !box.empty())) &&
            (!active.valid() ||
             active.rank() == discretization.lock()->manifold.lock()->dimension);
   }
@@ -82,15 +81,14 @@ private:
 public:
   virtual ~DiscretizationBlock() {}
 
-  void setRegion() { region.reset(); }
-  void setRegion(const box_t &region_) {
-    assert(region_.valid() &&
-           region_.rank() ==
-               discretization.lock()->manifold.lock()->dimension &&
-           !region_.empty());
-    region = region_;
+  void setBox() { box.reset(); }
+  void setBox(const box_t &box_) {
+    assert(box_.valid() &&
+           box_.rank() == discretization.lock()->manifold.lock()->dimension &&
+           !box_.empty());
+    box = box_;
   }
-  box_t getRegion() const { return region; }
+  box_t getBox() const { return box; }
 
   void setActive() { active.reset(); }
   void setActive(const region_t &active_) {

@@ -263,7 +263,7 @@ int main(int argc, char **argv) {
         [&](const H5::Group &group, const std::string &name,
             const H5L_info_t *info) {
           if (name == "Parameters and Global Attributes") {
-            cout << "  skipping " << name << "\n";
+            cout << "  skipping " << name << "...\n";
             return 0;
           }
           cout << "  opening dataset " << name << "...\n";
@@ -389,28 +389,28 @@ int main(int argc, char **argv) {
             ioffset.at(d) =
                 double(ioffsetnum.at(d)) / double(ioffsetdenom.at(d));
           // active region
-          dregion active;
+          region_t active;
           if (dataset.attrExists("active")) {
             string active_str = H5::readAttribute<string>(dataset, "active");
             istringstream ibuf(active_str);
             ibboxset active_bs;
             ibuf >> active_bs;
-            vector<dbox> dbs;
+            vector<box_t> dbs;
             for (const ibbox &b : active_bs.elts) {
-              dpoint lo(b.lower.elts);
-              dpoint hi(b.upper.elts);
-              const dpoint str(b.stride.elts);
+              point_t lo(b.lower.elts);
+              point_t hi(b.upper.elts);
+              const point_t str(b.stride.elts);
               hi += str;
-              const dpoint poffsetnum(ioffsetnum);
-              const dpoint poffsetdenom(ioffsetdenom);
+              const point_t poffsetnum(ioffsetnum);
+              const point_t poffsetdenom(ioffsetdenom);
               assert(all(!(str % poffsetdenom)));
               lo -= str * poffsetnum / poffsetdenom;
               hi -= str * poffsetnum / poffsetdenom;
               assert(all(!(lo % str) && !(hi % str)));
-              const dbox db(lo / str, hi / str);
+              const box_t db(lo / str, hi / str);
               dbs.push_back(db);
             }
-            active = dregion(dbs);
+            active = region_t(dbs);
           }
 
           // Output information
@@ -522,8 +522,8 @@ int main(int argc, char **argv) {
             assert(rank == dim);
             dataspace.getSimpleExtentDims((hsize_t *)(shape.data()));
             std::reverse(shape.begin(), shape.end());
-            discretizationblock->setRegion(
-                box_t(offset, point_t(offset) + shape));
+            discretizationblock->setBox(box_t(offset, point_t(offset) + shape));
+
             if (active.valid()) {
               discretizationblock->setActive(active);
             }
@@ -590,7 +590,7 @@ int main(int argc, char **argv) {
                     discretefieldblock->createDiscreteFieldBlockComponent(
                         discretefieldblockcomponentname, tensorcomponent);
 
-                vector<hssize_t> count = discretizationblock->region.shape();
+                vector<hssize_t> count = discretizationblock->box.shape();
                 double data_origin = origin.at(direction);
                 vector<double> data_delta(manifold->dimension, 0.0);
                 data_delta.at(direction) = delta.at(direction);
@@ -700,10 +700,10 @@ int main(int argc, char **argv) {
   }
 
   // Create subdiscretizations
-  // We need to add these late since Cactus stores the refinement
-  // level offsets with respect to a (virtual) global grid, whereas we
-  // need the relative offsets between two refinement levels. We can
-  // only calculate these after both levels have been handled.
+  // We need to add these late since Cactus stores the refinement level offsets
+  // with respect to a (virtual) global grid, whereas we need the relative
+  // offsets between two refinement levels. We can only calculate these after
+  // both levels have been handled.
   for (auto &i0 : ioffsets) {
     auto &configurationname = i0.first;
     auto &ioffsets1 = i0.second;

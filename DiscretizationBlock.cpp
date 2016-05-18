@@ -69,7 +69,7 @@ void DiscretizationBlock::read(
     std::reverse(offset.begin(), offset.end());
     H5::readAttribute(group, "shape", shape);
     std::reverse(shape.begin(), shape.end());
-    region = box_t(offset, point_t(offset) + shape);
+    box = box_t(offset, point_t(offset) + shape);
   }
   if (group.attrExists("active")) {
     // TODO read_active<0>(group, *this, active);
@@ -83,8 +83,8 @@ void DiscretizationBlock::read(
 ostream &DiscretizationBlock::output(ostream &os, int level) const {
   os << indent(level) << "DiscretizationBlock " << quote(name)
      << ": Discretization " << quote(discretization.lock()->name);
-  if (region.valid())
-    os << " region=" << region;
+  if (box.valid())
+    os << " box=" << box;
   if (active.valid())
     os << " active=" << active;
   os << "\n";
@@ -126,9 +126,9 @@ void DiscretizationBlock::write(const H5::CommonFG &loc,
   // H5::createHardLink(group, "discretization", parent, ".");
   H5::createHardLink(group, "..", parent, ".");
   H5::createSoftLink(group, "discretization", "..");
-  if (region.valid()) {
+  if (box.valid()) {
 #warning "TODO: write using boxtype HDF5 type"
-    vector<hssize_t> offset = region.lower(), shape = region.shape();
+    vector<hssize_t> offset = box.lower(), shape = box.shape();
     std::reverse(offset.begin(), offset.end());
     H5::createAttribute(group, "offset", offset);
     std::reverse(shape.begin(), shape.end());
