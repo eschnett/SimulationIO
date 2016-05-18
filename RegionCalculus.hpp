@@ -13,7 +13,7 @@
 #include <memory>
 #include <vector>
 
-#define REGIONCALCULUS_DEBUG 1
+#define REGIONCALCULUS_DEBUG 0
 
 namespace RegionCalculus {
 
