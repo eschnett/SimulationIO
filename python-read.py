@@ -33,16 +33,16 @@ discretefield = field.discretefields['rho']
 for discretefieldblockname in discretefield.discretefieldblocks:
     discretefieldblock = discretefield.discretefieldblocks[discretefieldblockname]
     discretefieldblockcomponent = discretefieldblock.discretefieldblockcomponents['scalar']
-    assert discretefieldblockcomponent.data_type == DiscreteFieldBlockComponent.type_dataset
     dataset = discretefieldblockcomponent.getData_dataset()
+    assert dataset
     path = dataset.path
     name = dataset.name
 
 
 
     # discretizationblock = discretefieldblock.discretizationblock
-    # region = discretizationblock.region
-    # print "region=", region
+    # box = discretizationblock.box
+    # print "box=", box
     # active = discretizationblock.active
     # print "active=", active
 
