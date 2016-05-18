@@ -31,9 +31,8 @@ for discretefieldblockname in discretefield[:discretefieldblocks]
         get(discretefield[:discretefieldblocks], discretefieldblockname)
     discretefieldblockcomponent =
         get(discretefieldblock[:discretefieldblockcomponents], "scalar")
-    @assert discretefieldblockcomponent[:data_type] ==
-        SIO.DiscreteFieldBlockComponent[:type_dataset]
     dataset = discretefieldblockcomponent[:getData_dataset]()
+    # TODO: check whether dataset is nullptr (None)
     path = dataset[:path]
     name = dataset[:name]
 

@@ -453,12 +453,12 @@ import Base: rank
 
 
 @wrap_field DiscretizationBlock.name::AbstractString
-@wrap_field DiscretizationBlock.region::IBox
+@wrap_field DiscretizationBlock.box::IBox
 #TODO @wrap_field DiscretizationBlock.active::IRegion
 @wrap_field DiscretizationBlock.discretization::PyWeakPtr{Discretization}
 
 @wrap_memfun DiscretizationBlock.invariant()::Bool
-@wrap_memfun DiscretizationBlock.setRegion(
+@wrap_memfun DiscretizationBlock.setBox(
     ioffset::Vector{Int},
     ishape::Vector{Int})::Void
 
