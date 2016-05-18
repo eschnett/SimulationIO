@@ -21,10 +21,6 @@
 using namespace SimulationIO;
 using namespace std;
 
-typedef RegionCalculus::dpoint<hssize_t> dpoint;
-typedef RegionCalculus::dbox<hssize_t> dbox;
-typedef RegionCalculus::dregion<hssize_t> dregion;
-
 const char *const dirnames[] = {"x", "y", "z"};
 
 // Output field widths for various quantities
