@@ -68,6 +68,8 @@ TEST(RegionCalculus, box) {
   box b5 = b4 >> p1;
   box b3 = b4 << p1;
   box b6 = b3 * point(2);
+  box b7 = b4.grow(p0, p1);
+  box b8 = b4.grow(p1, p0);
   EXPECT_EQ(b4, (box(::box<long long, 3>(b4))));
   EXPECT_TRUE(b4 == b4);
   EXPECT_TRUE(b4 != b5);
@@ -83,6 +85,10 @@ TEST(RegionCalculus, box) {
   EXPECT_TRUE(b4.issuperset(b));
   EXPECT_FALSE(b.issuperset(b4));
   EXPECT_TRUE(b.issuperset(b));
+  EXPECT_TRUE(b7.issuperset(b4));
+  EXPECT_TRUE(b7.issuperset(b5));
+  EXPECT_TRUE(b8.issuperset(b4));
+  EXPECT_TRUE(b8.issuperset(b3));
   EXPECT_FALSE(b4.is_strict_superset(b4));
   EXPECT_TRUE(b4.is_strict_superset(b));
   EXPECT_FALSE(b.is_strict_superset(b4));
@@ -155,7 +161,18 @@ TEST(RegionCalculus, region) {
   rs.push_back(r2.symmetric_difference(r12));
   for (std::size_t i = 0; i < rs.size(); ++i) {
     const auto &ri = rs[i];
+    auto rgrown = ri.grow(p1);
+    auto rshrunk = ri.shrink(p1);
     EXPECT_TRUE(ri.invariant());
+    EXPECT_TRUE(rgrown.invariant());
+    EXPECT_TRUE(rshrunk.invariant());
+    EXPECT_TRUE(rgrown.issuperset(ri));
+    if (ri.empty())
+      EXPECT_TRUE(rgrown.empty());
+    EXPECT_TRUE(ri.issuperset(rshrunk));
+    if (!rshrunk.empty())
+      EXPECT_TRUE(rshrunk.grow(p1) == ri);
+    EXPECT_TRUE(rgrown.shrink(p1) == ri);
     for (std::size_t j = 0; j < rs.size(); ++j) {
       const auto &rj = rs[j];
       auto rintersection = ri.intersection(rj);
@@ -166,6 +183,7 @@ TEST(RegionCalculus, region) {
       EXPECT_TRUE(rdifference.invariant());
       EXPECT_TRUE(rsetunion.invariant());
       EXPECT_TRUE(rsymmetric_difference.invariant());
+      EXPECT_TRUE(ri.issuperset(rintersection));
       EXPECT_TRUE(ri.issuperset(rintersection));
       EXPECT_TRUE(rj.issuperset(rintersection));
       EXPECT_TRUE(ri.issuperset(rdifference));

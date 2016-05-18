@@ -409,6 +409,16 @@ template <typename T, int D> struct box {
   box operator>>(const point<T, D> &p) const { return box(*this) >>= p; }
   box operator<<(const point<T, D> &p) const { return box(*this) <<= p; }
   box operator*(const point<T, D> &p) const { return box(*this) *= p; }
+  box grow(const point<T, D> &dlo, const point<T, D> &dup) const {
+    box nb(*this);
+    if (!empty()) {
+      nb.lo -= dlo;
+      nb.hi += dup;
+    }
+    return nb;
+  }
+  box grow(const point<T, D> &d) const { return grow(d, d); }
+  box grow(const T &n) const { return grow(point<T, D>(n)); }
 
   // Comparison operators
   bool operator==(const box &b) const {
@@ -679,6 +689,41 @@ public:
       sz += b.size();
     return sz;
   }
+
+  // Shift and scale operators
+  region grow(const point<T, D> &dlo, const point<T, D> &dup) const {
+    // Cannot shrink
+    assert(all(dlo + dup >= point<T, D>(T(0))));
+    region nr;
+    for (const auto &b : boxes)
+      nr = nr | b.grow(dlo, dup);
+    return nr;
+  }
+  region grow(const point<T, D> &d) const { return grow(d, d); }
+  region grow(const T &n) const { return grow(point<T, D>(n)); }
+  region operator>>(const point<T, D> &d) const {
+    region nr(*this);
+    for (auto &b : nr.boxes)
+      b >>= d;
+    return nr;
+  }
+  region operator<<(const point<T, D> &d) const {
+    region nr(*this);
+    for (auto &b : nr.boxes)
+      b <<= d;
+    return nr;
+  }
+  region shrink(const point<T, D> &dlo, const point<T, D> &dup) const {
+    // Cannot grow
+    assert(all(dlo + dup >= point<T, D>(T(0))));
+    auto maxdist = maxval(max(abs(dlo), abs(dup)));
+    auto world = bounding_box();
+    region world2 = world.grow(2 * maxdist);
+    region world4 = world.grow(4 * maxdist);
+    return world2 - (world4 - *this).grow(dlo, dup);
+  }
+  region shrink(const point<T, D> &d) const { return shrink(d, d); }
+  region shrink(const T &n) const { return shrink(point<T, D>(n)); }
 
   // Set operations
   box<T, D> bounding_box() const {
@@ -1339,6 +1384,10 @@ template <typename T> struct vbox {
   virtual unique_ptr<vbox> operator>>(const vpoint<T> &p) const = 0;
   virtual unique_ptr<vbox> operator<<(const vpoint<T> &p) const = 0;
   virtual unique_ptr<vbox> operator*(const vpoint<T> &p) const = 0;
+  virtual unique_ptr<vbox> grow(const vpoint<T> &dlo,
+                                const vpoint<T> &dup) const = 0;
+  virtual unique_ptr<vbox> grow(const vpoint<T> &d) const = 0;
+  virtual unique_ptr<vbox> grow(const T &n) const = 0;
 
   // Comparison operators
   virtual bool operator==(const vbox &b) const = 0;
@@ -1384,6 +1433,18 @@ template <typename T> struct vregion {
   virtual bool empty() const = 0;
   typedef typename region<T, 0>::prod_t prod_t;
   virtual prod_t size() const = 0;
+
+  // Shift and scale operators
+  virtual unique_ptr<vregion> grow(const vpoint<T> &dlo,
+                                   const vpoint<T> &dup) const = 0;
+  virtual unique_ptr<vregion> grow(const vpoint<T> &d) const = 0;
+  virtual unique_ptr<vregion> grow(const T &n) const = 0;
+  virtual unique_ptr<vregion> operator>>(const vpoint<T> &d) const = 0;
+  virtual unique_ptr<vregion> operator<<(const vpoint<T> &d) const = 0;
+  virtual unique_ptr<vregion> shrink(const vpoint<T> &dlo,
+                                     const vpoint<T> &dup) const = 0;
+  virtual unique_ptr<vregion> shrink(const vpoint<T> &d) const = 0;
+  virtual unique_ptr<vregion> shrink(const T &n) const = 0;
 
   // Set operations
   virtual unique_ptr<vbox<T>> bounding_box() const = 0;
@@ -1631,6 +1692,18 @@ template <typename T, int D> struct wbox : vbox<T> {
   unique_ptr<vbox<T>> operator*(const vpoint<T> &p) const {
     return make_unique<wbox>(val * dynamic_cast<const wpoint<T, D> &>(p).val);
   }
+  unique_ptr<vbox<T>> grow(const vpoint<T> &dlo, const vpoint<T> &dup) const {
+    return make_unique<wbox>(
+        val.grow(dynamic_cast<const wpoint<T, D> &>(dlo).val,
+                 dynamic_cast<const wpoint<T, D> &>(dup).val));
+  }
+  unique_ptr<vbox<T>> grow(const vpoint<T> &d) const {
+    return make_unique<wbox>(
+        val.grow(dynamic_cast<const wpoint<T, D> &>(d).val));
+  }
+  unique_ptr<vbox<T>> grow(const T &n) const {
+    return make_unique<wbox>(val.grow(n));
+  }
 
   // Comparison operators
   bool operator==(const vbox<T> &b) const {
@@ -1726,6 +1799,42 @@ template <typename T, int D> struct wregion : vregion<T> {
   bool empty() const { return val.empty(); }
   typedef typename vregion<T>::prod_t prod_t;
   prod_t size() const { return val.size(); }
+
+  // Shift and scale operators
+  unique_ptr<vregion<T>> grow(const vpoint<T> &dlo,
+                              const vpoint<T> &dup) const {
+    return make_unique<wregion>(
+        val.grow(dynamic_cast<const wpoint<T, D> &>(dlo).val,
+                 dynamic_cast<const wpoint<T, D> &>(dup).val));
+  }
+  unique_ptr<vregion<T>> grow(const vpoint<T> &d) const {
+    return make_unique<wregion>(
+        val.grow(dynamic_cast<const wpoint<T, D> &>(d).val));
+  }
+  unique_ptr<vregion<T>> grow(const T &n) const {
+    return make_unique<wregion>(val.grow(n));
+  }
+  unique_ptr<vregion<T>> operator>>(const vpoint<T> &d) const {
+    return make_unique<wregion>(val >>
+                                dynamic_cast<const wpoint<T, D> &>(d).val);
+  }
+  unique_ptr<vregion<T>> operator<<(const vpoint<T> &d) const {
+    return make_unique<wregion>(val
+                                << dynamic_cast<const wpoint<T, D> &>(d).val);
+  }
+  unique_ptr<vregion<T>> shrink(const vpoint<T> &dlo,
+                                const vpoint<T> &dup) const {
+    return make_unique<wregion>(
+        val.shrink(dynamic_cast<const wpoint<T, D> &>(dlo).val,
+                   dynamic_cast<const wpoint<T, D> &>(dup).val));
+  }
+  unique_ptr<vregion<T>> shrink(const vpoint<T> &d) const {
+    return make_unique<wregion>(
+        val.shrink(dynamic_cast<const wpoint<T, D> &>(d).val));
+  }
+  unique_ptr<vregion<T>> shrink(const T &n) const {
+    return make_unique<wregion>(val.shrink(n));
+  }
 
   // Set operations
   unique_ptr<vbox<T>> bounding_box() const {
@@ -2281,6 +2390,11 @@ template <typename T> struct dbox {
   dbox operator>>(const dpoint<T> &p) const { return dbox(*val >> *p.val); }
   dbox operator<<(const dpoint<T> &p) const { return dbox(*val << *p.val); }
   dbox operator*(const dpoint<T> &p) const { return dbox(*val * *p.val); }
+  dbox grow(const dpoint<T> &dlo, const dpoint<T> &dup) const {
+    return dbox(val->grow(*dlo, *dup));
+  }
+  dbox grow(const dpoint<T> &d) const { return dbox(val->grow(*d)); }
+  dbox grow(const T &n) const { return dbox(val->grow(n)); }
 
   // Comparison operators
   bool operator==(const dbox &b) const { return *val == *b.val; }
@@ -2397,6 +2511,24 @@ template <typename T> struct dregion {
   bool empty() const { return val->empty(); }
   typedef typename vregion<T>::prod_t prod_t;
   prod_t size() const { return val->size(); }
+
+  // Shift and scale operators
+  dregion grow(const dpoint<T> &dlo, const dpoint<T> &dup) const {
+    return dregion(val->grow(*dlo, *dup));
+  }
+  dregion grow(const dpoint<T> &d) const { return dregion(val->grow(*d)); }
+  dregion grow(const T &n) const { return dregion(val->grow(n)); }
+  dregion operator>>(const dpoint<T> &d) const {
+    return dregion(*val >> *d.val);
+  }
+  dregion operator<<(const dpoint<T> &d) const {
+    return dregion(*val << *d.val);
+  }
+  dregion shrink(const dpoint<T> &dlo, const dpoint<T> &dup) const {
+    return dregion(val->shrink(*dlo.val, *dup.val));
+  }
+  dregion shrink(const dpoint<T> &d) const { return dregion(val->shrink(*d)); }
+  dregion shrink(const T &n) const { return dregion(val->shrink(n)); }
 
   // Set operations
   dbox<T> bounding_box() const { return dbox<T>(val->bounding_box()); }
