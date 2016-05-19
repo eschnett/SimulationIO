@@ -1009,7 +1009,7 @@ template <typename T> struct region2<T, 0> {
     return region2(m_full ^ other.m_full);
   }
   region2 operator-(const region2 &other) const {
-    return region2(m_full && !other.m_full);
+    return region2(m_full & !other.m_full);
   }
 
   region2 &operator^=(const region2 &other) { return *this = *this ^ other; }
@@ -1025,15 +1025,17 @@ template <typename T> struct region2<T, 0> {
   region2 difference(const region2 &other) const { return *this - other; }
 
   // Set comparison operators
-  // bool contains(const point<T, 0> &p) const { return false; }
-  // bool isdisjoint(const region2 &other) const { return true; }
+  bool contains(const point<T, D> &p) const { return m_full; }
+  bool isdisjoint(const region2 &other) const {
+    return !(m_full & other.m_full);
+  }
 
   // Comparison operators
   bool operator<=(const region2 &other) const {
     return !m_full || other.m_full;
   }
   bool operator>=(const region2 &other) const { return other <= *this; }
-  bool operator<(const region2 &other) const { return !m_full && other.m_full; }
+  bool operator<(const region2 &other) const { return !m_full & other.m_full; }
   bool operator>(const region2 &other) const { return other < *this; }
   bool issubset(const region2 &other) const { return *this <= other; }
   bool issuperset(const region2 &other) const { return *this >= other; }
@@ -1126,6 +1128,23 @@ private:
     }
     assert(decoded_subregion0.empty());
     assert(decoded_subregion1.empty());
+  }
+
+  template <typename F> region2 unary_operator(const F &op) const {
+    region2 res;
+    subregion2_t old_decoded_subregion;
+    traverse_subregions(
+        [&](const T pos, const subregion2_t &decoded_subregion0) {
+          auto decoded_subregion = op(decoded_subregion0);
+          auto subregion = decoded_subregion ^ old_decoded_subregion;
+          if (!subregion.empty())
+            res.subregions[pos] = std::move(subregion);
+          using std::swap;
+          swap(old_decoded_subregion, decoded_subregion);
+        });
+    assert(old_decoded_subregion.empty());
+    assert(res.invariant());
+    return res;
   }
 
   template <typename F>
