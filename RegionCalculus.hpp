@@ -274,14 +274,14 @@ template <typename T, int D> struct point {
   }
   T minval() const {
     using std::min;
-    T r = std::numeric_limits<T>::max();
+    T r = numeric_limits<T>::max();
     for (int d = 0; d < D; ++d)
       r = min(r, elt[d]);
     return r;
   }
   T maxval() const {
     using std::max;
-    T r = std::numeric_limits<T>::min();
+    T r = numeric_limits<T>::min();
     for (int d = 0; d < D; ++d)
       r = max(r, elt[d]);
     return r;
@@ -603,8 +603,8 @@ private:
       vol += rs[i].size();
     }
     assert(vol == size());
-    for (std::size_t i = 0; i < rs.size(); ++i)
-      for (std::size_t j = i + 1; j < rs.size(); ++j)
+    for (size_t i = 0; i < rs.size(); ++i)
+      for (size_t j = i + 1; j < rs.size(); ++j)
         assert(rs[i].isdisjoint(rs[j]));
 #endif
   }
@@ -635,8 +635,8 @@ public:
       vol += r.size();
     }
     assert(vol >= max(prod_t(0), size() - b.size()) && vol <= size());
-    for (std::size_t i = 0; i < rs.size(); ++i)
-      for (std::size_t j = i + 1; j < rs.size(); ++j)
+    for (size_t i = 0; i < rs.size(); ++i)
+      for (size_t j = i + 1; j < rs.size(); ++j)
         assert(rs[i].isdisjoint(rs[j]));
 #endif
     return rs;
@@ -656,8 +656,8 @@ public:
       vol += r.size();
     }
     assert(vol >= size() && vol <= size() + b.size());
-    for (std::size_t i = 0; i < rs.size(); ++i)
-      for (std::size_t j = i + 1; j < rs.size(); ++j)
+    for (size_t i = 0; i < rs.size(); ++i)
+      for (size_t j = i + 1; j < rs.size(); ++j)
         assert(rs[i].isdisjoint(rs[j]));
 #endif
     return rs;
@@ -678,8 +678,8 @@ public:
       vol += r.size();
     }
     assert(vol >= abs(size() - b.size()) && vol <= size() + b.size());
-    for (std::size_t i = 0; i < rs.size(); ++i)
-      for (std::size_t j = i + 1; j < rs.size(); ++j)
+    for (size_t i = 0; i < rs.size(); ++i)
+      for (size_t j = i + 1; j < rs.size(); ++j)
         assert(rs[i].isdisjoint(rs[j]));
 #endif
     return rs;
@@ -745,17 +745,15 @@ private:
   }
 
   // Normalization
-  void normalize() {
-    std::sort(boxes.begin(), boxes.end(), std::less<box<T, D>>());
-  }
+  void normalize() { sort(boxes.begin(), boxes.end(), std::less<box<T, D>>()); }
 
 public:
   // Invariant
   bool invariant() const {
-    for (std::size_t i = 0; i < boxes.size(); ++i) {
+    for (size_t i = 0; i < boxes.size(); ++i) {
       if (boxes[i].empty())
         return false;
-      for (std::size_t j = i + 1; j < boxes.size(); ++j) {
+      for (size_t j = i + 1; j < boxes.size(); ++j) {
         if (!boxes[i].isdisjoint(boxes[j]))
           return false;
         if (!boxes[i].less(boxes[j]))
@@ -934,7 +932,7 @@ public:
   // Output
   ostream &output(ostream &os) const {
     os << "{";
-    for (std::size_t i = 0; i < boxes.size(); ++i) {
+    for (size_t i = 0; i < boxes.size(); ++i) {
       if (i > 0)
         os << ",";
       os << boxes[i];
@@ -1438,7 +1436,7 @@ public:
     // os << "}";
     os << "{";
     const vector<box<T, D>> boxes(*this);
-    for (std::size_t i = 0; i < boxes.size(); ++i) {
+    for (size_t i = 0; i < boxes.size(); ++i) {
       if (i > 0)
         os << ",";
       os << boxes[i];
