@@ -1236,13 +1236,12 @@ public:
           active1 = !lt(subbox1, subbox0);
         }
 
+        const T old_pos = iter0->second;
         if (active0 && active1 && eq(subbox0, subbox1)) {
-          assert(0);
           // The current bbox continues unchanged -- keep it
-          subboxes[subbox1] = pos;
+          subboxes[subbox1] = old_pos;
         } else {
           if (active0) {
-            const T old_pos = iter0->second;
             // The current box changed; finalize it
             res.push_back(box<T, D>(subbox0.lower().superpoint(D - 1, old_pos),
                                     subbox0.upper().superpoint(D - 1, pos)));
@@ -1272,10 +1271,11 @@ public:
       return box<T, D>();
     point<T, D - 1> pmin(numeric_limits<T>::max()),
         pmax(numeric_limits<T>::min());
-    for (const auto &subregion : subregions) {
+    for (const auto &pos_subregion : subregions) {
+      const auto &subregion = pos_subregion.second;
       auto subbox = subregion.bounding_box();
       pmin = min(pmin, subbox.lower());
-      pmax = max(pmax, subbox.lower());
+      pmax = max(pmax, subbox.upper());
     }
     const T xmin = subregions.begin()->first;
     const T xmax = subregions.rbegin()->first;
