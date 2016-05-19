@@ -370,6 +370,94 @@ template <typename T, int D> struct less<RegionCalculus::point<T, D>> {
 ////////////////////////////////////////////////////////////////////////////////
 
 namespace RegionCalculus {
+template <typename T, int D> struct box;
+
+template <typename T> struct box<T, 0> {
+  constexpr static const int D = 0;
+
+  bool m_full;
+
+  box() : m_full(false) {}
+  box(const box &b) = default;
+  box(box &&b) = default;
+  explicit box(bool b) : m_full(b) {}
+  box(const point<T, D> &lo, const point<T, D> &hi) : m_full(true) {}
+  explicit box(const point<T, D> &p) : m_full(true) {}
+  box(const vector<T> &lo, const vector<T> &hi) : m_full(true) {}
+  box &operator=(const box &p) = default;
+  box &operator=(box &&p) = default;
+  template <typename U> box(const box<U, D> &b) : m_full(b.m_full) {}
+
+  // Predicates
+  bool empty() const { return !m_full; }
+  point<T, D> lower() const { return point<T, D>(); }
+  point<T, D> upper() const { return point<T, D>(); }
+  point<T, D> shape() const { return point<T, D>(); }
+  typedef typename point<T, D>::prod_t prod_t;
+  prod_t size() const { return m_full; }
+
+  // Shift and scale operators
+  box &operator>>=(const point<T, D> &p) { return *this; }
+  box &operator<<=(const point<T, D> &p) { return *this; }
+  box &operator*=(const point<T, D> &p) { return *this; }
+  box operator>>(const point<T, D> &p) const { return *this; }
+  box operator<<(const point<T, D> &p) const { return *this; }
+  box operator*(const point<T, D> &p) const { return *this; }
+  box grow(const point<T, D> &dlo, const point<T, D> &dup) const {
+    return *this;
+  }
+  box grow(const point<T, D> &d) const { return grow(d, d); }
+  box grow(T n) const { return grow(point<T, D>(n)); }
+
+  // Comparison operators
+  bool operator==(const box &b) const { return m_full == b.m_full; }
+  bool operator!=(const box &b) const { return !(*this == b); }
+  bool less(const box &b) const { return m_full < b.m_full; }
+
+  // Set comparison operators
+  bool contains(const point<T, D> &p) const { return !empty(); }
+  bool isdisjoint(const box &b) const { return empty() | b.empty(); }
+  bool operator<=(const box &b) const { return m_full < b.m_full; }
+  bool operator>=(const box &b) const { return b <= *this; }
+  bool operator<(const box &b) const { return *this <= b && *this != b; }
+  bool operator>(const box &b) const { return b < *this; }
+  bool issubset(const box &b) const { return *this <= b; }
+  bool issuperset(const box &b) const { return *this >= b; }
+  bool is_strict_subset(const box &b) const { return *this < b; }
+  bool is_strict_superset(const box &b) const { return *this > b; }
+
+  // Set operations
+  box bounding_box(const box &b) const { return box(m_full | b.m_full); }
+
+  box operator&(const box &b) const { return box(m_full & b.m_full); }
+  box intersection(const box &b) const { return *this & b; }
+
+  vector<box> operator-(const box &b) const {
+    if (m_full > b.m_full)
+      return vector<box>(1, box(true));
+    return vector<box>();
+  }
+  vector<box> difference(const box &b) const { return *this - b; }
+
+  vector<box> operator|(const box &b) const {
+    if (m_full & b.m_full)
+      return vector<box>(1, box(true));
+    return vector<box>();
+  }
+  vector<box> setunion(const box &b) const { return *this | b; }
+
+  vector<box> operator^(const box &b) const {
+    if (m_full ^ b.m_full)
+      return vector<box>(1, box(true));
+    return vector<box>();
+  }
+  vector<box> symmetric_difference(const box &b) const { return *this ^ b; }
+
+  // Output
+  ostream &output(ostream &os) const { return os << "(" << m_full << ")"; }
+  friend ostream &operator<<(ostream &os, const box &b) { return b.output(os); }
+};
+
 template <typename T, int D> struct box {
   point<T, D> lo, hi;
   box() = default;
