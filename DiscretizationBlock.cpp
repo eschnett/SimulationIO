@@ -102,9 +102,10 @@ void write_active(const H5::H5Location &group,
   static_assert(D > 0, "");
   if (active.rank() != D)
     return;
-  auto boxes = dynamic_cast<const RegionCalculus::wregion<hssize_t, D> *>(
-                   active.val.get())
-                   ->val.boxes;
+  vector<RegionCalculus::box<hssize_t, D>> boxes =
+      dynamic_cast<const RegionCalculus::wregion<hssize_t, D> *>(
+          active.val.get())
+          ->val;
   auto boxtype = discretizationblock.discretization.lock()
                      ->manifold.lock()
                      ->project.lock()
