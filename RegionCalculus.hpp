@@ -8,9 +8,11 @@
 #include <cstdlib>
 #include <functional>
 #include <iostream>
+#include <iterator>
 #include <limits>
 #include <map>
 #include <memory>
+#include <type_traits>
 #include <vector>
 
 #define REGIONCALCULUS_DEBUG 0
@@ -30,6 +32,59 @@ using std::sort;
 using std::unique;
 using std::unique_ptr;
 using std::vector;
+
+////////////////////////////////////////////////////////////////////////////////
+// Reduction
+////////////////////////////////////////////////////////////////////////////////
+
+// op is functional
+template <typename Op, typename T,
+          typename R = typename std::result_of<Op(T, T)>::type>
+T reduce(Op &&op, vector<T> &xs) {
+  assert(!xs.empty());
+  for (size_t dist = 1; dist < xs.size(); dist *= 2)
+    for (size_t i = 0; i + dist < xs.size(); i += 2 * dist)
+      xs[i] = std::forward<Op>(op)(std::move(xs[i]), std::move(xs[i + dist]));
+  return std::move(xs[0]);
+}
+
+// // op is assignment-like
+// template <typename Op, typename T,
+//           typename R = typename std::result_of<Op(T &, T)>::type>
+// T reduce(Op &&op, vector<T> &xs) {
+//   assert(!xs.empty());
+//   for (size_t dist = 1; dist < xs.size(); dist *= 2)
+//     for (size_t i = 0; i + dist < x.size(); i += 2 * dist)
+//       std::forward<Op>(op)(xs[i], xs[i + dist]);
+//   return std::move(xs[0]);
+// }
+
+template <typename F, typename Op, typename R, typename B, typename E>
+R reduce(F &&f, Op &&op, R &&z, const B &b, const E &e) {
+  vector<R> rs;
+  for (auto i = b; i != e; ++i)
+    rs.push_back(std::forward<F>(f)(*i));
+  if (rs.empty())
+    return std::forward<R>(z);
+  return reduce(std::forward<Op>(op), rs);
+}
+
+template <typename F, typename Op, typename I,
+          typename T = typename std::iterator_traits<I>::value_type,
+          typename R1 = typename std::result_of<F(T)>::type,
+          typename R = typename std::decay<R1>::type>
+R reduce(F &&f, Op &&op, const I &b, const I &e) {
+  return reduce(std::forward<F>(f), std::forward<Op>(op), R(), b, e);
+}
+
+template <typename F, typename Op, typename C,
+          typename T = typename C::value_type,
+          typename R1 = typename std::result_of<F(T)>::type,
+          typename R = typename std::decay<R1>::type>
+R reduce(F &&f, Op &&op, const C &c) {
+  return reduce(std::forward<F>(f), std::forward<Op>(op), std::begin(c),
+                std::end(c));
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Point
@@ -1321,17 +1376,10 @@ public:
     // region2 nr;
     // for (const auto &box : vector<box<T, D>>(*this))
     //   nr |= box.grow(dlo, dup);
-    vector<region2> nrs;
-    for (const auto &box : vector<box<T, D>>(*this))
-      nrs.push_back(box.grow(dlo, dup));
-    region2 nr;
-    if (!nrs.empty()) {
-      for (std::size_t dist = 1; dist < nrs.size(); dist *= 2)
-        for (std::size_t i = 0; i + dist < nrs.size(); i += 2 * dist)
-          nrs.at(i) |= nrs.at(i + dist);
-      nr = std::move(nrs.at(0));
-    }
-    return nr;
+    // return nr;
+    return reduce([&](const box<T, D> &b) { return region2(b.grow(dlo, dup)); },
+                  [](const region2 &x, const region2 &y) { return x | y; },
+                  vector<box<T, D>>(*this));
   }
   region2 grow(const point<T, D> &d) const { return grow(d, d); }
   region2 grow(T n) const { return grow(point<T, D>(n)); }
