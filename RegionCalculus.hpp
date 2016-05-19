@@ -967,6 +967,8 @@ namespace RegionCalculus {
 template <typename T, int D> struct region2;
 
 template <typename T> struct region2<T, 0> {
+  constexpr static const int D = 0;
+
   bool m_full;
 
   region2() : m_full(false) {}
@@ -985,19 +987,19 @@ template <typename T> struct region2<T, 0> {
 
   // Predicates
   bool empty() const { return !m_full; }
-  typedef typename point<T, 0>::prod_t prod_t;
+  typedef typename point<T, D>::prod_t prod_t;
   prod_t size() const { return m_full; }
   prod_t chi_size() const { return 1; }
 
   // Conversion to boxes
-  operator vector<box<T, 0>>() const {
+  operator vector<box<T, D>>() const {
     if (empty())
-      return vector<box<T, 0>>();
-    return vector<box<T, 0>>(1, box<T, 0>());
+      return vector<box<T, D>>();
+    return vector<box<T, D>>(1, box<T, D>(true));
   }
 
   // Set operations
-  box<T, 0> bounding_box() const { return box<T, 0>(); }
+  box<T, D> bounding_box() const { return box<T, D>(m_full); }
 
   region2 operator&(const region2 &other) const {
     return region2(m_full & other.m_full);
