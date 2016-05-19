@@ -72,23 +72,20 @@ template <typename T, int D> struct point {
       r[d] = elt[d];
     return r;
   }
-  // template <bool cond = D == 2, typename std::enable_if<cond>::type * =
-  // nullptr>
+  template <bool cond = D == 2, typename std::enable_if<cond>::type * = nullptr>
   explicit point(T x0, T x1) {
     static_assert(D == 2, "");
     elt[0] = x0;
     elt[1] = x1;
   }
-  // template <bool cond = D == 3, typename std::enable_if<cond>::type * =
-  // nullptr>
+  template <bool cond = D == 3, typename std::enable_if<cond>::type * = nullptr>
   explicit point(T x0, T x1, T x2) {
     static_assert(D == 3, "");
     elt[0] = x0;
     elt[1] = x1;
     elt[2] = x2;
   }
-  // template <bool cond = D == 4, typename std::enable_if<cond>::type * =
-  // nullptr>
+  template <bool cond = D == 4, typename std::enable_if<cond>::type * = nullptr>
   explicit point(T x0, T x1, T x2, T x3) {
     static_assert(D == 4, "");
     elt[0] = x0;
