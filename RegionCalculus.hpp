@@ -779,16 +779,6 @@ public:
   }
 
   // Shift and scale operators
-  region grow(const point<T, D> &dlo, const point<T, D> &dup) const {
-    // Cannot shrink
-    assert(all(dlo + dup >= point<T, D>(T(0))));
-    region nr;
-    for (const auto &b : boxes)
-      nr = nr | b.grow(dlo, dup);
-    return nr;
-  }
-  region grow(const point<T, D> &d) const { return grow(d, d); }
-  region grow(const T &n) const { return grow(point<T, D>(n)); }
   region1 operator>>(const point<T, D> &d) const {
     region1 nr(*this);
     for (auto &b : nr.boxes)
@@ -796,19 +786,26 @@ public:
     return nr;
   }
   region1 operator<<(const point<T, D> &d) const { return *this >> -d; }
+  region1 grow(const point<T, D> &dlo, const point<T, D> &dup) const {
+    // Cannot shrink
+    assert(all(dlo + dup >= point<T, D>(T(0))));
+    region1 nr;
+    for (const auto &b : boxes)
+      nr = nr | b.grow(dlo, dup);
     return nr;
   }
-  region shrink(const point<T, D> &dlo, const point<T, D> &dup) const {
+  region1 grow(const point<T, D> &d) const { return grow(d, d); }
+  region1 grow(T n) const { return grow(point<T, D>(n)); }
+  region1 shrink(const point<T, D> &dlo, const point<T, D> &dup) const {
     // Cannot grow
     assert(all(dlo + dup >= point<T, D>(T(0))));
     auto maxdist = maxval(max(abs(dlo), abs(dup)));
     auto world = bounding_box();
-    region world2 = world.grow(2 * maxdist);
-    region world4 = world.grow(4 * maxdist);
-    return world2 - (world4 - *this).grow(dlo, dup);
+    region1 world2 = world.grow(2 * maxdist);
+    return world2 - (world2 - *this).grow(dlo, dup);
   }
-  region shrink(const point<T, D> &d) const { return shrink(d, d); }
-  region shrink(const T &n) const { return shrink(point<T, D>(n)); }
+  region1 shrink(const point<T, D> &d) const { return shrink(d, d); }
+  region1 shrink(T n) const { return shrink(point<T, D>(n)); }
 
   // Set operations
   box<T, D> bounding_box() const {
@@ -1002,6 +999,20 @@ template <typename T> struct region2<T, 0> {
       return vector<box<T, D>>();
     return vector<box<T, D>>(1, box<T, D>(true));
   }
+
+  // Shift and scale operators
+  region2 operator>>(const point<T, D> &d) const { return *this; }
+  region2 operator<<(const point<T, D> &d) const { return *this; }
+  region2 grow(const point<T, D> &dlo, const point<T, D> &dup) const {
+    return *this;
+  }
+  region2 grow(const point<T, D> &d) const { return grow(d, d); }
+  region2 grow(T n) const { return grow(point<T, D>(n)); }
+  region2 shrink(const point<T, D> &dlo, const point<T, D> &dup) const {
+    return *this;
+  }
+  region2 shrink(const point<T, D> &d) const { return shrink(d, d); }
+  region2 shrink(T n) const { return shrink(point<T, D>(n)); }
 
   // Set operations
   box<T, D> bounding_box() const { return box<T, D>(m_full); }
@@ -1292,6 +1303,50 @@ public:
 #endif
     return res;
   }
+
+  // Shift and scale operators
+  region2 operator>>(const point<T, D> &d) const {
+    region2 nr;
+    T dx = d[D - 1];
+    auto subd = d.subpoint(D - 1);
+    for (const auto &pos_subregion : subregions) {
+      const T pos = pos_subregion.first;
+      const auto &subregion = pos_subregion.second;
+      nr.subregions[pos + dx] = subregion >> subd;
+    }
+    return nr;
+  }
+  region2 operator<<(const point<T, D> &d) const { return *this >> -d; }
+  region2 grow(const point<T, D> &dlo, const point<T, D> &dup) const {
+    // Cannot shrink
+    assert(all(dlo + dup >= point<T, D>(T(0))));
+    // region2 nr;
+    // for (const auto &box : vector<box<T, D>>(*this))
+    //   nr |= box.grow(dlo, dup);
+    vector<region2> nrs;
+    for (const auto &box : vector<box<T, D>>(*this))
+      nrs.push_back(box.grow(dlo, dup));
+    region2 nr;
+    if (!nrs.empty()) {
+      for (std::size_t dist = 1; dist < nrs.size(); dist *= 2)
+        for (std::size_t i = 0; i + dist < nrs.size(); i += 2 * dist)
+          nrs.at(i) |= nrs.at(i + dist);
+      nr = std::move(nrs.at(0));
+    }
+    return nr;
+  }
+  region2 grow(const point<T, D> &d) const { return grow(d, d); }
+  region2 grow(T n) const { return grow(point<T, D>(n)); }
+  region2 shrink(const point<T, D> &dlo, const point<T, D> &dup) const {
+    // Cannot grow
+    assert(all(dlo + dup >= point<T, D>(T(0))));
+    auto maxdist = maxval(max(abs(dlo), abs(dup)));
+    auto world = bounding_box();
+    region2 world2 = world.grow(2 * maxdist);
+    return world2 - (world2 - *this).grow(dlo, dup);
+  }
+  region2 shrink(const point<T, D> &d) const { return shrink(d, d); }
+  region2 shrink(T n) const { return shrink(point<T, D>(n)); }
 
   // Set operations
   box<T, D> bounding_box() const {
