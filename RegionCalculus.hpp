@@ -1303,6 +1303,7 @@ public:
   }
 
   region2 operator-(const region2 &other) const {
+    // return *this & (*this ^ other);
     return binary_operator([](const subregion2_t &set0,
                               const subregion2_t &set1) { return set0 - set1; },
                            other);
