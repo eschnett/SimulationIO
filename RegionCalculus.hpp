@@ -1172,25 +1172,15 @@ private:
 public:
   // Invariant
   bool invariant() const {
+#if REGIONCALCULUS_DEBUG
     for (const auto &pos_subregion : subregions) {
       const auto &subregion = pos_subregion.second;
-      // if (subregion.empty() || !subregion.invariant())
-      //   return false;
-      if (subregion.empty()) {
-        std::cerr << "subregion.empty D=" << D << "\n";
+      if (subregion.empty() || !subregion.invariant())
         return false;
-      }
-      if (!subregion.invariant()) {
-        std::cerr << "!subregion.invariant\n";
-        return false;
-      }
     }
-    // if (chi_size() % 2 != 0)
-    //   return false;
-    if (chi_size() % 2 != 0) {
-      std::cerr << "chi_size\n";
+    if (chi_size() % 2 != 0)
       return false;
-    }
+#endif
     return true;
   }
 
@@ -1240,7 +1230,9 @@ public:
       auto iter1 = subboxes1.begin();
       const auto end0 = old_subboxes.end();
       const auto end1 = subboxes1.end();
+#if REGIONCALCULUS_DEBUG
       assert(is_sorted(iter1, end1));
+#endif
       map<box<T, D - 1>, T> subboxes;
       while (iter0 != end0 || iter1 != end1) {
         bool active0 = iter0 != end0;
@@ -1282,7 +1274,17 @@ public:
       swap(old_subboxes, subboxes);
     });
     assert(old_subboxes.empty());
+#if REGIONCALCULUS_DEBUG
     assert(is_sorted(res.begin(), res.end()));
+    {
+      region2 reg;
+      for (const auto &b : res) {
+        assert(region2(b).isdisjoint(reg));
+        reg |= b;
+      }
+      assert(reg == *this);
+    }
+#endif
     return res;
   }
 
