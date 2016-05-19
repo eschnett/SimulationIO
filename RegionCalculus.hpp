@@ -1885,7 +1885,7 @@ template <typename T, int D> struct wregion : vregion<T> {
   }
   operator vector<unique_ptr<vbox<T>>>() const {
     vector<unique_ptr<vbox<T>>> bs;
-    for (const auto &b : val.boxes)
+    for (const auto &b : vector<box<T, D>>(val))
       bs.push_back(make_unique<wbox<T, D>>(b));
     return bs;
   }
