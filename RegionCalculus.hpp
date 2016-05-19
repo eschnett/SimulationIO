@@ -25,6 +25,9 @@ using std::map;
 using std::max;
 using std::numeric_limits;
 using std::ostream;
+using std::size_t;
+using std::sort;
+using std::unique;
 using std::unique_ptr;
 using std::vector;
 
@@ -1451,7 +1454,7 @@ public:
 }
 
 namespace RegionCalculus {
-template <typename T, int D> using region = region1<T, D>;
+template <typename T, int D> using region = region2<T, D>;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
