@@ -97,7 +97,7 @@ void write_active(const H5::H5Location &group,
                   const DiscretizationBlock &discretizationblock,
                   const region_t &active) {
   // The case D==0 is not yet handled correctly:
-  // - C++ pads empty struct
+  // - C++ pads empty structs
   // - HDF5 cannot handle empty arrays
   static_assert(D > 0, "");
   if (active.rank() != D)
@@ -110,7 +110,7 @@ void write_active(const H5::H5Location &group,
                      ->manifold.lock()
                      ->project.lock()
                      ->boxtypes.at(D);
-  assert(sizeof(boxes[0]) == boxtype.getSize());
+  assert(sizeof boxes[0] == boxtype.getSize());
   H5::createAttribute(group, "active", boxes, boxtype);
 }
 }
