@@ -102,21 +102,21 @@ TEST(RegionCalculus, box) {
   EXPECT_EQ("([0,0,0]:[4,4,4])", buf.str());
 }
 
-TEST(RegionCalculus, region) {
+TEST(RegionCalculus, region1) {
   typedef point<int, 3> point;
   typedef box<int, 3> box;
-  typedef region<int, 3> region;
-  region r;
+  typedef region1<int, 3> region1;
+  region1 r;
   EXPECT_TRUE(r.invariant());
   EXPECT_TRUE(r.empty());
   point p;
   point p1(1);
   box b;
   box b1(p, p1);
-  region r0(b);
+  region1 r0(b);
   EXPECT_TRUE(r0.invariant());
   EXPECT_TRUE(r0.empty());
-  region r1(b1);
+  region1 r1(b1);
   EXPECT_TRUE(r1.invariant());
   EXPECT_FALSE(r1.empty());
   EXPECT_TRUE(r == r);
@@ -125,8 +125,8 @@ TEST(RegionCalculus, region) {
   EXPECT_TRUE(r != r1);
   point p2(2);
   box b2(p, p2);
-  region r2(b2);
-  EXPECT_EQ(r2, (region(::region<long long, 3>(r2))));
+  region1 r2(b2);
+  EXPECT_EQ(r2, (region1(::region1<long long, 3>(r2))));
   EXPECT_TRUE(r == r.intersection(r1));
   EXPECT_TRUE(r == r1.intersection(r));
   EXPECT_TRUE(r1 == r1.intersection(r2));
@@ -146,15 +146,15 @@ TEST(RegionCalculus, region) {
   vector<box> r12vals;
   r12vals.push_back(b1);
   r12vals.push_back(box(p1, p2));
-  region r12(r12vals);
+  region1 r12(r12vals);
   vector<box> r12boxes = r12;
   EXPECT_EQ(r12vals, r12boxes);
-  vector<region> rs;
+  vector<region1> rs;
   rs.push_back(r);
   rs.push_back(r1);
   rs.push_back(r2);
   box b4(p, point(4));
-  region r4(b4);
+  region1 r4(b4);
   rs.push_back(r4);
   rs.push_back(r12);
   rs.push_back(r2.difference(r1));
@@ -336,6 +336,140 @@ TEST(RegionCalculus, region2) {
         EXPECT_EQ(ri.contains(p) ^ rj.contains(p),
                   rsymmetric_difference.contains(p));
       }
+      if (ri == rj) {
+        EXPECT_TRUE(rintersection == ri);
+        EXPECT_TRUE(rdifference.empty());
+        EXPECT_TRUE(rsetunion == ri);
+        EXPECT_TRUE(rsymmetric_difference.empty());
+      }
+    }
+  }
+  ostringstream buf;
+  buf << r12;
+  EXPECT_EQ("{([0,0,0]:[1,1,1]),([1,1,1]:[2,2,2])}", buf.str());
+}
+
+TEST(RegionCalculus, region) {
+  typedef point<int, 3> point;
+  typedef box<int, 3> box;
+  typedef region<int, 3> region;
+  region r;
+  EXPECT_TRUE(r.invariant());
+  EXPECT_TRUE(r.empty());
+  point p;
+  point p1(1);
+  box b;
+  box b1(p, p1);
+  region r0(b);
+  EXPECT_TRUE(r0.invariant());
+  EXPECT_TRUE(r0.empty());
+  region r1(b1);
+  EXPECT_TRUE(r1.invariant());
+  EXPECT_FALSE(r1.empty());
+  EXPECT_TRUE(r == r);
+  EXPECT_TRUE(r1 == r1);
+  EXPECT_FALSE(r != r);
+  EXPECT_TRUE(r != r1);
+  point p2(2);
+  box b2(p, p2);
+  region r2(b2);
+  EXPECT_EQ(r2, (region(::region<long long, 3>(r2))));
+  EXPECT_TRUE(r == r.intersection(r1));
+  EXPECT_TRUE(r == r1.intersection(r));
+  EXPECT_TRUE(r1 == r1.intersection(r2));
+  EXPECT_TRUE(r1 == r2.intersection(r1));
+  EXPECT_TRUE(r == r.difference(r));
+  EXPECT_TRUE(r1 == r1.difference(r));
+  EXPECT_TRUE(r == r.difference(r1));
+  EXPECT_TRUE(r == r1.difference(r1));
+  EXPECT_TRUE(r == r.setunion(r));
+  EXPECT_TRUE(r1 == r1.setunion(r));
+  EXPECT_TRUE(r1 == r.setunion(r1));
+  EXPECT_TRUE(r1 == r1.setunion(r1));
+  EXPECT_TRUE(r == r.symmetric_difference(r));
+  EXPECT_TRUE(r1 == r1.symmetric_difference(r));
+  EXPECT_TRUE(r1 == r.symmetric_difference(r1));
+  EXPECT_TRUE(r == r1.symmetric_difference(r1));
+  vector<box> r12vals;
+  r12vals.push_back(b1);
+  r12vals.push_back(box(p1, p2));
+  region r12(r12vals);
+  vector<box> r12boxes = r12;
+  EXPECT_EQ(r12vals, r12boxes);
+  vector<region> rs;
+  rs.push_back(r);
+  rs.push_back(r1);
+  rs.push_back(r2);
+  box b4(p, point(4));
+  region r4(b4);
+  rs.push_back(r4);
+  rs.push_back(r12);
+  rs.push_back(r2.difference(r1));
+  rs.push_back(r2.symmetric_difference(r12));
+  for (std::size_t i = 0; i < rs.size(); ++i) {
+    const auto &ri = rs[i];
+    auto rgrown = ri.grow(p1);
+    auto rshrunk = ri.shrink(p1);
+    EXPECT_TRUE(ri.invariant());
+    EXPECT_TRUE(rgrown.invariant());
+    EXPECT_TRUE(rshrunk.invariant());
+    EXPECT_TRUE(rgrown.issuperset(ri));
+    if (ri.empty())
+      EXPECT_TRUE(rgrown.empty());
+    region rgrown_test;
+    for (int dk = -1; dk <= +1; ++dk)
+      for (int dj = -1; dj <= +1; ++dj)
+        for (int di = -1; di <= +1; ++di) {
+          auto shifted = ri >> point(di, dj, dk);
+          rgrown_test |= shifted;
+        }
+    EXPECT_TRUE(rgrown_test == rgrown);
+    EXPECT_TRUE(ri.issuperset(rshrunk));
+    if (!rshrunk.empty())
+      EXPECT_TRUE(rshrunk.grow(p1) == ri);
+    region rshrunk_test = ri;
+    for (int dk = -1; dk <= +1; ++dk)
+      for (int dj = -1; dj <= +1; ++dj)
+        for (int di = -1; di <= +1; ++di) {
+          auto shifted = ri >> point(di, dj, dk);
+          rshrunk_test &= shifted;
+        }
+    EXPECT_TRUE(rshrunk_test == rshrunk);
+    region rgrown_shrunk_test = rgrown;
+    for (int dk = -1; dk <= +1; ++dk)
+      for (int dj = -1; dj <= +1; ++dj)
+        for (int di = -1; di <= +1; ++di) {
+          auto shifted = rgrown >> point(di, dj, dk);
+          rgrown_shrunk_test &= shifted;
+        }
+    EXPECT_TRUE(rgrown_shrunk_test == ri);
+    EXPECT_TRUE(rgrown.shrink(p1) == ri);
+    for (std::size_t j = 0; j < rs.size(); ++j) {
+      const auto &rj = rs[j];
+      auto rintersection = ri.intersection(rj);
+      auto rdifference = ri.difference(rj);
+      auto rsetunion = ri.setunion(rj);
+      auto rsymmetric_difference = ri.symmetric_difference(rj);
+      EXPECT_TRUE(rintersection.invariant());
+      EXPECT_TRUE(rdifference.invariant());
+      EXPECT_TRUE(rsetunion.invariant());
+      EXPECT_TRUE(rsymmetric_difference.invariant());
+      EXPECT_TRUE(ri.issuperset(rintersection));
+      EXPECT_TRUE(ri.issuperset(rintersection));
+      EXPECT_TRUE(rj.issuperset(rintersection));
+      EXPECT_TRUE(ri.issuperset(rdifference));
+      EXPECT_TRUE(rsetunion.issuperset(ri));
+      EXPECT_TRUE(rsetunion.issuperset(rj));
+      EXPECT_TRUE(rintersection.isdisjoint(rsymmetric_difference));
+      EXPECT_TRUE(rdifference.isdisjoint(rj));
+      EXPECT_TRUE(rsetunion.issuperset(rintersection));
+      EXPECT_TRUE(rsetunion.issuperset(rdifference));
+      EXPECT_TRUE(rsetunion.issuperset(rsymmetric_difference));
+      EXPECT_TRUE(rintersection.setunion(rsymmetric_difference) == rsetunion);
+      EXPECT_TRUE(rdifference.setunion(rj) == rsetunion);
+      EXPECT_TRUE(rintersection == rj.intersection(ri));
+      EXPECT_TRUE(rsetunion == rj.setunion(ri));
+      EXPECT_TRUE(rsymmetric_difference == rj.symmetric_difference(ri));
       if (ri == rj) {
         EXPECT_TRUE(rintersection == ri);
         EXPECT_TRUE(rdifference.empty());
