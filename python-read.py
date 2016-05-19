@@ -69,4 +69,12 @@ for discretefieldblockname in discretefield.discretefieldblocks:
 
 ravg = rsum / rcount
 rnorm2 = sqrt(rsum2 / rcount)
-print "rho: ngrids=%d npoints=%g min=%g max=%g avg=%g norm2=%g" % (ngrids, rcount, rmin, rmax, ravg, rnorm2)
+print """\
+rho:
+    ngrids=%d
+    npoints=%g
+    min=%g
+    max=%g
+    avg=%g
+    norm2=%g
+""" % (ngrids, rcount, rmin, rmax, ravg, rnorm2)

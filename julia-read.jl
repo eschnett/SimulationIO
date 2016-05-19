@@ -64,4 +64,12 @@ else
     ravg = rsum / rcount
     rnorm2 = sqrt(rsum2 / rcount)
 end
-println("rho: ngrids=$ngrids npoints=$rcount min=$rmin max=$rmax avg=$ravg norm2=$rnorm2")
+println("""\
+$fieldname:
+    ngrids=$ngrids
+    npoints=$rcount
+    min=$rmin
+    max=$rmax
+    avg=$ravg
+    norm2=$rnorm2
+""")
