@@ -977,10 +977,15 @@ template <typename T> struct region2<T, 0> {
   region2 &operator=(const region2 &) = default;
   region2 &operator=(region2 &&) = default;
 
-  region2(const box<T, 0> &b) : m_full(true) {}
-  // region2(const point<T, 0> &p) : m_full(false) {}
   explicit region2(bool b) : m_full(b) {}
-  template <typename U> region2(const region2<U, 0> &r) : m_full(r.m_full) {}
+  region2(const box<T, D> &b) : m_full(b.m_full) {}
+  region2(const point<T, D> &p) : m_full(true) {}
+  region2(const vector<box<T, D>> &bs) {
+    m_full = false;
+    for (const auto &b : bs)
+      m_full |= !b.empty();
+  }
+  template <typename U> region2(const region2<U, D> &r) : m_full(r.m_full) {}
 
   // Invariant
   bool invariant() const { return true; }
