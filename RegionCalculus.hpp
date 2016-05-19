@@ -58,7 +58,7 @@ template <typename T, int D> struct point {
   }
   point(const point &p) = default;
   point(point &&p) = default;
-  explicit point(const T &x) {
+  explicit point(T x) {
     for (int d = 0; d < D; ++d)
       elt[d] = x;
   }
@@ -74,14 +74,14 @@ template <typename T, int D> struct point {
   }
   // template <bool cond = D == 2, typename std::enable_if<cond>::type * =
   // nullptr>
-  explicit point(const T &x0, const T &x1) {
+  explicit point(T x0, T x1) {
     static_assert(D == 2, "");
     elt[0] = x0;
     elt[1] = x1;
   }
   // template <bool cond = D == 3, typename std::enable_if<cond>::type * =
   // nullptr>
-  explicit point(const T &x0, const T &x1, const T &x2) {
+  explicit point(T x0, T x1, T x2) {
     static_assert(D == 3, "");
     elt[0] = x0;
     elt[1] = x1;
@@ -89,7 +89,7 @@ template <typename T, int D> struct point {
   }
   // template <bool cond = D == 4, typename std::enable_if<cond>::type * =
   // nullptr>
-  explicit point(const T &x0, const T &x1, const T &x2, const T &x3) {
+  explicit point(T x0, T x1, T x2, T x3) {
     static_assert(D == 4, "");
     elt[0] = x0;
     elt[1] = x1;
@@ -110,7 +110,7 @@ template <typename T, int D> struct point {
       r.elt[d] = elt[d + (d >= dir)];
     return r;
   }
-  point<T, D + 1> superpoint(int dir, const T &x) const {
+  point<T, D + 1> superpoint(int dir, T x) const {
     point<T, D + 1> r;
     for (int d = 0; d < D; ++d)
       r.elt[d + (d >= dir)] = elt[d];
@@ -418,7 +418,7 @@ template <typename T, int D> struct box {
     return nb;
   }
   box grow(const point<T, D> &d) const { return grow(d, d); }
-  box grow(const T &n) const { return grow(point<T, D>(n)); }
+  box grow(T n) const { return grow(point<T, D>(n)); }
 
   // Comparison operators
   bool operator==(const box &b) const {
@@ -1187,8 +1187,7 @@ public:
   }
 
   region2 operator^(const region2 &other) const {
-    // TODO: If other is much smaller than this, direct insertion may
-    // be faster
+    // TODO: If other is much smaller than this, direct insertion may be faster
     return binary_operator([](const subregion2_t &set0,
                               const subregion2_t &set1) { return set0 ^ set1; },
                            other);
@@ -1291,7 +1290,7 @@ template <typename T> struct vpoint {
   virtual unique_ptr<vpoint> copy() const = 0;
 
   static unique_ptr<vpoint> make(int d);
-  static unique_ptr<vpoint> make(int d, const T &x);
+  static unique_ptr<vpoint> make(int d, T x);
   static unique_ptr<vpoint> make(const vector<T> &val);
   virtual operator vector<T>() const = 0;
   template <typename U> static unique_ptr<vpoint> make(const vpoint<U> &p);
@@ -1387,7 +1386,7 @@ template <typename T> struct vbox {
   virtual unique_ptr<vbox> grow(const vpoint<T> &dlo,
                                 const vpoint<T> &dup) const = 0;
   virtual unique_ptr<vbox> grow(const vpoint<T> &d) const = 0;
-  virtual unique_ptr<vbox> grow(const T &n) const = 0;
+  virtual unique_ptr<vbox> grow(T n) const = 0;
 
   // Comparison operators
   virtual bool operator==(const vbox &b) const = 0;
@@ -1438,13 +1437,13 @@ template <typename T> struct vregion {
   virtual unique_ptr<vregion> grow(const vpoint<T> &dlo,
                                    const vpoint<T> &dup) const = 0;
   virtual unique_ptr<vregion> grow(const vpoint<T> &d) const = 0;
-  virtual unique_ptr<vregion> grow(const T &n) const = 0;
+  virtual unique_ptr<vregion> grow(T n) const = 0;
   virtual unique_ptr<vregion> operator>>(const vpoint<T> &d) const = 0;
   virtual unique_ptr<vregion> operator<<(const vpoint<T> &d) const = 0;
   virtual unique_ptr<vregion> shrink(const vpoint<T> &dlo,
                                      const vpoint<T> &dup) const = 0;
   virtual unique_ptr<vregion> shrink(const vpoint<T> &d) const = 0;
-  virtual unique_ptr<vregion> shrink(const T &n) const = 0;
+  virtual unique_ptr<vregion> shrink(T n) const = 0;
 
   // Set operations
   virtual unique_ptr<vbox<T>> bounding_box() const = 0;
@@ -1495,7 +1494,7 @@ template <typename T, int D> struct wpoint : vpoint<T> {
   wpoint(const point<T, D> &p) : val(p) {}
 
   wpoint() : val() {}
-  wpoint(const T &x) : val(x) {}
+  wpoint(T x) : val(x) {}
   wpoint(const array<T, D> &p) : val(p) {}
   wpoint(const vector<T> &p) : val(p) {}
   operator vector<T>() const { return vector<T>(val); }
@@ -1701,9 +1700,7 @@ template <typename T, int D> struct wbox : vbox<T> {
     return make_unique<wbox>(
         val.grow(dynamic_cast<const wpoint<T, D> &>(d).val));
   }
-  unique_ptr<vbox<T>> grow(const T &n) const {
-    return make_unique<wbox>(val.grow(n));
-  }
+  unique_ptr<vbox<T>> grow(T n) const { return make_unique<wbox>(val.grow(n)); }
 
   // Comparison operators
   bool operator==(const vbox<T> &b) const {
@@ -1811,7 +1808,7 @@ template <typename T, int D> struct wregion : vregion<T> {
     return make_unique<wregion>(
         val.grow(dynamic_cast<const wpoint<T, D> &>(d).val));
   }
-  unique_ptr<vregion<T>> grow(const T &n) const {
+  unique_ptr<vregion<T>> grow(T n) const {
     return make_unique<wregion>(val.grow(n));
   }
   unique_ptr<vregion<T>> operator>>(const vpoint<T> &d) const {
@@ -1832,7 +1829,7 @@ template <typename T, int D> struct wregion : vregion<T> {
     return make_unique<wregion>(
         val.shrink(dynamic_cast<const wpoint<T, D> &>(d).val));
   }
-  unique_ptr<vregion<T>> shrink(const T &n) const {
+  unique_ptr<vregion<T>> shrink(T n) const {
     return make_unique<wregion>(val.shrink(n));
   }
 
@@ -1928,7 +1925,7 @@ template <typename T> unique_ptr<vpoint<T>> vpoint<T>::make(int d) {
   }
 }
 
-template <typename T> unique_ptr<vpoint<T>> vpoint<T>::make(int d, const T &x) {
+template <typename T> unique_ptr<vpoint<T>> vpoint<T>::make(int d, T x) {
   switch (d) {
   case 0:
     return make_unique<wpoint<T, 0>>(x);
@@ -2168,7 +2165,7 @@ template <typename T> struct dpoint {
   dpoint(unique_ptr<vpoint<T>> &&val) : val(std::move(val)) {}
 
   explicit dpoint(int d) : val(vpoint<T>::make(d)) {}
-  dpoint(int d, const T &x) : val(vpoint<T>::make(d, x)) {}
+  dpoint(int d, T x) : val(vpoint<T>::make(d, x)) {}
   template <size_t D>
   dpoint(const array<T, D> &p) : val(make_unique<wpoint<T, D>>(p)) {}
   dpoint(const vector<T> &p) : val(vpoint<T>::make(p)) {}
@@ -2394,7 +2391,7 @@ template <typename T> struct dbox {
     return dbox(val->grow(*dlo, *dup));
   }
   dbox grow(const dpoint<T> &d) const { return dbox(val->grow(*d)); }
-  dbox grow(const T &n) const { return dbox(val->grow(n)); }
+  dbox grow(T n) const { return dbox(val->grow(n)); }
 
   // Comparison operators
   bool operator==(const dbox &b) const { return *val == *b.val; }
@@ -2517,7 +2514,7 @@ template <typename T> struct dregion {
     return dregion(val->grow(*dlo, *dup));
   }
   dregion grow(const dpoint<T> &d) const { return dregion(val->grow(*d)); }
-  dregion grow(const T &n) const { return dregion(val->grow(n)); }
+  dregion grow(T n) const { return dregion(val->grow(n)); }
   dregion operator>>(const dpoint<T> &d) const {
     return dregion(*val >> *d.val);
   }
@@ -2528,7 +2525,7 @@ template <typename T> struct dregion {
     return dregion(val->shrink(*dlo.val, *dup.val));
   }
   dregion shrink(const dpoint<T> &d) const { return dregion(val->shrink(*d)); }
-  dregion shrink(const T &n) const { return dregion(val->shrink(n)); }
+  dregion shrink(T n) const { return dregion(val->shrink(n)); }
 
   // Set operations
   dbox<T> bounding_box() const { return dbox<T>(val->bounding_box()); }
