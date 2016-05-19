@@ -18,15 +18,8 @@ isempty(map::PyMap) = isempty(map.pyobj)
 length(map::PyMap) = length(map.pyobj)
 import Base: getindex, haskey
 getindex{K,V}(map::PyMap{K,V}, key) = V(map.pyobj[:__getitem__](K(key)))
-haskey(map::PyMap, key) = map.pyobj[:count](K(key)) != 0
-#TODO import Base: start, next
-#TODO start{K,V}(map::PyMap{K,V}) = ... state
-#TODO next{K,V}(map::PyMap{K,V}, state) = ... item, state
-#TODO
-#TODO collect{K,V}(map::PyMap{K,V}) =
-#TODO keys
-#TODO values
-#TODO collect ... Pair
+#TODO haskey(map::PyMap, key) = map.pyobj[:count](K(key)) != 0
+#TODO haskey(map::PyMap, key) = map[:has_key](K(key))
 
 immutable PyWeakPtr{T}
     pyobj::PyObject
