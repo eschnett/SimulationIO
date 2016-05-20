@@ -25,15 +25,15 @@ before_install:
     fi
   - |
     if [ `uname` = Linux ]; then
-      export HDF5_DIR="$HOME/hdf5-1.8.16"
+      export HDF5_DIR="$HOME/hdf5-1.10.0"
       (
         mkdir external
         cd external
-        wget http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.16.tar.bz2
-        tar xjf hdf5-1.8.16.tar.bz2
-        mkdir hdf5-1.8.16-build
-        cd hdf5-1.8.16-build
-        `pwd`/../hdf5-1.8.16/configure --prefix="$HDF5_DIR" --enable-cxx
+        wget https://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.0/src/hdf5-1.10.0.tar.bz2
+        tar xjf hdf5-1.10.0.tar.bz2
+        mkdir hdf5-1.10.0-build
+        cd hdf5-1.10.0-build
+        `pwd`/../hdf5-1.10.0/configure --prefix="$HDF5_DIR" --enable-cxx
         make -j2
         make -j2 install
       )
