@@ -424,17 +424,17 @@ struct Discretization {
 
 struct DiscretizationBlock {
   string name;
-  ibox region;
+  ibox box;
   iregion active;
   std::weak_ptr<Discretization> discretization;
   bool invariant() const;
   %extend {
-    void setRegion(const std::vector<int>& ioffset,
-                   const std::vector<int>& ishape) {
+    void setBox(const std::vector<int>& ioffset,
+                const std::vector<int>& ishape) {
       std::vector<hssize_t> hoffset(ioffset.size()), hshape(ishape.size());
       std::copy(ioffset.begin(), ioffset.end(), hoffset.begin());
       std::copy(ishape.begin(), ishape.end(), hshape.begin());
-      self->setRegion(box_t(hoffset, point_t(hoffset) + hshape));
+      self->setBox(box_t(hoffset, point_t(hoffset) + hshape));
     }
   }
 };
