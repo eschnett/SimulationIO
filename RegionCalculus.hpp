@@ -260,15 +260,28 @@ template <typename T, int D> struct point {
   }
 
   // Unary functions
-  template <typename U = T, typename std::enable_if<
-                                std::is_unsigned<U>::value>::type * = nullptr>
-  point abs() const {
-    return *this;
-  }
+  // template <typename U = T, typename std::enable_if<
+  //                               std::is_unsigned<U>::value>::type * =
+  //                               nullptr>
+  // point abs() const {
+  //   return *this;
+  // }
 
-  template <typename U = T, typename std::enable_if<
-                                !std::is_unsigned<U>::value>::type * = nullptr>
+  // template <typename U = T, typename std::enable_if<
+  //                               !std::is_unsigned<U>::value>::type * =
+  //                               nullptr>
+  // point abs() const {
+  //   using std::abs;
+  //   point r;
+  //   for (int d = 0; d < D; ++d)
+  //     r.elt[d] = abs(elt[d]);
+  //   return r;
+  // }
+
   point abs() const {
+    // handle unsigned types
+    if (T(-1) > T(0))
+      return *this;
     using std::abs;
     point r;
     for (int d = 0; d < D; ++d)
