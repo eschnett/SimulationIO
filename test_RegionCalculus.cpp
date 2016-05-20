@@ -102,21 +102,23 @@ TEST(RegionCalculus, box) {
   EXPECT_EQ("([0,0,0]:[4,4,4])", buf.str());
 }
 
+#if !REGIONCALCULUS_TREE
+
 TEST(RegionCalculus, region1) {
   typedef point<int, 3> point;
   typedef box<int, 3> box;
-  typedef region1<int, 3> region1;
-  region1 r;
+  typedef region<int, 3> region;
+  region r;
   EXPECT_TRUE(r.invariant());
   EXPECT_TRUE(r.empty());
   point p;
   point p1(1);
   box b;
   box b1(p, p1);
-  region1 r0(b);
+  region r0(b);
   EXPECT_TRUE(r0.invariant());
   EXPECT_TRUE(r0.empty());
-  region1 r1(b1);
+  region r1(b1);
   EXPECT_TRUE(r1.invariant());
   EXPECT_FALSE(r1.empty());
   EXPECT_TRUE(r == r);
@@ -125,8 +127,8 @@ TEST(RegionCalculus, region1) {
   EXPECT_TRUE(r != r1);
   point p2(2);
   box b2(p, p2);
-  region1 r2(b2);
-  EXPECT_EQ(r2, (region1(::region1<long long, 3>(r2))));
+  region r2(b2);
+  EXPECT_EQ(r2, (region(::region<long long, 3>(r2))));
   EXPECT_TRUE(r == r.intersection(r1));
   EXPECT_TRUE(r == r1.intersection(r));
   EXPECT_TRUE(r1 == r1.intersection(r2));
@@ -146,15 +148,15 @@ TEST(RegionCalculus, region1) {
   vector<box> r12vals;
   r12vals.push_back(b1);
   r12vals.push_back(box(p1, p2));
-  region1 r12(r12vals);
+  region r12(r12vals);
   vector<box> r12boxes = r12;
   EXPECT_EQ(r12vals, r12boxes);
-  vector<region1> rs;
+  vector<region> rs;
   rs.push_back(r);
   rs.push_back(r1);
   rs.push_back(r2);
   box b4(p, point(4));
-  region1 r4(b4);
+  region r4(b4);
   rs.push_back(r4);
   rs.push_back(r12);
   rs.push_back(r2.difference(r1));
@@ -212,21 +214,23 @@ TEST(RegionCalculus, region1) {
   EXPECT_EQ("{([0,0,0]:[1,1,1]),([1,1,1]:[2,2,2])}", buf.str());
 }
 
-TEST(RegionCalculus, region2) {
+#else // #if REGIONCALCULUS_TREE
+
+TEST(RegionCalculus, region) {
   typedef point<int, 3> point;
   typedef box<int, 3> box;
-  typedef region2<int, 3> region2;
-  region2 r;
+  typedef region<int, 3> region;
+  region r;
   EXPECT_TRUE(r.invariant());
   EXPECT_TRUE(r.empty());
   point p;
   point p1(1);
   box b;
   box b1(p, p1);
-  region2 r0(b);
+  region r0(b);
   EXPECT_TRUE(r0.invariant());
   EXPECT_TRUE(r0.empty());
-  region2 r1(b1);
+  region r1(b1);
   EXPECT_TRUE(r1.invariant());
   EXPECT_FALSE(r1.empty());
   EXPECT_TRUE(r == r);
@@ -235,8 +239,8 @@ TEST(RegionCalculus, region2) {
   EXPECT_TRUE(r != r1);
   point p2(2);
   box b2(p, p2);
-  region2 r2(b2);
-  EXPECT_EQ(r2, region2(::region2<long long, 3>(r2)));
+  region r2(b2);
+  EXPECT_EQ(r2, region(::region<long long, 3>(r2)));
   EXPECT_TRUE(r == r.intersection(r1));
   EXPECT_TRUE(r == r1.intersection(r));
   EXPECT_TRUE(r1 == r1.intersection(r2));
@@ -265,15 +269,15 @@ TEST(RegionCalculus, region2) {
   vector<box> r12vals;
   r12vals.push_back(b1);
   r12vals.push_back(box(p1, p2));
-  region2 r12(r12vals);
+  region r12(r12vals);
   vector<box> r12boxes = r12;
   EXPECT_EQ(r12vals, r12boxes);
-  vector<region2> rs;
+  vector<region> rs;
   rs.push_back(r);
   rs.push_back(r1);
   rs.push_back(r2);
   box b4(p, point(4));
-  region2 r4(b4);
+  region r4(b4);
   rs.push_back(r4);
   rs.push_back(r12);
   rs.push_back(r2.difference(r1));
@@ -283,7 +287,7 @@ TEST(RegionCalculus, region2) {
     for (int n = irand(5); n >= 0; --n)
       bs.push_back(box(point(irand(10), irand(10), irand(10)),
                        point(irand(10), irand(10), irand(10))));
-    rs.push_back(region2(bs));
+    rs.push_back(region(bs));
   }
   for (std::size_t i = 0; i < rs.size(); ++i) {
     const auto &ri = rs[i];
@@ -349,7 +353,9 @@ TEST(RegionCalculus, region2) {
   EXPECT_EQ("{([0,0,0]:[1,1,1]),([1,1,1]:[2,2,2])}", buf.str());
 }
 
-TEST(RegionCalculus, region) {
+#endif // #if REGIONCALCULUS_TREE
+
+TEST(RegionCalculus, region2) {
   typedef point<int, 3> point;
   typedef box<int, 3> box;
   typedef region<int, 3> region;
