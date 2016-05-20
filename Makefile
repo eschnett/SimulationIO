@@ -147,6 +147,9 @@ coverage:
 	-lcov --remove coverage.info '/googletest-*' '/hdf5-*' '/usr/*' '/opt/*' '/Xcode.app/*' '*_wrap.cpp' --output-file coverage.info
 	-lcov --list coverage.info
 
+format:
+	find *.hpp *.cpp | grep -v _wrap.cpp | xargs -n 8 clang-format -i
+
 clean:
 	$(RM) -r *.dSYM
 	$(RM) *.gcda *.gcno coverage.info
