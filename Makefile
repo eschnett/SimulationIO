@@ -37,14 +37,13 @@ ALL_SRCS = \
 	copy.cpp \
 	example.cpp \
 	list.cpp \
-	test_LazyPtr.cpp \
 	test_RegionCalculus.cpp \
 	test_SimulationIO.cpp
 PYTHON_EXE = _H5.so _RegionCalculus.so _SimulationIO.so
 ALL_EXE = \
 	$(PYTHON_EXE) \
 	benchmark convert-carpet-output copy list example \
-	test_LazyPtr test_RegionCalculus test_SimulationIO
+	test_RegionCalculus test_SimulationIO
 
 HDF5_DIR = /opt/local
 HDF5_CPPFLAGS = -I$(HDF5_DIR)/include
@@ -89,8 +88,7 @@ test_RegionCalculus: $(RC_SRCS:%.cpp=%.o) test_RegionCalculus.o gtest-all.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 test_SimulationIO: $(SIO_SRCS:%.cpp=%.o) test_SimulationIO.o gtest-all.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
-check: test_LazyPtr test_RegionCalculus test_SimulationIO
-	./test_LazyPtr
+check: test_RegionCalculus test_SimulationIO
 	./test_RegionCalculus
 	./test_SimulationIO
 
