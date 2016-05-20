@@ -3,6 +3,7 @@
 
 #include <functional>
 #include <memory>
+#include <stdexcept>
 #include <utility>
 
 namespace LazyPtr {
@@ -59,12 +60,12 @@ public:
     return !(bool(task) & bool(ptr)) && (!task || task->invariant());
   }
 
-  lazy_ptr() noexcept = default;
+  lazy_ptr() = default;
 
-  lazy_ptr(const lazy_ptr &p) noexcept = default;
-  lazy_ptr(lazy_ptr &&p) noexcept = default;
-  lazy_ptr &operator=(const lazy_ptr &p) noexcept = default;
-  lazy_ptr &operator=(lazy_ptr &&p) noexcept = default;
+  lazy_ptr(const lazy_ptr &p) = default;
+  lazy_ptr(lazy_ptr &&p) = default;
+  lazy_ptr &operator=(const lazy_ptr &p) = default;
+  lazy_ptr &operator=(lazy_ptr &&p) = default;
 
   lazy_ptr(const function<T()> &f) : task(make_shared<task_t>(f)) {}
   lazy_ptr(function<T()> &&f) : task(make_shared<task_t>(move(f))) {}
