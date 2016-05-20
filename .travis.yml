@@ -40,9 +40,11 @@ before_install:
       export PYTHON_DIR="/usr"
       export PATH="$HDF5_DIR/bin:$PATH"
     fi
+  # - pip install --upgrade pip
   - pip install --user h5py
   - pip install --user codecov
   - gem install coveralls-lcov
+  - $CXX --version
   - h5ls --version
   - mpirun --version
   - lcov --version
@@ -56,7 +58,7 @@ script:
   - ./example && ./list example.s5
   - ./copy example.s5 example2.s5 && ./list example2.s5
   - ./python-example.py && ./list python-example.s5
-  - ./python-read-direct.py && ./python-read.s5
+  - ./python-read-direct.py && ./python-read.py
   # - ./julia-example.jl && ./list julia-example.s5
 after_success:
   - make -j2 coverage
