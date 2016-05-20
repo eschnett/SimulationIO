@@ -51,9 +51,11 @@ compiler:
   - gcc
 script:
   - make -j2 COVERAGE=1 CXX="$CXX" HDF5_DIR="$HDF5_DIR" PYTHON_DIR="$PYTHON_DIR"
-  - make -j2 test
+  - make -j2 check
   - ./example && ./list example.s5
+  - ./copy example.s5 example2.s5 && ./list example2.s5
   - ./python-example.py && ./list python-example.s5
+  - ./python-read-direct.py && ./python-read.s5
   # - ./julia-example.jl && ./list julia-example.s5
 after_success:
   - make -j2 coverage
