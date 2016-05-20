@@ -428,7 +428,7 @@ namespace RegionCalculus {
 template <typename T, int D> struct box;
 
 template <typename T> struct box<T, 0> {
-  constexpr static const int D = 0;
+  constexpr static int D = 0;
 
   bool m_full;
 
@@ -1017,7 +1017,7 @@ namespace RegionCalculus {
 template <typename T, int D> struct region2;
 
 template <typename T> struct region2<T, 0> {
-  constexpr static const int D = 0;
+  constexpr static int D = 0;
 
   bool m_full;
 
