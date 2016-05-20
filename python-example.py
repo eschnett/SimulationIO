@@ -47,7 +47,7 @@ for pk in range(npk):
         for pi in range(npi):
             p = pi + npi * (pj + npj * pk)
             block = discretization.createDiscretizationBlock("grid.%d" % p)
-            block.setRegion([nli*pi, nlj*pj, nlk*pk], [nli, nlj, nlk])
+            block.setBox([nli*pi, nlj*pj, nlk*pk], [nli, nlj, nlk])
             blocks.append(block)
 
 # Basis for TangentSpace

@@ -44,7 +44,7 @@ blocks = []
 for pk in 1:npk, pj in 1:npj, pi in 1:npi
     p = pi-1 + npi * (pj-1 + npj * (pk-1)) + 1
     block = discretization[:createDiscretizationBlock]("grid.$(p-1)")
-    block[:setRegion]((nli*pi, nlj*pj, nlk*pk), (nli, nlj, nlk))
+    block[:setBox]((nli*pi, nlj*pj, nlk*pk), (nli, nlj, nlk))
     push!(blocks, block)
 end
 
