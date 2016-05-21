@@ -1,6 +1,6 @@
 CXX = g++
 CPPFLAGS = $(GTEST_CPPFLAGS) $(HDF5_CPPFLAGS) $(MPI_CPPFLAGS) $(PYTHON_CPPFLAGS)
-CXXFLAGS = $(GTEST_CXXFLAGS) $(HDF5_CXXFLAGS) $(MPI_CXXFLAGS) $(PYTHON_CXXFLAGS) -g -Wall -std=c++0x -fPIC -O2 # -march=native
+CXXFLAGS = $(GTEST_CXXFLAGS) $(HDF5_CXXFLAGS) $(MPI_CXXFLAGS) $(PYTHON_CXXFLAGS) -g -Wall -std=c++0x -fPIC # -O2 -march=native
 # On Travis Darwin:
 # [-O2 -march=native]: times out
 # []: works
