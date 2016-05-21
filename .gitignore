@@ -57,3 +57,5 @@ test_RegionCalculus
 test_SimulationIO
 copy
 test_LazyPtr
+build
+external
