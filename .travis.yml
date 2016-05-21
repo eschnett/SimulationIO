@@ -53,7 +53,7 @@ before_install:
       export PYTHON_DIR="/usr"
       export PATH="$HDF5_DIR/bin:$PATH"
     fi
-  - pip install --upgrade pip
+  # - pip install --upgrade pip
   - pip install --user h5py
   - pip install --user codecov
   - gem install coveralls-lcov
