@@ -10,13 +10,12 @@ void Discretization::read(const H5::CommonFG &loc, const string &entry,
                           const shared_ptr<Manifold> &manifold) {
   this->manifold = manifold;
   auto group = loc.openGroup(entry);
-  assert(H5::readAttribute<string>(group, "type",
-                                   manifold->project.lock()->enumtype) ==
-         "Discretization");
+  assert(H5::readAttribute<string>(
+             group, "type", manifold->project()->enumtype) == "Discretization");
   H5::readAttribute(group, "name", name);
   assert(H5::readGroupAttribute<string>(group, "manifold", "name") ==
          manifold->name);
-  configuration = manifold->project.lock()->configurations.at(
+  configuration = manifold->project()->configurations.at(
       H5::readGroupAttribute<string>(group, "configuration", "name"));
   assert(H5::readGroupAttribute<string>(
              group, string("configuration/discretizations/") + name, "name") ==
@@ -41,7 +40,7 @@ void Discretization::write(const H5::CommonFG &loc,
                            const H5::H5Location &parent) const {
   assert(invariant());
   auto group = loc.createGroup(name);
-  H5::createAttribute(group, "type", manifold.lock()->project.lock()->enumtype,
+  H5::createAttribute(group, "type", manifold.lock()->project()->enumtype,
                       "Discretization");
   H5::createAttribute(group, "name", name);
   // H5::createHardLink(group, "manifold", parent, ".");

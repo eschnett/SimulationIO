@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
 
   // Fields
   const int nfields = 100;
-  vector<shared_ptr<Field>> fields;
+  vector<lazy_ptr<Field>> fields;
   vector<shared_ptr<DiscreteField>> discretefields;
   for (int f = 0; f < nfields; ++f) {
     ostringstream name;

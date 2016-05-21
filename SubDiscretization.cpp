@@ -12,19 +12,19 @@ void SubDiscretization::read(const H5::CommonFG &loc, const string &entry,
                              const shared_ptr<Manifold> &manifold) {
   this->manifold = manifold;
   auto group = loc.openGroup(entry);
-  assert(H5::readAttribute<string>(group, "type",
-                                   manifold->project.lock()->enumtype) ==
-         "SubDiscretization");
+  assert(
+      H5::readAttribute<string>(group, "type", manifold->project()->enumtype) ==
+      "SubDiscretization");
   H5::readAttribute(group, "name", name);
   assert(H5::readGroupAttribute<string>(group, "manifold", "name") ==
          manifold->name);
-  parent_discretization = manifold->discretizations.at(
+  parent_discretization = manifold->discretizations().at(
       H5::readGroupAttribute<string>(group, "parent_discretization", "name"));
   assert(H5::readGroupAttribute<string>(
              group,
              string("parent_discretization/child_discretizations/") + name,
              "name") == name);
-  child_discretization = manifold->discretizations.at(
+  child_discretization = manifold->discretizations().at(
       H5::readGroupAttribute<string>(group, "child_discretization", "name"));
   assert(H5::readGroupAttribute<string>(
              group,
@@ -51,7 +51,7 @@ void SubDiscretization::write(const H5::CommonFG &loc,
                               const H5::H5Location &parent) const {
   assert(invariant());
   auto group = loc.createGroup(name);
-  H5::createAttribute(group, "type", manifold.lock()->project.lock()->enumtype,
+  H5::createAttribute(group, "type", manifold.lock()->project()->enumtype,
                       "SubDiscretization");
   H5::createAttribute(group, "name", name);
   // H5::createHardLink(group, "manifold", parent, ".");

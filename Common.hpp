@@ -1,12 +1,24 @@
 #ifndef COMMON_HPP
 #define COMMON_HPP
 
+#include "LazyPtr.hpp"
+
 #include <H5Cpp.h>
 
 #include <iostream>
 #include <string>
 
 namespace SimulationIO {
+
+using LazyPtr::flag;
+
+// using LazyPtr::lazy;
+// using LazyPtr::lazy_from_shared;
+// using LazyPtr::lazy_ptr;
+// using LazyPtr::lazy_weak_ptr;
+
+template <typename T> using lazy_ptr = std::shared_ptr<T>;
+template <typename T> using lazy_weak_ptr = std::weak_ptr<T>;
 
 using std::ostream;
 using std::string;

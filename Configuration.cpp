@@ -62,7 +62,7 @@ ostream &Configuration::output(ostream &os, int level) const {
   for (const auto &d : discretizations)
     os << indent(level + 1) << "Discretization " << quote(d.second.lock()->name)
        << "\n";
-  for (const auto &f : fields)
+  for (const auto &f : fields())
     os << indent(level + 1) << "Field " << quote(f.second.lock()->name) << "\n";
   for (const auto &m : manifolds)
     os << indent(level + 1) << "Manifold " << quote(m.second.lock()->name)

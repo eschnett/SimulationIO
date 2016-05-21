@@ -362,12 +362,27 @@ Project::createField(const string &name,
   return field;
 }
 
-shared_ptr<Field> Project::readField(const H5::CommonFG &loc,
-                                     const string &entry) {
+lazy_ptr<Field> Project::readField(const H5::CommonFG &loc,
+                                   const string &entry) {
   auto field = Field::create(loc, entry, shared_from_this());
   checked_emplace(fields, field->name, field);
   assert(field->invariant());
   return field;
+
+  // auto group = (H5::Group &)loc;
+  // auto shared_this = shared_from_this();
+  // auto field = lazy_from_shared([=] {
+  //   // TODO: pass "fields" to create, then call "checked_emplace" and
+  //   // "invariant" from there as well
+  //   std::cout << "[reading field " << entry << "]\n";
+  //   auto field = Field::create(group, entry, shared_this);
+  //   std::cout << "[done reading field " << entry << "]\n";
+  //   assert(field->invariant());
+  //   std::cout << "[invariant is good]\n";
+  //   return field;
+  // });
+  // checked_emplace(fields, entry, field);
+  // return field;
 }
 
 shared_ptr<CoordinateSystem>

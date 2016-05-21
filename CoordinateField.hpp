@@ -22,14 +22,14 @@ namespace SimulationIO {
 struct CoordinateField : Common, std::enable_shared_from_this<CoordinateField> {
   weak_ptr<CoordinateSystem> coordinatesystem; // parent
   int direction;
-  shared_ptr<Field> field; // no backlink
+  lazy_ptr<Field> field; // no backlink
 
   virtual bool invariant() const {
     return Common::invariant() && bool(coordinatesystem.lock()) &&
            coordinatesystem.lock()->coordinatefields.count(name) &&
            coordinatesystem.lock()->coordinatefields.at(name).get() == this &&
            direction >= 0 &&
-           direction < coordinatesystem.lock()->manifold->dimension &&
+           direction < coordinatesystem.lock()->manifold->dimension() &&
            coordinatesystem.lock()->directions.count(direction) &&
            coordinatesystem.lock()->directions.at(direction).get() == this &&
            bool(field) && field->coordinatefields.nobacklink();
@@ -47,7 +47,7 @@ struct CoordinateField : Common, std::enable_shared_from_this<CoordinateField> {
   friend struct CoordinateSystem;
   CoordinateField(hidden, const string &name,
                   const shared_ptr<CoordinateSystem> &coordinatesystem,
-                  int direction, const shared_ptr<Field> &field)
+                  int direction, const lazy_ptr<Field> &field)
       : Common(name), coordinatesystem(coordinatesystem), direction(direction),
         field(field) {}
   CoordinateField(hidden) : Common(hidden()) {}
@@ -56,7 +56,7 @@ private:
   static shared_ptr<CoordinateField>
   create(const string &name,
          const shared_ptr<CoordinateSystem> &coordinatesystem, int direction,
-         const shared_ptr<Field> &field) {
+         const lazy_ptr<Field> &field) {
     auto coordinatefield = make_shared<CoordinateField>(
         hidden(), name, coordinatesystem, direction, field);
     field->noinsert(coordinatefield);

@@ -40,9 +40,9 @@ public:
   map<string, weak_ptr<CoordinateSystem>> coordinatesystems; // backlinks
   map<string, weak_ptr<DiscreteField>> discretefields;       // backlinks
   map<string, weak_ptr<Discretization>> discretizations;     // backlinks
-  map<string, weak_ptr<Field>> fields;                       // backlinks
-  map<string, weak_ptr<Manifold>> manifolds;                 // backlinks
-  map<string, weak_ptr<TangentSpace>> tangentspaces;         // backlinks
+  const map<string, lazy_weak_ptr<Field>> &fields() const { return m_fields; }
+  map<string, weak_ptr<Manifold>> manifolds;         // backlinks
+  map<string, weak_ptr<TangentSpace>> tangentspaces; // backlinks
 
   virtual bool invariant() const {
     return Common::invariant() && bool(project.lock()) &&
@@ -111,8 +111,8 @@ private:
               const shared_ptr<Discretization> &discretization) {
     checked_emplace(discretizations, name, discretization);
   }
-  void insert(const string &name, const shared_ptr<Field> &field) {
-    checked_emplace(fields, name, field);
+  void insert(const string &name, const lazy_ptr<Field> &field) {
+    checked_emplace(m_fields, name, field);
   }
   void insert(const string &name, const shared_ptr<Manifold> &manifold) {
     checked_emplace(manifolds, name, manifold);

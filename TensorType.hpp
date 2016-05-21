@@ -31,7 +31,7 @@ struct TensorType : Common, std::enable_shared_from_this<TensorType> {
   int rank;
   map<string, shared_ptr<TensorComponent>> tensorcomponents; // children
   map<int, shared_ptr<TensorComponent>> storage_indices;
-  NoBackLink<weak_ptr<Field>> fields;
+  NoBackLink<lazy_weak_ptr<Field>> fields;
 
   virtual bool invariant() const {
     bool inv = Common::invariant() && bool(project.lock()) &&
@@ -90,7 +90,7 @@ public:
 
 private:
   friend struct Field;
-  void noinsert(const shared_ptr<Field> &field) {}
+  void noinsert(const lazy_ptr<Field> &field) {}
 };
 }
 

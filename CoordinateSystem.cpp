@@ -71,7 +71,7 @@ void CoordinateSystem::write(const H5::CommonFG &loc,
 
 shared_ptr<CoordinateField>
 CoordinateSystem::createCoordinateField(const string &name, int direction,
-                                        const shared_ptr<Field> &field) {
+                                        const lazy_ptr<Field> &field) {
   auto coordinatefield =
       CoordinateField::create(name, shared_from_this(), direction, field);
   checked_emplace(coordinatefields, coordinatefield->name, coordinatefield);

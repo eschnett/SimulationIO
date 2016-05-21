@@ -20,7 +20,7 @@ void read_active(const H5::H5Location &group,
   vector<RegionCalculus::box<hssize_t, D>> boxes;
   auto boxtype = discretizationblock.discretization.lock()
                      ->manifold.lock()
-                     ->project.lock()
+                     ->project()
                      ->boxtypes.at(D);
   assert(sizeof(boxes[0]) == boxtype.getSize());
 #if 1
@@ -58,7 +58,7 @@ void DiscretizationBlock::read(
   auto group = loc.openGroup(entry);
   assert(H5::readAttribute<string>(
              group, "type",
-             discretization->manifold.lock()->project.lock()->enumtype) ==
+             discretization->manifold.lock()->project()->enumtype) ==
          "DiscretizationBlock");
   H5::readAttribute(group, "name", name);
   assert(H5::readGroupAttribute<string>(group, "discretization", "name") ==
@@ -108,7 +108,7 @@ void write_active(const H5::H5Location &group,
           ->val;
   auto boxtype = discretizationblock.discretization.lock()
                      ->manifold.lock()
-                     ->project.lock()
+                     ->project()
                      ->boxtypes.at(D);
   assert(sizeof boxes[0] == boxtype.getSize());
   H5::createAttribute(group, "active", boxes, boxtype);
@@ -121,7 +121,7 @@ void DiscretizationBlock::write(const H5::CommonFG &loc,
   auto group = loc.createGroup(name);
   H5::createAttribute(
       group, "type",
-      discretization.lock()->manifold.lock()->project.lock()->enumtype,
+      discretization.lock()->manifold.lock()->project()->enumtype,
       "DiscretizationBlock");
   H5::createAttribute(group, "name", name);
   // H5::createHardLink(group, "discretization", parent, ".");

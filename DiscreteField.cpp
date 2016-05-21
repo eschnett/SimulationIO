@@ -7,7 +7,7 @@
 namespace SimulationIO {
 
 void DiscreteField::read(const H5::CommonFG &loc, const string &entry,
-                         const shared_ptr<Field> &field) {
+                         const lazy_ptr<Field> &field) {
   this->field = field;
   auto group = loc.openGroup(entry);
   assert(H5::readAttribute<string>(group, "type",
@@ -22,7 +22,7 @@ void DiscreteField::read(const H5::CommonFG &loc, const string &entry,
   assert(H5::readGroupAttribute<string>(
              group, string("configuration/discretefields/") + name, "name") ==
          name);
-  discretization = field->manifold->discretizations.at(
+  discretization = field->manifold->discretizations().at(
       H5::readGroupAttribute<string>(group, "discretization", "name"));
   basis = field->tangentspace->bases.at(
       H5::readGroupAttribute<string>(group, "basis", "name"));

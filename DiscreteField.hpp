@@ -28,7 +28,7 @@ class DiscreteFieldBlock;
 class DiscreteField : public Common,
                       public std::enable_shared_from_this<DiscreteField> {
 public:
-  weak_ptr<Field> field;                     // parent
+  lazy_weak_ptr<Field> field;                // parent
   shared_ptr<Configuration> configuration;   // with backlink
   shared_ptr<Discretization> discretization; // with backlink
   shared_ptr<Basis> basis;                   // with backlink
@@ -55,7 +55,7 @@ public:
   DiscreteField &operator=(DiscreteField &&) = delete;
 
   friend struct Field;
-  DiscreteField(hidden, const string &name, const shared_ptr<Field> &field,
+  DiscreteField(hidden, const string &name, const lazy_ptr<Field> &field,
                 const shared_ptr<Configuration> &configuration,
                 const shared_ptr<Discretization> &discretization,
                 const shared_ptr<Basis> &basis)
@@ -65,7 +65,7 @@ public:
 
 private:
   static shared_ptr<DiscreteField>
-  create(const string &name, const shared_ptr<Field> &field,
+  create(const string &name, const lazy_ptr<Field> &field,
          const shared_ptr<Configuration> &configuration,
          const shared_ptr<Discretization> &discretization,
          const shared_ptr<Basis> &basis) {
@@ -76,13 +76,13 @@ private:
   }
   static shared_ptr<DiscreteField> create(const H5::CommonFG &loc,
                                           const string &entry,
-                                          const shared_ptr<Field> &field) {
+                                          const lazy_ptr<Field> &field) {
     auto discretefield = make_shared<DiscreteField>(hidden());
     discretefield->read(loc, entry, field);
     return discretefield;
   }
   void read(const H5::CommonFG &loc, const string &entry,
-            const shared_ptr<Field> &field);
+            const lazy_ptr<Field> &field);
 
 public:
   virtual ~DiscreteField() {}

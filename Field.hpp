@@ -43,12 +43,12 @@ struct Field : Common, std::enable_shared_from_this<Field> {
     bool inv = Common::invariant() && bool(project.lock()) &&
                project.lock()->fields.count(name) &&
                project.lock()->fields.at(name).get() == this &&
-               bool(configuration) && configuration->fields.count(name) &&
-               configuration->fields.at(name).lock().get() == this &&
-               bool(manifold) && manifold->fields.count(name) &&
-               manifold->fields.at(name).lock().get() == this &&
-               bool(tangentspace) && tangentspace->fields.count(name) &&
-               tangentspace->fields.at(name).lock().get() == this &&
+               bool(configuration) && configuration->fields().count(name) &&
+               configuration->fields().at(name).lock().get() == this &&
+               bool(manifold) && manifold->fields().count(name) &&
+               manifold->fields().at(name).lock().get() == this &&
+               bool(tangentspace) && tangentspace->fields().count(name) &&
+               tangentspace->fields().at(name).lock().get() == this &&
                bool(tensortype) &&
                tangentspace->dimension == tensortype->dimension &&
                tensortype->fields.nobacklink();

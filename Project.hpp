@@ -43,7 +43,7 @@ struct Project : Common, std::enable_shared_from_this<Project> {
   map<string, shared_ptr<TensorType>> tensortypes;             // children
   map<string, shared_ptr<Manifold>> manifolds;                 // children
   map<string, shared_ptr<TangentSpace>> tangentspaces;         // children
-  map<string, shared_ptr<Field>> fields;                       // children
+  map<string, lazy_ptr<Field>> fields;                         // children
   map<string, shared_ptr<CoordinateSystem>> coordinatesystems; // children
   // TODO: coordinatebasis
 
@@ -125,7 +125,7 @@ public:
                                 const shared_ptr<Manifold> &manifold,
                                 const shared_ptr<TangentSpace> &tangentspace,
                                 const shared_ptr<TensorType> &tensortype);
-  shared_ptr<Field> readField(const H5::CommonFG &loc, const string &entry);
+  lazy_ptr<Field> readField(const H5::CommonFG &loc, const string &entry);
   shared_ptr<CoordinateSystem>
   createCoordinateSystem(const string &name,
                          const shared_ptr<Configuration> &configuration,

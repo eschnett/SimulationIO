@@ -79,7 +79,7 @@ public:
             discretefieldblock.lock()
                 ->discretizationblock->discretization.lock()
                 ->manifold.lock()
-                ->dimension) == (data_type == type_range);
+                ->dimension()) == (data_type == type_range);
     return inv;
   }
 

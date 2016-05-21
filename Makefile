@@ -12,41 +12,43 @@ CXXFLAGS += --coverage
 endif
 
 RC_SRCS =
-SIO_SRCS = \
-	Basis.cpp \
-	BasisVector.cpp \
-	Configuration.cpp \
-	CoordinateField.cpp \
-	CoordinateSystem.cpp \
-	DiscreteField.cpp \
-	DiscreteFieldBlock.cpp \
-	DiscreteFieldBlockComponent.cpp \
-	Discretization.cpp \
-	DiscretizationBlock.cpp \
-	Field.cpp \
-	Manifold.cpp \
-	Parameter.cpp \
-	ParameterValue.cpp \
-	Project.cpp \
-	SubDiscretization.cpp \
-	TangentSpace.cpp \
-	TensorComponent.cpp \
+SIO_SRCS =					\
+	Basis.cpp				\
+	BasisVector.cpp				\
+	Configuration.cpp			\
+	CoordinateField.cpp			\
+	CoordinateSystem.cpp			\
+	DataBlock.cpp				\
+	DiscreteField.cpp			\
+	DiscreteFieldBlock.cpp			\
+	DiscreteFieldBlockComponent.cpp		\
+	Discretization.cpp			\
+	DiscretizationBlock.cpp			\
+	Field.cpp				\
+	Manifold.cpp				\
+	Parameter.cpp				\
+	ParameterValue.cpp			\
+	Project.cpp				\
+	SubDiscretization.cpp			\
+	TangentSpace.cpp			\
+	TensorComponent.cpp			\
 	TensorType.cpp
-ALL_SRCS = \
-	$(SIO_SRCS) \
-	$(RC_SRCS) \
-	benchmark.cpp \
-	convert-carpet-output.cpp \
-	copy.cpp \
-	example.cpp \
-	list.cpp \
-	test_RegionCalculus.cpp \
+ALL_SRCS =					\
+	$(SIO_SRCS)				\
+	$(RC_SRCS)				\
+	benchmark.cpp				\
+	convert-carpet-output.cpp		\
+	copy.cpp				\
+	example.cpp				\
+	list.cpp				\
+	test_LazyPtr.cpp			\
+	test_RegionCalculus.cpp			\
 	test_SimulationIO.cpp
 PYTHON_EXE = _H5.so _RegionCalculus.so _SimulationIO.so
-ALL_EXE = \
-	$(PYTHON_EXE) \
-	benchmark convert-carpet-output copy list example \
-	test_RegionCalculus test_SimulationIO
+ALL_EXE =							\
+	$(PYTHON_EXE)						\
+	benchmark convert-carpet-output copy list example	\
+	test_LazyPtr test_RegionCalculus test_SimulationIO
 
 HDF5_DIR = /opt/local
 HDF5_CPPFLAGS = -I$(HDF5_DIR)/include
@@ -91,7 +93,8 @@ test_RegionCalculus: $(RC_SRCS:%.cpp=%.o) test_RegionCalculus.o gtest-all.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 test_SimulationIO: $(SIO_SRCS:%.cpp=%.o) test_SimulationIO.o gtest-all.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
-check: test_RegionCalculus test_SimulationIO
+check: test_LazyPtr test_RegionCalculus test_SimulationIO
+	./test_LazyPtr
 	./test_RegionCalculus
 	./test_SimulationIO
 

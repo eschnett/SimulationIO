@@ -39,8 +39,8 @@ struct CoordinateSystem : Common,
            bool(configuration) &&
            configuration->coordinatesystems.count(name) &&
            configuration->coordinatesystems.at(name).lock().get() == this &&
-           bool(manifold) && manifold->coordinatesystems.count(name) &&
-           manifold->coordinatesystems.at(name).lock().get() == this;
+           bool(manifold) && manifold->coordinatesystems().count(name) &&
+           manifold->coordinatesystems().at(name).lock().get() == this;
   }
 
   CoordinateSystem() = delete;
@@ -92,7 +92,7 @@ public:
 
   shared_ptr<CoordinateField>
   createCoordinateField(const string &name, int direction,
-                        const shared_ptr<Field> &field);
+                        const lazy_ptr<Field> &field);
   shared_ptr<CoordinateField> readCoordinateField(const H5::CommonFG &loc,
                                                   const string &entry);
 };
