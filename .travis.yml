@@ -1,18 +1,31 @@
+# General settings
 notifications:
   email: false
+sudo: false
+
+# Build matrix
 os:
   - linux   # This is currently Ubuntu 12.04 LTS
   - osx
-sudo: false
+language: cpp
+compiler:
+  - clang
+  - gcc
+matrix:
+  exclude:
+    - os: osx
+      compiler: gcc
+
+# Install, buuild, and test
 addons:
- apt:
-   packages:
-     - lcov
-     # - libhdf5-serial-dev   # This lacks the HDF5 C++ bindings
-     - libopenmpi-dev
-     - openmpi-bin
-     - python-numpy
-     - swig
+  apt:
+    packages:
+      - lcov
+      # - libhdf5-serial-dev   # This lacks the HDF5 C++ bindings
+      - libopenmpi-dev
+      - openmpi-bin
+      - python-numpy
+      - swig
 before_install:
   - |
     if [ `uname` = Darwin ]; then
@@ -48,10 +61,6 @@ before_install:
   - h5ls --version
   - mpirun --version
   - lcov --version
-language: cpp
-compiler:
-  - clang
-  - gcc
 script:
   - make -j2 COVERAGE=1 CXX="$CXX" HDF5_DIR="$HDF5_DIR" PYTHON_DIR="$PYTHON_DIR"
   - make -j2 check
