@@ -18,7 +18,6 @@ SIO_SRCS =					\
 	Configuration.cpp			\
 	CoordinateField.cpp			\
 	CoordinateSystem.cpp			\
-	DataBlock.cpp				\
 	DiscreteField.cpp			\
 	DiscreteFieldBlock.cpp			\
 	DiscreteFieldBlockComponent.cpp		\
