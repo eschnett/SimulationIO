@@ -22,10 +22,12 @@ using std::string;
 using std::weak_ptr;
 
 class DiscreteField;
-struct DiscretizationBlock;
-struct SubDiscretization;
+class DiscretizationBlock;
+class SubDiscretization;
 
-struct Discretization : Common, std::enable_shared_from_this<Discretization> {
+class Discretization : public Common,
+                       public std::enable_shared_from_this<Discretization> {
+public:
   weak_ptr<Manifold> manifold;             // parent
   shared_ptr<Configuration> configuration; // with backlink
   map<string, shared_ptr<DiscretizationBlock>> discretizationblocks; // children
@@ -89,7 +91,7 @@ public:
   readDiscretizationBlock(const H5::CommonFG &loc, const string &entry);
 
 private:
-  friend struct SubDiscretization;
+  friend class SubDiscretization;
   void insertChild(const string &name,
                    const shared_ptr<SubDiscretization> &subdiscretization) {
     checked_emplace(child_discretizations, name, subdiscretization);

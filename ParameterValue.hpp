@@ -22,7 +22,9 @@ using std::weak_ptr;
 
 class Configuration;
 
-struct ParameterValue : Common, std::enable_shared_from_this<ParameterValue> {
+class ParameterValue : public Common,
+                       public std::enable_shared_from_this<ParameterValue> {
+public:
   weak_ptr<Parameter> parameter;                       // parent
   map<string, weak_ptr<Configuration>> configurations; // backlinks
   enum { type_empty, type_int, type_double, type_string } value_type;
@@ -43,7 +45,7 @@ struct ParameterValue : Common, std::enable_shared_from_this<ParameterValue> {
   ParameterValue &operator=(const ParameterValue &) = delete;
   ParameterValue &operator=(ParameterValue &&) = delete;
 
-  friend struct Parameter;
+  friend class Parameter;
   ParameterValue(hidden, const string &name,
                  const shared_ptr<Parameter> &parameter)
       : Common(name), parameter(parameter), value_type(type_empty) {}

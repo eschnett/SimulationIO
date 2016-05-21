@@ -28,8 +28,10 @@ typedef RegionCalculus::dregion<hssize_t> region_t;
 
 class DiscreteFieldBlock;
 
-struct DiscretizationBlock : Common,
-                             std::enable_shared_from_this<DiscretizationBlock> {
+class DiscretizationBlock
+    : public Common,
+      public std::enable_shared_from_this<DiscretizationBlock> {
+public:
   // Discretization of a certain region, represented by contiguous data
   weak_ptr<Discretization> discretization; // parent
   box_t box;
@@ -59,7 +61,7 @@ struct DiscretizationBlock : Common,
   DiscretizationBlock &operator=(const DiscretizationBlock &) = delete;
   DiscretizationBlock &operator=(DiscretizationBlock &&) = delete;
 
-  friend struct Discretization;
+  friend class Discretization;
   DiscretizationBlock(hidden, const string &name,
                       const shared_ptr<Discretization> &discretization)
       : Common(name), discretization(discretization) {}

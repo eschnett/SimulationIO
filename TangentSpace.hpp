@@ -22,8 +22,8 @@ using std::shared_ptr;
 using std::string;
 using std::weak_ptr;
 
-struct Field;
-struct Basis;
+class Field;
+class Basis;
 
 class TangentSpace : public Common,
                      public std::enable_shared_from_this<TangentSpace> {
@@ -54,7 +54,7 @@ public:
   TangentSpace &operator=(const TangentSpace &) = delete;
   TangentSpace &operator=(TangentSpace &&) = delete;
 
-  friend struct Project;
+  friend class Project;
   TangentSpace(hidden, const string &name, const shared_ptr<Project> &project,
                const shared_ptr<Configuration> &configuration, int dimension)
       : Common(name), project(project), configuration(configuration),
@@ -95,7 +95,7 @@ public:
   shared_ptr<Basis> readBasis(const H5::CommonFG &loc, const string &entry);
 
 private:
-  friend struct Field;
+  friend class Field;
   void insert(const string &name, const shared_ptr<Field> &field) {
     checked_emplace(m_fields, name, field);
   }

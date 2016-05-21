@@ -22,22 +22,23 @@ using std::shared_ptr;
 using std::string;
 using std::vector;
 
-struct Project;
+class Project;
 
 shared_ptr<Project> createProject(const string &name);
 shared_ptr<Project> readProject(const H5::CommonFG &loc);
 
-struct Parameter;
+class Parameter;
 class Configuration;
-struct CoordinateSystem;
-struct TensorType;
+class CoordinateSystem;
+class TensorType;
 class Manifold;
 class TangentSpace;
-struct Field;
-// struct CoordinateSystem;
-// struct CoordinateBasis;
+class Field;
+// class CoordinateSystem;
+// class CoordinateBasis;
 
-struct Project : Common, std::enable_shared_from_this<Project> {
+class Project : public Common, public std::enable_shared_from_this<Project> {
+public:
   map<string, shared_ptr<Parameter>> parameters;               // children
   map<string, shared_ptr<Configuration>> configurations;       // children
   map<string, shared_ptr<TensorType>> tensortypes;             // children

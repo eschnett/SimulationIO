@@ -54,7 +54,7 @@ public:
   DiscreteField &operator=(const DiscreteField &) = delete;
   DiscreteField &operator=(DiscreteField &&) = delete;
 
-  friend struct Field;
+  friend class Field;
   DiscreteField(hidden, const string &name, const shared_ptr<Field> &field,
                 const shared_ptr<Configuration> &configuration,
                 const shared_ptr<Discretization> &discretization,

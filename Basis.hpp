@@ -21,11 +21,12 @@ using std::shared_ptr;
 using std::string;
 using std::weak_ptr;
 
-struct BasisVector;
+class BasisVector;
 class DiscreteField;
-// struct CoordinateBasis;
+// class CoordinateBasis;
 
-struct Basis : Common, std::enable_shared_from_this<Basis> {
+class Basis : public Common, public std::enable_shared_from_this<Basis> {
+public:
   weak_ptr<TangentSpace> tangentspace;               // parent
   shared_ptr<Configuration> configuration;           // with backlink
   map<string, shared_ptr<BasisVector>> basisvectors; // children

@@ -40,7 +40,8 @@ template <typename T> struct NoBackLink {
 
 // Common to all file elements
 
-struct Common {
+class Common {
+public:
   string name;
 
   virtual bool invariant() const { return !name.empty(); }

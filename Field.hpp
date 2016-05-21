@@ -24,13 +24,14 @@ using std::shared_ptr;
 using std::string;
 using std::weak_ptr;
 
-struct CoordinateField;
+class CoordinateField;
 class Manifold;
 class TangentSpace;
-struct TensorType;
+class TensorType;
 class DiscreteField;
 
-struct Field : Common, std::enable_shared_from_this<Field> {
+class Field : public Common, public std::enable_shared_from_this<Field> {
+public:
   weak_ptr<Project> project;                             // parent
   shared_ptr<Configuration> configuration;               // with backlink
   shared_ptr<Manifold> manifold;                         // with backlink
@@ -63,7 +64,7 @@ struct Field : Common, std::enable_shared_from_this<Field> {
   Field &operator=(const Field &) = delete;
   Field &operator=(Field &&) = delete;
 
-  friend struct Project;
+  friend class Project;
   Field(hidden, const string &name, const shared_ptr<Project> &project,
         const shared_ptr<Configuration> &configuration,
         const shared_ptr<Manifold> &manifold,
@@ -117,7 +118,7 @@ public:
                                               const string &entry);
 
 private:
-  friend struct CoordinateField;
+  friend class CoordinateField;
   void noinsert(const shared_ptr<CoordinateField> &coordinatefield) {}
 };
 }

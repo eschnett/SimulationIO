@@ -21,13 +21,13 @@ using std::shared_ptr;
 using std::string;
 using std::weak_ptr;
 
-struct Basis;
-struct CoordinateSystem;
+class Basis;
+class CoordinateSystem;
 class DiscreteField;
-struct Discretization;
-struct Field;
+class Discretization;
+class Field;
 class Manifold;
-struct ParameterValue;
+class ParameterValue;
 class TangentSpace;
 
 class Configuration : public Common,
@@ -56,7 +56,7 @@ public:
   Configuration &operator=(const Configuration &) = delete;
   Configuration &operator=(Configuration &&) = delete;
 
-  friend struct Project;
+  friend class Project;
   Configuration(hidden, const string &name, const shared_ptr<Project> &project)
       : Common(name), project(project) {}
   Configuration(hidden) : Common(hidden()) {}
@@ -89,11 +89,11 @@ public:
   void insertParameterValue(const shared_ptr<ParameterValue> &parametervalue);
 
 private:
-  friend struct Basis;
-  friend struct CoordinateSystem;
+  friend class Basis;
+  friend class CoordinateSystem;
   friend class DiscreteField;
-  friend struct Discretization;
-  friend struct Field;
+  friend class Discretization;
+  friend class Field;
   friend class Manifold;
   friend class TangentSpace;
   void insert(const string &name, const shared_ptr<Basis> &basis) {

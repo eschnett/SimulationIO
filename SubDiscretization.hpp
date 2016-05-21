@@ -26,8 +26,10 @@ using std::string;
 using std::vector;
 using std::weak_ptr;
 
-struct SubDiscretization : Common,
-                           std::enable_shared_from_this<SubDiscretization> {
+class SubDiscretization
+    : public Common,
+      public std::enable_shared_from_this<SubDiscretization> {
+public:
   weak_ptr<Manifold> manifold;
   shared_ptr<Discretization> parent_discretization;
   shared_ptr<Discretization> child_discretization;

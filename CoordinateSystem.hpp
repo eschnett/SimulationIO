@@ -21,10 +21,11 @@ using std::shared_ptr;
 using std::string;
 using std::weak_ptr;
 
-struct CoordinateField;
+class CoordinateField;
 
-struct CoordinateSystem : Common,
-                          std::enable_shared_from_this<CoordinateSystem> {
+class CoordinateSystem : public Common,
+                         public std::enable_shared_from_this<CoordinateSystem> {
+public:
   weak_ptr<Project> project;                                 // parent
   shared_ptr<Configuration> configuration;                   // with backlink
   shared_ptr<Manifold> manifold;                             // with backlink
@@ -49,7 +50,7 @@ struct CoordinateSystem : Common,
   CoordinateSystem &operator=(const CoordinateSystem &) = delete;
   CoordinateSystem &operator=(CoordinateSystem &&) = delete;
 
-  friend struct Project;
+  friend class Project;
   CoordinateSystem(hidden, const string &name,
                    const shared_ptr<Project> &project,
                    const shared_ptr<Configuration> &configuration,

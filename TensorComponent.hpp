@@ -21,7 +21,9 @@ using std::weak_ptr;
 
 class DiscreteFieldBlockComponent;
 
-struct TensorComponent : Common, std::enable_shared_from_this<TensorComponent> {
+class TensorComponent : public Common,
+                        public std::enable_shared_from_this<TensorComponent> {
+public:
   weak_ptr<TensorType> tensortype; // parent
   int storage_index;
   vector<int> indexvalues;
@@ -65,7 +67,7 @@ struct TensorComponent : Common, std::enable_shared_from_this<TensorComponent> {
   TensorComponent &operator=(const TensorComponent &) = delete;
   TensorComponent &operator=(TensorComponent &&) = delete;
 
-  friend struct TensorType;
+  friend class TensorType;
   TensorComponent(hidden, const string &name,
                   const shared_ptr<TensorType> &tensortype, int storage_index,
                   const vector<int> &indexvalues)

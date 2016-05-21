@@ -21,9 +21,11 @@ using std::shared_ptr;
 using std::string;
 using std::weak_ptr;
 
-struct ParameterValue;
+class ParameterValue;
 
-struct Parameter : Common, std::enable_shared_from_this<Parameter> {
+class Parameter : public Common,
+                  public std::enable_shared_from_this<Parameter> {
+public:
   weak_ptr<Project> project;                               // parent
   map<string, shared_ptr<ParameterValue>> parametervalues; // children
   // type, range?, description?
@@ -40,7 +42,7 @@ struct Parameter : Common, std::enable_shared_from_this<Parameter> {
   Parameter &operator=(const Parameter &) = delete;
   Parameter &operator=(Parameter &&) = delete;
 
-  friend struct Project;
+  friend class Project;
   Parameter(hidden, const string &name, const shared_ptr<Project> &project)
       : Common(name), project(project) {}
   Parameter(hidden) : Common(hidden()) {}

@@ -24,11 +24,11 @@ using std::string;
 using std::vector;
 using std::weak_ptr;
 
-struct CoordinateSystem;
-struct Field;
-struct CoordinateSystem;
-struct Discretization;
-struct SubDiscretization;
+class CoordinateSystem;
+class Field;
+class CoordinateSystem;
+class Discretization;
+class SubDiscretization;
 
 class Manifold : public Common, public std::enable_shared_from_this<Manifold> {
   weak_ptr<Project> m_project;               // parent
@@ -74,7 +74,7 @@ public:
   Manifold &operator=(const Manifold &) = delete;
   Manifold &operator=(Manifold &&) = delete;
 
-  friend struct Project;
+  friend class Project;
   Manifold(hidden, const string &name, const shared_ptr<Project> &project,
            const shared_ptr<Configuration> &configuration, int dimension)
       : Common(name), m_project(project), m_configuration(configuration),
@@ -124,12 +124,12 @@ public:
                                                       const string &entry);
 
 private:
-  friend struct CoordinateSystem;
+  friend class CoordinateSystem;
   void insert(const string &name,
               const shared_ptr<CoordinateSystem> &coordinatesystem) {
     checked_emplace(m_coordinatesystems, name, coordinatesystem);
   }
-  friend struct Field;
+  friend class Field;
   void insert(const string &name, const shared_ptr<Field> &field) {
     checked_emplace(m_fields, name, field);
   }

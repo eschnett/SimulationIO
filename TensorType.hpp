@@ -22,10 +22,12 @@ using std::string;
 using std::vector;
 using std::weak_ptr;
 
-struct Field;
-struct TensorComponent;
+class Field;
+class TensorComponent;
 
-struct TensorType : Common, std::enable_shared_from_this<TensorType> {
+class TensorType : public Common,
+                   public std::enable_shared_from_this<TensorType> {
+public:
   weak_ptr<Project> project; // parent
   int dimension;
   int rank;
@@ -50,7 +52,7 @@ struct TensorType : Common, std::enable_shared_from_this<TensorType> {
   TensorType &operator=(const TensorType &) = delete;
   TensorType &operator=(TensorType &&) = delete;
 
-  friend struct Project;
+  friend class Project;
   TensorType(hidden, const string &name, const shared_ptr<Project> &project,
              int dimension, int rank)
       : Common(name), project(project), dimension(dimension), rank(rank) {}
@@ -89,7 +91,7 @@ public:
                                                   const string &entry);
 
 private:
-  friend struct Field;
+  friend class Field;
   void noinsert(const shared_ptr<Field> &field) {}
 };
 }

@@ -18,7 +18,9 @@ using std::weak_ptr;
 
 namespace SimulationIO {
 
-struct BasisVector : Common, std::enable_shared_from_this<BasisVector> {
+class BasisVector : public Common,
+                    public std::enable_shared_from_this<BasisVector> {
+public:
   weak_ptr<Basis> basis; // parent
   int direction;
 
@@ -38,7 +40,7 @@ struct BasisVector : Common, std::enable_shared_from_this<BasisVector> {
   BasisVector &operator=(const BasisVector &) = delete;
   BasisVector &operator=(BasisVector &&) = delete;
 
-  friend struct Basis;
+  friend class Basis;
   BasisVector(hidden, const string &name, const shared_ptr<Basis> &basis,
               int direction)
       : Common(name), basis(basis), direction(direction) {}

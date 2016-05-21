@@ -51,17 +51,17 @@ using std::vector;
 
 // Coordinates
 
-struct CoordinateBasis;
+class CoordinateBasis;
 
-struct CoordinateBasisElement;
+class CoordinateBasisElement;
 
-struct CoordinateBasis {
+class CoordinateBasis {
   shared_ptr<CoordinateSystem> coordinatesystem;
   shared_ptr<Basis> basis;
   vector<shared_ptr<CoordinateBasisElement>> coordinatebasiselements; // owned
 };
 
-struct CoordinateBasisElement {
+class CoordinateBasisElement {
   shared_ptr<CoordinateBasis> coordinatebasis;
   shared_ptr<CoordinateField> coordinatefield;
   shared_ptr<BasisVector> basisvector;

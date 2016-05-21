@@ -19,7 +19,9 @@ using std::weak_ptr;
 
 namespace SimulationIO {
 
-struct CoordinateField : Common, std::enable_shared_from_this<CoordinateField> {
+class CoordinateField : public Common,
+                        public std::enable_shared_from_this<CoordinateField> {
+public:
   weak_ptr<CoordinateSystem> coordinatesystem; // parent
   int direction;
   shared_ptr<Field> field; // no backlink
@@ -44,7 +46,7 @@ struct CoordinateField : Common, std::enable_shared_from_this<CoordinateField> {
   CoordinateField &operator=(const CoordinateField &) = delete;
   CoordinateField &operator=(CoordinateField &&) = delete;
 
-  friend struct CoordinateSystem;
+  friend class CoordinateSystem;
   CoordinateField(hidden, const string &name,
                   const shared_ptr<CoordinateSystem> &coordinatesystem,
                   int direction, const shared_ptr<Field> &field)
