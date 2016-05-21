@@ -430,20 +430,20 @@ int main(int argc, char **argv) {
           assert(H5::readAttribute<int>(dataset, "level") == refinementlevel);
           // local coordinates
           auto origin = H5::readAttribute<vector<double>>(dataset, "origin");
-          assert(int(origin.size()) == manifold->dimension);
+          assert(int(origin.size()) == manifold->dimension());
           auto delta = H5::readAttribute<vector<double>>(dataset, "delta");
-          assert(int(delta.size()) == manifold->dimension);
+          assert(int(delta.size()) == manifold->dimension());
           // subdiscretizations
-          vector<double> idelta(manifold->dimension);
+          vector<double> idelta(manifold->dimension());
           for (int d = 0; d < int(idelta.size()); ++d)
             idelta.at(d) = double(delta.at(d));
-          vector<double> ioffset(manifold->dimension);
+          vector<double> ioffset(manifold->dimension());
           auto ioffsetnum =
               H5::readAttribute<vector<hssize_t>>(dataset, "ioffset");
           auto ioffsetdenom =
               H5::readAttribute<vector<hssize_t>>(dataset, "ioffsetdenom");
-          assert(int(ioffsetnum.size()) == manifold->dimension);
-          assert(int(ioffsetdenom.size()) == manifold->dimension);
+          assert(int(ioffsetnum.size()) == manifold->dimension());
+          assert(int(ioffsetdenom.size()) == manifold->dimension());
           for (int d = 0; d < int(ioffset.size()); ++d)
             ioffset.at(d) =
                 double(ioffsetnum.at(d)) / double(ioffsetdenom.at(d));
@@ -632,7 +632,8 @@ int main(int argc, char **argv) {
               auto coordinatesystem = project->createCoordinateSystem(
                   coordinatesystemname, global_configuration, manifold);
               auto tangentspace = project->createTangentSpace(
-                  tangentspacename, global_configuration, manifold->dimension);
+                  tangentspacename, global_configuration,
+                  manifold->dimension());
               tangentspace->createBasis(coordinatesystemname,
                                         global_configuration);
             }
@@ -678,7 +679,7 @@ int main(int argc, char **argv) {
 
                 vector<hssize_t> count = discretizationblock->box.shape();
                 double data_origin = origin.at(direction);
-                vector<double> data_delta(manifold->dimension, 0.0);
+                vector<double> data_delta(manifold->dimension(), 0.0);
                 data_delta.at(direction) = delta.at(direction);
                 discretefieldblockcomponent->setData(data_origin, data_delta);
               }
@@ -885,7 +886,7 @@ int main(int argc, char **argv) {
                 << refinementlevel;
             return buf.str();
           }();
-          if (!manifold->subdiscretizations.count(subdiscretizationname)) {
+          if (!manifold->subdiscretizations().count(subdiscretizationname)) {
             // origin0 = origin + delta0 * offset0
             // origin1 = origin + delta1 * offset1
             // x0 = origin0 + i0 * delta0

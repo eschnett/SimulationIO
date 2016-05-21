@@ -13,14 +13,13 @@ void CoordinateField::read(
   this->coordinatesystem = coordinatesystem;
   auto group = loc.openGroup(entry);
   assert(H5::readAttribute<string>(
-             group, "type",
-             coordinatesystem->manifold->project.lock()->enumtype) ==
+             group, "type", coordinatesystem->manifold->project()->enumtype) ==
          "CoordinateField");
   H5::readAttribute(group, "name", name);
   assert(H5::readGroupAttribute<string>(group, "coordinatesystem", "name") ==
          coordinatesystem->name);
   H5::readAttribute(group, "direction", direction);
-  field = coordinatesystem->manifold->project.lock()->fields.at(
+  field = coordinatesystem->manifold->project()->fields.at(
       H5::readGroupAttribute<string>(group, "field", "name"));
   field->noinsert(shared_from_this());
 }
@@ -36,10 +35,9 @@ void CoordinateField::write(const H5::CommonFG &loc,
                             const H5::H5Location &parent) const {
   assert(invariant());
   auto group = loc.createGroup(name);
-  H5::createAttribute(
-      group, "type",
-      coordinatesystem.lock()->manifold->project.lock()->enumtype,
-      "CoordinateField");
+  H5::createAttribute(group, "type",
+                      coordinatesystem.lock()->manifold->project()->enumtype,
+                      "CoordinateField");
   H5::createAttribute(group, "name", name);
   // H5::createHardLink(group, "coordinatesystem", parent, ".");
   H5::createHardLink(group, "..", parent, ".");

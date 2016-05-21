@@ -393,7 +393,7 @@ TEST(Field, create) {
   auto s3d = project->tensortypes.at("SymmetricTensor3D");
   auto f1 = project->createField("f1", conf1, m1, s1, s3d);
   EXPECT_EQ(1, project->fields.size());
-  EXPECT_EQ(f1, project->fields.at("f1"));
+  EXPECT_EQ(&*f1, &*project->fields.at("f1"));
 }
 
 TEST(Field, HDF5) {
@@ -443,13 +443,13 @@ TEST(CoordinateSystem, HDF5) {
 
 TEST(Discretization, create) {
   auto m1 = project->manifolds.at("m1");
-  EXPECT_TRUE(m1->discretizations.empty());
+  EXPECT_TRUE(m1->discretizations().empty());
   auto conf1 = project->configurations.at("conf1");
   auto d1 = m1->createDiscretization("d1", conf1);
   auto d2 = m1->createDiscretization("d2", conf1);
-  EXPECT_EQ(2, m1->discretizations.size());
-  EXPECT_EQ(d1, m1->discretizations.at("d1"));
-  EXPECT_EQ(d2, m1->discretizations.at("d2"));
+  EXPECT_EQ(2, m1->discretizations().size());
+  EXPECT_EQ(d1, m1->discretizations().at("d1"));
+  EXPECT_EQ(d2, m1->discretizations().at("d2"));
 }
 
 TEST(Discretization, HDF5) {
@@ -462,8 +462,8 @@ TEST(Discretization, HDF5) {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);
     auto p1 = readProject(file);
     ostringstream buf;
-    buf << *p1->manifolds.at("m1")->discretizations.at("d1");
-    buf << *p1->manifolds.at("m1")->discretizations.at("d2");
+    buf << *p1->manifolds.at("m1")->discretizations().at("d1");
+    buf << *p1->manifolds.at("m1")->discretizations().at("d2");
     EXPECT_EQ(
         "Discretization \"d1\": Configuration \"conf1\" Manifold \"m1\"\n"
         "Discretization \"d2\": Configuration \"conf1\" Manifold \"m1\"\n",
@@ -474,13 +474,13 @@ TEST(Discretization, HDF5) {
 
 TEST(SubDiscretization, create) {
   auto m1 = project->manifolds.at("m1");
-  auto d1 = m1->discretizations.at("d1");
-  auto d2 = m1->discretizations.at("d2");
-  EXPECT_TRUE(m1->subdiscretizations.empty());
-  vector<double> factor(m1->dimension, 1.0), offset(m1->dimension, 0.5);
+  auto d1 = m1->discretizations().at("d1");
+  auto d2 = m1->discretizations().at("d2");
+  EXPECT_TRUE(m1->subdiscretizations().empty());
+  vector<double> factor(m1->dimension(), 1.0), offset(m1->dimension(), 0.5);
   auto sd1 = m1->createSubDiscretization("sd1", d1, d2, factor, offset);
-  EXPECT_EQ(1, m1->subdiscretizations.size());
-  EXPECT_EQ(sd1, m1->subdiscretizations.at("sd1"));
+  EXPECT_EQ(1, m1->subdiscretizations().size());
+  EXPECT_EQ(sd1, m1->subdiscretizations().at("sd1"));
 }
 
 TEST(SubDiscretization, HDF5) {
@@ -493,7 +493,7 @@ TEST(SubDiscretization, HDF5) {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);
     auto p1 = readProject(file);
     ostringstream buf;
-    buf << *p1->manifolds.at("m1")->subdiscretizations.at("sd1");
+    buf << *p1->manifolds.at("m1")->subdiscretizations().at("sd1");
     EXPECT_EQ("SubDiscretization \"sd1\": Manifold \"m1\" parent "
               "Discretization \"d1\" child Discretization \"d2\" "
               "factor=[1,1,1] offset=[0.5,0.5,0.5]\n",
@@ -504,11 +504,11 @@ TEST(SubDiscretization, HDF5) {
 
 TEST(DiscretizationBlock, create) {
   auto m1 = project->manifolds.at("m1");
-  auto d1 = m1->discretizations.at("d1");
+  auto d1 = m1->discretizations().at("d1");
   EXPECT_TRUE(d1->discretizationblocks.empty());
   auto db1 = d1->createDiscretizationBlock("db1");
-  vector<hssize_t> offset(m1->dimension, 3);
-  vector<hssize_t> shape(m1->dimension);
+  vector<hssize_t> offset(m1->dimension(), 3);
+  vector<hssize_t> shape(m1->dimension());
   shape.at(0) = 9;
   shape.at(1) = 10;
   shape.at(2) = 11;
@@ -527,7 +527,7 @@ TEST(DiscretizationBlock, HDF5) {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);
     auto p1 = readProject(file);
     ostringstream buf;
-    buf << *p1->manifolds.at("m1")->discretizations.at("d1");
+    buf << *p1->manifolds.at("m1")->discretizations().at("d1");
     EXPECT_EQ("Discretization \"d1\": Configuration \"conf1\" Manifold \"m1\"\n"
               "  DiscretizationBlock \"db1\": Discretization \"d1\" "
               "box=([3,3,3]:[9,10,11])\n",
@@ -602,7 +602,7 @@ TEST(DiscreteField, create) {
   auto f1 = project->fields.at("f1");
   auto conf1 = project->configurations.at("conf1");
   auto m1 = f1->manifold;
-  auto d1 = m1->discretizations.at("d1");
+  auto d1 = m1->discretizations().at("d1");
   auto s1 = f1->tangentspace;
   auto b1 = s1->bases.at("b1");
   EXPECT_TRUE(f1->discretefields.empty());

@@ -31,23 +31,39 @@ struct Discretization;
 struct SubDiscretization;
 
 class Manifold : public Common, public std::enable_shared_from_this<Manifold> {
+  weak_ptr<Project> m_project;               // parent
+  shared_ptr<Configuration> m_configuration; // with backlink
+  int m_dimension;
+  map<string, shared_ptr<Discretization>> m_discretizations;       // children
+  map<string, shared_ptr<SubDiscretization>> m_subdiscretizations; // children
+  map<string, weak_ptr<Field>> m_fields;                           // backlinks
+  map<string, weak_ptr<CoordinateSystem>> m_coordinatesystems;     // backlinks
 public:
-  weak_ptr<Project> project;               // parent
-  shared_ptr<Configuration> configuration; // with backlink
-  int dimension;
-  map<string, shared_ptr<Discretization>> discretizations;       // children
-  map<string, shared_ptr<SubDiscretization>> subdiscretizations; // children
-  map<string, weak_ptr<Field>> fields;                           // backlinks
-  map<string, weak_ptr<CoordinateSystem>> coordinatesystems;     // backlinks
+  shared_ptr<Project> project() const { return m_project.lock(); }
+  const shared_ptr<Configuration> &configuration() const {
+    return m_configuration;
+  }
+  int dimension() const { return m_dimension; }
+  const map<string, shared_ptr<Discretization>> &discretizations() const {
+    return m_discretizations;
+  }
+  const map<string, shared_ptr<SubDiscretization>> &subdiscretizations() const {
+    return m_subdiscretizations;
+  }
+  const map<string, weak_ptr<Field>> &fields() const { return m_fields; }
+  const map<string, weak_ptr<CoordinateSystem>> &coordinatesystems() const {
+    return m_coordinatesystems;
+  }
 
   virtual bool invariant() const {
-    bool inv = Common::invariant() && bool(project.lock()) &&
-               project.lock()->manifolds.count(name) &&
-               project.lock()->manifolds.at(name).get() == this &&
-               bool(configuration) && configuration->manifolds.count(name) &&
-               configuration->manifolds.at(name).lock().get() == this &&
-               dimension >= 0;
-    for (const auto &d : discretizations)
+    bool inv = Common::invariant() && bool(project()) &&
+               project()->manifolds.count(name) &&
+               project()->manifolds.at(name).get() == this &&
+               bool(configuration()) &&
+               configuration()->manifolds.count(name) &&
+               configuration()->manifolds.at(name).lock().get() == this &&
+               dimension() >= 0;
+    for (const auto &d : discretizations())
       inv &= !d.first.empty() && bool(d.second);
     return inv;
   }
@@ -61,8 +77,8 @@ public:
   friend struct Project;
   Manifold(hidden, const string &name, const shared_ptr<Project> &project,
            const shared_ptr<Configuration> &configuration, int dimension)
-      : Common(name), project(project), configuration(configuration),
-        dimension(dimension) {}
+      : Common(name), m_project(project), m_configuration(configuration),
+        m_dimension(dimension) {}
   Manifold(hidden) : Common(hidden()) {}
 
 private:
@@ -111,11 +127,11 @@ private:
   friend struct CoordinateSystem;
   void insert(const string &name,
               const shared_ptr<CoordinateSystem> &coordinatesystem) {
-    checked_emplace(coordinatesystems, name, coordinatesystem);
+    checked_emplace(m_coordinatesystems, name, coordinatesystem);
   }
   friend struct Field;
   void insert(const string &name, const shared_ptr<Field> &field) {
-    checked_emplace(fields, name, field);
+    checked_emplace(m_fields, name, field);
   }
 };
 }

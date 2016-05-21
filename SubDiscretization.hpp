@@ -53,8 +53,8 @@ struct SubDiscretization : Common,
   virtual bool invariant() const {
     bool inv =
         Common::invariant() && bool(manifold.lock()) &&
-        manifold.lock()->subdiscretizations.count(name) &&
-        manifold.lock()->subdiscretizations.at(name).get() == this &&
+        manifold.lock()->subdiscretizations().count(name) &&
+        manifold.lock()->subdiscretizations().at(name).get() == this &&
         bool(parent_discretization) &&
         parent_discretization->child_discretizations.count(name) &&
         parent_discretization->child_discretizations.at(name).lock().get() ==
@@ -68,8 +68,8 @@ struct SubDiscretization : Common,
         child_discretization->manifold.lock().get() == manifold.lock().get() &&
         child_discretization->configuration.get() ==
             parent_discretization->configuration.get() &&
-        int(factor.size()) == manifold.lock()->dimension &&
-        int(offset.size()) == manifold.lock()->dimension;
+        int(factor.size()) == manifold.lock()->dimension() &&
+        int(offset.size()) == manifold.lock()->dimension();
     for (int d = 0; d < int(factor.size()); ++d)
       inv &= std::isfinite(factor.at(d)) && factor.at(d) != 0.0;
     for (int d = 0; d < int(offset.size()); ++d)

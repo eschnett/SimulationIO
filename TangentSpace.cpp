@@ -36,7 +36,7 @@ ostream &TangentSpace::output(ostream &os, int level) const {
      << quote(configuration->name) << " dim=" << dimension << "\n";
   for (const auto &b : bases)
     b.second->output(os, level + 1);
-  for (const auto &f : fields)
+  for (const auto &f : fields())
     os << indent(level + 1) << "Field " << quote(f.second.lock()->name) << "\n";
   return os;
 }

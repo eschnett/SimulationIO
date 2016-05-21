@@ -39,8 +39,8 @@ struct CoordinateSystem : Common,
            bool(configuration) &&
            configuration->coordinatesystems.count(name) &&
            configuration->coordinatesystems.at(name).lock().get() == this &&
-           bool(manifold) && manifold->coordinatesystems.count(name) &&
-           manifold->coordinatesystems.at(name).lock().get() == this;
+           bool(manifold) && manifold->coordinatesystems().count(name) &&
+           manifold->coordinatesystems().at(name).lock().get() == this;
   }
 
   CoordinateSystem() = delete;

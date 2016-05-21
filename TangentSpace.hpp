@@ -33,7 +33,7 @@ public:
   shared_ptr<Configuration> configuration; // with backlink
   int dimension;
   map<string, shared_ptr<Basis>> bases; // children
-  map<string, weak_ptr<Field>> fields;  // backlinks
+  const map<string, weak_ptr<Field>> &fields() const { return m_fields; }
 
   virtual bool invariant() const {
     bool inv = Common::invariant() && bool(project.lock()) &&
@@ -97,7 +97,7 @@ public:
 private:
   friend struct Field;
   void insert(const string &name, const shared_ptr<Field> &field) {
-    checked_emplace(fields, name, field);
+    checked_emplace(m_fields, name, field);
   }
 };
 }

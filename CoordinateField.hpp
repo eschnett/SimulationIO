@@ -29,7 +29,7 @@ struct CoordinateField : Common, std::enable_shared_from_this<CoordinateField> {
            coordinatesystem.lock()->coordinatefields.count(name) &&
            coordinatesystem.lock()->coordinatefields.at(name).get() == this &&
            direction >= 0 &&
-           direction < coordinatesystem.lock()->manifold->dimension &&
+           direction < coordinatesystem.lock()->manifold->dimension() &&
            coordinatesystem.lock()->directions.count(direction) &&
            coordinatesystem.lock()->directions.at(direction).get() == this &&
            bool(field) && field->coordinatefields.nobacklink();
