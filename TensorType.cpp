@@ -21,7 +21,7 @@ void TensorType::read(const H5::CommonFG &loc, const string &entry,
                 [&](const H5::Group &group, const string &name) {
                   readTensorComponent(group, name);
                 });
-#warning "TODO: check storage_indices"
+  // TODO: check storage_indices
 }
 
 ostream &TensorType::output(ostream &os, int level) const {
@@ -44,7 +44,7 @@ void TensorType::write(const H5::CommonFG &loc,
   H5::createAttribute(group, "dimension", dimension);
   H5::createAttribute(group, "rank", rank);
   H5::createGroup(group, "tensorcomponents", tensorcomponents);
-#warning "TODO: write storage_indices"
+  // TODO: write storage_indices
 }
 
 shared_ptr<TensorComponent>

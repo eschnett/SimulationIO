@@ -128,7 +128,7 @@ void DiscretizationBlock::write(const H5::CommonFG &loc,
   H5::createHardLink(group, "..", parent, ".");
   H5::createSoftLink(group, "discretization", "..");
   if (box.valid()) {
-#warning "TODO: write using boxtype HDF5 type"
+    // TODO: write using boxtype HDF5 type
     vector<hssize_t> offset = box.lower(), shape = box.shape();
     std::reverse(offset.begin(), offset.end());
     H5::createAttribute(group, "offset", offset);

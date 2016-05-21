@@ -26,7 +26,7 @@ void CoordinateSystem::read(const H5::CommonFG &loc, const string &entry,
                 [&](const H5::Group &group, const string &name) {
                   readCoordinateField(group, name);
                 });
-#warning "TODO: check group directions"
+  // TODO: check group directions
   configuration->insert(name, shared_from_this());
   manifold->insert(name, shared_from_this());
 }
@@ -66,7 +66,7 @@ void CoordinateSystem::write(const H5::CommonFG &loc,
                                 "/coordinatesystems",
                      name, group, ".");
   H5::createGroup(group, "coordinatefields", coordinatefields);
-#warning "TODO: output directions"
+  // TODO: output directions
 }
 
 shared_ptr<CoordinateField>

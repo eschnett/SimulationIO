@@ -27,7 +27,7 @@ void DiscreteFieldBlock::read(const H5::CommonFG &loc, const string &entry,
                   readDiscreteFieldBlockComponent(group, name);
                 });
   discretizationblock->noinsert(shared_from_this());
-#warning "TODO: check storage_indices"
+  // TODO: check storage_indices
 }
 
 ostream &DiscreteFieldBlock::output(ostream &os, int level) const {
@@ -59,7 +59,7 @@ void DiscreteFieldBlock::write(const H5::CommonFG &loc,
                          discretizationblock->name);
   H5::createGroup(group, "discretefieldblockcomponents",
                   discretefieldblockcomponents);
-#warning "TODO: write storage_indices"
+  // TODO: write storage_indices
 }
 
 shared_ptr<DiscreteFieldBlockComponent>
