@@ -91,6 +91,17 @@ test_SimulationIO: $(SIO_SRCS:%.cpp=%.o) test_SimulationIO.o gtest-all.o
 check: test_RegionCalculus test_SimulationIO
 	./test_RegionCalculus
 	./test_SimulationIO
+	./example
+	./list example.s5
+	./copy example.s5 example2.s5
+	./list example2.s5
+	./python-example.py
+	-h5format_convert python-example.s5
+	./python-read-direct.py
+	./python-read.py
+#	./julia-example.jl
+#	-h5format_convert julia-example.s5
+#	./julia-read.jl
 
 benchmark: $(SIO_SRCS:%.cpp=%.o) benchmark.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
@@ -157,6 +168,7 @@ clean:
 	$(RM) -- $(PYTHON_EXE:_%.so=%_wrap.d) $(PYTHON_EXE:_%.so=%_wrap.o)
 	$(RM) -- $(PYTHON_EXE:_%.so=%.py) $(PYTHON_EXE:_%.so=%.pyc)
 	$(RM) -- $(ALL_EXE)
+	$(RM) -- example.s5 example2.s5 python-example.s5 julia-example.s5
 
 distclean: clean
 	$(RM) $(GTEST_DIR).tar.gz
