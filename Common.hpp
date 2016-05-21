@@ -35,7 +35,7 @@ template <typename Target> struct unilink { Target *target; };
 // An always empty pseudo-container type indicating that there is no
 // back-link
 template <typename T> struct NoBackLink {
-  bool nobacklink() const { return true; }
+  constexpr bool nobacklink() const noexcept { return true; }
 };
 
 // Common to all file elements
