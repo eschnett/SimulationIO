@@ -32,7 +32,7 @@ class TangentSpace;
 
 class Configuration : public Common,
                       public std::enable_shared_from_this<Configuration> {
-  map<string, lazy_weak_ptr<Field>> m_fields; // backlinks
+  map<string, weak_ptr<Field>> m_fields; // backlinks
 public:
   weak_ptr<Project> project;                                 // parent
   map<string, shared_ptr<ParameterValue>> parametervalues;   // links
