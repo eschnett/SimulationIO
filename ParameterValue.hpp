@@ -20,7 +20,7 @@ using std::shared_ptr;
 using std::string;
 using std::weak_ptr;
 
-struct Configuration;
+class Configuration;
 
 struct ParameterValue : Common, std::enable_shared_from_this<ParameterValue> {
   weak_ptr<Parameter> parameter;                       // parent
@@ -83,7 +83,7 @@ public:
                      const H5::H5Location &parent) const;
 
 private:
-  friend struct Configuration;
+  friend class Configuration;
   void insert(const shared_ptr<Configuration> &configuration);
 };
 }

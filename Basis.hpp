@@ -22,7 +22,7 @@ using std::string;
 using std::weak_ptr;
 
 struct BasisVector;
-struct DiscreteField;
+class DiscreteField;
 // struct CoordinateBasis;
 
 struct Basis : Common, std::enable_shared_from_this<Basis> {
@@ -49,7 +49,7 @@ struct Basis : Common, std::enable_shared_from_this<Basis> {
   Basis &operator=(const Basis &) = delete;
   Basis &operator=(Basis &&) = delete;
 
-  friend struct TangentSpace;
+  friend class TangentSpace;
   Basis(hidden, const string &name,
         const shared_ptr<TangentSpace> &tangentspace,
         const shared_ptr<Configuration> &configuration)
@@ -91,7 +91,7 @@ public:
                                           const string &entry);
 
 private:
-  friend struct DiscreteField;
+  friend class DiscreteField;
   void noinsert(const shared_ptr<DiscreteField> &discretefield) {}
 };
 }

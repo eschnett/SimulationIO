@@ -21,10 +21,12 @@ using std::shared_ptr;
 using std::string;
 using std::weak_ptr;
 
-struct DiscreteFieldBlockComponent;
+class DiscreteFieldBlockComponent;
 
-struct DiscreteFieldBlock : Common,
-                            std::enable_shared_from_this<DiscreteFieldBlock> {
+class DiscreteFieldBlock
+    : public Common,
+      public std::enable_shared_from_this<DiscreteFieldBlock> {
+public:
   // Discrete field on a particular region (discretization block)
   weak_ptr<DiscreteField> discretefield;               // parent
   shared_ptr<DiscretizationBlock> discretizationblock; // with backlink
@@ -49,7 +51,7 @@ struct DiscreteFieldBlock : Common,
   DiscreteFieldBlock &operator=(const DiscreteFieldBlock &) = delete;
   DiscreteFieldBlock &operator=(DiscreteFieldBlock &&) = delete;
 
-  friend struct DiscreteField;
+  friend class DiscreteField;
   DiscreteFieldBlock(hidden, const string &name,
                      const shared_ptr<DiscreteField> &discretefield,
                      const shared_ptr<DiscretizationBlock> &discretizationblock)

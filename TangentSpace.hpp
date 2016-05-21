@@ -25,7 +25,10 @@ using std::weak_ptr;
 struct Field;
 struct Basis;
 
-struct TangentSpace : Common, std::enable_shared_from_this<TangentSpace> {
+class TangentSpace : public Common,
+                     public std::enable_shared_from_this<TangentSpace> {
+  map<string, lazy_weak_ptr<Field>> m_fields; // backlinks
+public:
   weak_ptr<Project> project;               // parent
   shared_ptr<Configuration> configuration; // with backlink
   int dimension;

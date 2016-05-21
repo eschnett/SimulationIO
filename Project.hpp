@@ -28,11 +28,11 @@ shared_ptr<Project> createProject(const string &name);
 shared_ptr<Project> readProject(const H5::CommonFG &loc);
 
 struct Parameter;
-struct Configuration;
+class Configuration;
 struct CoordinateSystem;
 struct TensorType;
-struct Manifold;
-struct TangentSpace;
+class Manifold;
+class TangentSpace;
 struct Field;
 // struct CoordinateSystem;
 // struct CoordinateBasis;

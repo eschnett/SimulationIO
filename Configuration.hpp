@@ -23,14 +23,17 @@ using std::weak_ptr;
 
 struct Basis;
 struct CoordinateSystem;
-struct DiscreteField;
+class DiscreteField;
 struct Discretization;
 struct Field;
-struct Manifold;
+class Manifold;
 struct ParameterValue;
-struct TangentSpace;
+class TangentSpace;
 
-struct Configuration : Common, std::enable_shared_from_this<Configuration> {
+class Configuration : public Common,
+                      public std::enable_shared_from_this<Configuration> {
+  map<string, lazy_weak_ptr<Field>> m_fields; // backlinks
+public:
   weak_ptr<Project> project;                                 // parent
   map<string, shared_ptr<ParameterValue>> parametervalues;   // links
   map<string, weak_ptr<Basis>> bases;                        // backlinks
@@ -88,11 +91,11 @@ public:
 private:
   friend struct Basis;
   friend struct CoordinateSystem;
-  friend struct DiscreteField;
+  friend class DiscreteField;
   friend struct Discretization;
   friend struct Field;
-  friend struct Manifold;
-  friend struct TangentSpace;
+  friend class Manifold;
+  friend class TangentSpace;
   void insert(const string &name, const shared_ptr<Basis> &basis) {
     checked_emplace(bases, name, basis);
   }

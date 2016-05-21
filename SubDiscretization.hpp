@@ -83,7 +83,7 @@ struct SubDiscretization : Common,
   SubDiscretization &operator=(const SubDiscretization &) = delete;
   SubDiscretization &operator=(SubDiscretization &&) = delete;
 
-  friend struct Manifold;
+  friend class Manifold;
   SubDiscretization(hidden, const string &name,
                     const shared_ptr<Manifold> &manifold,
                     const shared_ptr<Discretization> &parent_discretization,

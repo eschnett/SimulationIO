@@ -21,7 +21,7 @@ using std::shared_ptr;
 using std::string;
 using std::weak_ptr;
 
-struct DiscreteField;
+class DiscreteField;
 struct DiscretizationBlock;
 struct SubDiscretization;
 
@@ -47,7 +47,7 @@ struct Discretization : Common, std::enable_shared_from_this<Discretization> {
   Discretization &operator=(const Discretization &) = delete;
   Discretization &operator=(Discretization &&) = delete;
 
-  friend struct Manifold;
+  friend class Manifold;
   Discretization(hidden, const string &name,
                  const shared_ptr<Manifold> &manifold,
                  const shared_ptr<Configuration> &configuration)
@@ -98,7 +98,7 @@ private:
                     const shared_ptr<SubDiscretization> &subdiscretization) {
     checked_emplace(parent_discretizations, name, subdiscretization);
   }
-  friend struct DiscreteField;
+  friend class DiscreteField;
   void noinsert(const shared_ptr<DiscreteField> &discretefield) {}
 };
 }

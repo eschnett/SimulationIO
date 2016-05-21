@@ -22,9 +22,10 @@ using std::string;
 using std::vector;
 using std::weak_ptr;
 
-struct DiscreteFieldBlockComponent
-    : Common,
-      std::enable_shared_from_this<DiscreteFieldBlockComponent> {
+class DiscreteFieldBlockComponent
+    : public Common,
+      public std::enable_shared_from_this<DiscreteFieldBlockComponent> {
+public:
   // Tensor component for a discrete field on a particular region
   weak_ptr<DiscreteFieldBlock> discretefieldblock; // parent
   shared_ptr<TensorComponent> tensorcomponent;     // without backlink
@@ -90,7 +91,7 @@ struct DiscreteFieldBlockComponent
   DiscreteFieldBlockComponent &
   operator=(DiscreteFieldBlockComponent &&) = delete;
 
-  friend struct DiscreteFieldBlock;
+  friend class DiscreteFieldBlock;
   DiscreteFieldBlockComponent(
       hidden, const string &name,
       const shared_ptr<DiscreteFieldBlock> &discretefieldblock,

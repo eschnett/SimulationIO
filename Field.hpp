@@ -25,10 +25,10 @@ using std::string;
 using std::weak_ptr;
 
 struct CoordinateField;
-struct Manifold;
-struct TangentSpace;
+class Manifold;
+class TangentSpace;
 struct TensorType;
-struct DiscreteField;
+class DiscreteField;
 
 struct Field : Common, std::enable_shared_from_this<Field> {
   weak_ptr<Project> project;                             // parent

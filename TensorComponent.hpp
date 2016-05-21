@@ -19,7 +19,7 @@ using std::string;
 using std::vector;
 using std::weak_ptr;
 
-struct DiscreteFieldBlockComponent;
+class DiscreteFieldBlockComponent;
 
 struct TensorComponent : Common, std::enable_shared_from_this<TensorComponent> {
   weak_ptr<TensorType> tensortype; // parent
@@ -102,7 +102,7 @@ public:
                      const H5::H5Location &parent) const;
 
 private:
-  friend struct DiscreteFieldBlockComponent;
+  friend class DiscreteFieldBlockComponent;
   void noinsert(const shared_ptr<DiscreteFieldBlockComponent>
                     &discretefieldblockcomponent) {}
 };

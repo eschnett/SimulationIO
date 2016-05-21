@@ -26,7 +26,7 @@ typedef RegionCalculus::dpoint<hssize_t> point_t;
 typedef RegionCalculus::dbox<hssize_t> box_t;
 typedef RegionCalculus::dregion<hssize_t> region_t;
 
-struct DiscreteFieldBlock;
+class DiscreteFieldBlock;
 
 struct DiscretizationBlock : Common,
                              std::enable_shared_from_this<DiscretizationBlock> {
@@ -107,7 +107,7 @@ public:
                      const H5::H5Location &parent) const;
 
 private:
-  friend struct DiscreteFieldBlock;
+  friend class DiscreteFieldBlock;
   void noinsert(const shared_ptr<DiscreteFieldBlock> &discretefieldblock) {}
 };
 }

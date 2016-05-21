@@ -23,9 +23,11 @@ using std::shared_ptr;
 using std::string;
 using std::weak_ptr;
 
-struct DiscreteFieldBlock;
+class DiscreteFieldBlock;
 
-struct DiscreteField : Common, std::enable_shared_from_this<DiscreteField> {
+class DiscreteField : public Common,
+                      public std::enable_shared_from_this<DiscreteField> {
+public:
   weak_ptr<Field> field;                     // parent
   shared_ptr<Configuration> configuration;   // with backlink
   shared_ptr<Discretization> discretization; // with backlink
