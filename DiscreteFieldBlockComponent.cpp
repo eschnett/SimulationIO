@@ -19,9 +19,9 @@ void DiscreteFieldBlockComponent::read(
                                 ->field.lock()
                                 ->project.lock()
                                 ->enumtype) == "DiscreteFieldBlockComponent");
-  H5::readAttribute(group, "name", name);
+  H5::readAttribute(group, "name", m_name);
   assert(H5::readGroupAttribute<string>(group, "discretefieldblock", "name") ==
-         discretefieldblock->name);
+         discretefieldblock->name());
   // TODO: Read and interpret objects (shallowly) instead of naively only
   // looking at their names
   tensorcomponent =
@@ -118,9 +118,9 @@ void DiscreteFieldBlockComponent::setData(double origin,
 }
 
 ostream &DiscreteFieldBlockComponent::output(ostream &os, int level) const {
-  os << indent(level) << "DiscreteFieldBlockComponent " << quote(name)
-     << ": DiscreteFieldBlock " << quote(discretefieldblock.lock()->name)
-     << " TensorComponent " << quote(tensorcomponent->name) << "\n";
+  os << indent(level) << "DiscreteFieldBlockComponent " << quote(name())
+     << ": DiscreteFieldBlock " << quote(discretefieldblock.lock()->name())
+     << " TensorComponent " << quote(tensorcomponent->name()) << "\n";
   os << indent(level + 1) << "data: ";
   switch (data_type) {
   case type_empty:
@@ -165,25 +165,25 @@ ostream &DiscreteFieldBlockComponent::output(ostream &os, int level) const {
 void DiscreteFieldBlockComponent::write(const H5::CommonFG &loc,
                                         const H5::H5Location &parent) const {
   assert(invariant());
-  auto group = loc.createGroup(name);
+  auto group = loc.createGroup(name());
   H5::createAttribute(group, "type", discretefieldblock.lock()
                                          ->discretefield.lock()
                                          ->field.lock()
                                          ->project.lock()
                                          ->enumtype,
                       "DiscreteFieldBlockComponent");
-  H5::createAttribute(group, "name", name);
+  H5::createAttribute(group, "name", name());
   // H5::createHardLink(group, "discretefieldblock", parent, ".");
   H5::createHardLink(group, "..", parent, ".");
   H5::createSoftLink(group, "discretefieldblock", "..");
   // H5::createHardLink(
   //     group, "tensorcomponent", parent,
   //     string("discretefield/field/tensortype/tensorcomponents/") +
-  //         tensorcomponent->name);
+  //         tensorcomponent->name());
   H5::createSoftLink(
       group, "tensorcomponent",
       string("../discretefield/field/tensortype/tensorcomponents/") +
-          tensorcomponent->name);
+          tensorcomponent->name());
   switch (data_type) {
   case type_empty: // do nothing
     break;
@@ -238,10 +238,10 @@ string DiscreteFieldBlockComponent::getPath() const {
   auto discretefield = discretefieldblock.lock()->discretefield;
   auto field = discretefield.lock()->field;
   ostringstream buf;
-  buf << "fields/" << field.lock()->name << "/discretefields/"
-      << discretefield.lock()->name << "/discretefieldblocks/"
-      << discretefieldblock.lock()->name << "/discretefieldblockcomponents/"
-      << name;
+  buf << "fields/" << field.lock()->name() << "/discretefields/"
+      << discretefield.lock()->name() << "/discretefieldblocks/"
+      << discretefieldblock.lock()->name() << "/discretefieldblockcomponents/"
+      << name();
   return buf.str();
 }
 string DiscreteFieldBlockComponent::getName() const {

@@ -15,9 +15,9 @@ void ParameterValue::read(const H5::CommonFG &loc, const string &entry,
   assert(H5::readAttribute<string>(group, "type",
                                    parameter->project.lock()->enumtype) ==
          "ParameterValue");
-  H5::readAttribute(group, "name", name);
+  H5::readAttribute(group, "name", m_name);
   assert(H5::readGroupAttribute<string>(group, "parameter", "name") ==
-         parameter->name);
+         parameter->name());
   // TODO: Read and interpret objects (shallowly) instead of naively only
   // looking at their names
   if (group.attrExists("data")) {
@@ -60,8 +60,8 @@ void ParameterValue::setValue(const string &s) {
 }
 
 ostream &ParameterValue::output(ostream &os, int level) const {
-  os << indent(level) << "ParameterValue " << quote(name) << ": Parameter "
-     << quote(parameter.lock()->name) << "\n"
+  os << indent(level) << "ParameterValue " << quote(name()) << ": Parameter "
+     << quote(parameter.lock()->name()) << "\n"
      << indent(level + 1) << "value: ";
   switch (value_type) {
   case type_empty:
@@ -86,12 +86,13 @@ ostream &ParameterValue::output(ostream &os, int level) const {
 void ParameterValue::write(const H5::CommonFG &loc,
                            const H5::H5Location &parent) const {
   assert(invariant());
-  auto group = loc.createGroup(name);
+  auto group = loc.createGroup(name());
   H5::createAttribute(group, "type", parameter.lock()->project.lock()->enumtype,
                       "ParameterValue");
-  H5::createAttribute(group, "name", name);
+  H5::createAttribute(group, "name", name());
   // H5::createHardLink(group, "parameter", parent,
-  //                    string("project/parameters/") + parameter.lock()->name);
+  //                    string("project/parameters/") +
+  //                    parameter.lock()->name());
   // H5::createHardLink(group, "parameter", parent, ".");
   H5::createHardLink(group, "..", parent, ".");
   H5::createSoftLink(group, "parameter", "..");
@@ -115,6 +116,6 @@ void ParameterValue::write(const H5::CommonFG &loc,
 }
 
 void ParameterValue::insert(const shared_ptr<Configuration> &configuration) {
-  checked_emplace(configurations, configuration->name, configuration);
+  checked_emplace(configurations, configuration->name(), configuration);
 }
 }

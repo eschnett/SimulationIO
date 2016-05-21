@@ -28,8 +28,8 @@ public:
 
   virtual bool invariant() const {
     return Common::invariant() && bool(coordinatesystem.lock()) &&
-           coordinatesystem.lock()->coordinatefields.count(name) &&
-           coordinatesystem.lock()->coordinatefields.at(name).get() == this &&
+           coordinatesystem.lock()->coordinatefields.count(name()) &&
+           coordinatesystem.lock()->coordinatefields.at(name()).get() == this &&
            direction >= 0 &&
            direction < coordinatesystem.lock()->manifold->dimension() &&
            coordinatesystem.lock()->directions.count(direction) &&

@@ -66,8 +66,8 @@ int main(int argc, char **argv) {
     auto field = project->createField(name.str(), configuration, manifold,
                                       tangentspace, vector3d);
     fields.push_back(field);
-    auto discretefield = field->createDiscreteField(field->name, configuration,
-                                                    discretization, basis);
+    auto discretefield = field->createDiscreteField(
+        field->name(), configuration, discretization, basis);
     discretefields.push_back(discretefield);
   }
   for (int i = 0; i < ngrids; ++i) {
@@ -75,11 +75,11 @@ int main(int argc, char **argv) {
     for (int f = 0; f < nfields; ++f) {
       auto discretefield = discretefields.at(f);
       auto field_block = discretefield->createDiscreteFieldBlock(
-          discretefield->name + "-" + blocks.at(i)->name, blocks.at(i));
+          discretefield->name() + "-" + blocks.at(i)->name(), blocks.at(i));
       for (int d = 0; d < dim; ++d) {
         auto vector3d_component = vector3d->storage_indices.at(d);
         auto field_component = field_block->createDiscreteFieldBlockComponent(
-            field_block->name + "-" + dirnames[d], vector3d_component);
+            field_block->name() + "-" + dirnames[d], vector3d_component);
         (void)field_component;
       }
     }

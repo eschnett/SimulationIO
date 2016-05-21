@@ -486,13 +486,13 @@ int main(int argc, char **argv) {
           // Get configuration
           string value_iteration_name = [&] {
             ostringstream buf;
-            buf << parameter_iteration->name << "." << setfill('0')
+            buf << parameter_iteration->name() << "." << setfill('0')
                 << setw(width_it) << iteration;
             return buf.str();
           }();
           string value_timelevel_name = [&] {
             ostringstream buf;
-            buf << parameter_timelevel->name << "." << setfill('0')
+            buf << parameter_timelevel->name() << "." << setfill('0')
                 << setw(width_tl) << timelevel;
             return buf.str();
           }();
@@ -535,20 +535,20 @@ int main(int argc, char **argv) {
           assert(tensorcomponent);
 
           // Get discretization
-          ideltas[configuration->name][mapindex][refinementlevel] = idelta;
-          ioffsets[configuration->name][mapindex][refinementlevel] = ioffset;
-          if (!discretizations.count(configuration->name))
-            discretizations[configuration->name];
-          if (!discretizations.at(configuration->name).count(mapindex))
-            discretizations.at(configuration->name)[mapindex];
-          while (int(discretizations.at(configuration->name)
+          ideltas[configuration->name()][mapindex][refinementlevel] = idelta;
+          ioffsets[configuration->name()][mapindex][refinementlevel] = ioffset;
+          if (!discretizations.count(configuration->name()))
+            discretizations[configuration->name()];
+          if (!discretizations.at(configuration->name()).count(mapindex))
+            discretizations.at(configuration->name())[mapindex];
+          while (int(discretizations.at(configuration->name())
                          .at(mapindex)
                          .size()) <= refinementlevel) {
             const int rl =
-                discretizations.at(configuration->name).at(mapindex).size();
+                discretizations.at(configuration->name()).at(mapindex).size();
             string discretizationname = [&] {
               ostringstream buf;
-              buf << configuration->name;
+              buf << configuration->name();
               if (is_multiblock)
                 buf << "-map." << setfill('0') << setw(width_m) << mapindex;
               if (is_amr)
@@ -557,11 +557,11 @@ int main(int argc, char **argv) {
             }();
             auto discretization = manifold->createDiscretization(
                 discretizationname, configuration);
-            discretizations.at(configuration->name)
+            discretizations.at(configuration->name())
                 .at(mapindex)
                 .push_back(discretization);
           }
-          auto discretization = discretizations.at(configuration->name)
+          auto discretization = discretizations.at(configuration->name())
                                     .at(mapindex)
                                     .at(refinementlevel);
 
@@ -666,13 +666,13 @@ int main(int argc, char **argv) {
               auto field = project->fields.at(fieldname);
               auto discretefield = field->discretefields.at(discretefieldname);
 
-              auto discretefieldblockname = discretizationblock->name;
-              auto discretefieldblockcomponentname = tensorcomponent->name;
+              auto discretefieldblockname = discretizationblock->name();
+              auto discretefieldblockcomponentname = tensorcomponent->name();
               if (!discretefield->discretefieldblocks.count(
                       discretefieldblockname)) {
                 auto discretefieldblock =
                     discretefield->createDiscreteFieldBlock(
-                        discretizationblock->name, discretizationblock);
+                        discretizationblock->name(), discretizationblock);
                 auto discretefieldblockcomponent =
                     discretefieldblock->createDiscreteFieldBlockComponent(
                         discretefieldblockcomponentname, tensorcomponent);
@@ -693,10 +693,10 @@ int main(int argc, char **argv) {
           auto field = project->fields.at(fieldname);
 
           // Get global coordinates
-          if (field->name == "GRID") {
+          if (field->name() == "GRID") {
             string coordinatesystemname = [&] {
               ostringstream buf;
-              buf << field->name << "-" << configuration->name;
+              buf << field->name() << "-" << configuration->name();
               return buf.str();
             }();
             if (!project->coordinatesystems.count(coordinatesystemname))
@@ -708,17 +708,17 @@ int main(int argc, char **argv) {
             int direction = tensorcomponent->indexvalues.at(0);
             string coordinatefieldname = [&] {
               ostringstream buf;
-              buf << coordinatesystem->name << "-" << direction;
+              buf << coordinatesystem->name() << "-" << direction;
               return buf.str();
             }();
             if (!coordinatesystem->directions.count(direction))
               coordinatesystem->createCoordinateField(coordinatefieldname,
                                                       direction, field);
-          } else if (field->name == "GRID::x" || field->name == "GRID::y" ||
-                     field->name == "GRID::z") {
+          } else if (field->name() == "GRID::x" || field->name() == "GRID::y" ||
+                     field->name() == "GRID::z") {
             string coordinatesystemname = [&] {
               ostringstream buf;
-              buf << "GRID-" << configuration->name;
+              buf << "GRID-" << configuration->name();
               return buf.str();
             }();
             if (!project->coordinatesystems.count(coordinatesystemname))
@@ -728,17 +728,17 @@ int main(int argc, char **argv) {
                 project->coordinatesystems.at(coordinatesystemname);
             assert(tensortype->rank == 0);
             int direction = -1;
-            if (field->name == "GRID::x")
+            if (field->name() == "GRID::x")
               direction = 0;
-            else if (field->name == "GRID::y")
+            else if (field->name() == "GRID::y")
               direction = 1;
-            else if (field->name == "GRID::z")
+            else if (field->name() == "GRID::z")
               direction = 2;
             else
               assert(0);
             string coordinatefieldname = [&] {
               ostringstream buf;
-              buf << coordinatesystem->name << "-" << *field->name.rbegin();
+              buf << coordinatesystem->name() << "-" << *field->name().rbegin();
               return buf.str();
             }();
             if (!coordinatesystem->directions.count(direction))
@@ -749,7 +749,7 @@ int main(int argc, char **argv) {
           // Get discrete field
           string discretefieldname = [&] {
             ostringstream buf;
-            buf << fieldname << "-" << discretization->name;
+            buf << fieldname << "-" << discretization->name();
             return buf.str();
           }();
           if (!field->discretefields.count(discretefieldname))
@@ -758,19 +758,19 @@ int main(int argc, char **argv) {
           auto discretefield = field->discretefields.at(discretefieldname);
           // Get discrete field block
           if (!discretefield->discretefieldblocks.count(
-                  discretizationblock->name))
-            discretefield->createDiscreteFieldBlock(discretizationblock->name,
+                  discretizationblock->name()))
+            discretefield->createDiscreteFieldBlock(discretizationblock->name(),
                                                     discretizationblock);
-          auto discretefieldblock =
-              discretefield->discretefieldblocks.at(discretizationblock->name);
+          auto discretefieldblock = discretefield->discretefieldblocks.at(
+              discretizationblock->name());
           // Get discrete field block data
           if (!discretefieldblock->discretefieldblockcomponents.count(
-                  tensorcomponent->name))
+                  tensorcomponent->name()))
             discretefieldblock->createDiscreteFieldBlockComponent(
-                tensorcomponent->name, tensorcomponent);
+                tensorcomponent->name(), tensorcomponent);
           auto discretefieldblockcomponent =
               discretefieldblock->discretefieldblockcomponents.at(
-                  tensorcomponent->name);
+                  tensorcomponent->name());
           switch (action) {
           case action_copy:
             discretefieldblockcomponent->setData(inputfile, name);
@@ -795,7 +795,7 @@ int main(int argc, char **argv) {
         const auto &mapindex = i1.first;
         for (size_t reflevel = 0; reflevel < i1.second.size(); ++reflevel) {
           const auto &discretization = i1.second.at(reflevel);
-          cout << "  discretization: " << discretization->name << "\n";
+          cout << "  discretization: " << discretization->name() << "\n";
           const auto &buffers = grid_buffers.at(mapindex).at(reflevel);
           const auto &domain = grid_domain.at(mapindex).at(reflevel);
           region_t region(dim);

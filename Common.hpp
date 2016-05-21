@@ -41,13 +41,18 @@ template <typename T> struct NoBackLink {
 // Common to all file elements
 
 class Common {
-public:
-  string name;
+protected:
+  // TODO: Make m_name private, provide an HDF5 read routine, handle the type
+  // attribute there as well
+  string m_name;
 
-  virtual bool invariant() const { return !name.empty(); }
+public:
+  const string &name() const { return m_name; }
+
+  virtual bool invariant() const { return !name().empty(); }
 
 protected:
-  Common(const string &name) : name(name) {}
+  Common(const string &name) : m_name(name) {}
   Common(hidden) {}
 
 public:

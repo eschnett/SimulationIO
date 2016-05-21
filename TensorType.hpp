@@ -37,8 +37,8 @@ public:
 
   virtual bool invariant() const {
     bool inv = Common::invariant() && bool(project.lock()) &&
-               project.lock()->tensortypes.count(name) &&
-               project.lock()->tensortypes.at(name).get() == this &&
+               project.lock()->tensortypes.count(name()) &&
+               project.lock()->tensortypes.at(name()).get() == this &&
                dimension >= 0 && rank >= 0 &&
                int(tensorcomponents.size()) <= ipow(dimension, rank);
     for (const auto &tc : tensorcomponents)

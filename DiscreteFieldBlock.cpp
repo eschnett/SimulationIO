@@ -15,9 +15,9 @@ void DiscreteFieldBlock::read(const H5::CommonFG &loc, const string &entry,
              group, "type",
              discretefield->field.lock()->project.lock()->enumtype) ==
          "DiscreteFieldBlock");
-  H5::readAttribute(group, "name", name);
+  H5::readAttribute(group, "name", m_name);
   assert(H5::readGroupAttribute<string>(group, "discretefield", "name") ==
-         discretefield->name);
+         discretefield->name());
   // TODO: Read and interpret objects (shallowly) instead of naively only
   // looking at their names
   discretizationblock = discretefield->discretization->discretizationblocks.at(
@@ -31,9 +31,9 @@ void DiscreteFieldBlock::read(const H5::CommonFG &loc, const string &entry,
 }
 
 ostream &DiscreteFieldBlock::output(ostream &os, int level) const {
-  os << indent(level) << "DiscreteFieldBlock " << quote(name)
-     << ": DiscreteField " << quote(discretefield.lock()->name)
-     << " DiscretizationBlock " << quote(discretizationblock->name) << "\n";
+  os << indent(level) << "DiscreteFieldBlock " << quote(name())
+     << ": DiscreteField " << quote(discretefield.lock()->name())
+     << " DiscretizationBlock " << quote(discretizationblock->name()) << "\n";
   for (const auto &dfbd : discretefieldblockcomponents)
     dfbd.second->output(os, level + 1);
   return os;
@@ -42,21 +42,21 @@ ostream &DiscreteFieldBlock::output(ostream &os, int level) const {
 void DiscreteFieldBlock::write(const H5::CommonFG &loc,
                                const H5::H5Location &parent) const {
   assert(invariant());
-  auto group = loc.createGroup(name);
+  auto group = loc.createGroup(name());
   H5::createAttribute(
       group, "type",
       discretefield.lock()->field.lock()->project.lock()->enumtype,
       "DiscreteFieldBlock");
-  H5::createAttribute(group, "name", name);
+  H5::createAttribute(group, "name", name());
   // H5::createHardLink(group, "discretefield", parent, ".");
   H5::createHardLink(group, "..", parent, ".");
   H5::createSoftLink(group, "discretefield", "..");
   // H5::createHardLink(group, "discretizationblock", parent,
   //                    string("discretization/discretizationblocks/") +
-  //                        discretizationblock->name);
+  //                        discretizationblock->name());
   H5::createSoftLink(group, "discretizationblock",
                      string("../discretization/discretizationblocks/") +
-                         discretizationblock->name);
+                         discretizationblock->name());
   H5::createGroup(group, "discretefieldblockcomponents",
                   discretefieldblockcomponents);
   // TODO: write storage_indices
@@ -68,7 +68,7 @@ DiscreteFieldBlock::createDiscreteFieldBlockComponent(
   auto discretefieldblockcomponent = DiscreteFieldBlockComponent::create(
       name, shared_from_this(), tensorcomponent);
   checked_emplace(discretefieldblockcomponents,
-                  discretefieldblockcomponent->name,
+                  discretefieldblockcomponent->name(),
                   discretefieldblockcomponent);
   checked_emplace(storage_indices,
                   discretefieldblockcomponent->tensorcomponent->storage_index,
@@ -83,7 +83,7 @@ DiscreteFieldBlock::readDiscreteFieldBlockComponent(const H5::CommonFG &loc,
   auto discretefieldblockcomponent =
       DiscreteFieldBlockComponent::create(loc, entry, shared_from_this());
   checked_emplace(discretefieldblockcomponents,
-                  discretefieldblockcomponent->name,
+                  discretefieldblockcomponent->name(),
                   discretefieldblockcomponent);
   checked_emplace(storage_indices,
                   discretefieldblockcomponent->tensorcomponent->storage_index,

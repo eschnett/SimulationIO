@@ -15,9 +15,9 @@ void CoordinateField::read(
   assert(H5::readAttribute<string>(
              group, "type", coordinatesystem->manifold->project()->enumtype) ==
          "CoordinateField");
-  H5::readAttribute(group, "name", name);
+  H5::readAttribute(group, "name", m_name);
   assert(H5::readGroupAttribute<string>(group, "coordinatesystem", "name") ==
-         coordinatesystem->name);
+         coordinatesystem->name());
   H5::readAttribute(group, "direction", direction);
   field = coordinatesystem->manifold->project()->fields.at(
       H5::readGroupAttribute<string>(group, "field", "name"));
@@ -25,20 +25,20 @@ void CoordinateField::read(
 }
 
 ostream &CoordinateField::output(ostream &os, int level) const {
-  os << indent(level) << "CoordinateField " << quote(name)
-     << ": CoordinateSystem " << quote(coordinatesystem.lock()->name)
-     << " direction=" << direction << " Field " << quote(field->name) << "\n";
+  os << indent(level) << "CoordinateField " << quote(name())
+     << ": CoordinateSystem " << quote(coordinatesystem.lock()->name())
+     << " direction=" << direction << " Field " << quote(field->name()) << "\n";
   return os;
 }
 
 void CoordinateField::write(const H5::CommonFG &loc,
                             const H5::H5Location &parent) const {
   assert(invariant());
-  auto group = loc.createGroup(name);
+  auto group = loc.createGroup(name());
   H5::createAttribute(group, "type",
                       coordinatesystem.lock()->manifold->project()->enumtype,
                       "CoordinateField");
-  H5::createAttribute(group, "name", name);
+  H5::createAttribute(group, "name", name());
   // H5::createHardLink(group, "coordinatesystem", parent, ".");
   H5::createHardLink(group, "..", parent, ".");
   H5::createSoftLink(group, "coordinatesystem", "..");
@@ -46,6 +46,6 @@ void CoordinateField::write(const H5::CommonFG &loc,
   // H5::createHardLink(group, "field", parent,
   //                    string("project/fields/") + field->name);
   H5::createSoftLink(group, "field",
-                     string("../project/fields/") + field->name);
+                     string("../project/fields/") + field->name());
 }
 }

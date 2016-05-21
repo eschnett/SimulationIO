@@ -20,18 +20,21 @@ namespace SimulationIO {
 
 class BasisVector : public Common,
                     public std::enable_shared_from_this<BasisVector> {
+  weak_ptr<Basis> m_basis; // parent
+  int m_direction;
+
 public:
-  weak_ptr<Basis> basis; // parent
-  int direction;
+  shared_ptr<Basis> basis() const { return m_basis.lock(); }
+  int direction() const { return m_direction; }
 
   virtual bool invariant() const {
-    return Common::invariant() && bool(basis.lock()) &&
-           basis.lock()->basisvectors.count(name) &&
-           basis.lock()->basisvectors.at(name).get() == this &&
-           direction >= 0 &&
-           direction < basis.lock()->tangentspace.lock()->dimension &&
-           basis.lock()->directions.count(direction) &&
-           basis.lock()->directions.at(direction).get() == this;
+    return Common::invariant() && bool(basis()) &&
+           basis()->basisvectors().count(name()) &&
+           basis()->basisvectors().at(name()).get() == this &&
+           direction() >= 0 &&
+           direction() < basis()->tangentspace()->dimension &&
+           basis()->directions().count(direction()) &&
+           basis()->directions().at(direction()).get() == this;
   }
 
   BasisVector() = delete;
@@ -43,7 +46,7 @@ public:
   friend class Basis;
   BasisVector(hidden, const string &name, const shared_ptr<Basis> &basis,
               int direction)
-      : Common(name), basis(basis), direction(direction) {}
+      : Common(name), m_basis(basis), m_direction(direction) {}
   BasisVector(hidden) : Common(hidden()) {}
 
 private:

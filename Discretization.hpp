@@ -37,10 +37,11 @@ public:
 
   virtual bool invariant() const {
     return Common::invariant() && bool(manifold.lock()) &&
-           manifold.lock()->discretizations().count(name) &&
-           manifold.lock()->discretizations().at(name).get() == this &&
-           bool(configuration) && configuration->discretizations.count(name) &&
-           configuration->discretizations.at(name).lock().get() == this;
+           manifold.lock()->discretizations().count(name()) &&
+           manifold.lock()->discretizations().at(name()).get() == this &&
+           bool(configuration) &&
+           configuration->discretizations().count(name()) &&
+           configuration->discretizations().at(name()).lock().get() == this;
   }
 
   Discretization() = delete;

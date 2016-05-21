@@ -34,8 +34,8 @@ public:
 
   virtual bool invariant() const {
     return Common::invariant() && bool(parameter.lock()) &&
-           parameter.lock()->parametervalues.count(name) &&
-           parameter.lock()->parametervalues.at(name).get() == this &&
+           parameter.lock()->parametervalues.count(name()) &&
+           parameter.lock()->parametervalues.at(name()).get() == this &&
            value_type >= type_empty && value_type <= type_string;
   }
 

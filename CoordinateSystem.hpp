@@ -35,13 +35,13 @@ public:
 
   virtual bool invariant() const {
     return Common::invariant() && bool(project.lock()) &&
-           project.lock()->coordinatesystems.count(name) &&
-           project.lock()->coordinatesystems.at(name).get() == this &&
+           project.lock()->coordinatesystems.count(name()) &&
+           project.lock()->coordinatesystems.at(name()).get() == this &&
            bool(configuration) &&
-           configuration->coordinatesystems.count(name) &&
-           configuration->coordinatesystems.at(name).lock().get() == this &&
-           bool(manifold) && manifold->coordinatesystems().count(name) &&
-           manifold->coordinatesystems().at(name).lock().get() == this;
+           configuration->coordinatesystems().count(name()) &&
+           configuration->coordinatesystems().at(name()).lock().get() == this &&
+           bool(manifold) && manifold->coordinatesystems().count(name()) &&
+           manifold->coordinatesystems().at(name()).lock().get() == this;
   }
 
   CoordinateSystem() = delete;

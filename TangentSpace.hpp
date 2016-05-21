@@ -37,11 +37,11 @@ public:
 
   virtual bool invariant() const {
     bool inv = Common::invariant() && bool(project.lock()) &&
-               project.lock()->tangentspaces.count(name) &&
-               project.lock()->tangentspaces.at(name).get() == this &&
+               project.lock()->tangentspaces.count(name()) &&
+               project.lock()->tangentspaces.at(name()).get() == this &&
                bool(configuration) &&
-               configuration->tangentspaces.count(name) &&
-               configuration->tangentspaces.at(name).lock().get() == this &&
+               configuration->tangentspaces().count(name()) &&
+               configuration->tangentspaces().at(name()).lock().get() == this &&
                dimension >= 0;
     for (const auto &b : bases)
       inv &= !b.first.empty() && bool(b.second);

@@ -26,20 +26,35 @@ class DiscreteField;
 // class CoordinateBasis;
 
 class Basis : public Common, public std::enable_shared_from_this<Basis> {
+  weak_ptr<TangentSpace> m_tangentspace;               // parent
+  shared_ptr<Configuration> m_configuration;           // with backlink
+  map<string, shared_ptr<BasisVector>> m_basisvectors; // children
+  map<int, shared_ptr<BasisVector>> m_directions;
+  NoBackLink<weak_ptr<DiscreteField>> m_discretefields;
+  // map<string, CoordinateBasis *> m_coordinatebases;
 public:
-  weak_ptr<TangentSpace> tangentspace;               // parent
-  shared_ptr<Configuration> configuration;           // with backlink
-  map<string, shared_ptr<BasisVector>> basisvectors; // children
-  map<int, shared_ptr<BasisVector>> directions;
-  NoBackLink<weak_ptr<DiscreteField>> discretefields;
-  // map<string, CoordinateBasis *> coordinatebases;
+  shared_ptr<TangentSpace> tangentspace() const {
+    return m_tangentspace.lock();
+  }
+  const shared_ptr<Configuration> &configuration() const {
+    return m_configuration;
+  }
+  const map<string, shared_ptr<BasisVector>> &basisvectors() const {
+    return m_basisvectors;
+  }
+  const map<int, shared_ptr<BasisVector>> &directions() const {
+    return m_directions;
+  }
+  const NoBackLink<weak_ptr<DiscreteField>> &discretefields() const {
+    return m_discretefields;
+  }
 
   virtual bool invariant() const {
-    return Common::invariant() && bool(tangentspace.lock()) &&
-           tangentspace.lock()->bases.count(name) &&
-           tangentspace.lock()->bases.at(name).get() == this &&
-           bool(configuration) && configuration->bases.count(name) &&
-           configuration->bases.at(name).lock().get() == this;
+    return Common::invariant() && bool(tangentspace()) &&
+           tangentspace()->bases.count(name()) &&
+           tangentspace()->bases.at(name()).get() == this &&
+           bool(configuration()) && configuration()->bases().count(name()) &&
+           configuration()->bases().at(name()).lock().get() == this;
     // int(basisvectors.size()) == tangentspace->dimension
     // int(directions.size()) == tangentspace->dimension
   }
@@ -54,8 +69,8 @@ public:
   Basis(hidden, const string &name,
         const shared_ptr<TangentSpace> &tangentspace,
         const shared_ptr<Configuration> &configuration)
-      : Common(name), tangentspace(tangentspace), configuration(configuration) {
-  }
+      : Common(name), m_tangentspace(tangentspace),
+        m_configuration(configuration) {}
   Basis(hidden) : Common(hidden()) {}
 
 private:

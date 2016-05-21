@@ -254,42 +254,45 @@ struct TensorType;
 %nodefaultctor;
 
 struct Basis {
-  string name;
-  std::weak_ptr<TangentSpace> tangentspace;
-  std::shared_ptr<Configuration> configuration;
-  std::map<string, std::shared_ptr<BasisVector> > basisvectors;
-  std::map<int, std::shared_ptr<BasisVector> > directions;
+  const string &name() const;
+  std::shared_ptr<TangentSpace> tangentspace() const;
+  const std::shared_ptr<Configuration> &configuration() const;
+  const std::map<string, std::shared_ptr<BasisVector>> &basisvectors() const;
+  const std::map<int, std::shared_ptr<BasisVector>> &directions() const;
   bool invariant() const;
 
-  std::shared_ptr<BasisVector> createBasisVector(const string& name, int dim);
+  std::shared_ptr<BasisVector> createBasisVector(const string &name, int dim);
 };
 
 struct BasisVector {
-  string name;
-  std::weak_ptr<Basis> basis;
-  int direction;
+  const string &name() const;
+  std::shared_ptr<Basis> basis() const;
+  int direction() const;
   bool invariant() const;
 };
 
 struct Configuration {
-  string name;
-  std::weak_ptr<Project> project;
-  std::map<string, std::shared_ptr<ParameterValue> > parametervalues;
-  std::map<string, std::weak_ptr<Basis> > bases;
-  std::map<string, std::weak_ptr<CoordinateSystem> > coordinatesystems;
-  std::map<string, std::weak_ptr<DiscreteField> > discretefields;
-  std::map<string, std::weak_ptr<Discretization> > discretizations;
-  std::map<string, std::weak_ptr<Field> > fields;
-  std::map<string, std::weak_ptr<Manifold> > manifolds;
-  std::map<string, std::weak_ptr<TangentSpace> > tangentspaces;
+  const string &name() const;
+  std::shared_ptr<Project> project() const;
+  const std::map<string, std::shared_ptr<ParameterValue>> &
+  parametervalues() const;
+  const std::map<string, std::weak_ptr<Basis>> &bases() const;
+  const std::map<string, std::weak_ptr<CoordinateSystem>> &
+  coordinatesystems() const;
+  const std::map<string, std::weak_ptr<DiscreteField>> &discretefields() const;
+  const std::map<string, std::weak_ptr<Discretization>> &
+  discretizations() const;
+  const std::map<string, std::weak_ptr<Field>> &fields() const;
+  const std::map<string, std::weak_ptr<Manifold>> &manifolds() const;
+  const std::map<string, std::weak_ptr<TangentSpace>> &tangentspaces() const;
   bool invariant() const;
 
   void
-    insertParameterValue(const std::shared_ptr<ParameterValue>& parametervalue);
+  insertParameterValue(const std::shared_ptr<ParameterValue> &parametervalue);
 };
 
 struct CoordinateField {
-  string name;
+  const string &name() const;
   std::weak_ptr<CoordinateSystem> coordinatesystem;
   int direction;
   std::shared_ptr<Field> field;
@@ -297,48 +300,46 @@ struct CoordinateField {
 };
 
 struct CoordinateSystem {
-  string name;
+  const string &name() const;
   std::weak_ptr<Project> project;
   std::shared_ptr<Configuration> configuration;
   std::shared_ptr<Manifold> manifold;
-  std::map<string, std::shared_ptr<CoordinateField> > coordinatefields;
-  std::map<int, std::shared_ptr<CoordinateField> > directions;
+  std::map<string, std::shared_ptr<CoordinateField>> coordinatefields;
+  std::map<int, std::shared_ptr<CoordinateField>> directions;
   bool invariant();
 
   std::shared_ptr<CoordinateField>
-    createCoordinateField(string name,
-                          int direction,
-                          std::shared_ptr<Field>& field);
+  createCoordinateField(string name, int direction,
+                        std::shared_ptr<Field> &field);
 };
 
 struct DiscreteField {
-  string name;
+  const string &name() const;
   std::weak_ptr<Field> field;
   std::shared_ptr<Configuration> configuration;
   std::shared_ptr<Discretization> discretization;
   std::shared_ptr<Basis> basis;
-  std::map<string, std::shared_ptr<DiscreteFieldBlock> > discretefieldblocks;
+  std::map<string, std::shared_ptr<DiscreteFieldBlock>> discretefieldblocks;
   bool invariant() const;
 
-  std::shared_ptr<DiscreteFieldBlock>
-    createDiscreteFieldBlock(const string& name,
-                             const std::shared_ptr<DiscretizationBlock>&
-                               discretizationblock);
+  std::shared_ptr<DiscreteFieldBlock> createDiscreteFieldBlock(
+      const string &name,
+      const std::shared_ptr<DiscretizationBlock> &discretizationblock);
 };
 
 struct DiscreteFieldBlock {
-  string name;
+  const string &name() const;
   std::weak_ptr<DiscreteField> discretefield;
   std::shared_ptr<DiscretizationBlock> discretizationblock;
-  std::map<string, std::shared_ptr<DiscreteFieldBlockComponent> >
-    discretefieldblockcomponents;
-  std::map<int, std::shared_ptr<DiscreteFieldBlockComponent> > storage_indices;
+  std::map<string, std::shared_ptr<DiscreteFieldBlockComponent>>
+      discretefieldblockcomponents;
+  std::map<int, std::shared_ptr<DiscreteFieldBlockComponent>> storage_indices;
   bool invariant() const;
 
   std::shared_ptr<DiscreteFieldBlockComponent>
-    createDiscreteFieldBlockComponent(const string& name,
-                                      const std::shared_ptr<TensorComponent>&
-                                        tensorcomponent);
+  createDiscreteFieldBlockComponent(
+      const string &name,
+      const std::shared_ptr<TensorComponent> &tensorcomponent);
 };
 
 %shared_ptr(DataSet);
@@ -360,7 +361,7 @@ struct DiscreteFieldBlock {
 %}
 
 struct DiscreteFieldBlockComponent {
-  string name;
+  const string &name() const;
   std::weak_ptr<DiscreteFieldBlock> discretefieldblock;
   std::shared_ptr<TensorComponent> tensorcomponent;
   enum {
@@ -371,10 +372,10 @@ struct DiscreteFieldBlockComponent {
     type_range
   } data_type;
   bool invariant() const;
-  void setData(const H5::DataType &datatype, const H5::DataSpace& dataspace);
-  void setData(const string& filename, const string& objname);
-  // void setData(H5::hid loc, const string& name);
-  void setData(double origin, const std::vector<double>& delta);
+  void setData(const H5::DataType &datatype, const H5::DataSpace &dataspace);
+  void setData(const string &filename, const string &objname);
+  // void setData(H5::hid loc, const string &name);
+  void setData(double origin, const std::vector<double> &delta);
   %extend {
     std::shared_ptr<DataSet> getData_dataset() const {
       if (self->data_type == DiscreteFieldBlockComponent::type_dataset ||
@@ -400,37 +401,37 @@ struct DiscreteFieldBlockComponent {
   // string getPath() const;
   // string getName() const;
   %extend {
-    void writeData_int(const std::vector<int>& data) const {
+    void writeData_int(const std::vector<int> &data) const {
       self->writeData(data);
     }
-    void writeData_double(const std::vector<double>& data) const {
+    void writeData_double(const std::vector<double> &data) const {
       self->writeData(data);
     }
   }
 };
 
 struct Discretization {
-  string name;
+  const string &name() const;
   std::weak_ptr<Manifold> manifold;
   std::shared_ptr<Configuration> configuration;
-  std::map<string, std::shared_ptr<DiscretizationBlock> > discretizationblocks;
-  std::map<string, std::weak_ptr<SubDiscretization> > child_discretizations;
-  std::map<string, std::weak_ptr<SubDiscretization> > parent_discretizations;
+  std::map<string, std::shared_ptr<DiscretizationBlock>> discretizationblocks;
+  std::map<string, std::weak_ptr<SubDiscretization>> child_discretizations;
+  std::map<string, std::weak_ptr<SubDiscretization>> parent_discretizations;
   bool invariant() const;
 
   std::shared_ptr<DiscretizationBlock>
-    createDiscretizationBlock(const string& name);
+  createDiscretizationBlock(const string &name);
 };
 
 struct DiscretizationBlock {
-  string name;
+  const string &name() const;
   ibox box;
   iregion active;
   std::weak_ptr<Discretization> discretization;
   bool invariant() const;
   %extend {
-    void setBox(const std::vector<int>& ioffset,
-                const std::vector<int>& ishape) {
+    void setBox(const std::vector<int> &ioffset,
+                const std::vector<int> &ishape) {
       std::vector<hssize_t> hoffset(ioffset.size()), hshape(ishape.size());
       std::copy(ioffset.begin(), ioffset.end(), hoffset.begin());
       std::copy(ishape.begin(), ishape.end(), hshape.begin());
@@ -440,99 +441,98 @@ struct DiscretizationBlock {
 };
 
 struct Field {
-  string name;
+  const string &name() const;
   std::weak_ptr<Project> project;
   std::shared_ptr<Configuration> configuration;
   std::shared_ptr<Manifold> manifold;
   std::shared_ptr<TangentSpace> tangentspace;
   std::shared_ptr<TensorType> tensortype;
-  std::map<string, std::shared_ptr<DiscreteField> > discretefields;
+  std::map<string, std::shared_ptr<DiscreteField>> discretefields;
   bool invariant() const;
 
   std::shared_ptr<DiscreteField>
-    createDiscreteField(const string& name,
-                        const std::shared_ptr<Configuration>& configuration,
-                        const std::shared_ptr<Discretization>& discretization,
-                        const std::shared_ptr<Basis>& basis);
+  createDiscreteField(const string &name,
+                      const std::shared_ptr<Configuration> &configuration,
+                      const std::shared_ptr<Discretization> &discretization,
+                      const std::shared_ptr<Basis> &basis);
 };
 
 struct Manifold {
-  string name;
-  std::weak_ptr<Project> project;
-  std::shared_ptr<Configuration> configuration;
-  int dimension;
-  std::map<string, std::shared_ptr<Discretization> > discretizations;
-  std::map<string, std::weak_ptr<Field> > fields;
-  std::map<string, std::weak_ptr<CoordinateSystem> > coordinatesystems;
+  const string &name() const;
+  std::shared_ptr<Project> project() const;
+  const std::shared_ptr<Configuration> &configuration() const;
+  int dimension() const;
+  const std::map<string, std::shared_ptr<Discretization>> &
+  discretizations() const;
+  const std::map<string, std::weak_ptr<Field>> &fields() const;
+  const std::map<string, std::weak_ptr<CoordinateSystem>> &
+  coordinatesystems() const;
   bool invariant() const;
 
   std::shared_ptr<Discretization>
-    createDiscretization(const string& name,
-                         const std::shared_ptr<Configuration>& configuration);
-  std::shared_ptr<SubDiscretization>
-    createSubDiscretization(const string& name,
-                            const std::shared_ptr<Discretization>&
-                              parent_discretization,
-                            const std::shared_ptr<Discretization>&
-                              child_discretization,
-                            const std::vector<double>& factor,
-                            const std::vector<double>& offset);
+  createDiscretization(const string &name,
+                       const std::shared_ptr<Configuration> &configuration);
+  std::shared_ptr<SubDiscretization> createSubDiscretization(
+      const string &name,
+      const std::shared_ptr<Discretization> &parent_discretization,
+      const std::shared_ptr<Discretization> &child_discretization,
+      const std::vector<double> &factor, const std::vector<double> &offset);
 };
 
 struct Parameter {
-  string name;
+  const string &name() const;
   std::weak_ptr<Project> project;
-  std::map<string, std::shared_ptr<ParameterValue> > parametervalues;
+  std::map<string, std::shared_ptr<ParameterValue>> parametervalues;
   bool invariant() const;
 
-  std::shared_ptr<ParameterValue> createParameterValue(const string& name);
+  std::shared_ptr<ParameterValue> createParameterValue(const string &name);
 };
 
 struct ParameterValue {
-  string name;
+  const string &name() const;
   std::weak_ptr<Parameter> parameter;
-  std::map<string, std::weak_ptr<Configuration> > configurations;
+  std::map<string, std::weak_ptr<Configuration>> configurations;
   bool invariant() const;
 };
 
 struct Project {
-  string name;
-  std::map<string, std::shared_ptr<Parameter> > parameters;
-  std::map<string, std::shared_ptr<Configuration> > configurations;
-  std::map<string, std::shared_ptr<TensorType> > tensortypes;
-  std::map<string, std::shared_ptr<Manifold> > manifolds;
-  std::map<string, std::shared_ptr<TangentSpace> > tangentspaces;
-  std::map<string, std::shared_ptr<Field> > fields;
-  std::map<string, std::shared_ptr<CoordinateSystem> > coordinatesystems;
+  const string &name() const;
+  std::map<string, std::shared_ptr<Parameter>> parameters;
+  std::map<string, std::shared_ptr<Configuration>> configurations;
+  std::map<string, std::shared_ptr<TensorType>> tensortypes;
+  std::map<string, std::shared_ptr<Manifold>> manifolds;
+  std::map<string, std::shared_ptr<TangentSpace>> tangentspaces;
+  std::map<string, std::shared_ptr<Field>> fields;
+  std::map<string, std::shared_ptr<CoordinateSystem>> coordinatesystems;
   bool invariant() const;
 
   void createStandardTensorTypes();
-  void write(const H5::CommonFG& loc);
+  void write(const H5::CommonFG &loc);
 
-  std::shared_ptr<Parameter> createParameter(const string& name);
-  std::shared_ptr<Configuration> createConfiguration(const string& name);
-  std::shared_ptr<TensorType>
-    createTensorType(const string& name, int dimension, int rank);
+  std::shared_ptr<Parameter> createParameter(const string &name);
+  std::shared_ptr<Configuration> createConfiguration(const string &name);
+  std::shared_ptr<TensorType> createTensorType(const string &name,
+                                               int dimension, int rank);
   std::shared_ptr<Manifold>
-    createManifold(const string& name,
-                   const std::shared_ptr<Configuration>& configuration,
-                   int dimension);
+  createManifold(const string &name,
+                 const std::shared_ptr<Configuration> &configuration,
+                 int dimension);
   std::shared_ptr<TangentSpace>
-    createTangentSpace(const string& name,
-                       const std::shared_ptr<Configuration>& configuration,
-                       int dimension);
+  createTangentSpace(const string &name,
+                     const std::shared_ptr<Configuration> &configuration,
+                     int dimension);
   std::shared_ptr<Field>
-    createField(const string& name,
-                const std::shared_ptr<Configuration>& configuration,
-                const std::shared_ptr<Manifold>& manifold,
-                const std::shared_ptr<TangentSpace>& tangentspace,
-                const std::shared_ptr<TensorType>& tensortype);
+  createField(const string &name,
+              const std::shared_ptr<Configuration> &configuration,
+              const std::shared_ptr<Manifold> &manifold,
+              const std::shared_ptr<TangentSpace> &tangentspace,
+              const std::shared_ptr<TensorType> &tensortype);
   std::shared_ptr<CoordinateSystem>
-    createCoordinateSystem(const string& name,
-                           const std::shared_ptr<Configuration>& configuration,
-                           const std::shared_ptr<Manifold>& manifold);
+  createCoordinateSystem(const string &name,
+                         const std::shared_ptr<Configuration> &configuration,
+                         const std::shared_ptr<Manifold> &manifold);
 };
-std::shared_ptr<Project> createProject(const string& name);
+std::shared_ptr<Project> createProject(const string &name);
 std::shared_ptr<Project> readProject(const H5::CommonFG &loc);
 // TODO: Support
 //    import h5py
@@ -540,7 +540,7 @@ std::shared_ptr<Project> readProject(const H5::CommonFG &loc);
 // Do this as well for all other functions taking HDF5 objects as arguments.
 
 struct SubDiscretization {
-  string name;
+  const string &name() const;
   std::weak_ptr<Manifold> manifold;
   std::shared_ptr<Discretization> parent_discretization;
   std::shared_ptr<Discretization> child_discretization;
@@ -552,21 +552,21 @@ struct SubDiscretization {
 };
 
 struct TangentSpace {
-  string name;
+  const string &name() const;
   std::weak_ptr<Project> project;
   std::shared_ptr<Configuration> configuration;
   int dimension;
-  std::map<string, std::shared_ptr<Basis> > bases;
-  std::map<string, std::weak_ptr<Field> > fields;
+  std::map<string, std::shared_ptr<Basis>> bases;
+  const std::map<string, std::weak_ptr<Field>> &fields() const;
   bool invariant() const;
 
   std::shared_ptr<Basis>
-    createBasis(const string& name,
-                const std::shared_ptr<Configuration>& configuration);
+  createBasis(const string &name,
+              const std::shared_ptr<Configuration> &configuration);
 };
 
 struct TensorComponent {
-  string name;
+  const string &name() const;
   std::weak_ptr<TensorType> tensortype;
   int storage_index;
   std::vector<int> indexvalues;
@@ -574,17 +574,16 @@ struct TensorComponent {
 };
 
 struct TensorType {
-  string name;
+  const string &name() const;
   std::weak_ptr<Project> project;
   int dimension;
   int rank;
-  std::map<string, std::shared_ptr<TensorComponent> > tensorcomponents;
-  std::map<int, std::shared_ptr<TensorComponent> > storage_indices;
+  std::map<string, std::shared_ptr<TensorComponent>> tensorcomponents;
+  std::map<int, std::shared_ptr<TensorComponent>> storage_indices;
 
   std::shared_ptr<TensorComponent>
-    createTensorComponent(const string& name,
-                          int storage_index,
-                          const std::vector<int>& indexvalues);
+  createTensorComponent(const string &name, int storage_index,
+                        const std::vector<int> &indexvalues);
 };
 
 %clearnodefaultctor;

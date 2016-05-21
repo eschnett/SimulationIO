@@ -36,16 +36,17 @@ public:
 
   virtual bool invariant() const {
     return Common::invariant() && bool(field.lock()) &&
-           field.lock()->discretefields.count(name) &&
-           field.lock()->discretefields.at(name).get() == this &&
-           bool(configuration) && configuration->discretefields.count(name) &&
-           configuration->discretefields.at(name).lock().get() == this &&
+           field.lock()->discretefields.count(name()) &&
+           field.lock()->discretefields.at(name()).get() == this &&
+           bool(configuration) &&
+           configuration->discretefields().count(name()) &&
+           configuration->discretefields().at(name()).lock().get() == this &&
            bool(discretization) &&
            discretization->discretefields.nobacklink() &&
            field.lock()->manifold.get() ==
                discretization->manifold.lock().get() &&
-           bool(basis) && basis->discretefields.nobacklink() &&
-           field.lock()->tangentspace.get() == basis->tangentspace.lock().get();
+           bool(basis) && basis->discretefields().nobacklink() &&
+           field.lock()->tangentspace.get() == basis->tangentspace().get();
   }
 
   DiscreteField() = delete;

@@ -57,11 +57,11 @@ public:
 
   virtual bool invariant() const {
     bool inv = Common::invariant() && bool(project()) &&
-               project()->manifolds.count(name) &&
-               project()->manifolds.at(name).get() == this &&
+               project()->manifolds.count(name()) &&
+               project()->manifolds.at(name()).get() == this &&
                bool(configuration()) &&
-               configuration()->manifolds.count(name) &&
-               configuration()->manifolds.at(name).lock().get() == this &&
+               configuration()->manifolds().count(name()) &&
+               configuration()->manifolds().at(name()).lock().get() == this &&
                dimension() >= 0;
     for (const auto &d : discretizations())
       inv &= !d.first.empty() && bool(d.second);

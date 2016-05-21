@@ -55,16 +55,16 @@ public:
   virtual bool invariant() const {
     bool inv =
         Common::invariant() && bool(manifold.lock()) &&
-        manifold.lock()->subdiscretizations().count(name) &&
-        manifold.lock()->subdiscretizations().at(name).get() == this &&
+        manifold.lock()->subdiscretizations().count(name()) &&
+        manifold.lock()->subdiscretizations().at(name()).get() == this &&
         bool(parent_discretization) &&
-        parent_discretization->child_discretizations.count(name) &&
-        parent_discretization->child_discretizations.at(name).lock().get() ==
+        parent_discretization->child_discretizations.count(name()) &&
+        parent_discretization->child_discretizations.at(name()).lock().get() ==
             this &&
         parent_discretization->manifold.lock().get() == manifold.lock().get() &&
         bool(child_discretization) &&
-        child_discretization->parent_discretizations.count(name) &&
-        child_discretization->parent_discretizations.at(name).lock().get() ==
+        child_discretization->parent_discretizations.count(name()) &&
+        child_discretization->parent_discretizations.at(name()).lock().get() ==
             this &&
         child_discretization.get() != parent_discretization.get() &&
         child_discretization->manifold.lock().get() == manifold.lock().get() &&

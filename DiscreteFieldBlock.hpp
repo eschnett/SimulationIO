@@ -37,8 +37,8 @@ public:
   virtual bool invariant() const {
     bool inv =
         Common::invariant() && bool(discretefield.lock()) &&
-        discretefield.lock()->discretefieldblocks.count(name) &&
-        discretefield.lock()->discretefieldblocks.at(name).get() == this &&
+        discretefield.lock()->discretefieldblocks.count(name()) &&
+        discretefield.lock()->discretefieldblocks.at(name()).get() == this &&
         bool(discretizationblock) &&
         discretizationblock->discretefieldblocks.nobacklink() &&
         discretefieldblockcomponents.size() == storage_indices.size();

@@ -161,14 +161,14 @@ TEST(Configuration, create) {
   EXPECT_EQ(2, project->configurations.size());
   EXPECT_EQ(conf1, project->configurations.at("conf1"));
   EXPECT_EQ(conf2, project->configurations.at("conf2"));
-  EXPECT_TRUE(conf1->parametervalues.empty());
-  EXPECT_TRUE(conf2->parametervalues.empty());
+  EXPECT_TRUE(conf1->parametervalues().empty());
+  EXPECT_TRUE(conf2->parametervalues().empty());
   conf2->insertParameterValue(val1);
   conf2->insertParameterValue(val2);
-  EXPECT_TRUE(conf1->parametervalues.empty());
-  EXPECT_EQ(2, conf2->parametervalues.size());
-  EXPECT_EQ(val1, conf2->parametervalues.at("val1"));
-  EXPECT_EQ(val2, conf2->parametervalues.at("val2"));
+  EXPECT_TRUE(conf1->parametervalues().empty());
+  EXPECT_EQ(2, conf2->parametervalues().size());
+  EXPECT_EQ(val1, conf2->parametervalues().at("val1"));
+  EXPECT_EQ(val2, conf2->parametervalues().at("val2"));
 }
 
 TEST(Configuration, HDF5) {
@@ -565,17 +565,17 @@ TEST(Basis, HDF5) {
 TEST(BasisVector, create) {
   auto s1 = project->tangentspaces.at("s1");
   auto b1 = s1->bases.at("b1");
-  EXPECT_TRUE(b1->basisvectors.empty());
+  EXPECT_TRUE(b1->basisvectors().empty());
   auto bx1 = b1->createBasisVector("x", 0);
   auto by1 = b1->createBasisVector("y", 1);
   auto bz1 = b1->createBasisVector("z", 2);
-  EXPECT_EQ(0, bx1->direction);
-  EXPECT_EQ(1, by1->direction);
-  EXPECT_EQ(2, bz1->direction);
-  EXPECT_EQ(3, b1->basisvectors.size());
-  EXPECT_EQ(bx1, b1->basisvectors.at("x"));
-  EXPECT_EQ(by1, b1->basisvectors.at("y"));
-  EXPECT_EQ(bz1, b1->basisvectors.at("z"));
+  EXPECT_EQ(0, bx1->direction());
+  EXPECT_EQ(1, by1->direction());
+  EXPECT_EQ(2, bz1->direction());
+  EXPECT_EQ(3, b1->basisvectors().size());
+  EXPECT_EQ(bx1, b1->basisvectors().at("x"));
+  EXPECT_EQ(by1, b1->basisvectors().at("y"));
+  EXPECT_EQ(bz1, b1->basisvectors().at("z"));
 }
 
 TEST(BasisVector, HDF5) {
@@ -722,10 +722,10 @@ TEST(DiscreteFieldBlockComponent, create) {
   EXPECT_EQ(DiscreteFieldBlockComponent::type_empty, dfbd3->data_type);
   EXPECT_EQ(DiscreteFieldBlockComponent::type_empty, dfbd4->data_type);
   dfbd1->setData("discretizationfieldblockcomponent.s5",
-                 project->name + "/tensortypes/Scalar3D");
+                 project->name() + "/tensortypes/Scalar3D");
   dfbd1->setData();
   dfbd2->setData("discretizationfieldblockcomponent.s5",
-                 project->name + "/tensortypes/Scalar3D");
+                 project->name() + "/tensortypes/Scalar3D");
   const auto datatype = H5::getType(0.0);
   // TODO: get rank and shape from manifold and discretization block
   const int rank = 3;

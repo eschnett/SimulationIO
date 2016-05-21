@@ -88,11 +88,11 @@ int main(int argc, char **argv) {
   for (int d = 0; d < dim; ++d) {
     auto field = project->createField(dirnames[d], configuration, manifold,
                                       tangentspace, scalar3d);
-    auto discretefield = field->createDiscreteField(field->name, configuration,
-                                                    discretization, basis);
+    auto discretefield = field->createDiscreteField(
+        field->name(), configuration, discretization, basis);
     for (int p = 0; p < ngrids; ++p) {
       auto block = discretefield->createDiscreteFieldBlock(
-          discretefield->name + "-" + blocks.at(p)->name, blocks.at(p));
+          discretefield->name() + "-" + blocks.at(p)->name(), blocks.at(p));
       auto scalar3d_component = scalar3d->storage_indices.at(0);
       auto component = block->createDiscreteFieldBlockComponent(
           "scalar", scalar3d_component);
@@ -110,19 +110,19 @@ int main(int argc, char **argv) {
                                   scalar3d);
   auto vel = project->createField("vel", configuration, manifold, tangentspace,
                                   vector3d);
-  auto discretized_rho =
-      rho->createDiscreteField(rho->name, configuration, discretization, basis);
-  auto discretized_vel =
-      vel->createDiscreteField(vel->name, configuration, discretization, basis);
+  auto discretized_rho = rho->createDiscreteField(rho->name(), configuration,
+                                                  discretization, basis);
+  auto discretized_vel = vel->createDiscreteField(vel->name(), configuration,
+                                                  discretization, basis);
   for (int i = 0; i < ngrids; ++i) {
     const hsize_t dims[dim] = {nlk, nlj, nli};
     auto dataspace = H5::DataSpace(dim, dims);
     auto datatype = H5::getType(double());
     // Create discrete region
     auto rho_block = discretized_rho->createDiscreteFieldBlock(
-        rho->name + "-" + blocks.at(i)->name, blocks.at(i));
+        rho->name() + "-" + blocks.at(i)->name(), blocks.at(i));
     auto vel_block = discretized_vel->createDiscreteFieldBlock(
-        vel->name + "-" + blocks.at(i)->name, blocks.at(i));
+        vel->name() + "-" + blocks.at(i)->name(), blocks.at(i));
     // Create tensor components for this region
     auto scalar3d_component = scalar3d->storage_indices.at(0);
     auto rho_component = rho_block->createDiscreteFieldBlockComponent(
@@ -176,27 +176,27 @@ int main(int argc, char **argv) {
         // Write coordinates
         for (int d = 0; d < dim; ++d) {
           auto field = coordinates[d]->field;
-          auto discretefield = field->discretefields.at(field->name);
+          auto discretefield = field->discretefields.at(field->name());
           auto block = discretefield->discretefieldblocks.at(
-              discretefield->name + "-" + blocks.at(p)->name);
+              discretefield->name() + "-" + blocks.at(p)->name());
           auto component = block->discretefieldblockcomponents.at("scalar");
           component->writeData(d == 0 ? coordx : d == 1 ? coordy : coordz);
         }
         // Write rho
         {
           auto field = rho;
-          auto discretefield = field->discretefields.at(field->name);
+          auto discretefield = field->discretefields.at(field->name());
           auto block = discretefield->discretefieldblocks.at(
-              discretefield->name + "-" + blocks.at(p)->name);
+              discretefield->name() + "-" + blocks.at(p)->name());
           auto component = block->discretefieldblockcomponents.at("scalar");
           component->writeData(datarho);
         }
         // Write velocity
         for (int d = 0; d < dim; ++d) {
           auto field = vel;
-          auto discretefield = field->discretefields.at(field->name);
+          auto discretefield = field->discretefields.at(field->name());
           auto block = discretefield->discretefieldblocks.at(
-              discretefield->name + "-" + blocks.at(p)->name);
+              discretefield->name() + "-" + blocks.at(p)->name());
           auto component = block->discretefieldblockcomponents.at(dirnames[d]);
           component->writeData(d == 0 ? datavelx : d == 1 ? datavely
                                                           : datavelz);

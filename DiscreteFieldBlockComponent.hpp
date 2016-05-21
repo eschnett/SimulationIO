@@ -48,9 +48,9 @@ public:
   virtual bool invariant() const {
     bool inv =
         Common::invariant() && bool(discretefieldblock.lock()) &&
-        discretefieldblock.lock()->discretefieldblockcomponents.count(name) &&
+        discretefieldblock.lock()->discretefieldblockcomponents.count(name()) &&
         discretefieldblock.lock()
-                ->discretefieldblockcomponents.at(name)
+                ->discretefieldblockcomponents.at(name())
                 .get() == this &&
         bool(tensorcomponent) &&
         tensorcomponent->discretefieldblockcomponents.nobacklink() &&

@@ -32,8 +32,8 @@ public:
 
   virtual bool invariant() const {
     return Common::invariant() && bool(project.lock()) &&
-           project.lock()->parameters.count(name) &&
-           project.lock()->parameters.at(name).get() == this;
+           project.lock()->parameters.count(name()) &&
+           project.lock()->parameters.at(name()).get() == this;
   }
 
   Parameter() = delete;

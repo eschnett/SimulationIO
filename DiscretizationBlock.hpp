@@ -44,8 +44,9 @@ public:
 
   virtual bool invariant() const {
     return Common::invariant() && bool(discretization.lock()) &&
-           discretization.lock()->discretizationblocks.count(name) &&
-           discretization.lock()->discretizationblocks.at(name).get() == this &&
+           discretization.lock()->discretizationblocks.count(name()) &&
+           discretization.lock()->discretizationblocks.at(name()).get() ==
+               this &&
            (!box.valid() ||
             (box.rank() ==
                  discretization.lock()->manifold.lock()->dimension() &&

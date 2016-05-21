@@ -60,9 +60,9 @@ void DiscretizationBlock::read(
              group, "type",
              discretization->manifold.lock()->project()->enumtype) ==
          "DiscretizationBlock");
-  H5::readAttribute(group, "name", name);
+  H5::readAttribute(group, "name", m_name);
   assert(H5::readGroupAttribute<string>(group, "discretization", "name") ==
-         discretization->name);
+         discretization->name());
   if (group.attrExists("offset")) {
     vector<hssize_t> offset, shape;
     H5::readAttribute(group, "offset", offset);
@@ -81,8 +81,8 @@ void DiscretizationBlock::read(
 }
 
 ostream &DiscretizationBlock::output(ostream &os, int level) const {
-  os << indent(level) << "DiscretizationBlock " << quote(name)
-     << ": Discretization " << quote(discretization.lock()->name);
+  os << indent(level) << "DiscretizationBlock " << quote(name())
+     << ": Discretization " << quote(discretization.lock()->name());
   if (box.valid())
     os << " box=" << box;
   if (active.valid())
@@ -118,12 +118,12 @@ void write_active(const H5::H5Location &group,
 void DiscretizationBlock::write(const H5::CommonFG &loc,
                                 const H5::H5Location &parent) const {
   assert(invariant());
-  auto group = loc.createGroup(name);
+  auto group = loc.createGroup(name());
   H5::createAttribute(
       group, "type",
       discretization.lock()->manifold.lock()->project()->enumtype,
       "DiscretizationBlock");
-  H5::createAttribute(group, "name", name);
+  H5::createAttribute(group, "name", name());
   // H5::createHardLink(group, "discretization", parent, ".");
   H5::createHardLink(group, "..", parent, ".");
   H5::createSoftLink(group, "discretization", "..");

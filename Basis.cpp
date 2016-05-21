@@ -8,40 +8,40 @@ namespace SimulationIO {
 
 void Basis::read(const H5::CommonFG &loc, const string &entry,
                  const shared_ptr<TangentSpace> &tangentspace) {
-  this->tangentspace = tangentspace;
+  m_tangentspace = tangentspace;
   auto group = loc.openGroup(entry);
   assert(H5::readAttribute<string>(
              group, "type", tangentspace->project.lock()->enumtype) == "Basis");
-  H5::readAttribute(group, "name", name);
+  H5::readAttribute(group, "name", m_name);
   assert(H5::readGroupAttribute<string>(group, "tangentspace", "name") ==
-         tangentspace->name);
-  configuration = tangentspace->project.lock()->configurations.at(
+         tangentspace->name());
+  m_configuration = tangentspace->project.lock()->configurations.at(
       H5::readGroupAttribute<string>(group, "configuration", "name"));
   assert(H5::readGroupAttribute<string>(
-             group, string("configuration/bases/") + name, "name") == name);
+             group, string("configuration/bases/") + name(), "name") == name());
   H5::readGroup(group, "basisvectors",
                 [&](const H5::Group &group, const string &name) {
                   readBasisVector(group, name);
                 });
   // TODO: check group directions
-  configuration->insert(name, shared_from_this());
+  m_configuration->insert(name(), shared_from_this());
 }
 
 ostream &Basis::output(ostream &os, int level) const {
-  os << indent(level) << "Basis " << quote(name) << ": Configuration "
-     << quote(configuration->name) << " TangentSpace "
-     << quote(tangentspace.lock()->name) << "\n";
-  for (const auto &db : directions)
+  os << indent(level) << "Basis " << quote(name()) << ": Configuration "
+     << quote(configuration()->name()) << " TangentSpace "
+     << quote(tangentspace()->name()) << "\n";
+  for (const auto &db : directions())
     db.second->output(os, level + 1);
   return os;
 }
 
 void Basis::write(const H5::CommonFG &loc, const H5::H5Location &parent) const {
   assert(invariant());
-  auto group = loc.createGroup(name);
-  H5::createAttribute(group, "type",
-                      tangentspace.lock()->project.lock()->enumtype, "Basis");
-  H5::createAttribute(group, "name", name);
+  auto group = loc.createGroup(name());
+  H5::createAttribute(group, "type", tangentspace()->project.lock()->enumtype,
+                      "Basis");
+  H5::createAttribute(group, "name", name());
   // H5::createHardLink(group, "tangentspace", parent, ".");
   H5::createHardLink(group, "..", parent, ".");
   H5::createSoftLink(group, "tangentspace", "..");
@@ -50,19 +50,19 @@ void Basis::write(const H5::CommonFG &loc, const H5::H5Location &parent) const {
   //                    configuration->name);
   H5::createSoftLink(group, "configuration",
                      string("../project/configurations/") +
-                         configuration->name);
+                         configuration()->name());
   H5::createHardLink(group, string("tangentspace/project/configurations/") +
-                                configuration->name + "/bases",
-                     name, group, ".");
-  H5::createGroup(group, "basisvectors", basisvectors);
+                                configuration()->name() + "/bases",
+                     name(), group, ".");
+  H5::createGroup(group, "basisvectors", basisvectors());
   // TODO: output directions
 }
 
 shared_ptr<BasisVector> Basis::createBasisVector(const string &name,
                                                  int direction) {
   auto basisvector = BasisVector::create(name, shared_from_this(), direction);
-  checked_emplace(basisvectors, basisvector->name, basisvector);
-  checked_emplace(directions, basisvector->direction, basisvector);
+  checked_emplace(m_basisvectors, basisvector->name(), basisvector);
+  checked_emplace(m_directions, basisvector->direction(), basisvector);
   assert(basisvector->invariant());
   return basisvector;
 }
@@ -70,8 +70,8 @@ shared_ptr<BasisVector> Basis::createBasisVector(const string &name,
 shared_ptr<BasisVector> Basis::readBasisVector(const H5::CommonFG &loc,
                                                const string &entry) {
   auto basisvector = BasisVector::create(loc, entry, shared_from_this());
-  checked_emplace(basisvectors, basisvector->name, basisvector);
-  checked_emplace(directions, basisvector->direction, basisvector);
+  checked_emplace(m_basisvectors, basisvector->name(), basisvector);
+  checked_emplace(m_directions, basisvector->direction(), basisvector);
   assert(basisvector->invariant());
   return basisvector;
 }

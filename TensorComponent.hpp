@@ -33,8 +33,8 @@ public:
   virtual bool invariant() const {
     bool inv =
         Common::invariant() && bool(tensortype.lock()) &&
-        tensortype.lock()->tensorcomponents.count(name) &&
-        tensortype.lock()->tensorcomponents.at(name).get() == this &&
+        tensortype.lock()->tensorcomponents.count(name()) &&
+        tensortype.lock()->tensorcomponents.at(name()).get() == this &&
         storage_index >= 0 &&
         storage_index <
             ipow(tensortype.lock()->dimension, tensortype.lock()->rank) &&
