@@ -39,6 +39,24 @@ using std::unique_ptr;
 using std::vector;
 
 ////////////////////////////////////////////////////////////////////////////////
+// Numerical functions
+////////////////////////////////////////////////////////////////////////////////
+
+namespace detail {
+
+template <typename T>
+typename std::enable_if<!std::is_unsigned<T>::value, T>::type abs_wrapper(T x) {
+  using std::abs;
+  return abs(x);
+}
+
+template <typename T>
+typename std::enable_if<std::is_unsigned<T>::value, T>::type abs_wrapper(T x) {
+  return x;
+}
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // Reduction
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -278,14 +296,21 @@ template <typename T, int D> struct point {
   //   return r;
   // }
 
+  // point abs() const {
+  //   // handle unsigned types
+  //   if (T(-1) > T(0))
+  //     return *this;
+  //   using std::abs;
+  //   point r;
+  //   for (int d = 0; d < D; ++d)
+  //     r.elt[d] = abs(elt[d]);
+  //   return r;
+  // }
+
   point abs() const {
-    // handle unsigned types
-    if (T(-1) > T(0))
-      return *this;
-    using std::abs;
     point r;
     for (int d = 0; d < D; ++d)
-      r.elt[d] = abs(elt[d]);
+      r.elt[d] = detail::abs_wrapper(elt[d]);
     return r;
   }
 
