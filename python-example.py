@@ -64,10 +64,10 @@ for d in range(dim):
     field = project.createField(
         dirnames[d], configuration, manifold, tangentspace, scalar3d)
     discretefield = field.createDiscreteField(
-        field.name, configuration, discretization, basis)
+        field.name(), configuration, discretization, basis)
     for p in range(ngrids):
         block = discretefield.createDiscreteFieldBlock(
-            "%s-%s" % (discretefield.name, blocks[p].name), blocks[p])
+            "%s-%s" % (discretefield.name(), blocks[p].name()), blocks[p])
         scalar3d_component = scalar3d.storage_indices[0]
         component = block.createDiscreteFieldBlockComponent(
             "scalar", scalar3d_component)
@@ -91,9 +91,9 @@ for p in range(ngrids):
     datatype = H5.DataType(H5.PredType.NATIVE_DOUBLE)
     # Create discrete region
     rho_block = discretized_rho.createDiscreteFieldBlock(
-        "%s-%s" % (rho.name, blocks[p].name), blocks[p])
+        "%s-%s" % (rho.name(), blocks[p].name()), blocks[p])
     vel_block = discretized_vel.createDiscreteFieldBlock(
-        "%s-%s" % (vel.name, blocks[p].name), blocks[p])
+        "%s-%s" % (vel.name(), blocks[p].name()), blocks[p])
     # Create tensor components for this region
     scalar3d_component = scalar3d.storage_indices[0]
     rho_component = rho_block.createDiscreteFieldBlockComponent(
@@ -142,26 +142,26 @@ for pk in range(npk):
             # Write coordinates
             for d in range(dim):
                 field = coordinates[d].field
-                discretefield = field.discretefields[field.name]
+                discretefield = field.discretefields[field.name()]
                 block = discretefield.discretefieldblocks[
-                    "%s-%s" % (discretefield.name, blocks[p].name)]
+                    "%s-%s" % (discretefield.name(), blocks[p].name())]
                 component = block.discretefieldblockcomponents["scalar"]
                 component.writeData_double(
                     np.reshape([coordx, coordy, coordz][d], npoints))
             # Write rho
             for d in range(1):
                 field = rho
-                discretefield = field.discretefields[field.name]
+                discretefield = field.discretefields[field.name()]
                 block = discretefield.discretefieldblocks[
-                    "%s-%s" % (discretefield.name, blocks[p].name)]
+                    "%s-%s" % (discretefield.name(), blocks[p].name())]
                 component = block.discretefieldblockcomponents["scalar"]
                 component.writeData_double(np.reshape(datarho, npoints))
             # Write velocity
             for d in range(dim):
                 field = vel
-                discretefield = field.discretefields[field.name]
+                discretefield = field.discretefields[field.name()]
                 block = discretefield.discretefieldblocks[
-                    "%s-%s" % (discretefield.name, blocks[p].name)]
+                    "%s-%s" % (discretefield.name(), blocks[p].name())]
                 component = block.discretefieldblockcomponents[dirnames[d]]
                 component.writeData_double(
                     np.reshape([datavelx, datavely, datavelz][d], npoints))
