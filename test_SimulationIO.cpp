@@ -727,7 +727,7 @@ TEST(DiscreteFieldBlockComponent, create) {
   dfbd2->setData("discretizationfieldblockcomponent.s5",
                  project->name + "/tensortypes/Scalar3D");
   const auto datatype = H5::getType(0.0);
-#warning "TODO: get rank and shape from manifold and discretization block"
+  // TODO: get rank and shape from manifold and discretization block
   const int rank = 3;
   const hsize_t dims[rank] = {11, 10, 9};
   auto dataspace = H5::DataSpace(rank, dims);
