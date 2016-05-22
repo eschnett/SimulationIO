@@ -45,7 +45,7 @@ public:
   shared_ptr<Manifold> manifold() const { return m_manifold; }
   shared_ptr<TangentSpace> tangentspace() const { return m_tangentspace; }
   shared_ptr<TensorType> tensortype() const { return m_tensortype; }
-  const map<string, shared_ptr<DiscreteField>> discretefields() const {
+  const map<string, shared_ptr<DiscreteField>> &discretefields() const {
     return m_discretefields;
   }
   NoBackLink<CoordinateField> coordinatefields() const {

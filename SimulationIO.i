@@ -16,26 +16,6 @@ typedef RegionCalculus::dregion<int> iregion;
 %include <std_string.i>
 %include <std_vector.i>
 
-%shared_ptr(Basis);
-%shared_ptr(BasisVector);
-%shared_ptr(Configuration);
-%shared_ptr(CoordinateField);
-%shared_ptr(CoordinateSystem);
-%shared_ptr(DiscreteField);
-%shared_ptr(DiscreteFieldBlock);
-%shared_ptr(DiscreteFieldBlockComponent);
-%shared_ptr(Discretization);
-%shared_ptr(DiscretizationBlock);
-%shared_ptr(Field);
-%shared_ptr(Manifold);
-%shared_ptr(Parameter);
-%shared_ptr(ParameterValue);
-%shared_ptr(Project);
-%shared_ptr(SubDiscretization);
-%shared_ptr(TangentSpace);
-%shared_ptr(TensorComponent);
-%shared_ptr(TensorType);
-
 namespace std {
 template<typename T> class weak_ptr {
 public:
@@ -60,6 +40,26 @@ public:
 // using std::map;
 // using std::shared_ptr;
 using std::string;
+
+%shared_ptr(Basis);
+%shared_ptr(BasisVector);
+%shared_ptr(Configuration);
+%shared_ptr(CoordinateField);
+%shared_ptr(CoordinateSystem);
+%shared_ptr(DiscreteField);
+%shared_ptr(DiscreteFieldBlock);
+%shared_ptr(DiscreteFieldBlockComponent);
+%shared_ptr(Discretization);
+%shared_ptr(DiscretizationBlock);
+%shared_ptr(Field);
+%shared_ptr(Manifold);
+%shared_ptr(Parameter);
+%shared_ptr(ParameterValue);
+%shared_ptr(Project);
+%shared_ptr(SubDiscretization);
+%shared_ptr(TangentSpace);
+%shared_ptr(TensorComponent);
+%shared_ptr(TensorType);
 
 struct Basis;
 struct BasisVector;
