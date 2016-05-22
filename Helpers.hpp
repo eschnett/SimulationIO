@@ -14,7 +14,7 @@ namespace SimulationIO {
 
 // Integer exponentiation
 inline int ipow(int base, int exp) {
-  assert(base >= 0 && exp >= 0);
+  assert(exp >= 0);
   int res = 1;
   while (exp--)
     res *= base;
