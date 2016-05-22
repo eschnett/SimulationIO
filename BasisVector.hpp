@@ -32,7 +32,7 @@ public:
            basis()->basisvectors().count(name()) &&
            basis()->basisvectors().at(name()).get() == this &&
            direction() >= 0 &&
-           direction() < basis()->tangentspace()->dimension &&
+           direction() < basis()->tangentspace()->dimension() &&
            basis()->directions().count(direction()) &&
            basis()->directions().at(direction()).get() == this;
   }

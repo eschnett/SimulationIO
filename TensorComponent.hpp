@@ -23,38 +23,46 @@ class DiscreteFieldBlockComponent;
 
 class TensorComponent : public Common,
                         public std::enable_shared_from_this<TensorComponent> {
-public:
-  weak_ptr<TensorType> tensortype; // parent
-  int storage_index;
-  vector<int> indexvalues;
+  weak_ptr<TensorType> m_tensortype; // parent
+  int m_storage_index;
+  vector<int> m_indexvalues;
   NoBackLink<weak_ptr<DiscreteFieldBlockComponent>>
-      discretefieldblockcomponents;
+      m_discretefieldblockcomponents;
+
+public:
+  shared_ptr<TensorType> tensortype() const { return m_tensortype.lock(); }
+  int storage_index() const { return m_storage_index; }
+  vector<int> indexvalues() const { return m_indexvalues; }
+  NoBackLink<weak_ptr<DiscreteFieldBlockComponent>>
+  discretefieldblockcomponents() const {
+    return m_discretefieldblockcomponents;
+  }
 
   virtual bool invariant() const {
     bool inv =
-        Common::invariant() && bool(tensortype.lock()) &&
-        tensortype.lock()->tensorcomponents.count(name()) &&
-        tensortype.lock()->tensorcomponents.at(name()).get() == this &&
-        storage_index >= 0 &&
-        storage_index <
-            ipow(tensortype.lock()->dimension, tensortype.lock()->rank) &&
-        tensortype.lock()->storage_indices.count(storage_index) &&
-        tensortype.lock()->storage_indices.at(storage_index).get() == this &&
-        int(indexvalues.size()) == tensortype.lock()->rank;
-    for (int i = 0; i < int(indexvalues.size()); ++i)
-      inv &=
-          indexvalues[i] >= 0 && indexvalues[i] < tensortype.lock()->dimension;
+        Common::invariant() && bool(tensortype()) &&
+        tensortype()->tensorcomponents().count(name()) &&
+        tensortype()->tensorcomponents().at(name()).get() == this &&
+        storage_index() >= 0 &&
+        storage_index() <
+            ipow(tensortype()->dimension(), tensortype()->rank()) &&
+        tensortype()->storage_indices().count(storage_index()) &&
+        tensortype()->storage_indices().at(storage_index()).get() == this &&
+        int(indexvalues().size()) == tensortype()->rank();
+    for (int i = 0; i < int(indexvalues().size()); ++i)
+      inv &= indexvalues().at(i) >= 0 &&
+             indexvalues().at(i) < tensortype()->dimension();
     // Ensure all tensor components are distinct
-    for (const auto &tc : tensortype.lock()->tensorcomponents) {
+    for (const auto &tc : tensortype()->tensorcomponents()) {
       const auto &other = tc.second;
       if (other.get() == this)
         continue;
-      bool samesize = other->indexvalues.size() == indexvalues.size();
+      bool samesize = other->indexvalues().size() == indexvalues().size();
       inv &= samesize;
       if (samesize) {
         bool isequal = true;
-        for (int i = 0; i < int(indexvalues.size()); ++i)
-          isequal &= other->indexvalues[i] == indexvalues[i];
+        for (int i = 0; i < int(indexvalues().size()); ++i)
+          isequal &= other->indexvalues().at(i) == indexvalues().at(i);
         inv &= !isequal;
       }
     }
@@ -71,8 +79,8 @@ public:
   TensorComponent(hidden, const string &name,
                   const shared_ptr<TensorType> &tensortype, int storage_index,
                   const vector<int> &indexvalues)
-      : Common(name), tensortype(tensortype), storage_index(storage_index),
-        indexvalues(indexvalues) {}
+      : Common(name), m_tensortype(tensortype), m_storage_index(storage_index),
+        m_indexvalues(indexvalues) {}
   TensorComponent(hidden) : Common(hidden()) {}
 
 private:

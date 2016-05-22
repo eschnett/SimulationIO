@@ -26,22 +26,37 @@ class DiscreteFieldBlockComponent;
 class DiscreteFieldBlock
     : public Common,
       public std::enable_shared_from_this<DiscreteFieldBlock> {
-public:
   // Discrete field on a particular region (discretization block)
-  weak_ptr<DiscreteField> discretefield;               // parent
-  shared_ptr<DiscretizationBlock> discretizationblock; // with backlink
+  weak_ptr<DiscreteField> m_discretefield;               // parent
+  shared_ptr<DiscretizationBlock> m_discretizationblock; // with backlink
   map<string, shared_ptr<DiscreteFieldBlockComponent>>
-      discretefieldblockcomponents; // children
-  map<int, shared_ptr<DiscreteFieldBlockComponent>> storage_indices;
+      m_discretefieldblockcomponents; // children
+  map<int, shared_ptr<DiscreteFieldBlockComponent>> m_storage_indices;
+
+public:
+  shared_ptr<DiscreteField> discretefield() const {
+    return m_discretefield.lock();
+  }
+  shared_ptr<DiscretizationBlock> discretizationblock() const {
+    return m_discretizationblock;
+  }
+  const map<string, shared_ptr<DiscreteFieldBlockComponent>> &
+  discretefieldblockcomponents() const {
+    return m_discretefieldblockcomponents;
+  }
+  const map<int, shared_ptr<DiscreteFieldBlockComponent>> &
+  storage_indices() const {
+    return m_storage_indices;
+  }
 
   virtual bool invariant() const {
     bool inv =
-        Common::invariant() && bool(discretefield.lock()) &&
-        discretefield.lock()->discretefieldblocks.count(name()) &&
-        discretefield.lock()->discretefieldblocks.at(name()).get() == this &&
-        bool(discretizationblock) &&
-        discretizationblock->discretefieldblocks.nobacklink() &&
-        discretefieldblockcomponents.size() == storage_indices.size();
+        Common::invariant() && bool(discretefield()) &&
+        discretefield()->discretefieldblocks().count(name()) &&
+        discretefield()->discretefieldblocks().at(name()).get() == this &&
+        bool(discretizationblock()) &&
+        discretizationblock()->discretefieldblocks().nobacklink() &&
+        discretefieldblockcomponents().size() == storage_indices().size();
     return inv;
   }
 
@@ -55,8 +70,8 @@ public:
   DiscreteFieldBlock(hidden, const string &name,
                      const shared_ptr<DiscreteField> &discretefield,
                      const shared_ptr<DiscretizationBlock> &discretizationblock)
-      : Common(name), discretefield(discretefield),
-        discretizationblock(discretizationblock) {}
+      : Common(name), m_discretefield(discretefield),
+        m_discretizationblock(discretizationblock) {}
   DiscreteFieldBlock(hidden) : Common(hidden()) {}
 
 private:

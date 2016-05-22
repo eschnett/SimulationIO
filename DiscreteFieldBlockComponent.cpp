@@ -12,23 +12,24 @@ using std::ostringstream;
 void DiscreteFieldBlockComponent::read(
     const H5::CommonFG &loc, const string &entry,
     const shared_ptr<DiscreteFieldBlock> &discretefieldblock) {
-  this->discretefieldblock = discretefieldblock;
+  m_discretefieldblock = discretefieldblock;
   auto group = loc.openGroup(entry);
-  assert(H5::readAttribute<string>(
-             group, "type", discretefieldblock->discretefield.lock()
-                                ->field.lock()
-                                ->project.lock()
-                                ->enumtype) == "DiscreteFieldBlockComponent");
+  assert(
+      H5::readAttribute<string>(
+          group, "type",
+          discretefieldblock->discretefield()->field()->project()->enumtype) ==
+      "DiscreteFieldBlockComponent");
   H5::readAttribute(group, "name", m_name);
   assert(H5::readGroupAttribute<string>(group, "discretefieldblock", "name") ==
          discretefieldblock->name());
   // TODO: Read and interpret objects (shallowly) instead of naively only
   // looking at their names
-  tensorcomponent =
-      discretefieldblock->discretefield.lock()
-          ->field.lock()
-          ->tensortype->tensorcomponents.at(
-              H5::readGroupAttribute<string>(group, "tensorcomponent", "name"));
+  m_tensorcomponent =
+      discretefieldblock->discretefield()
+          ->field()
+          ->tensortype()
+          ->tensorcomponents()
+          .at(H5::readGroupAttribute<string>(group, "tensorcomponent", "name"));
   if (group.attrExists("data_origin")) {
     // "data" is an attribute
     H5::readAttribute(group, "data_origin", data_range_origin);
@@ -67,7 +68,7 @@ void DiscreteFieldBlockComponent::read(
       data_type = type_empty;
     }
   }
-  tensorcomponent->noinsert(shared_from_this());
+  m_tensorcomponent->noinsert(shared_from_this());
 }
 
 void DiscreteFieldBlockComponent::setData() {
@@ -119,8 +120,8 @@ void DiscreteFieldBlockComponent::setData(double origin,
 
 ostream &DiscreteFieldBlockComponent::output(ostream &os, int level) const {
   os << indent(level) << "DiscreteFieldBlockComponent " << quote(name())
-     << ": DiscreteFieldBlock " << quote(discretefieldblock.lock()->name())
-     << " TensorComponent " << quote(tensorcomponent->name()) << "\n";
+     << ": DiscreteFieldBlock " << quote(discretefieldblock()->name())
+     << " TensorComponent " << quote(tensorcomponent()->name()) << "\n";
   os << indent(level + 1) << "data: ";
   switch (data_type) {
   case type_empty:
@@ -166,12 +167,10 @@ void DiscreteFieldBlockComponent::write(const H5::CommonFG &loc,
                                         const H5::H5Location &parent) const {
   assert(invariant());
   auto group = loc.createGroup(name());
-  H5::createAttribute(group, "type", discretefieldblock.lock()
-                                         ->discretefield.lock()
-                                         ->field.lock()
-                                         ->project.lock()
-                                         ->enumtype,
-                      "DiscreteFieldBlockComponent");
+  H5::createAttribute(
+      group, "type",
+      discretefieldblock()->discretefield()->field()->project()->enumtype,
+      "DiscreteFieldBlockComponent");
   H5::createAttribute(group, "name", name());
   // H5::createHardLink(group, "discretefieldblock", parent, ".");
   H5::createHardLink(group, "..", parent, ".");
@@ -183,7 +182,7 @@ void DiscreteFieldBlockComponent::write(const H5::CommonFG &loc,
   H5::createSoftLink(
       group, "tensorcomponent",
       string("../discretefield/field/tensortype/tensorcomponents/") +
-          tensorcomponent->name());
+          tensorcomponent()->name());
   switch (data_type) {
   case type_empty: // do nothing
     break;
@@ -235,12 +234,12 @@ void DiscreteFieldBlockComponent::write(const H5::CommonFG &loc,
 }
 
 string DiscreteFieldBlockComponent::getPath() const {
-  auto discretefield = discretefieldblock.lock()->discretefield;
-  auto field = discretefield.lock()->field;
+  auto discretefield = discretefieldblock()->discretefield();
+  auto field = discretefield->field();
   ostringstream buf;
-  buf << "fields/" << field.lock()->name() << "/discretefields/"
-      << discretefield.lock()->name() << "/discretefieldblocks/"
-      << discretefieldblock.lock()->name() << "/discretefieldblockcomponents/"
+  buf << "fields/" << field->name() << "/discretefields/"
+      << discretefield->name() << "/discretefieldblocks/"
+      << discretefieldblock()->name() << "/discretefieldblockcomponents/"
       << name();
   return buf.str();
 }

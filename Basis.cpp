@@ -11,11 +11,11 @@ void Basis::read(const H5::CommonFG &loc, const string &entry,
   m_tangentspace = tangentspace;
   auto group = loc.openGroup(entry);
   assert(H5::readAttribute<string>(
-             group, "type", tangentspace->project.lock()->enumtype) == "Basis");
+             group, "type", tangentspace->project()->enumtype) == "Basis");
   H5::readAttribute(group, "name", m_name);
   assert(H5::readGroupAttribute<string>(group, "tangentspace", "name") ==
          tangentspace->name());
-  m_configuration = tangentspace->project.lock()->configurations.at(
+  m_configuration = tangentspace->project()->configurations().at(
       H5::readGroupAttribute<string>(group, "configuration", "name"));
   assert(H5::readGroupAttribute<string>(
              group, string("configuration/bases/") + name(), "name") == name());
@@ -39,7 +39,7 @@ ostream &Basis::output(ostream &os, int level) const {
 void Basis::write(const H5::CommonFG &loc, const H5::H5Location &parent) const {
   assert(invariant());
   auto group = loc.createGroup(name());
-  H5::createAttribute(group, "type", tangentspace()->project.lock()->enumtype,
+  H5::createAttribute(group, "type", tangentspace()->project()->enumtype,
                       "Basis");
   H5::createAttribute(group, "name", name());
   // H5::createHardLink(group, "tangentspace", parent, ".");

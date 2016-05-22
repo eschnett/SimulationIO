@@ -25,15 +25,19 @@ class ParameterValue;
 
 class Parameter : public Common,
                   public std::enable_shared_from_this<Parameter> {
-public:
-  weak_ptr<Project> project;                               // parent
-  map<string, shared_ptr<ParameterValue>> parametervalues; // children
+  weak_ptr<Project> m_project;                               // parent
+  map<string, shared_ptr<ParameterValue>> m_parametervalues; // children
   // type, range?, description?
+public:
+  shared_ptr<Project> project() const { return m_project.lock(); }
+  const map<string, shared_ptr<ParameterValue>> &parametervalues() const {
+    return m_parametervalues;
+  }
 
   virtual bool invariant() const {
-    return Common::invariant() && bool(project.lock()) &&
-           project.lock()->parameters.count(name()) &&
-           project.lock()->parameters.at(name()).get() == this;
+    return Common::invariant() && bool(project()) &&
+           project()->parameters().count(name()) &&
+           project()->parameters().at(name()).get() == this;
   }
 
   Parameter() = delete;
@@ -44,7 +48,7 @@ public:
 
   friend class Project;
   Parameter(hidden, const string &name, const shared_ptr<Project> &project)
-      : Common(name), project(project) {}
+      : Common(name), m_project(project) {}
   Parameter(hidden) : Common(hidden()) {}
 
 private:

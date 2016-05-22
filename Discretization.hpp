@@ -27,21 +27,41 @@ class SubDiscretization;
 
 class Discretization : public Common,
                        public std::enable_shared_from_this<Discretization> {
+  weak_ptr<Manifold> m_manifold;             // parent
+  shared_ptr<Configuration> m_configuration; // with backlink
+  map<string, shared_ptr<DiscretizationBlock>>
+      m_discretizationblocks;                                       // children
+  map<string, weak_ptr<SubDiscretization>> m_child_discretizations; // backlinks
+  map<string, weak_ptr<SubDiscretization>>
+      m_parent_discretizations; // backlinks
+  NoBackLink<weak_ptr<DiscreteField>> m_discretefields;
+
 public:
-  weak_ptr<Manifold> manifold;             // parent
-  shared_ptr<Configuration> configuration; // with backlink
-  map<string, shared_ptr<DiscretizationBlock>> discretizationblocks; // children
-  map<string, weak_ptr<SubDiscretization>> child_discretizations;  // backlinks
-  map<string, weak_ptr<SubDiscretization>> parent_discretizations; // backlinks
-  NoBackLink<weak_ptr<DiscreteField>> discretefields;
+  shared_ptr<Manifold> manifold() const { return m_manifold.lock(); }
+  shared_ptr<Configuration> configuration() const { return m_configuration; }
+  const map<string, shared_ptr<DiscretizationBlock>> &
+  discretizationblocks() const {
+    return m_discretizationblocks;
+  }
+  const map<string, weak_ptr<SubDiscretization>> &
+  child_discretizations() const {
+    return m_child_discretizations;
+  }
+  const map<string, weak_ptr<SubDiscretization>> &
+  parent_discretizations() const {
+    return m_parent_discretizations;
+  }
+  NoBackLink<weak_ptr<DiscreteField>> discretefields() const {
+    return m_discretefields;
+  }
 
   virtual bool invariant() const {
-    return Common::invariant() && bool(manifold.lock()) &&
-           manifold.lock()->discretizations().count(name()) &&
-           manifold.lock()->discretizations().at(name()).get() == this &&
-           bool(configuration) &&
-           configuration->discretizations().count(name()) &&
-           configuration->discretizations().at(name()).lock().get() == this;
+    return Common::invariant() && bool(manifold()) &&
+           manifold()->discretizations().count(name()) &&
+           manifold()->discretizations().at(name()).get() == this &&
+           bool(configuration()) &&
+           configuration()->discretizations().count(name()) &&
+           configuration()->discretizations().at(name()).lock().get() == this;
   }
 
   Discretization() = delete;
@@ -54,7 +74,7 @@ public:
   Discretization(hidden, const string &name,
                  const shared_ptr<Manifold> &manifold,
                  const shared_ptr<Configuration> &configuration)
-      : Common(name), manifold(manifold), configuration(configuration) {}
+      : Common(name), m_manifold(manifold), m_configuration(configuration) {}
   Discretization(hidden) : Common(hidden()) {}
 
 private:
@@ -95,11 +115,11 @@ private:
   friend class SubDiscretization;
   void insertChild(const string &name,
                    const shared_ptr<SubDiscretization> &subdiscretization) {
-    checked_emplace(child_discretizations, name, subdiscretization);
+    checked_emplace(m_child_discretizations, name, subdiscretization);
   }
   void insertParent(const string &name,
                     const shared_ptr<SubDiscretization> &subdiscretization) {
-    checked_emplace(parent_discretizations, name, subdiscretization);
+    checked_emplace(m_parent_discretizations, name, subdiscretization);
   }
   friend class DiscreteField;
   void noinsert(const shared_ptr<DiscreteField> &discretefield) {}

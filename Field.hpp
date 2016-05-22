@@ -31,29 +31,42 @@ class TensorType;
 class DiscreteField;
 
 class Field : public Common, public std::enable_shared_from_this<Field> {
+  weak_ptr<Project> m_project;                             // parent
+  shared_ptr<Configuration> m_configuration;               // with backlink
+  shared_ptr<Manifold> m_manifold;                         // with backlink
+  shared_ptr<TangentSpace> m_tangentspace;                 // with backlink
+  shared_ptr<TensorType> m_tensortype;                     // without backlink
+  map<string, shared_ptr<DiscreteField>> m_discretefields; // children
+  NoBackLink<CoordinateField> m_coordinatefields;
+
 public:
-  weak_ptr<Project> project;                             // parent
-  shared_ptr<Configuration> configuration;               // with backlink
-  shared_ptr<Manifold> manifold;                         // with backlink
-  shared_ptr<TangentSpace> tangentspace;                 // with backlink
-  shared_ptr<TensorType> tensortype;                     // without backlink
-  map<string, shared_ptr<DiscreteField>> discretefields; // children
-  NoBackLink<CoordinateField> coordinatefields;
+  shared_ptr<Project> project() const { return m_project.lock(); }
+  shared_ptr<Configuration> configuration() const { return m_configuration; }
+  shared_ptr<Manifold> manifold() const { return m_manifold; }
+  shared_ptr<TangentSpace> tangentspace() const { return m_tangentspace; }
+  shared_ptr<TensorType> tensortype() const { return m_tensortype; }
+  const map<string, shared_ptr<DiscreteField>> discretefields() const {
+    return m_discretefields;
+  }
+  NoBackLink<CoordinateField> coordinatefields() const {
+    return m_coordinatefields;
+  }
 
   virtual bool invariant() const {
-    bool inv = Common::invariant() && bool(project.lock()) &&
-               project.lock()->fields.count(name()) &&
-               project.lock()->fields.at(name()).get() == this &&
-               bool(configuration) && configuration->fields().count(name()) &&
-               configuration->fields().at(name()).lock().get() == this &&
-               bool(manifold) && manifold->fields().count(name()) &&
-               manifold->fields().at(name()).lock().get() == this &&
-               bool(tangentspace) && tangentspace->fields().count(name()) &&
-               tangentspace->fields().at(name()).lock().get() == this &&
-               bool(tensortype) &&
-               tangentspace->dimension == tensortype->dimension &&
-               tensortype->fields.nobacklink();
-    for (const auto &df : discretefields)
+    bool inv = Common::invariant() && bool(project()) &&
+               project()->fields().count(name()) &&
+               project()->fields().at(name()).get() == this &&
+               bool(configuration()) &&
+               configuration()->fields().count(name()) &&
+               configuration()->fields().at(name()).lock().get() == this &&
+               bool(manifold()) && manifold()->fields().count(name()) &&
+               manifold()->fields().at(name()).lock().get() == this &&
+               bool(tangentspace()) && tangentspace()->fields().count(name()) &&
+               tangentspace()->fields().at(name()).lock().get() == this &&
+               bool(tensortype()) &&
+               tangentspace()->dimension() == tensortype()->dimension() &&
+               tensortype()->fields().nobacklink();
+    for (const auto &df : discretefields())
       inv &= !df.first.empty() && bool(df.second);
     return inv;
   }
@@ -70,9 +83,9 @@ public:
         const shared_ptr<Manifold> &manifold,
         const shared_ptr<TangentSpace> &tangentspace,
         const shared_ptr<TensorType> &tensortype)
-      : Common(name), project(project), configuration(configuration),
-        manifold(manifold), tangentspace(tangentspace), tensortype(tensortype) {
-  }
+      : Common(name), m_project(project), m_configuration(configuration),
+        m_manifold(manifold), m_tangentspace(tangentspace),
+        m_tensortype(tensortype) {}
   Field(hidden) : Common(hidden()) {}
 
 private:

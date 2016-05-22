@@ -38,15 +38,34 @@ class Field;
 // class CoordinateBasis;
 
 class Project : public Common, public std::enable_shared_from_this<Project> {
-public:
-  map<string, shared_ptr<Parameter>> parameters;               // children
-  map<string, shared_ptr<Configuration>> configurations;       // children
-  map<string, shared_ptr<TensorType>> tensortypes;             // children
-  map<string, shared_ptr<Manifold>> manifolds;                 // children
-  map<string, shared_ptr<TangentSpace>> tangentspaces;         // children
-  map<string, shared_ptr<Field>> fields;                       // children
-  map<string, shared_ptr<CoordinateSystem>> coordinatesystems; // children
+  map<string, shared_ptr<Parameter>> m_parameters;               // children
+  map<string, shared_ptr<Configuration>> m_configurations;       // children
+  map<string, shared_ptr<TensorType>> m_tensortypes;             // children
+  map<string, shared_ptr<Manifold>> m_manifolds;                 // children
+  map<string, shared_ptr<TangentSpace>> m_tangentspaces;         // children
+  map<string, shared_ptr<Field>> m_fields;                       // children
+  map<string, shared_ptr<CoordinateSystem>> m_coordinatesystems; // children
   // TODO: coordinatebasis
+public:
+  const map<string, shared_ptr<Parameter>> &parameters() const {
+    return m_parameters;
+  }
+  const map<string, shared_ptr<Configuration>> &configurations() const {
+    return m_configurations;
+  }
+  const map<string, shared_ptr<TensorType>> &tensortypes() const {
+    return m_tensortypes;
+  }
+  const map<string, shared_ptr<Manifold>> &manifolds() const {
+    return m_manifolds;
+  }
+  const map<string, shared_ptr<TangentSpace>> &tangentspaces() const {
+    return m_tangentspaces;
+  }
+  const map<string, shared_ptr<Field>> &fields() const { return m_fields; }
+  const map<string, shared_ptr<CoordinateSystem>> &coordinatesystems() const {
+    return m_coordinatesystems;
+  }
 
   mutable H5::EnumType enumtype;
   mutable H5::CompType rangetype;

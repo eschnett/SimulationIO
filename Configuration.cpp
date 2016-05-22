@@ -26,8 +26,8 @@ void Configuration::read(const H5::CommonFG &loc, const string &entry,
                                               const string &valname) {
     auto parname =
         H5::readGroupAttribute<string>(group, valname + "/parameter", "name");
-    auto parameter = project->parameters.at(parname);
-    auto parametervalue = parameter->parametervalues.at(valname);
+    auto parameter = project->parameters().at(parname);
+    auto parametervalue = parameter->parametervalues().at(valname);
     assert(H5::readGroupAttribute<string>(
                group, valname + string("/configurations/") + name(), "name") ==
            name());
@@ -49,7 +49,7 @@ ostream &Configuration::output(ostream &os, int level) const {
   os << indent(level) << "Configuration " << quote(name()) << "\n";
   for (const auto &val : parametervalues())
     os << indent(level + 1) << "Parameter "
-       << quote(val.second->parameter.lock()->name()) << " ParameterValue "
+       << quote(val.second->parameter()->name()) << " ParameterValue "
        << quote(val.second->name()) << "\n";
   for (const auto &b : bases())
     os << indent(level + 1) << "Basis " << quote(b.second.lock()->name())
@@ -87,14 +87,12 @@ void Configuration::write(const H5::CommonFG &loc,
   auto val_group = group.createGroup("parametervalues");
   for (const auto &val : parametervalues()) {
     H5::createHardLink(val_group, val.second->name(), parent,
-                       string("parameters/") +
-                           val.second->parameter.lock()->name() +
+                       string("parameters/") + val.second->parameter()->name() +
                            "/parametervalues/" + val.second->name());
-    H5::createHardLink(group, string("project/parameters/") +
-                                  val.second->parameter.lock()->name() +
-                                  "/parametervalues/" + val.second->name() +
-                                  "/configurations",
-                       name(), group, ".");
+    H5::createHardLink(
+        group, string("project/parameters/") + val.second->parameter()->name() +
+                   "/parametervalues/" + val.second->name() + "/configurations",
+        name(), group, ".");
   }
   group.createGroup("bases");
   group.createGroup("coordinatesystems");
@@ -108,8 +106,7 @@ void Configuration::write(const H5::CommonFG &loc,
 void Configuration::insertParameterValue(
     const shared_ptr<ParameterValue> &parametervalue) {
   for (const auto &val : parametervalues())
-    assert(val.second->parameter.lock().get() !=
-           parametervalue->parameter.lock().get());
+    assert(val.second->parameter().get() != parametervalue->parameter().get());
   checked_emplace(m_parametervalues, parametervalue->name(), parametervalue);
   parametervalue->insert(shared_from_this());
 }

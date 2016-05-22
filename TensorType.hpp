@@ -27,21 +27,32 @@ class TensorComponent;
 
 class TensorType : public Common,
                    public std::enable_shared_from_this<TensorType> {
+  weak_ptr<Project> m_project; // parent
+  int m_dimension;
+  int m_rank;
+  map<string, shared_ptr<TensorComponent>> m_tensorcomponents; // children
+  map<int, shared_ptr<TensorComponent>> m_storage_indices;
+  NoBackLink<weak_ptr<Field>> m_fields;
+
 public:
-  weak_ptr<Project> project; // parent
-  int dimension;
-  int rank;
-  map<string, shared_ptr<TensorComponent>> tensorcomponents; // children
-  map<int, shared_ptr<TensorComponent>> storage_indices;
-  NoBackLink<weak_ptr<Field>> fields;
+  shared_ptr<Project> project() const { return m_project.lock(); }
+  int dimension() const { return m_dimension; }
+  int rank() const { return m_rank; }
+  const map<string, shared_ptr<TensorComponent>> &tensorcomponents() const {
+    return m_tensorcomponents;
+  }
+  const map<int, shared_ptr<TensorComponent>> &storage_indices() const {
+    return m_storage_indices;
+  }
+  NoBackLink<weak_ptr<Field>> fields() const { return m_fields; }
 
   virtual bool invariant() const {
-    bool inv = Common::invariant() && bool(project.lock()) &&
-               project.lock()->tensortypes.count(name()) &&
-               project.lock()->tensortypes.at(name()).get() == this &&
-               dimension >= 0 && rank >= 0 &&
-               int(tensorcomponents.size()) <= ipow(dimension, rank);
-    for (const auto &tc : tensorcomponents)
+    bool inv = Common::invariant() && bool(project()) &&
+               project()->tensortypes().count(name()) &&
+               project()->tensortypes().at(name()).get() == this &&
+               dimension() >= 0 && rank() >= 0 &&
+               int(tensorcomponents().size()) <= ipow(dimension(), rank());
+    for (const auto &tc : tensorcomponents())
       inv &= !tc.first.empty() && bool(tc.second);
     return inv;
   }
@@ -55,7 +66,8 @@ public:
   friend class Project;
   TensorType(hidden, const string &name, const shared_ptr<Project> &project,
              int dimension, int rank)
-      : Common(name), project(project), dimension(dimension), rank(rank) {}
+      : Common(name), m_project(project), m_dimension(dimension), m_rank(rank) {
+  }
   TensorType(hidden) : Common(hidden()) {}
 
 private:

@@ -36,23 +36,21 @@ public:
   shared_ptr<TangentSpace> tangentspace() const {
     return m_tangentspace.lock();
   }
-  const shared_ptr<Configuration> &configuration() const {
-    return m_configuration;
-  }
+  shared_ptr<Configuration> configuration() const { return m_configuration; }
   const map<string, shared_ptr<BasisVector>> &basisvectors() const {
     return m_basisvectors;
   }
   const map<int, shared_ptr<BasisVector>> &directions() const {
     return m_directions;
   }
-  const NoBackLink<weak_ptr<DiscreteField>> &discretefields() const {
+  NoBackLink<weak_ptr<DiscreteField>> discretefields() const {
     return m_discretefields;
   }
 
   virtual bool invariant() const {
     return Common::invariant() && bool(tangentspace()) &&
-           tangentspace()->bases.count(name()) &&
-           tangentspace()->bases.at(name()).get() == this &&
+           tangentspace()->bases().count(name()) &&
+           tangentspace()->bases().at(name()).get() == this &&
            bool(configuration()) && configuration()->bases().count(name()) &&
            configuration()->bases().at(name()).lock().get() == this;
     // int(basisvectors.size()) == tangentspace->dimension

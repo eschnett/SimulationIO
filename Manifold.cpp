@@ -24,7 +24,7 @@ void Manifold::read(const H5::CommonFG &loc, const string &entry,
   H5::readAttribute(group, "name", m_name);
   assert(H5::readGroupAttribute<string>(group, "project", "name") ==
          project->name());
-  m_configuration = project->configurations.at(
+  m_configuration = project->configurations().at(
       H5::readGroupAttribute<string>(group, "configuration", "name"));
   assert(H5::readGroupAttribute<string>(
              group, string("configuration/manifolds/") + name(), "name") ==

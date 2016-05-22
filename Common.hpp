@@ -184,7 +184,7 @@ protected:
   string m_name;
 
 public:
-  const string &name() const { return m_name; }
+  string name() const { return m_name; }
 
   virtual bool invariant() const { return !name().empty(); }
 

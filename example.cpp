@@ -44,8 +44,8 @@ int main(int argc, char **argv) {
 
   // TensorTypes
   project->createStandardTensorTypes();
-  auto scalar3d = project->tensortypes.at("Scalar3D");
-  auto vector3d = project->tensortypes.at("Vector3D");
+  auto scalar3d = project->tensortypes().at("Scalar3D");
+  auto vector3d = project->tensortypes().at("Vector3D");
 
   // Manifold and TangentSpace, both 3D
   auto manifold = project->createManifold("domain", configuration, dim);
@@ -93,7 +93,7 @@ int main(int argc, char **argv) {
     for (int p = 0; p < ngrids; ++p) {
       auto block = discretefield->createDiscreteFieldBlock(
           discretefield->name() + "-" + blocks.at(p)->name(), blocks.at(p));
-      auto scalar3d_component = scalar3d->storage_indices.at(0);
+      auto scalar3d_component = scalar3d->storage_indices().at(0);
       auto component = block->createDiscreteFieldBlockComponent(
           "scalar", scalar3d_component);
       const hsize_t dims[dim] = {nlk, nlj, nli};
@@ -124,12 +124,12 @@ int main(int argc, char **argv) {
     auto vel_block = discretized_vel->createDiscreteFieldBlock(
         vel->name() + "-" + blocks.at(i)->name(), blocks.at(i));
     // Create tensor components for this region
-    auto scalar3d_component = scalar3d->storage_indices.at(0);
+    auto scalar3d_component = scalar3d->storage_indices().at(0);
     auto rho_component = rho_block->createDiscreteFieldBlockComponent(
         "scalar", scalar3d_component);
     rho_component->setData(datatype, dataspace);
     for (int d = 0; d < dim; ++d) {
-      auto vector3d_component = vector3d->storage_indices.at(d);
+      auto vector3d_component = vector3d->storage_indices().at(d);
       auto vel_component = vel_block->createDiscreteFieldBlockComponent(
           dirnames[d], vector3d_component);
       vel_component->setData(datatype, dataspace);
@@ -175,29 +175,30 @@ int main(int argc, char **argv) {
             }
         // Write coordinates
         for (int d = 0; d < dim; ++d) {
-          auto field = coordinates[d]->field;
-          auto discretefield = field->discretefields.at(field->name());
-          auto block = discretefield->discretefieldblocks.at(
+          auto field = coordinates[d]->field();
+          auto discretefield = field->discretefields().at(field->name());
+          auto block = discretefield->discretefieldblocks().at(
               discretefield->name() + "-" + blocks.at(p)->name());
-          auto component = block->discretefieldblockcomponents.at("scalar");
+          auto component = block->discretefieldblockcomponents().at("scalar");
           component->writeData(d == 0 ? coordx : d == 1 ? coordy : coordz);
         }
         // Write rho
         {
           auto field = rho;
-          auto discretefield = field->discretefields.at(field->name());
-          auto block = discretefield->discretefieldblocks.at(
+          auto discretefield = field->discretefields().at(field->name());
+          auto block = discretefield->discretefieldblocks().at(
               discretefield->name() + "-" + blocks.at(p)->name());
-          auto component = block->discretefieldblockcomponents.at("scalar");
+          auto component = block->discretefieldblockcomponents().at("scalar");
           component->writeData(datarho);
         }
         // Write velocity
         for (int d = 0; d < dim; ++d) {
           auto field = vel;
-          auto discretefield = field->discretefields.at(field->name());
-          auto block = discretefield->discretefieldblocks.at(
+          auto discretefield = field->discretefields().at(field->name());
+          auto block = discretefield->discretefieldblocks().at(
               discretefield->name() + "-" + blocks.at(p)->name());
-          auto component = block->discretefieldblockcomponents.at(dirnames[d]);
+          auto component =
+              block->discretefieldblockcomponents().at(dirnames[d]);
           component->writeData(d == 0 ? datavelx : d == 1 ? datavely
                                                           : datavelz);
         }

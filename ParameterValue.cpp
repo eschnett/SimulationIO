@@ -9,11 +9,11 @@ namespace SimulationIO {
 
 void ParameterValue::read(const H5::CommonFG &loc, const string &entry,
                           const shared_ptr<Parameter> &parameter) {
-  this->parameter = parameter;
+  m_parameter = parameter;
   value_type = type_empty;
   auto group = loc.openGroup(entry);
   assert(H5::readAttribute<string>(group, "type",
-                                   parameter->project.lock()->enumtype) ==
+                                   parameter->project()->enumtype) ==
          "ParameterValue");
   H5::readAttribute(group, "name", m_name);
   assert(H5::readGroupAttribute<string>(group, "parameter", "name") ==
@@ -61,7 +61,7 @@ void ParameterValue::setValue(const string &s) {
 
 ostream &ParameterValue::output(ostream &os, int level) const {
   os << indent(level) << "ParameterValue " << quote(name()) << ": Parameter "
-     << quote(parameter.lock()->name()) << "\n"
+     << quote(parameter()->name()) << "\n"
      << indent(level + 1) << "value: ";
   switch (value_type) {
   case type_empty:
@@ -87,7 +87,7 @@ void ParameterValue::write(const H5::CommonFG &loc,
                            const H5::H5Location &parent) const {
   assert(invariant());
   auto group = loc.createGroup(name());
-  H5::createAttribute(group, "type", parameter.lock()->project.lock()->enumtype,
+  H5::createAttribute(group, "type", parameter()->project()->enumtype,
                       "ParameterValue");
   H5::createAttribute(group, "name", name());
   // H5::createHardLink(group, "parameter", parent,
@@ -116,6 +116,6 @@ void ParameterValue::write(const H5::CommonFG &loc,
 }
 
 void ParameterValue::insert(const shared_ptr<Configuration> &configuration) {
-  checked_emplace(configurations, configuration->name(), configuration);
+  checked_emplace(m_configurations, configuration->name(), configuration);
 }
 }

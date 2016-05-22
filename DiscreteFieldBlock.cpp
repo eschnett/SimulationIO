@@ -9,32 +9,32 @@ namespace SimulationIO {
 
 void DiscreteFieldBlock::read(const H5::CommonFG &loc, const string &entry,
                               const shared_ptr<DiscreteField> &discretefield) {
-  this->discretefield = discretefield;
+  m_discretefield = discretefield;
   auto group = loc.openGroup(entry);
   assert(H5::readAttribute<string>(
-             group, "type",
-             discretefield->field.lock()->project.lock()->enumtype) ==
+             group, "type", discretefield->field()->project()->enumtype) ==
          "DiscreteFieldBlock");
   H5::readAttribute(group, "name", m_name);
   assert(H5::readGroupAttribute<string>(group, "discretefield", "name") ==
          discretefield->name());
   // TODO: Read and interpret objects (shallowly) instead of naively only
   // looking at their names
-  discretizationblock = discretefield->discretization->discretizationblocks.at(
-      H5::readGroupAttribute<string>(group, "discretizationblock", "name"));
+  m_discretizationblock =
+      discretefield->discretization()->discretizationblocks().at(
+          H5::readGroupAttribute<string>(group, "discretizationblock", "name"));
   H5::readGroup(group, "discretefieldblockcomponents",
                 [&](const H5::Group &group, const string &name) {
                   readDiscreteFieldBlockComponent(group, name);
                 });
-  discretizationblock->noinsert(shared_from_this());
+  m_discretizationblock->noinsert(shared_from_this());
   // TODO: check storage_indices
 }
 
 ostream &DiscreteFieldBlock::output(ostream &os, int level) const {
   os << indent(level) << "DiscreteFieldBlock " << quote(name())
-     << ": DiscreteField " << quote(discretefield.lock()->name())
-     << " DiscretizationBlock " << quote(discretizationblock->name()) << "\n";
-  for (const auto &dfbd : discretefieldblockcomponents)
+     << ": DiscreteField " << quote(discretefield()->name())
+     << " DiscretizationBlock " << quote(discretizationblock()->name()) << "\n";
+  for (const auto &dfbd : discretefieldblockcomponents())
     dfbd.second->output(os, level + 1);
   return os;
 }
@@ -43,10 +43,9 @@ void DiscreteFieldBlock::write(const H5::CommonFG &loc,
                                const H5::H5Location &parent) const {
   assert(invariant());
   auto group = loc.createGroup(name());
-  H5::createAttribute(
-      group, "type",
-      discretefield.lock()->field.lock()->project.lock()->enumtype,
-      "DiscreteFieldBlock");
+  H5::createAttribute(group, "type",
+                      discretefield()->field()->project()->enumtype,
+                      "DiscreteFieldBlock");
   H5::createAttribute(group, "name", name());
   // H5::createHardLink(group, "discretefield", parent, ".");
   H5::createHardLink(group, "..", parent, ".");
@@ -56,9 +55,9 @@ void DiscreteFieldBlock::write(const H5::CommonFG &loc,
   //                        discretizationblock->name());
   H5::createSoftLink(group, "discretizationblock",
                      string("../discretization/discretizationblocks/") +
-                         discretizationblock->name());
+                         discretizationblock()->name());
   H5::createGroup(group, "discretefieldblockcomponents",
-                  discretefieldblockcomponents);
+                  discretefieldblockcomponents());
   // TODO: write storage_indices
 }
 
@@ -67,12 +66,13 @@ DiscreteFieldBlock::createDiscreteFieldBlockComponent(
     const string &name, const shared_ptr<TensorComponent> &tensorcomponent) {
   auto discretefieldblockcomponent = DiscreteFieldBlockComponent::create(
       name, shared_from_this(), tensorcomponent);
-  checked_emplace(discretefieldblockcomponents,
+  checked_emplace(m_discretefieldblockcomponents,
                   discretefieldblockcomponent->name(),
                   discretefieldblockcomponent);
-  checked_emplace(storage_indices,
-                  discretefieldblockcomponent->tensorcomponent->storage_index,
-                  discretefieldblockcomponent);
+  checked_emplace(
+      m_storage_indices,
+      discretefieldblockcomponent->tensorcomponent()->storage_index(),
+      discretefieldblockcomponent);
   assert(discretefieldblockcomponent->invariant());
   return discretefieldblockcomponent;
 }
@@ -82,12 +82,13 @@ DiscreteFieldBlock::readDiscreteFieldBlockComponent(const H5::CommonFG &loc,
                                                     const string &entry) {
   auto discretefieldblockcomponent =
       DiscreteFieldBlockComponent::create(loc, entry, shared_from_this());
-  checked_emplace(discretefieldblockcomponents,
+  checked_emplace(m_discretefieldblockcomponents,
                   discretefieldblockcomponent->name(),
                   discretefieldblockcomponent);
-  checked_emplace(storage_indices,
-                  discretefieldblockcomponent->tensorcomponent->storage_index,
-                  discretefieldblockcomponent);
+  checked_emplace(
+      m_storage_indices,
+      discretefieldblockcomponent->tensorcomponent()->storage_index(),
+      discretefieldblockcomponent);
   assert(discretefieldblockcomponent->invariant());
   return discretefieldblockcomponent;
 }

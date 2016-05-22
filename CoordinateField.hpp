@@ -21,20 +21,25 @@ namespace SimulationIO {
 
 class CoordinateField : public Common,
                         public std::enable_shared_from_this<CoordinateField> {
+  weak_ptr<CoordinateSystem> m_coordinatesystem; // parent
+  int m_direction;
+  shared_ptr<Field> m_field; // no backlink
 public:
-  weak_ptr<CoordinateSystem> coordinatesystem; // parent
-  int direction;
-  shared_ptr<Field> field; // no backlink
+  shared_ptr<CoordinateSystem> coordinatesystem() const {
+    return m_coordinatesystem.lock();
+  }
+  int direction() const { return m_direction; }
+  const shared_ptr<Field> &field() const { return m_field; }
 
   virtual bool invariant() const {
-    return Common::invariant() && bool(coordinatesystem.lock()) &&
-           coordinatesystem.lock()->coordinatefields.count(name()) &&
-           coordinatesystem.lock()->coordinatefields.at(name()).get() == this &&
-           direction >= 0 &&
-           direction < coordinatesystem.lock()->manifold->dimension() &&
-           coordinatesystem.lock()->directions.count(direction) &&
-           coordinatesystem.lock()->directions.at(direction).get() == this &&
-           bool(field) && field->coordinatefields.nobacklink();
+    return Common::invariant() && bool(coordinatesystem()) &&
+           coordinatesystem()->coordinatefields().count(name()) &&
+           coordinatesystem()->coordinatefields().at(name()).get() == this &&
+           direction() >= 0 &&
+           direction() < coordinatesystem()->manifold()->dimension() &&
+           coordinatesystem()->directions().count(direction()) &&
+           coordinatesystem()->directions().at(direction()).get() == this &&
+           bool(field()) && field()->coordinatefields().nobacklink();
     // TODO: Ensure that the field lives on the same manifold
     // TODO: Ensure that all fields of this coordinate system are distinct
     // TODO: Ensure the field is a scalar
@@ -50,8 +55,8 @@ public:
   CoordinateField(hidden, const string &name,
                   const shared_ptr<CoordinateSystem> &coordinatesystem,
                   int direction, const shared_ptr<Field> &field)
-      : Common(name), coordinatesystem(coordinatesystem), direction(direction),
-        field(field) {}
+      : Common(name), m_coordinatesystem(coordinatesystem),
+        m_direction(direction), m_field(field) {}
   CoordinateField(hidden) : Common(hidden()) {}
 
 private:

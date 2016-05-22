@@ -30,8 +30,8 @@ int main(int argc, char **argv) {
 
   // TensorTypes
   project->createStandardTensorTypes();
-  auto scalar3d = project->tensortypes.at("Scalar3D");
-  auto vector3d = project->tensortypes.at("Vector3D");
+  auto scalar3d = project->tensortypes().at("Scalar3D");
+  auto vector3d = project->tensortypes().at("Vector3D");
 
   // Manifold and TangentSpace, both 3D
   const int dim = 3;
@@ -77,7 +77,7 @@ int main(int argc, char **argv) {
       auto field_block = discretefield->createDiscreteFieldBlock(
           discretefield->name() + "-" + blocks.at(i)->name(), blocks.at(i));
       for (int d = 0; d < dim; ++d) {
-        auto vector3d_component = vector3d->storage_indices.at(d);
+        auto vector3d_component = vector3d->storage_indices().at(d);
         auto field_component = field_block->createDiscreteFieldBlockComponent(
             field_block->name() + "-" + dirnames[d], vector3d_component);
         (void)field_component;

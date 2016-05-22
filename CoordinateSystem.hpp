@@ -25,23 +25,33 @@ class CoordinateField;
 
 class CoordinateSystem : public Common,
                          public std::enable_shared_from_this<CoordinateSystem> {
+  weak_ptr<Project> m_project;                                 // parent
+  shared_ptr<Configuration> m_configuration;                   // with backlink
+  shared_ptr<Manifold> m_manifold;                             // with backlink
+  map<string, shared_ptr<CoordinateField>> m_coordinatefields; // children
+  map<int, shared_ptr<CoordinateField>> m_directions;
+  // map<string, shared_ptr<CoordinateBasis>> m_coordinatebases;
 public:
-  weak_ptr<Project> project;                                 // parent
-  shared_ptr<Configuration> configuration;                   // with backlink
-  shared_ptr<Manifold> manifold;                             // with backlink
-  map<string, shared_ptr<CoordinateField>> coordinatefields; // children
-  map<int, shared_ptr<CoordinateField>> directions;
-  // map<string, shared_ptr<CoordinateBasis>> coordinatebases;
+  shared_ptr<Project> project() const { return m_project.lock(); }
+  shared_ptr<Configuration> configuration() const { return m_configuration; }
+  shared_ptr<Manifold> manifold() const { return m_manifold; }
+  const map<string, shared_ptr<CoordinateField>> &coordinatefields() const {
+    return m_coordinatefields;
+  }
+  const map<int, shared_ptr<CoordinateField>> &directions() const {
+    return m_directions;
+  }
 
   virtual bool invariant() const {
-    return Common::invariant() && bool(project.lock()) &&
-           project.lock()->coordinatesystems.count(name()) &&
-           project.lock()->coordinatesystems.at(name()).get() == this &&
-           bool(configuration) &&
-           configuration->coordinatesystems().count(name()) &&
-           configuration->coordinatesystems().at(name()).lock().get() == this &&
-           bool(manifold) && manifold->coordinatesystems().count(name()) &&
-           manifold->coordinatesystems().at(name()).lock().get() == this;
+    return Common::invariant() && bool(project()) &&
+           project()->coordinatesystems().count(name()) &&
+           project()->coordinatesystems().at(name()).get() == this &&
+           bool(configuration()) &&
+           configuration()->coordinatesystems().count(name()) &&
+           configuration()->coordinatesystems().at(name()).lock().get() ==
+               this &&
+           bool(manifold()) && manifold()->coordinatesystems().count(name()) &&
+           manifold()->coordinatesystems().at(name()).lock().get() == this;
   }
 
   CoordinateSystem() = delete;
@@ -55,8 +65,8 @@ public:
                    const shared_ptr<Project> &project,
                    const shared_ptr<Configuration> &configuration,
                    const shared_ptr<Manifold> &manifold)
-      : Common(name), project(project), configuration(configuration),
-        manifold(manifold) {}
+      : Common(name), m_project(project), m_configuration(configuration),
+        m_manifold(manifold) {}
   CoordinateSystem(hidden) : Common(hidden()) {}
 
 private:

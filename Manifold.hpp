@@ -40,9 +40,7 @@ class Manifold : public Common, public std::enable_shared_from_this<Manifold> {
   map<string, weak_ptr<CoordinateSystem>> m_coordinatesystems;     // backlinks
 public:
   shared_ptr<Project> project() const { return m_project.lock(); }
-  const shared_ptr<Configuration> &configuration() const {
-    return m_configuration;
-  }
+  shared_ptr<Configuration> configuration() const { return m_configuration; }
   int dimension() const { return m_dimension; }
   const map<string, shared_ptr<Discretization>> &discretizations() const {
     return m_discretizations;
@@ -57,8 +55,8 @@ public:
 
   virtual bool invariant() const {
     bool inv = Common::invariant() && bool(project()) &&
-               project()->manifolds.count(name()) &&
-               project()->manifolds.at(name()).get() == this &&
+               project()->manifolds().count(name()) &&
+               project()->manifolds().at(name()).get() == this &&
                bool(configuration()) &&
                configuration()->manifolds().count(name()) &&
                configuration()->manifolds().at(name()).lock().get() == this &&

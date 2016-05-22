@@ -24,18 +24,22 @@ class Configuration;
 
 class ParameterValue : public Common,
                        public std::enable_shared_from_this<ParameterValue> {
+  weak_ptr<Parameter> m_parameter;                       // parent
+  map<string, weak_ptr<Configuration>> m_configurations; // backlinks
 public:
-  weak_ptr<Parameter> parameter;                       // parent
-  map<string, weak_ptr<Configuration>> configurations; // backlinks
+  shared_ptr<Parameter> parameter() const { return m_parameter.lock(); }
+  const map<string, weak_ptr<Configuration>> &configurations() const {
+    return m_configurations;
+  }
   enum { type_empty, type_int, type_double, type_string } value_type;
   long long value_int;
   double value_double;
   string value_string;
 
   virtual bool invariant() const {
-    return Common::invariant() && bool(parameter.lock()) &&
-           parameter.lock()->parametervalues.count(name()) &&
-           parameter.lock()->parametervalues.at(name()).get() == this &&
+    return Common::invariant() && bool(parameter()) &&
+           parameter()->parametervalues().count(name()) &&
+           parameter()->parametervalues().at(name()).get() == this &&
            value_type >= type_empty && value_type <= type_string;
   }
 
@@ -48,7 +52,7 @@ public:
   friend class Parameter;
   ParameterValue(hidden, const string &name,
                  const shared_ptr<Parameter> &parameter)
-      : Common(name), parameter(parameter), value_type(type_empty) {}
+      : Common(name), m_parameter(parameter), value_type(type_empty) {}
   ParameterValue(hidden) : Common(hidden()) {}
 
 private:

@@ -27,26 +27,33 @@ class DiscreteFieldBlock;
 
 class DiscreteField : public Common,
                       public std::enable_shared_from_this<DiscreteField> {
+  weak_ptr<Field> m_field;                     // parent
+  shared_ptr<Configuration> m_configuration;   // with backlink
+  shared_ptr<Discretization> m_discretization; // with backlink
+  shared_ptr<Basis> m_basis;                   // with backlink
+  map<string, shared_ptr<DiscreteFieldBlock>> m_discretefieldblocks; // children
 public:
-  weak_ptr<Field> field;                     // parent
-  shared_ptr<Configuration> configuration;   // with backlink
-  shared_ptr<Discretization> discretization; // with backlink
-  shared_ptr<Basis> basis;                   // with backlink
-  map<string, shared_ptr<DiscreteFieldBlock>> discretefieldblocks; // children
+  shared_ptr<Field> field() const { return m_field.lock(); }
+  shared_ptr<Configuration> configuration() const { return m_configuration; }
+  shared_ptr<Discretization> discretization() const { return m_discretization; }
+  shared_ptr<Basis> basis() const { return m_basis; }
+  const map<string, shared_ptr<DiscreteFieldBlock>> &
+  discretefieldblocks() const {
+    return m_discretefieldblocks;
+  }
 
   virtual bool invariant() const {
-    return Common::invariant() && bool(field.lock()) &&
-           field.lock()->discretefields.count(name()) &&
-           field.lock()->discretefields.at(name()).get() == this &&
-           bool(configuration) &&
-           configuration->discretefields().count(name()) &&
-           configuration->discretefields().at(name()).lock().get() == this &&
-           bool(discretization) &&
-           discretization->discretefields.nobacklink() &&
-           field.lock()->manifold.get() ==
-               discretization->manifold.lock().get() &&
-           bool(basis) && basis->discretefields().nobacklink() &&
-           field.lock()->tangentspace.get() == basis->tangentspace().get();
+    return Common::invariant() && bool(field()) &&
+           field()->discretefields().count(name()) &&
+           field()->discretefields().at(name()).get() == this &&
+           bool(configuration()) &&
+           configuration()->discretefields().count(name()) &&
+           configuration()->discretefields().at(name()).lock().get() == this &&
+           bool(discretization()) &&
+           discretization()->discretefields().nobacklink() &&
+           field()->manifold().get() == discretization()->manifold().get() &&
+           bool(basis()) && basis()->discretefields().nobacklink() &&
+           field()->tangentspace().get() == basis()->tangentspace().get();
   }
 
   DiscreteField() = delete;
@@ -60,8 +67,8 @@ public:
                 const shared_ptr<Configuration> &configuration,
                 const shared_ptr<Discretization> &discretization,
                 const shared_ptr<Basis> &basis)
-      : Common(name), field(field), configuration(configuration),
-        discretization(discretization), basis(basis) {}
+      : Common(name), m_field(field), m_configuration(configuration),
+        m_discretization(discretization), m_basis(basis) {}
   DiscreteField(hidden) : Common(hidden()) {}
 
 private:

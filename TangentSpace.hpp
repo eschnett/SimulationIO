@@ -27,23 +27,28 @@ class Basis;
 
 class TangentSpace : public Common,
                      public std::enable_shared_from_this<TangentSpace> {
-  map<string, weak_ptr<Field>> m_fields; // backlinks
+  weak_ptr<Project> m_project;               // parent
+  shared_ptr<Configuration> m_configuration; // with backlink
+  int m_dimension;
+  map<string, shared_ptr<Basis>> m_bases; // children
+  map<string, weak_ptr<Field>> m_fields;  // backlinks
 public:
-  weak_ptr<Project> project;               // parent
-  shared_ptr<Configuration> configuration; // with backlink
-  int dimension;
-  map<string, shared_ptr<Basis>> bases; // children
+  shared_ptr<Project> project() const { return m_project.lock(); }
+  shared_ptr<Configuration> configuration() const { return m_configuration; }
+  int dimension() const { return m_dimension; }
+  const map<string, shared_ptr<Basis>> &bases() const { return m_bases; }
   const map<string, weak_ptr<Field>> &fields() const { return m_fields; }
 
   virtual bool invariant() const {
-    bool inv = Common::invariant() && bool(project.lock()) &&
-               project.lock()->tangentspaces.count(name()) &&
-               project.lock()->tangentspaces.at(name()).get() == this &&
-               bool(configuration) &&
-               configuration->tangentspaces().count(name()) &&
-               configuration->tangentspaces().at(name()).lock().get() == this &&
-               dimension >= 0;
-    for (const auto &b : bases)
+    bool inv =
+        Common::invariant() && bool(project()) &&
+        project()->tangentspaces().count(name()) &&
+        project()->tangentspaces().at(name()).get() == this &&
+        bool(configuration()) &&
+        configuration()->tangentspaces().count(name()) &&
+        configuration()->tangentspaces().at(name()).lock().get() == this &&
+        dimension() >= 0;
+    for (const auto &b : bases())
       inv &= !b.first.empty() && bool(b.second);
     return inv;
   }
@@ -57,8 +62,8 @@ public:
   friend class Project;
   TangentSpace(hidden, const string &name, const shared_ptr<Project> &project,
                const shared_ptr<Configuration> &configuration, int dimension)
-      : Common(name), project(project), configuration(configuration),
-        dimension(dimension) {}
+      : Common(name), m_project(project), m_configuration(configuration),
+        m_dimension(dimension) {}
   TangentSpace(hidden) : Common(hidden()) {}
 
 private:

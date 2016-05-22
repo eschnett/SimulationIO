@@ -66,7 +66,7 @@ class CoordinateBasisElement {
   shared_ptr<CoordinateField> coordinatefield;
   shared_ptr<BasisVector> basisvector;
   bool invariant() const {
-    return coordinatefield->direction == basisvector->direction();
+    return coordinatefield->direction() == basisvector->direction();
   }
 };
 }

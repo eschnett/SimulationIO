@@ -66,8 +66,8 @@ public:
 
   virtual bool invariant() const {
     return Common::invariant() && bool(project()) &&
-           project()->configurations.count(name()) &&
-           project()->configurations.at(name()).get() == this;
+           project()->configurations().count(name()) &&
+           project()->configurations().at(name()).get() == this;
   }
 
   Configuration() = delete;

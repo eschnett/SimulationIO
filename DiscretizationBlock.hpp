@@ -31,29 +31,35 @@ class DiscreteFieldBlock;
 class DiscretizationBlock
     : public Common,
       public std::enable_shared_from_this<DiscretizationBlock> {
-public:
   // Discretization of a certain region, represented by contiguous data
-  weak_ptr<Discretization> discretization; // parent
-  box_t box;
-  region_t active;
-  NoBackLink<weak_ptr<DiscreteFieldBlock>> discretefieldblocks;
+  weak_ptr<Discretization> m_discretization; // parent
+  box_t m_box;
+  region_t m_active;
+  NoBackLink<weak_ptr<DiscreteFieldBlock>> m_discretefieldblocks;
+
+public:
+  shared_ptr<Discretization> discretization() const {
+    return m_discretization.lock();
+  }
+  const box_t &box() const { return m_box; }
+  const region_t &active() const { return m_active; }
+  NoBackLink<weak_ptr<DiscreteFieldBlock>> discretefieldblocks() const {
+    return m_discretefieldblocks;
+  }
 
   // bounding box? in terms of coordinates?
   // connectivity? neighbouring blocks?
   // overlaps?
 
   virtual bool invariant() const {
-    return Common::invariant() && bool(discretization.lock()) &&
-           discretization.lock()->discretizationblocks.count(name()) &&
-           discretization.lock()->discretizationblocks.at(name()).get() ==
-               this &&
-           (!box.valid() ||
-            (box.rank() ==
-                 discretization.lock()->manifold.lock()->dimension() &&
-             !box.empty())) &&
-           (!active.valid() ||
-            active.rank() ==
-                discretization.lock()->manifold.lock()->dimension());
+    return Common::invariant() && bool(discretization()) &&
+           discretization()->discretizationblocks().count(name()) &&
+           discretization()->discretizationblocks().at(name()).get() == this &&
+           (!box().valid() ||
+            (box().rank() == discretization()->manifold()->dimension() &&
+             !box().empty())) &&
+           (!active().valid() ||
+            active().rank() == discretization()->manifold()->dimension());
   }
 
   DiscretizationBlock() = delete;
@@ -65,7 +71,7 @@ public:
   friend class Discretization;
   DiscretizationBlock(hidden, const string &name,
                       const shared_ptr<Discretization> &discretization)
-      : Common(name), discretization(discretization) {}
+      : Common(name), m_discretization(discretization) {}
   DiscretizationBlock(hidden) : Common(hidden()) {}
 
 private:
@@ -86,23 +92,22 @@ private:
 public:
   virtual ~DiscretizationBlock() {}
 
-  void setBox() { box.reset(); }
-  void setBox(const box_t &box_) {
-    assert(box_.valid() &&
-           box_.rank() == discretization.lock()->manifold.lock()->dimension() &&
-           !box_.empty());
-    box = box_;
+  void setBox() { m_box.reset(); }
+  void setBox(const box_t &box) {
+    assert(box.valid() &&
+           box.rank() == discretization()->manifold()->dimension() &&
+           !box.empty());
+    m_box = box;
   }
-  box_t getBox() const { return box; }
+  box_t getBox() const { return m_box; }
 
-  void setActive() { active.reset(); }
-  void setActive(const region_t &active_) {
-    assert(active_.valid() &&
-           active_.rank() ==
-               discretization.lock()->manifold.lock()->dimension());
-    active = active_;
+  void setActive() { m_active.reset(); }
+  void setActive(const region_t &active) {
+    assert(active.valid() &&
+           active.rank() == discretization()->manifold()->dimension());
+    m_active = active;
   }
-  region_t getActive() const { return active; }
+  region_t getActive() const { return m_active; }
 
   virtual ostream &output(ostream &os, int level = 0) const;
   friend ostream &operator<<(ostream &os,

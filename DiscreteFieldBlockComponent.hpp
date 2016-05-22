@@ -25,10 +25,17 @@ using std::weak_ptr;
 class DiscreteFieldBlockComponent
     : public Common,
       public std::enable_shared_from_this<DiscreteFieldBlockComponent> {
-public:
   // Tensor component for a discrete field on a particular region
-  weak_ptr<DiscreteFieldBlock> discretefieldblock; // parent
-  shared_ptr<TensorComponent> tensorcomponent;     // without backlink
+  weak_ptr<DiscreteFieldBlock> m_discretefieldblock; // parent
+  shared_ptr<TensorComponent> m_tensorcomponent;     // without backlink
+public:
+  shared_ptr<DiscreteFieldBlock> discretefieldblock() const {
+    return m_discretefieldblock.lock();
+  }
+  shared_ptr<TensorComponent> tensorcomponent() const {
+    return m_tensorcomponent;
+  }
+
   enum {
     type_empty,
     type_dataset,
@@ -47,25 +54,23 @@ public:
 
   virtual bool invariant() const {
     bool inv =
-        Common::invariant() && bool(discretefieldblock.lock()) &&
-        discretefieldblock.lock()->discretefieldblockcomponents.count(name()) &&
-        discretefieldblock.lock()
-                ->discretefieldblockcomponents.at(name())
-                .get() == this &&
-        bool(tensorcomponent) &&
-        tensorcomponent->discretefieldblockcomponents.nobacklink() &&
-        discretefieldblock.lock()
-                ->discretefield.lock()
-                ->field.lock()
-                ->tensortype.get() == tensorcomponent->tensortype.lock().get();
+        Common::invariant() && bool(discretefieldblock()) &&
+        discretefieldblock()->discretefieldblockcomponents().count(name()) &&
+        discretefieldblock()->discretefieldblockcomponents().at(name()).get() ==
+            this &&
+        bool(tensorcomponent()) &&
+        tensorcomponent()->discretefieldblockcomponents().nobacklink() &&
+        discretefieldblock()->discretefield()->field()->tensortype().get() ==
+            tensorcomponent()->tensortype().get();
     // Ensure all discrete field block data have different tensor components
     for (const auto &dfbd :
-         discretefieldblock.lock()->discretefieldblockcomponents)
+         discretefieldblock()->discretefieldblockcomponents())
       if (dfbd.second.get() != this)
-        inv &= dfbd.second->tensorcomponent.get() != tensorcomponent.get();
+        inv &= dfbd.second->tensorcomponent().get() != tensorcomponent().get();
     // Ensure mapping from storage_indices is correct
-    inv &= discretefieldblock.lock()
-                   ->storage_indices.at(tensorcomponent->storage_index)
+    inv &= discretefieldblock()
+                   ->storage_indices()
+                   .at(tensorcomponent()->storage_index())
                    .get() == this &&
            (data_type == type_empty || data_type == type_dataset ||
             data_type == type_extlink || data_type == type_copy ||
@@ -76,9 +81,10 @@ public:
            !data_copy_name.empty() == (data_type == type_copy) &&
            !data_range_delta.empty() == (data_type == type_range) &&
            (int(data_range_delta.size()) ==
-            discretefieldblock.lock()
-                ->discretizationblock->discretization.lock()
-                ->manifold.lock()
+            discretefieldblock()
+                ->discretizationblock()
+                ->discretization()
+                ->manifold()
                 ->dimension()) == (data_type == type_range);
     return inv;
   }
@@ -96,8 +102,8 @@ public:
       hidden, const string &name,
       const shared_ptr<DiscreteFieldBlock> &discretefieldblock,
       const shared_ptr<TensorComponent> &tensorcomponent)
-      : Common(name), discretefieldblock(discretefieldblock),
-        tensorcomponent(tensorcomponent), data_type(type_empty) {}
+      : Common(name), m_discretefieldblock(discretefieldblock),
+        m_tensorcomponent(tensorcomponent), data_type(type_empty) {}
   DiscreteFieldBlockComponent(hidden) : Common(hidden()) {}
 
 private:
