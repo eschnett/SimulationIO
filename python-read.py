@@ -28,11 +28,11 @@ rmax = -sys.float_info.max
 rcount = 0.0
 ngrids = 0
 
-field = project.fields['rho']
-discretefield = field.discretefields['rho']
-for discretefieldblockname in discretefield.discretefieldblocks:
-    discretefieldblock = discretefield.discretefieldblocks[discretefieldblockname]
-    discretefieldblockcomponent = discretefieldblock.discretefieldblockcomponents['scalar']
+field = project.fields()['rho']
+discretefield = field.discretefields()['rho']
+for discretefieldblockname in discretefield.discretefieldblocks():
+    discretefieldblock = discretefield.discretefieldblocks()[discretefieldblockname]
+    discretefieldblockcomponent = discretefieldblock.discretefieldblockcomponents()['scalar']
     dataset = discretefieldblockcomponent.getData_dataset()
     assert dataset
     path = dataset.path
