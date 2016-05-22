@@ -6,6 +6,10 @@
 #include <iostream>
 #include <string>
 
+#include <map>
+#include <memory>
+#include <utility>
+
 namespace SimulationIO {
 
 using std::ostream;
@@ -31,6 +35,139 @@ template <typename Target> struct link { Target *target; };
 template <typename Source> struct nobacklinks {};
 template <typename Target> struct unilink { Target *target; };
 #endif
+
+// A map holding weak pointers
+// TODO: Move this into a file of its own
+template <typename K, typename T> class weak_map {
+  typedef std::map<K, std::weak_ptr<T>> map_type;
+  map_type impl;
+
+public:
+  typedef K key_type;
+  typedef std::shared_ptr<T> mapped_type;
+  typedef std::pair<const K, std::shared_ptr<T>> value_type;
+  typedef typename map_type::size_type size_type;
+  typedef typename map_type::difference_type difference_type;
+
+  weak_map() = default;
+  weak_map(const weak_map &m) = default;
+  weak_map(weak_map &&m) = default;
+  weak_map &operator=(const weak_map &m) = default;
+  weak_map &operator=(weak_map &&m) = default;
+
+  std::shared_ptr<T> at(const K &k) const { return impl.at(k).lock(); }
+
+  class iterator {
+    typename map_type::iterator impl;
+
+    iterator(const typename map_type::iterator &impl) noexcept : impl(impl) {}
+    iterator(typename map_type::iterator &&impl) noexcept
+        : impl(std::move(impl)) {}
+
+  public:
+    // Iterator
+    iterator() = default; // extension
+    iterator(const iterator &impl) = default;
+    iterator(iterator &&impl) = default; // extension
+    iterator operator=(const iterator &impl) = default;
+    iterator operator=(iterator &&impl) = default; // extension
+    void swap(iterator &iter) noexcept { std::swap(impl, iter.impl); }
+    bool operator==(const iterator &iter) const { return impl == iter.impl; }
+
+    // InputIterator
+    bool operator!=(const iterator &iter) const { return impl != iter.impl; }
+    std::pair<const K, std::shared_ptr<T>> operator*() const {
+      return {impl->first, impl->second.lock()};
+    }
+    iterator &operator++() {
+      ++impl;
+      return *this;
+    }
+    iterator operator++(int) { return {impl++}; }
+    // ForwardIterator
+    // BidirectionalIterator
+    iterator &operator--() {
+      --impl;
+      return *this;
+    }
+    iterator operator--(int) { return {impl--}; }
+  };
+
+  class const_iterator {
+    typename map_type::const_iterator impl;
+
+    const_iterator(const typename map_type::const_iterator &impl) noexcept
+        : impl(impl) {}
+    const_iterator(typename map_type::const_iterator &&impl) noexcept
+        : impl(std::move(impl)) {}
+
+  public:
+    // Iterator
+    const_iterator() = default; // extension
+    const_iterator(const const_iterator &impl) = default;
+    const_iterator(const_iterator &&impl) = default; // extension
+    const_iterator operator=(const const_iterator &impl) = default;
+    const_iterator operator=(const_iterator &&impl) = default; // extension
+    void swap(const_iterator &iter) noexcept { std::swap(impl, iter.impl); }
+    bool operator==(const const_iterator &iter) const {
+      return impl == iter.impl;
+    }
+
+    // InputIterator
+    bool operator!=(const const_iterator &iter) const {
+      return impl != iter.impl;
+    }
+    std::pair<const K, const std::shared_ptr<T>> operator*() const {
+      return {impl->first, impl->second.lock()};
+    }
+    const_iterator &operator++() {
+      ++impl;
+      return *this;
+    }
+    const_iterator operator++(int) { return {impl++}; }
+    // ForwardIterator
+    // BidirectionalIterator
+    const_iterator &operator--() {
+      --impl;
+      return *this;
+    }
+    const_iterator operator--(int) { return {impl--}; }
+  };
+
+  iterator begin() noexcept { return iterator(impl.begin()); }
+  const_iterator begin() const noexcept { return const_iterator(impl.begin()); }
+  const_iterator cbegin() const noexcept { return begin(); }
+  iterator end() noexcept { return iterator(impl.end()); }
+  const_iterator end() const noexcept { return const_iterator(impl.end()); }
+  const_iterator cend() const noexcept { return end(); }
+
+  bool empty() const noexcept { return impl.empty(); }
+  std::size_t size() const noexcept { return impl.size(); }
+  std::size_t max_size() const noexcept { return impl.max_size(); }
+
+  void clear() { impl.clear(); }
+  std::pair<iterator, bool> insert(const value_type &value) {
+    auto res =
+        impl.insert(typename map_type::value_type(value.first, value.second));
+    return {std::move(res.first), std::move(res.second)};
+  }
+  // template <typename... Args>
+  // std::pair<iterator, bool> emplace(Args &&... args);
+  void swap(weak_map &m) noexcept { impl.swap(m.impl); }
+
+  size_type count(const K &k) const { return impl.count(k); }
+  iterator find(const K &k) { return {impl.find(k)}; }
+  const_iterator find(const K &k) const { return {impl.find(k)}; }
+};
+template <typename K, typename T>
+void swap(weak_map<K, T> &x, weak_map<K, T> &y) noexcept {
+  x.swap(y);
+}
+template <typename K, typename T>
+void swap(typename weak_map<K, T>::const_iterator &x,
+          typename weak_map<K, T>::const_iterator &y) noexcept {
+  x.swap(y);
+}
 
 // An always empty pseudo-container type indicating that there is no
 // back-link
