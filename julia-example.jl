@@ -31,8 +31,8 @@ configuration = project[:createConfiguration]("global")
 
 # TensorTypes
 project[:createStandardTensorTypes]()
-scalar3d = get(project[:tensortypes], "Scalar3D")
-vector3d = get(project[:tensortypes], "Vector3D")
+scalar3d = get(project[:tensortypes](), "Scalar3D")
+vector3d = get(project[:tensortypes](), "Vector3D")
 
 # Manifold and TangentSpace, both 3D
 manifold = project[:createManifold]("domain", configuration, dim)
@@ -63,11 +63,11 @@ for d in 1:dim
     field = project[:createField](
         dirnames[d], configuration, manifold, tangentspace, scalar3d)
     discretefield = field[:createDiscreteField](
-        field[:name], configuration, discretization, basis)
+        field[:name](), configuration, discretization, basis)
     for p in 1:ngrids
         block = discretefield[:createDiscreteFieldBlock](
-            "$(discretefield[:name])-$(blocks[p][:name])", blocks[p])
-        scalar3d_component = get(scalar3d[:storage_indices], 0)
+            "$(discretefield[:name]())-$(blocks[p][:name]())", blocks[p])
+        scalar3d_component = get(scalar3d[:storage_indices](), 0)
         component = block[:createDiscreteFieldBlockComponent](
             "scalar", scalar3d_component)
         dataspace = H5.DataSpace[:make]((nli, nlj, nlk))
@@ -92,16 +92,16 @@ for p in 1:ngrids
     datatype = H5.DataType(H5.PredType[:NATIVE_DOUBLE])
     # Create discrete region
     rho_block = discretized_rho[:createDiscreteFieldBlock](
-        "$(rho[:name])-$(blocks[p][:name])", blocks[p])
+        "$(rho[:name]())-$(blocks[p][:name]())", blocks[p])
     vel_block = discretized_vel[:createDiscreteFieldBlock](
-        "$(vel[:name])-$(blocks[p][:name])", blocks[p])
+        "$(vel[:name]())-$(blocks[p][:name]())", blocks[p])
     # Create tensor components for this region
-    scalar3d_component = get(scalar3d[:storage_indices], 0)
+    scalar3d_component = get(scalar3d[:storage_indices](), 0)
     rho_component = rho_block[:createDiscreteFieldBlockComponent](
         "scalar", scalar3d_component)
     rho_component[:setData](datatype, dataspace)
     for d in 1:dim
-        vector3d_component = get(vector3d[:storage_indices], d-1)
+        vector3d_component = get(vector3d[:storage_indices](), d-1)
         vel_component = vel_block[:createDiscreteFieldBlockComponent](
             dirnames[d], vector3d_component)
         vel_component[:setData](datatype, dataspace)
@@ -139,30 +139,30 @@ for pk in 1:npk, pj in 1:npj, pi in 1:npi
     end
     # Write coordinates
     for d in 1:dim
-        field = coordinates[d][:field]
-        discretefield = get(field[:discretefields], field[:name])
-        block = get(discretefield[:discretefieldblocks],
-            "$(discretefield[:name])-$(blocks[p][:name])")
-        component = get(block[:discretefieldblockcomponents], "scalar")
+        field = coordinates[d][:field]()
+        discretefield = get(field[:discretefields](), field[:name]())
+        block = get(discretefield[:discretefieldblocks](),
+            "$(discretefield[:name]())-$(blocks[p][:name]())")
+        component = get(block[:discretefieldblockcomponents](), "scalar")
         component[:writeData_double](
             reshape((coordx, coordy, coordz)[d], npoints))
     end
     # Write rho
     for d in 1:1
         field = rho
-        discretefield = get(field[:discretefields], field[:name])
-        block = get(discretefield[:discretefieldblocks],
-            "$(discretefield[:name])-$(blocks[p][:name])")
-        component = get(block[:discretefieldblockcomponents], "scalar")
+        discretefield = get(field[:discretefields](), field[:name]())
+        block = get(discretefield[:discretefieldblocks](),
+            "$(discretefield[:name]())-$(blocks[p][:name]())")
+        component = get(block[:discretefieldblockcomponents](), "scalar")
         component[:writeData_double](reshape(datarho, npoints))
     end
     # Write velocity
     for d in 1:dim
         field = vel
-        discretefield = get(field[:discretefields], field[:name])
-        block = get(discretefield[:discretefieldblocks],
-            "$(discretefield[:name])-$(blocks[p][:name])")
-        component = get(block[:discretefieldblockcomponents], dirnames[d])
+        discretefield = get(field[:discretefields](), field[:name]())
+        block = get(discretefield[:discretefieldblocks](),
+            "$(discretefield[:name]())-$(blocks[p][:name]())")
+        component = get(block[:discretefieldblockcomponents](), dirnames[d])
         component[:writeData_double](
             reshape((datavelx, datavely, datavelz)[d], npoints))
     end

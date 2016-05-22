@@ -99,6 +99,7 @@ check: test_RegionCalculus test_SimulationIO
 #	./julia-example.jl
 #	-h5format_convert julia-example.s5
 #	./julia-read.jl
+	echo SUCCESS
 
 benchmark: $(SIO_SRCS:%.cpp=%.o) benchmark.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)

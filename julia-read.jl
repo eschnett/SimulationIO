@@ -56,16 +56,17 @@ function findvalue(pred, map)
     nothing
 end
 
-field = get(project[:fields], fieldname)
+field = get(project[:fields](), fieldname)
 discretefield =
-    findvalue(df -> df[:discretization][:name] == discretizationname,
-              field[:discretefields])
+    findvalue(df -> df[:discretization]()[:name]() == discretizationname,
+              field[:discretefields]())
 @assert discretefield !== nothing
 
-for discretefieldblock in discretefield[:discretefieldblocks][:itervalues]()
+for discretefieldblock in discretefield[:discretefieldblocks]()[:itervalues]()
     discretefieldblockcomponent =
-        findvalue(dfbc -> dfbc[:tensorcomponent][:name] == tensorcomponentname,
-                  discretefieldblock[:discretefieldblockcomponents])
+        findvalue(dfbc -> (dfbc[:tensorcomponent]()[:name]() ==
+                           tensorcomponentname),
+                  discretefieldblock[:discretefieldblockcomponents]())
     @assert discretefieldblockcomponent !== nothing
 
     dataset = discretefieldblockcomponent[:getData_dataset]()
