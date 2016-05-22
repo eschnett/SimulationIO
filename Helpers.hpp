@@ -21,11 +21,6 @@ inline int ipow(int base, int exp) {
   return res;
 }
 
-// Convert a weak_ptr to a shared_ptr, deducing the element type
-template <typename T> std::shared_ptr<T> shared(const std::weak_ptr<T> &x) {
-  return std::shared_ptr<T>(x);
-}
-
 // Quote a string
 inline std::string quote(const std::string &str) {
   std::ostringstream buf;
