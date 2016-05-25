@@ -1,8 +1,19 @@
-CXX = g++
 CPPFLAGS = $(GTEST_CPPFLAGS) $(HDF5_CPPFLAGS) $(MPI_CPPFLAGS) $(PYTHON_CPPFLAGS)
 CXXFLAGS = $(GTEST_CXXFLAGS) $(HDF5_CXXFLAGS) $(MPI_CXXFLAGS) $(PYTHON_CXXFLAGS) -g -Wall -std=c++0x -fPIC
 LDFLAGS = $(GTEST_LDFLAGS) $(HDF5_LDFLAGS) $(MPI_LDFLAGS)
 LIBS = $(GTEST_LIBS) $(HDF5_LIBS) $(MPI_LIBS)
+
+DEFAULT_CXX = g++
+DEFAULT_SWIG = swig
+DEFAULT_MPI_DIR = /usr/
+DEFAULT_HDF5_DIR = /usr/local/hdf5
+DEFAULT_PYTHON_DIR = /usr
+DEFAULT_PYTHON_VERSION=2.7
+DEFAULT_MPI_NAME = mpich
+DEFAULT_MPI_LIBS= -lmpichcxx -lmpich
+
+CXX ?= $(DEFAULT_CXX)
+SWIG ?= $(DEFAULT_SWIG)
 
 ifneq ($(COVERAGE),)
 CXXFLAGS += --coverage
@@ -44,25 +55,29 @@ ALL_EXE = \
 	benchmark convert-carpet-output list example \
 	test_RegionCalculus test_SimulationIO
 
-HDF5_DIR = /opt/local
-HDF5_CPPFLAGS = -I$(HDF5_DIR)/include
-HDF5_CXXFLAGS =
-HDF5_LDFLAGS = -L$(HDF5_DIR)/lib -Wl,-rpath,$(HDF5_DIR)/lib
-HDF5_LIBS = -lhdf5_cpp -lhdf5
+HDF5_DIR ?= $(DEFAULT_HDF5_DIR)
+HDF5_CPPFLAGS ?= -I$(HDF5_DIR)/include
+HDF5_CXXFLAGS ?=
+HDF5_LDFLAGS ?= -L$(HDF5_DIR)/lib -Wl,-rpath,$(HDF5_DIR)/lib
+HDF5_LIBS ?= -lhdf5_cpp -lhdf5
 
-MPI_DIR = /opt/local
-MPI_CPPFLAGS = -I$(MPI_DIR)/include/openmpi-gcc5
-MPI_CXXFLAGS =
-MPI_LDFLAGS = -L$(MPI_DIR)/lib/openmpi-gcc5 -Wl,-rpath,$(MPI_DIR)/lib/openmpi-gcc5
-MPI_LIBS = -lmpi_cxx -lmpi
+MPI_NAME ?= $(DEFAULT_MPI_NAME)
+MPI_DIR ?= $(DEFAULT_MPI_DIR)
+MPI_CPPFLAGS ?= -I$(MPI_DIR)/include/$(MPI_NAME)
+MPI_CXXFLAGS ?=
+MPI_LDFLAGS ?= -L$(MPI_DIR)/lib/x86_64-gnu -Wl,-rpath,$(MPI_DIR)/lib/x86_64-linux-gnu
+MPI_LIBS ?= $(DEFAULT_MPI_LIBS)
 
-PYTHON_DIR = /opt/local/Library/Frameworks/Python.framework/Versions/2.7
-PYTHON_CPPFLAGS = -I$(PYTHON_DIR)/include/python2.7
-PYTHON_CXXFLAGS =
-PYTHON_LDFLAGS = -L$(PYTHON_DIR)/lib -Wl,-rpath,$(PYTHON_DIR)/lib
-PYTHON_LIBS = -lpython2.7
+PYTHON_VERSION ?= $(DEFAULT_PYTHON_VERSION)
+PYTHON_NAME ?= python${PYTHON_VERSION}
+PYTHON_DIR ?= $(DEFAULT_PYTHON_DIR)
+PYTHON_CPPFLAGS ?= -I$(PYTHON_DIR)/include/${PYTHON_NAME} -I$(PYTHON_DIR)/include/x86_64-linux-gnu/${PYTHON_NAME}
+PYTHON_CXXFLAGS ?=
+PYTHON_LDFLAGS ?= -L$(PYTHON_DIR)/lib/x86_64-linux-gnu -Wl,-rpath,$(PYTHON_DIR)/lib/x86_64-linux-gnu
+PYTHON_LIBS ?= -lpython${PYTHON_VERSION}
 
-GTEST_DIR = googletest-release-1.7.0
+GTEST_VERSION = release-1.7.0
+GTEST_DIR = googletest-${GTEST_VERSION}
 GTEST_CPPFLAGS = -isystem $(GTEST_DIR)/include -I$(GTEST_DIR)
 GTEST_CXXFLAGS = -pthread
 GTEST_LIBS =
@@ -112,7 +127,7 @@ _%.so: %_wrap.o $(SIO_SRCS:%.cpp=%.o)
 	$(CXX) $(make-dynamiclib) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $(PYTHON_LDFLAGS) -o $@ $^ $(LIBS) $(PYTHON_LIBS)
 
 %_wrap.cpp: %.i
-	swig -Wall -c++ -python $*.i
+	$(SWIG) -Wall -c++ -python $*.i
 	mv $*_wrap.cxx $*_wrap.cpp
 .PRECIOUS: $(PYTHON_EXE:_%.so=%_wrap.cpp)
 .PRECIOUS: $(PYTHON_EXE:_%.so=%_wrap.o)
@@ -125,11 +140,11 @@ _%.so: %_wrap.o $(SIO_SRCS:%.cpp=%.o)
 
 # Taken from <http://mad-scientist.net/make/autodep.html> as written by Paul D.
 # Smith <psmith@gnu.org>, originally developed by Tom Tromey <tromey@cygnus.com>
-PROCESS_DEPENDENCIES =							  \
-  {									  \
-    perl -p -e 's{$*.o.tmp}{$*.o}g' < $*.o.d &&				  \
-    perl -p -e 's{\#.*}{};s{^[^:]*: *}{};s{ *\\$$}{};s{$$}{ :}' < $*.o.d; \
-  } > $*.d &&								  \
+PROCESS_DEPENDENCIES = \
+  { \
+  	perl -p -e 's{$*.o.tmp}{$*.o}g' < $*.o.d && \
+  	perl -p -e 's{\#.*}{};s{^[^:]*: *}{};s{ *\\$$}{};s{$$}{ :}' < $*.o.d; \
+  } > $*.d && \
   $(RM) $*.o.d
 -include $(ALL_SRCS:%.cpp=%.d)
 
