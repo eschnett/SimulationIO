@@ -377,6 +377,14 @@ struct DiscreteFieldBlockComponent {
   } data_type;
   bool invariant() const;
   void setData(const H5::DataType &datatype, const H5::DataSpace &dataspace);
+  %extend {
+    void setData_int() {
+      self->setData<int>();
+    }
+    void setData_double() {
+      self->setData<double>();
+    }
+  }
   void setData(const string &filename, const string &objname);
   // void setData(H5::hid loc, const string &name);
   void setData(double origin, const std::vector<double> &delta);

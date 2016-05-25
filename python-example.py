@@ -71,9 +71,7 @@ for d in range(dim):
         scalar3d_component = scalar3d.storage_indices()[0]
         component = block.createDiscreteFieldBlockComponent(
             "scalar", scalar3d_component)
-        dataspace = H5.DataSpace.make([nli, nlj, nlk])
-        datatype = H5.DataType(H5.PredType.NATIVE_DOUBLE)
-        component.setData(datatype, dataspace)
+        component.setData_double()
     coordinates.append(
         coordinatesystem.createCoordinateField(dirnames[d], d, field))
 

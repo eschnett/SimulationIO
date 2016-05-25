@@ -96,10 +96,7 @@ int main(int argc, char **argv) {
       auto scalar3d_component = scalar3d->storage_indices().at(0);
       auto component = block->createDiscreteFieldBlockComponent(
           "scalar", scalar3d_component);
-      const hsize_t dims[dim] = {nlk, nlj, nli};
-      auto dataspace = H5::DataSpace(dim, dims);
-      auto datatype = H5::getType(double());
-      component->setData(datatype, dataspace);
+      component->setData<double>();
     }
     coordinates.push_back(
         coordinatesystem->createCoordinateField(dirnames[d], d, field));

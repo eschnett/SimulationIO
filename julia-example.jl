@@ -88,8 +88,6 @@ discretized_rho = rho[:createDiscreteField](
 discretized_vel = vel[:createDiscreteField](
     "vel", configuration, discretization, basis)
 for p in 1:ngrids
-    dataspace = H5.DataSpace[:make]((nli, nlj, nlk))
-    datatype = H5.DataType(H5.PredType[:NATIVE_DOUBLE])
     # Create discrete region
     rho_block = discretized_rho[:createDiscreteFieldBlock](
         "$(rho[:name]())-$(blocks[p][:name]())", blocks[p])
@@ -99,12 +97,12 @@ for p in 1:ngrids
     scalar3d_component = get(scalar3d[:storage_indices](), 0)
     rho_component = rho_block[:createDiscreteFieldBlockComponent](
         "scalar", scalar3d_component)
-    rho_component[:setData](datatype, dataspace)
+    rho_component[:setData_double]()
     for d in 1:dim
         vector3d_component = get(vector3d[:storage_indices](), d-1)
         vel_component = vel_block[:createDiscreteFieldBlockComponent](
             dirnames[d], vector3d_component)
-        vel_component[:setData](datatype, dataspace)
+        vel_component[:setData_double]()
     end
 end
 

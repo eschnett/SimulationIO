@@ -91,6 +91,28 @@ void DiscreteFieldBlockComponent::setData(const H5::DataType &datatype,
   data_dataspace = dataspace;
 }
 
+template <typename T> void DiscreteFieldBlockComponent::setData() {
+  if (data_type != type_empty)
+    setData();
+  data_type = type_dataset;
+
+  data_datatype = H5::getType(T{});
+
+  auto box = discretefieldblock()->discretizationblock()->getBox();
+  assert(box.valid());
+
+  int dim = box.rank();
+  vector<hsize_t> dims(dim);
+  for (int d = 0; d < dim; ++d)
+    dims.at(d) = vector<hssize_t>(box.shape()).at(d);
+  std::reverse(dims.begin(), dims.end());
+  data_dataspace = H5::DataSpace(dims.size(), dims.data());
+  assert(data_dataspace.isSimple());
+  assert(data_dataspace.getSimpleExtentNdims() == dim);
+}
+template void DiscreteFieldBlockComponent::setData<int>();
+template void DiscreteFieldBlockComponent::setData<double>();
+
 void DiscreteFieldBlockComponent::setData(const string &filename,
                                           const string &objname) {
   if (data_type != type_empty)

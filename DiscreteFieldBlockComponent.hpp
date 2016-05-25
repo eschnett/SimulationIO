@@ -132,6 +132,7 @@ public:
 
   void setData();
   void setData(const H5::DataType &datatype, const H5::DataSpace &dataspace);
+  template <typename T> void setData();
   void setData(const string &filename, const string &objname);
   void setData(const H5::H5Location &loc, const string &name);
   void setData(double origin, const vector<double> &delta);
