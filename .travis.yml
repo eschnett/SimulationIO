@@ -34,6 +34,7 @@ before_install:
       brew install lcov
       brew install open-mpi
       brew install swig
+      export HDF5_DIR="/usr/local"
       export PYTHON_DIR="/System/Library/Frameworks/Python.framework/Versions/2.7"
     fi
   - |
@@ -51,13 +52,13 @@ before_install:
         make -j2 install
       )
       export PYTHON_DIR="/usr"
-      export PATH="$HDF5_DIR/bin:$PATH"
     fi
+  - export PATH="$HDF5_DIR/bin:$PYTHON_DIR/bin:$PATH"
   - pip install --user h5py
   - pip install --user codecov
   - gem install coveralls-lcov
   - $CXX --version
-  - $HDF5_DIR/bin/h5ls --version
+  - h5ls --version
   - mpirun --version
   - lcov --version
 script:
