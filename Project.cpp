@@ -36,7 +36,8 @@ shared_ptr<Project> readProject(const H5::CommonFG &loc) {
 
 void Project::read(const H5::CommonFG &loc) {
   auto group = loc.openGroup(".");
-  createTypes(); // TODO: read from file
+  createTypes(); // TODO: read from file instead to ensure integer constants are
+                 // consistent
   assert(H5::readAttribute<string>(group, "type", enumtype) == "Project");
   H5::readAttribute(group, "name", m_name);
   H5::readGroup(group, "parameters",
