@@ -93,7 +93,7 @@ check: $(ALL_EXE)
 	./copy example.s5 example2.s5
 	./list example2.s5
 	./python-example.py
-	-h5format_convert python-example.s5
+	-$(HDF5_DIR)/bin/h5format_convert python-example.s5
 	./python-read-direct.py
 	./python-read.py
 #	./julia-example.jl
