@@ -800,12 +800,12 @@ int main(int argc, char **argv) {
           cout << "  discretization: " << discretization->name() << "\n";
           const auto &buffers = grid_buffers.at(mapindex).at(reflevel);
           const auto &domain = grid_domain.at(mapindex).at(reflevel);
-          region_t region(dim);
-#warning "use a reduction"
-          for (const auto &i1 : discretization->discretizationblocks()) {
-            const auto &discretizationblock = i1.second;
-            region = region | discretizationblock->box();
-          }
+          auto region = RegionCalculus::reduce(
+              [](const pair<string, shared_ptr<DiscretizationBlock>> &s_db) {
+                return region_t(s_db.second->box());
+              },
+              [](const region_t &x, const region_t &y) { return x | y; },
+              discretization->discretizationblocks());
           cout << "    region: " << region << "\n";
           point_t lower_buffers = buffers.at(0);
           point_t upper_buffers = buffers.at(1);
