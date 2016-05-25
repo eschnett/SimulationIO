@@ -124,12 +124,12 @@ int main(int argc, char **argv) {
     auto scalar3d_component = scalar3d->storage_indices().at(0);
     auto rho_component = rho_block->createDiscreteFieldBlockComponent(
         "scalar", scalar3d_component);
-    rho_component->setData(datatype, dataspace);
+    rho_component->setData<double>();
     for (int d = 0; d < dim; ++d) {
       auto vector3d_component = vector3d->storage_indices().at(d);
       auto vel_component = vel_block->createDiscreteFieldBlockComponent(
           dirnames[d], vector3d_component);
-      vel_component->setData(datatype, dataspace);
+      vel_component->setData<double>();
     }
   }
 

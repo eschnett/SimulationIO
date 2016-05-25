@@ -82,15 +82,6 @@ void DiscreteFieldBlockComponent::setData() {
   data_copy_name.clear();
 }
 
-void DiscreteFieldBlockComponent::setData(const H5::DataType &datatype,
-                                          const H5::DataSpace &dataspace) {
-  if (data_type != type_empty)
-    setData();
-  data_type = type_dataset;
-  data_datatype = datatype;
-  data_dataspace = dataspace;
-}
-
 template <typename T> void DiscreteFieldBlockComponent::setData() {
   if (data_type != type_empty)
     setData();

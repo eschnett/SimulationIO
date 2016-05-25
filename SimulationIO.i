@@ -376,7 +376,6 @@ struct DiscreteFieldBlockComponent {
     type_range
   } data_type;
   bool invariant() const;
-  void setData(const H5::DataType &datatype, const H5::DataSpace &dataspace);
   %extend {
     void setData_int() {
       self->setData<int>();
