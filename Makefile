@@ -8,7 +8,7 @@ DEFAULT_SWIG = swig
 DEFAULT_MPI_DIR = /usr/
 DEFAULT_HDF5_DIR = /usr/local/hdf5
 DEFAULT_PYTHON_DIR = /usr
-DEFAULT_PYTHON_VERSION=2.7
+DEFAULT_PYTHON_VERSION = 2.7
 DEFAULT_MPI_NAME = mpich
 DEFAULT_MPI_LIBS= -lmpichcxx -lmpich
 
@@ -52,7 +52,7 @@ ALL_SRCS = \
 PYTHON_EXE = _H5.so _RegionCalculus.so _SimulationIO.so
 ALL_EXE = \
 	$(PYTHON_EXE) \
-	benchmark convert-carpet-output list example \
+	sio-benchmark sio-convert-carpet-output sio-list sio-example \
 	test_RegionCalculus test_SimulationIO
 
 HDF5_DIR ?= $(DEFAULT_HDF5_DIR)
@@ -103,16 +103,16 @@ test: test_RegionCalculus test_SimulationIO
 	./test_RegionCalculus
 	./test_SimulationIO
 
-benchmark: $(SIO_SRCS:%.cpp=%.o) benchmark.o
+sio-benchmark: $(SIO_SRCS:%.cpp=%.o) benchmark.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
-example: $(SIO_SRCS:%.cpp=%.o) example.o
+sio-example: $(SIO_SRCS:%.cpp=%.o) example.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
-list: $(SIO_SRCS:%.cpp=%.o) list.o
+sio-list: $(SIO_SRCS:%.cpp=%.o) list.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
-convert-carpet-output: $(SIO_SRCS:%.cpp=%.o) convert-carpet-output.o
+sio-convert-carpet-output: $(SIO_SRCS:%.cpp=%.o) convert-carpet-output.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 os = $(shell uname)
@@ -161,11 +161,12 @@ clean:
 	$(RM) -- $(PYTHON_EXE:_%.so=%_wrap.cxx) $(PYTHON_EXE:_%.so=%_wrap.cpp)
 	$(RM) -- $(PYTHON_EXE:_%.so=%_wrap.d) $(PYTHON_EXE:_%.so=%_wrap.o)
 	$(RM) -- $(PYTHON_EXE:_%.so=%.py) $(PYTHON_EXE:_%.so=%.pyc)
-	$(RM) -- $(ALL_EXE)
+	$(RM) -- $(ALL_EXE)	
 
 distclean: clean
 	$(RM) $(GTEST_DIR).tar.gz
 	$(RM) -r $(GTEST_DIR)
 	$(RM) gtest
+	$(RM) example.s5
 
 .PHONY: all test coverage clean distclean
