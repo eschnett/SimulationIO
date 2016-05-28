@@ -14,7 +14,7 @@ using std::string;
 int main(int argc, char **argv) {
 
   if (argc < 2) {
-    cerr << "Synopsis:\n" << argv[0] << " {<filename>}+\n";
+    cerr << "Synopsis:\n" << argv[0] << " {<file name>}+\n";
     return 1;
   }
 
