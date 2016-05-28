@@ -1979,10 +1979,10 @@ template <typename T, int D> struct wbox : vbox<T> {
 
   // Comparison operators
   bool operator==(const vbox<T> &b) const {
-    return val == dynamic_cast<const wbox<T, D> &>(b).val;
+    return rank() == b.rank() && val == dynamic_cast<const wbox<T, D> &>(b).val;
   }
   bool operator!=(const vbox<T> &b) const {
-    return val != dynamic_cast<const wbox<T, D> &>(b).val;
+    return rank() != b.rank() || val != dynamic_cast<const wbox<T, D> &>(b).val;
   }
 
   bool less(const vbox<T> &b) const {
@@ -2162,10 +2162,10 @@ template <typename T, int D> struct wregion : vregion<T> {
     return val > dynamic_cast<const wregion &>(r).val;
   }
   bool operator==(const vregion<T> &r) const {
-    return val == dynamic_cast<const wregion &>(r).val;
+    return rank() == r.rank() && val == dynamic_cast<const wregion &>(r).val;
   }
   bool operator!=(const vregion<T> &r) const {
-    return val != dynamic_cast<const wregion &>(r).val;
+    return rank() != r.rank() || val != dynamic_cast<const wregion &>(r).val;
   }
 
   bool less(const vregion<T> &r) const {
