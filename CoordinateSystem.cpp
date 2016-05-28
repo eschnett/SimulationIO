@@ -33,9 +33,8 @@ void CoordinateSystem::read(const H5::CommonFG &loc, const string &entry,
 
 ostream &CoordinateSystem::output(ostream &os, int level) const {
   os << indent(level) << "CoordinateSystem " << quote(name())
-     << ": Configuration " << quote(configuration()->name()) << " Project "
-     << quote(project()->name()) << " Manifold " << quote(manifold()->name())
-     << "\n";
+     << ": Configuration " << quote(configuration()->name()) << " Manifold "
+     << quote(manifold()->name()) << "\n";
   for (const auto &cf : directions())
     cf.second->output(os, level + 1);
   return os;
