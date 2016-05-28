@@ -733,7 +733,7 @@ TEST(DiscreteFieldBlockComponent, create) {
   const int rank = 3;
   const hsize_t dims[rank] = {11, 10, 9};
   auto dataspace = H5::DataSpace(rank, dims);
-  dfbd3->setData(datatype, dataspace);
+  dfbd3->setData<double>();
   double origin = -1.0;
   vector<double> delta(rank);
   for (int d = 0; d < rank; ++d) {

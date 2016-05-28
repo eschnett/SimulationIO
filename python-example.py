@@ -71,9 +71,7 @@ for d in range(dim):
         scalar3d_component = scalar3d.storage_indices()[0]
         component = block.createDiscreteFieldBlockComponent(
             "scalar", scalar3d_component)
-        dataspace = H5.DataSpace.make([nli, nlj, nlk])
-        datatype = H5.DataType(H5.PredType.NATIVE_DOUBLE)
-        component.setData(datatype, dataspace)
+        component.setData_double()
     coordinates.append(
         coordinatesystem.createCoordinateField(dirnames[d], d, field))
 
@@ -98,12 +96,12 @@ for p in range(ngrids):
     scalar3d_component = scalar3d.storage_indices()[0]
     rho_component = rho_block.createDiscreteFieldBlockComponent(
         "scalar", scalar3d_component)
-    rho_component.setData(datatype, dataspace)
+    rho_component.setData_double()
     for d in range(dim):
         vector3d_component = vector3d.storage_indices()[d]
         vel_component = vel_block.createDiscreteFieldBlockComponent(
             dirnames[d], vector3d_component)
-        vel_component.setData(datatype, dataspace)
+        vel_component.setData_double()
 
 # Write file
 filename = "python-example.s5"
