@@ -409,8 +409,9 @@ struct DiscreteFieldBlockComponent {
       return nullptr;
     }
   }
-  // string getPath() const;
-  // string getName() const;
+  // TODO: Eliminate these (requires writing hyperslabs for the combiners)
+  string getPath() const;
+  string getName() const;
   %extend {
     void writeData_int(const std::vector<int> &data) const {
       self->writeData(data);
@@ -443,6 +444,8 @@ struct DiscretizationBlock {
   iregion active() const;
   std::shared_ptr<Discretization> discretization() const;
   bool invariant() const;
+  void setBox(const ibox &box);
+  void setActive(const iregion &active);
   %extend {
     void setBox(const std::vector<int> &ioffset,
                 const std::vector<int> &ishape) {
