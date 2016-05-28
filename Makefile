@@ -37,12 +37,13 @@ ALL_SRCS =					\
 	copy.cpp				\
 	example.cpp				\
 	list.cpp				\
+	merge.cpp				\
 	test_RegionCalculus.cpp			\
 	test_SimulationIO.cpp
 PYTHON_EXE = _H5.so _RegionCalculus.so _SimulationIO.so
 ALL_EXE =							\
 	$(PYTHON_EXE)						\
-	benchmark convert-carpet-output copy list example	\
+	benchmark convert-carpet-output copy example list merge	\
 	test_RegionCalculus test_SimulationIO
 
 HDF5_DIR = /opt/local
@@ -111,6 +112,9 @@ example: $(SIO_SRCS:%.cpp=%.o) example.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 list: $(SIO_SRCS:%.cpp=%.o) list.o
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
+
+merge: $(SIO_SRCS:%.cpp=%.o) merge.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 convert-carpet-output: $(SIO_SRCS:%.cpp=%.o) convert-carpet-output.o

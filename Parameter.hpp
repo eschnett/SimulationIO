@@ -69,6 +69,8 @@ private:
 public:
   virtual ~Parameter() {}
 
+  void merge(const shared_ptr<Parameter> &parameter);
+
   virtual ostream &output(ostream &os, int level = 0) const;
   friend ostream &operator<<(ostream &os, const Parameter &parameter) {
     return parameter.output(os);

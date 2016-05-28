@@ -71,6 +71,66 @@ void DiscreteFieldBlockComponent::read(
   m_tensorcomponent->noinsert(shared_from_this());
 }
 
+void DiscreteFieldBlockComponent::merge(
+    const shared_ptr<DiscreteFieldBlockComponent>
+        &discretefieldblockcomponent) {
+  assert(discretefieldblock()->name() ==
+         discretefieldblockcomponent->discretefieldblock()->name());
+  assert(m_tensorcomponent->name() ==
+         discretefieldblockcomponent->tensorcomponent()->name());
+  if (data_type == type_empty) {
+    data_type = discretefieldblockcomponent->data_type;
+    switch (data_type) {
+    case type_empty:
+      break;
+    case type_dataset:
+      // Don't know how to copy datasets
+      assert(0);
+      break;
+    case type_extlink:
+      data_extlink_filename =
+          discretefieldblockcomponent->data_extlink_filename;
+      data_extlink_objname = discretefieldblockcomponent->data_extlink_objname;
+      break;
+    case type_copy:
+      data_copy_loc = discretefieldblockcomponent->data_copy_loc;
+      data_copy_name = discretefieldblockcomponent->data_copy_name;
+      break;
+    case type_range:
+      data_range_origin = discretefieldblockcomponent->data_range_origin;
+      data_range_delta = discretefieldblockcomponent->data_range_delta;
+      break;
+    default:
+      assert(0);
+    }
+  }
+  assert(data_type == discretefieldblockcomponent->data_type);
+  switch (data_type) {
+  case type_empty:
+    break;
+  case type_dataset:
+    // Don't know how to compare datasets
+    assert(0);
+    break;
+  case type_extlink:
+    assert(data_extlink_filename ==
+           discretefieldblockcomponent->data_extlink_filename);
+    assert(data_extlink_objname ==
+           discretefieldblockcomponent->data_extlink_objname);
+    break;
+  case type_copy:
+    assert(data_copy_loc == discretefieldblockcomponent->data_copy_loc);
+    assert(data_copy_name == discretefieldblockcomponent->data_copy_name);
+    break;
+  case type_range:
+    assert(data_range_origin == discretefieldblockcomponent->data_range_origin);
+    assert(data_range_delta == discretefieldblockcomponent->data_range_delta);
+    break;
+  default:
+    assert(0);
+  }
+}
+
 void DiscreteFieldBlockComponent::setData() {
   data_type = type_empty;
   data_dataspace = H5::DataSpace();

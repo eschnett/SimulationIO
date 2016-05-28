@@ -93,6 +93,8 @@ private:
 public:
   virtual ~Basis() {}
 
+  void merge(const shared_ptr<Basis> &basis);
+
   virtual ostream &output(ostream &os, int level = 0) const;
   friend ostream &operator<<(ostream &os, const Basis &basis) {
     return basis.output(os);

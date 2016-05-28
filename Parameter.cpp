@@ -21,6 +21,16 @@ void Parameter::read(const H5::CommonFG &loc, const string &entry,
                 });
 }
 
+void Parameter::merge(const shared_ptr<Parameter> &parameter) {
+  assert(project()->name() == parameter->project()->name());
+  for (const auto &iter : parameter->parametervalues()) {
+    const auto &parametervalue = iter.second;
+    if (!m_parametervalues.count(parametervalue->name()))
+      createParameterValue(parametervalue->name());
+    m_parametervalues.at(parametervalue->name())->merge(parametervalue);
+  }
+}
+
 ostream &Parameter::output(ostream &os, int level) const {
   os << indent(level) << "Parameter " << quote(name()) << "\n";
   for (const auto &val : parametervalues())

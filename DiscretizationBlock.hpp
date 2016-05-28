@@ -92,6 +92,8 @@ private:
 public:
   virtual ~DiscretizationBlock() {}
 
+  void merge(const shared_ptr<DiscretizationBlock> &discretizationblock);
+
   void setBox() { m_box.reset(); }
   void setBox(const box_t &box) {
     assert(box.valid() &&

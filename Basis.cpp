@@ -27,6 +27,17 @@ void Basis::read(const H5::CommonFG &loc, const string &entry,
   m_configuration->insert(name(), shared_from_this());
 }
 
+void Basis::merge(const shared_ptr<Basis> &basis) {
+  assert(tangentspace()->name() == basis->tangentspace()->name());
+  assert(m_configuration->name() == basis->configuration()->name());
+  for (const auto &iter : basis->basisvectors()) {
+    const auto &basisvector = iter.second;
+    if (!m_basisvectors.count(basisvector->name()))
+      createBasisVector(basisvector->name(), basisvector->direction());
+    m_basisvectors.at(basisvector->name())->merge(basisvector);
+  }
+}
+
 ostream &Basis::output(ostream &os, int level) const {
   os << indent(level) << "Basis " << quote(name()) << ": Configuration "
      << quote(configuration()->name()) << " TangentSpace "

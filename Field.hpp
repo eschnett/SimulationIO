@@ -115,6 +115,8 @@ private:
 public:
   virtual ~Field() {}
 
+  void merge(const shared_ptr<Field> &field);
+
   virtual ostream &output(ostream &os, int level = 0) const;
   friend ostream &operator<<(ostream &os, const Field &field) {
     return field.output(os);

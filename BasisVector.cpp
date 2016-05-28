@@ -17,6 +17,11 @@ void BasisVector::read(const H5::CommonFG &loc, const string &entry,
   H5::readAttribute(group, "direction", m_direction);
 }
 
+void BasisVector::merge(const shared_ptr<BasisVector> &basisvector) {
+  assert(basis()->name() == basisvector->basis()->name());
+  assert(m_direction == basisvector->direction());
+}
+
 ostream &BasisVector::output(ostream &os, int level) const {
   os << indent(level) << "BasisVector " << quote(name()) << ": Basis "
      << quote(basis()->name()) << " direction=" << direction() << "\n";

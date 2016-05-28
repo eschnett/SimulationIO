@@ -30,6 +30,37 @@ void DiscreteFieldBlock::read(const H5::CommonFG &loc, const string &entry,
   // TODO: check storage_indices
 }
 
+void DiscreteFieldBlock::merge(
+    const shared_ptr<DiscreteFieldBlock> &discretefieldblock) {
+  assert(discretefield()->name() ==
+         discretefieldblock->discretefield()->name());
+  assert(m_discretizationblock->name() ==
+         discretefieldblock->discretizationblock()->name());
+  for (const auto &iter : discretefieldblock->discretefieldblockcomponents()) {
+    const auto &discretefieldblockcomponent = iter.second;
+    if (!m_discretefieldblockcomponents.count(
+            discretefieldblockcomponent->name()))
+      createDiscreteFieldBlockComponent(
+          discretefieldblockcomponent->name(),
+          discretefield()
+              ->field()
+              ->project()
+              ->tensortypes()
+              .at(discretefieldblockcomponent->tensorcomponent()
+                      ->tensortype()
+                      ->name())
+              ->tensorcomponents()
+              .at(discretefieldblockcomponent->tensorcomponent()->name()));
+    m_discretefieldblockcomponents.at(discretefieldblockcomponent->name())
+        ->merge(discretefieldblockcomponent);
+  }
+  for (const auto &iter : discretefieldblock->storage_indices()) {
+    auto storage_index = iter.first;
+    assert(m_storage_indices.at(storage_index)->name() ==
+           discretefieldblock->storage_indices().at(storage_index)->name());
+  }
+}
+
 ostream &DiscreteFieldBlock::output(ostream &os, int level) const {
   os << indent(level) << "DiscreteFieldBlock " << quote(name())
      << ": DiscreteField " << quote(discretefield()->name())
