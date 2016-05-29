@@ -373,7 +373,7 @@ struct DiscreteFieldBlockComponent {
     type_dataset,
     type_extlink,
     type_copy,
-    type_range
+    type_range,
   } data_type;
   bool invariant() const;
   %extend {
@@ -514,7 +514,30 @@ struct ParameterValue {
   string name() const;
   std::shared_ptr<Parameter> parameter() const;
   const std::map<string, std::weak_ptr<Configuration> > &configurations() const;
+  enum {
+    type_empty,
+    type_int,
+    type_double,
+    type_string,
+  } value_type;
   bool invariant() const;
+  %extend {
+    int getValue_int() const
+    {
+      assert(self->value_type == ParameterValue::type_int);
+      return self->value_int;
+    }
+    double getValue_double() const
+    {
+      assert(self->value_type == ParameterValue::type_double);
+      return self->value_double;
+    }
+    string getValue_string() const
+    {
+      assert(self->value_type == ParameterValue::type_string);
+      return self->value_string;
+    }
+  }
 };
 
 struct Project {
