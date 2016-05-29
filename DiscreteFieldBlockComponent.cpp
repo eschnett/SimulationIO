@@ -207,7 +207,20 @@ void DiscreteFieldBlockComponent::write(const H5::CommonFG &loc,
     vector<hsize_t> size(dim);
     data_dataspace.getSimpleExtentDims(size.data());
     vector<hsize_t> chunksize(dim);
-    const hsize_t linear_size = 16; // 16^3 * 8 B = 32 kB
+    // Guessing a good chunk size:
+    // - chunk should fit in L3 cache
+    // - chunk should be larger than stripe size
+    // - chunk should be larger than bandwidth-latency product
+    // A typical L3 cache size is several MByte
+    // A typical stripe size is 128 kByte
+    // A typical disk latency-bandwidth product is
+    //    L = 1 / (10,000/min) / 2 = 0.006 sec
+    //    BW = 100 MByte/sec
+    //    BW * L = 600 kByte
+    // We choose a chunk size of 64^3:
+    //    64^3 * 8 B = 2 MByte
+    // Maybe 32^3 would be a better size?
+    const hsize_t linear_size = 64;
     for (int d = 0; d < dim; ++d)
       chunksize.at(d) = std::min(linear_size, size.at(d));
     proplist.setChunk(dim, chunksize.data());
