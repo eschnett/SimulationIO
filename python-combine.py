@@ -293,83 +293,92 @@ for field2 in project2.fields().values():
                     discretefieldblockcomponent2.tensorcomponent()
                 message("TensorComponent \"%s\"" % tensorcomponent2.name())
 
-                # Create dataset
-                discretefieldblockcomponent2.setData_double()
-                path2 = discretefieldblockcomponent2.getPath()
-                name2 = discretefieldblockcomponent2.getName()
-                lower2 = discretizationblock2.box().lower()
-                upper2 = discretizationblock2.box().upper()
-                shape2 = discretizationblock2.box().shape()
-                message("combined_box=%s:%s" % (lower2, upper2))
-                # Guessing a good chunk size:
-                # - chunk should fit in L3 cache
-                # - chunk should be larger than stripe size
-                # - chunk should be larger than bandwidth-latency product
-                # A typical L3 cache size is several MByte
-                # A typical stripe size is 128 kByte
-                # A typical disk latency-bandwidth product is
-                #    L = 1 / (10,000/min) / 2 = 0.006 sec
-                #    BW = 100 MByte/sec
-                #    BW * L = 600 kByte
-                # We choose a chunk size of 64^3:
-                #    64^3 * 8 B = 2 MByte
-                # Maybe 32^3 would be a better size?
-                chunksize = [min(64, sz) for sz in shape2]
-                # shuffling improves compression
-                # level 1 is fast, but still offers good compression
-                clevel = 1
-                dataset = \
-                    hfile2.create_dataset("%s/%s" % (path2, name2),
-                                          dtype='double', shape=shape2,
-                                          chunks=tuple(chunksize), shuffle=True,
-                                          compression='gzip',
-                                          compression_opts=clevel)
+                if (discretefieldblockcomponent2.data_type ==
+                    discretefieldblockcomponent2.type_range):
 
-                # Loop over datasets to be read
-                points_total = discretizationblock2.box().size()
-                points_read = 0
-                indent()
-                for discretefieldblock in \
-                        discretefield.discretefieldblocks().values():
-                    message("DiscreteFieldBlock \"%s\"" %
-                            discretefieldblock.name())
-                    discretizationblock = \
-                        discretefieldblock.discretizationblock()
+                    # TODO: implement this
+                    pass
+
+                else:
+
+                    # Create dataset
+                    discretefieldblockcomponent2.setData_double()
+                    path2 = discretefieldblockcomponent2.getPath()
+                    name2 = discretefieldblockcomponent2.getName()
+                    lower2 = discretizationblock2.box().lower()
+                    upper2 = discretizationblock2.box().upper()
+                    shape2 = discretizationblock2.box().shape()
+                    message("combined_box=%s:%s" % (lower2, upper2))
+                    # Guessing a good chunk size:
+                    # - chunk should fit in L3 cache
+                    # - chunk should be larger than stripe size
+                    # - chunk should be larger than bandwidth-latency product
+                    # A typical L3 cache size is several MByte
+                    # A typical stripe size is 128 kByte
+                    # A typical disk latency-bandwidth product is
+                    #    L = 1 / (10,000/min) / 2 = 0.006 sec
+                    #    BW = 100 MByte/sec
+                    #    BW * L = 600 kByte
+                    # We choose a chunk size of 64^3:
+                    #    64^3 * 8 B = 2 MByte
+                    # Maybe 32^3 would be a better size?
+                    chunksize = [min(64, sz) for sz in shape2]
+                    # shuffling improves compression
+                    # level 1 is fast, but still offers good compression
+                    clevel = 1
+                    dataset = \
+                        hfile2.create_dataset("%s/%s" % (path2, name2),
+                                              dtype='double', shape=shape2,
+                                              chunks=tuple(chunksize),
+                                              shuffle=True,
+                                              compression='gzip',
+                                              compression_opts=clevel)
+
+                    # Loop over datasets to be read
+                    points_total = discretizationblock2.box().size()
+                    points_read = 0
                     indent()
+                    for discretefieldblock in \
+                            discretefield.discretefieldblocks().values():
+                        message("DiscreteFieldBlock \"%s\"" %
+                                discretefieldblock.name())
+                        discretizationblock = \
+                            discretefieldblock.discretizationblock()
+                        indent()
 
-                    discretefieldblockcomponent = \
-                        discretefieldblock.storage_indices()[
-                            tensorcomponent2.storage_index()]
-                    message("DiscreteFieldBlockComponent \"%s\"" %
-                            discretefieldblockcomponent.name())
+                        discretefieldblockcomponent = \
+                            discretefieldblock.storage_indices()[
+                                tensorcomponent2.storage_index()]
+                        message("DiscreteFieldBlockComponent \"%s\"" %
+                                discretefieldblockcomponent.name())
 
-                    tensorcomponent = \
-                        discretefieldblockcomponent.tensorcomponent()
-                    assert (tensorcomponent.storage_index() ==
-                            tensorcomponent2.storage_index())
+                        tensorcomponent = \
+                            discretefieldblockcomponent.tensorcomponent()
+                        assert (tensorcomponent.storage_index() ==
+                                tensorcomponent2.storage_index())
 
-                    # Read dataset
-                    path = discretefieldblockcomponent.getPath()
-                    name = discretefieldblockcomponent.getName()
-                    lower = discretizationblock.box().lower()
-                    upper = discretizationblock.box().upper()
-                    shape = discretizationblock.box().shape()
-                    # TODO: disregard overlap (ghost zones)
-                    points_read += discretizationblock.box().size()
-                    message("box=%s:%s   %d/%d (%d%%)" %
-                            (lower, upper, points_read, points_total,
-                             100.0 * points_read / points_total))
-                    data = hfile["%s/%s" % (path, name)]
-                    data_shape = np.flipud(data.shape)
-                    assert (data_shape == shape).all()
+                        # Read dataset
+                        path = discretefieldblockcomponent.getPath()
+                        name = discretefieldblockcomponent.getName()
+                        lower = discretizationblock.box().lower()
+                        upper = discretizationblock.box().upper()
+                        shape = discretizationblock.box().shape()
+                        # TODO: disregard overlap (ghost zones)
+                        points_read += discretizationblock.box().size()
+                        message("box=%s:%s   %d/%d (%d%%)" %
+                                (lower, upper, points_read, points_total,
+                                 100.0 * points_read / points_total))
+                        data = hfile["%s/%s" % (path, name)]
+                        data_shape = np.flipud(data.shape)
+                        assert (data_shape == shape).all()
 
-                    # Write into dataset
-                    dataset[lower[2]:upper[2],
-                            lower[1]:upper[1],
-                            lower[0]:upper[0]] = data
+                        # Write into dataset
+                        dataset[lower[2]:upper[2],
+                                lower[1]:upper[1],
+                                lower[0]:upper[0]] = data
 
+                        outdent()
                     outdent()
-                outdent()
 
         outdent()
 
