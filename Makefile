@@ -14,6 +14,7 @@ DEFAULT_MPI_LIBS= -lmpichcxx -lmpich
 
 CXX ?= $(DEFAULT_CXX)
 SWIG ?= $(DEFAULT_SWIG)
+PY_PACKAGE_DIR=pysimulationio
 
 ifneq ($(COVERAGE),)
 CXXFLAGS += --coverage
@@ -125,10 +126,12 @@ make-dynamiclib = -shared
 endif
 _%.so: %_wrap.o $(SIO_SRCS:%.cpp=%.o)
 	$(CXX) $(make-dynamiclib) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $(PYTHON_LDFLAGS) -o $@ $^ $(LIBS) $(PYTHON_LIBS)
+	cp _$*.so $(PY_PACKAGE_DIR)
 
 %_wrap.cpp: %.i
 	$(SWIG) -Wall -c++ -python $*.i
 	mv $*_wrap.cxx $*_wrap.cpp
+	cp $*.py $(PY_PACKAGE_DIR)
 .PRECIOUS: $(PYTHON_EXE:_%.so=%_wrap.cpp)
 .PRECIOUS: $(PYTHON_EXE:_%.so=%_wrap.o)
 
@@ -161,7 +164,11 @@ clean:
 	$(RM) -- $(PYTHON_EXE:_%.so=%_wrap.cxx) $(PYTHON_EXE:_%.so=%_wrap.cpp)
 	$(RM) -- $(PYTHON_EXE:_%.so=%_wrap.d) $(PYTHON_EXE:_%.so=%_wrap.o)
 	$(RM) -- $(PYTHON_EXE:_%.so=%.py) $(PYTHON_EXE:_%.so=%.pyc)
-	$(RM) -- $(ALL_EXE)	
+	$(RM) -- $(ALL_EXE)
+	$(RM) -- $(PYTHON_EXE:_%.so=${PY_PACKAGE_DIR}/%.py)
+	$(RM) -- $(PYTHON_EXE:_%.so=${PY_PACKAGE_DIR}/%.pyc)
+	$(RM) -- $(PYTHON_EXE:%.so=${PY_PACKAGE_DIR}/%.so)
+	$(RM) ${PY_PACKAGE_DIR}/__init__.pyc
 
 distclean: clean
 	$(RM) $(GTEST_DIR).tar.gz
