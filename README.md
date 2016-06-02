@@ -11,7 +11,7 @@ fiber-bundles, and sub-manifolds. The project is currently in a
 working beta.
 
 More information can be found in
-[this presnetation](https://github.com/Yurlungur/simulationio-and-yt)
+[this presentation](https://github.com/Yurlungur/simulationio-and-yt)
 on SimulationIO and related tools.
 
 ## Components
@@ -25,7 +25,30 @@ SimulationIO has several components:
 - A python library, pysimulationio that wraps the object files into a
   single shared python API.
 
-# Requirements
+## Using
+
+- To convert output from the Einstein Toolkit:
+
+```bash
+sio-convert-carpet-output output_file.s5 /path/to/input_files/*.h5
+```
+
+- To look at the innards of a file:
+
+```bash
+sio-list filename.s5
+```
+
+- To generate an example file:
+
+```bash
+sio-example
+```
+
+- The repository also contains several python files which show how to
+  use the python API.
+
+## Requirements
 
 SimulationIO relies on a modern version of HDF5 and a modern version
 of MPI.
