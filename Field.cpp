@@ -42,6 +42,25 @@ void Field::read(const H5::CommonFG &loc, const string &entry,
   m_tensortype->noinsert(shared_from_this());
 }
 
+void Field::merge(const shared_ptr<Field> &field) {
+  assert(project()->name() == field->project()->name());
+  assert(m_configuration->name() == field->configuration()->name());
+  assert(m_manifold->name() == field->manifold()->name());
+  assert(m_tangentspace->name() == field->tangentspace()->name());
+  assert(m_tensortype->name() == field->tensortype()->name());
+  for (const auto &iter : field->discretefields()) {
+    const auto &discretefield = iter.second;
+    if (!m_discretefields.count(discretefield->name()))
+      createDiscreteField(
+          discretefield->name(), project()->configurations().at(
+                                     discretefield->configuration()->name()),
+          manifold()->discretizations().at(
+              discretefield->discretization()->name()),
+          tangentspace()->bases().at(discretefield->basis()->name()));
+    m_discretefields.at(discretefield->name())->merge(discretefield);
+  }
+}
+
 ostream &Field::output(ostream &os, int level) const {
   os << indent(level) << "Field " << quote(name()) << ": Configuration "
      << quote(configuration()->name()) << " Manifold "

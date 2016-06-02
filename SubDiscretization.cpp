@@ -38,6 +38,17 @@ void SubDiscretization::read(const H5::CommonFG &loc, const string &entry,
   m_child_discretization->insertParent(name(), shared_from_this());
 }
 
+void SubDiscretization::merge(
+    const shared_ptr<SubDiscretization> &subdiscretization) {
+  assert(manifold()->name() == subdiscretization->manifold()->name());
+  assert(m_parent_discretization->name() ==
+         subdiscretization->parent_discretization()->name());
+  assert(m_child_discretization->name() ==
+         subdiscretization->child_discretization()->name());
+  assert(m_factor == subdiscretization->factor());
+  assert(m_offset == subdiscretization->offset());
+}
+
 ostream &SubDiscretization::output(ostream &os, int level) const {
   os << indent(level) << "SubDiscretization " << quote(name()) << ": Manifold "
      << quote(manifold()->name()) << " parent Discretization "

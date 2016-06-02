@@ -35,6 +35,23 @@ void DiscreteField::read(const H5::CommonFG &loc, const string &entry,
   m_basis->noinsert(shared_from_this());
 }
 
+void DiscreteField::merge(const shared_ptr<DiscreteField> &discretefield) {
+  assert(field()->name() == discretefield->field()->name());
+  assert(m_configuration->name() == discretefield->configuration()->name());
+  assert(m_discretization->name() == discretefield->discretization()->name());
+  assert(m_basis->name() == discretefield->basis()->name());
+  for (const auto &iter : discretefield->discretefieldblocks()) {
+    const auto &discretefieldblock = iter.second;
+    if (!m_discretefieldblocks.count(discretefieldblock->name()))
+      createDiscreteFieldBlock(
+          discretefieldblock->name(),
+          m_discretization->discretizationblocks().at(
+              discretefieldblock->discretizationblock()->name()));
+    m_discretefieldblocks.at(discretefieldblock->name())
+        ->merge(discretefieldblock);
+  }
+}
+
 ostream &DiscreteField::output(ostream &os, int level) const {
   os << indent(level) << "DiscreteField " << quote(name()) << ": Configuration "
      << quote(configuration()->name()) << " Field " << quote(field()->name())

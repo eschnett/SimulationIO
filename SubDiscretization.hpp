@@ -138,6 +138,8 @@ private:
 public:
   virtual ~SubDiscretization() {}
 
+  void merge(const shared_ptr<SubDiscretization> &subdiscretization);
+
   virtual ostream &output(ostream &os, int level = 0) const;
   friend ostream &operator<<(ostream &os,
                              const SubDiscretization &subdiscretization) {

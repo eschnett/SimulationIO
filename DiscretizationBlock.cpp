@@ -78,6 +78,18 @@ void DiscretizationBlock::read(
   }
 }
 
+void DiscretizationBlock::merge(
+    const shared_ptr<DiscretizationBlock> &discretizationblock) {
+  assert(discretization()->name() ==
+         discretizationblock->discretization()->name());
+  if (!m_box.valid())
+    m_box = discretizationblock->box();
+  if (!m_active.valid())
+    m_active = discretizationblock->active();
+  assert(m_box == discretizationblock->box());
+  assert(m_active == discretizationblock->active());
+}
+
 ostream &DiscretizationBlock::output(ostream &os, int level) const {
   os << indent(level) << "DiscretizationBlock " << quote(name())
      << ": Discretization " << quote(discretization()->name());

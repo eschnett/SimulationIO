@@ -88,6 +88,8 @@ private:
 public:
   virtual ~TangentSpace() {}
 
+  void merge(const shared_ptr<TangentSpace> &tangentspace);
+
   virtual ostream &output(ostream &os, int level = 0) const;
   friend ostream &operator<<(ostream &os, const TangentSpace &tangentspace) {
     return tangentspace.output(os);

@@ -102,6 +102,8 @@ private:
 public:
   virtual ~Project() {}
 
+  void merge(const shared_ptr<Project> &project);
+
   void createStandardTensorTypes();
 
   virtual ostream &output(ostream &os, int level = 0) const;

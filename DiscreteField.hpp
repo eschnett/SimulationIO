@@ -95,6 +95,8 @@ private:
 public:
   virtual ~DiscreteField() {}
 
+  void merge(const shared_ptr<DiscreteField> &discretefield);
+
   virtual ostream &output(ostream &os, int level = 0) const;
   friend ostream &operator<<(ostream &os, const DiscreteField &discretefield) {
     return discretefield.output(os);

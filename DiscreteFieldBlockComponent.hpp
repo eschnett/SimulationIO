@@ -130,6 +130,9 @@ private:
 public:
   virtual ~DiscreteFieldBlockComponent() {}
 
+  void merge(const shared_ptr<DiscreteFieldBlockComponent>
+                 &discretefieldblockcomponent);
+
   void setData();
   template <typename T> void setData();
   void setData(const string &filename, const string &objname);

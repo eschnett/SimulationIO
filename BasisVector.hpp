@@ -67,6 +67,8 @@ private:
 public:
   virtual ~BasisVector() {}
 
+  void merge(const shared_ptr<BasisVector> &basisvector);
+
   virtual ostream &output(ostream &os, int level = 0) const;
   friend ostream &operator<<(ostream &os, const BasisVector &basisvector) {
     return basisvector.output(os);

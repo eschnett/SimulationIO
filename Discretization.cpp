@@ -27,6 +27,18 @@ void Discretization::read(const H5::CommonFG &loc, const string &entry,
   m_configuration->insert(name(), shared_from_this());
 }
 
+void Discretization::merge(const shared_ptr<Discretization> &discretization) {
+  assert(manifold()->name() == discretization->manifold()->name());
+  assert(m_configuration->name() == discretization->configuration()->name());
+  for (const auto &iter : discretization->discretizationblocks()) {
+    const auto &discretizationblock = iter.second;
+    if (!m_discretizationblocks.count(discretizationblock->name()))
+      createDiscretizationBlock(discretizationblock->name());
+    m_discretizationblocks.at(discretizationblock->name())
+        ->merge(discretizationblock);
+  }
+}
+
 ostream &Discretization::output(ostream &os, int level) const {
   os << indent(level) << "Discretization " << quote(name())
      << ": Configuration " << quote(configuration()->name()) << " Manifold "

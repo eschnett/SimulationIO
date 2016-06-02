@@ -25,6 +25,14 @@ void CoordinateField::read(
   m_field->noinsert(shared_from_this());
 }
 
+void CoordinateField::merge(
+    const shared_ptr<CoordinateField> &coordinatefield) {
+  assert(coordinatesystem()->name() ==
+         coordinatefield->coordinatesystem()->name());
+  assert(m_direction == coordinatefield->direction());
+  assert(m_field->name() == coordinatefield->field()->name());
+}
+
 ostream &CoordinateField::output(ostream &os, int level) const {
   os << indent(level) << "CoordinateField " << quote(name())
      << ": CoordinateSystem " << quote(coordinatesystem()->name())

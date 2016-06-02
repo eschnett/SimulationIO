@@ -82,6 +82,8 @@ private:
 public:
   virtual ~CoordinateField() {}
 
+  void merge(const shared_ptr<CoordinateField> &coordinatefield);
+
   virtual ostream &output(ostream &os, int level = 0) const;
   friend ostream &operator<<(ostream &os,
                              const CoordinateField &coordinatefield) {

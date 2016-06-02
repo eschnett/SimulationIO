@@ -59,3 +59,4 @@ copy
 test_LazyPtr
 build
 external
+merge
