@@ -12,6 +12,16 @@ import SimulationIO as SIO
 
 
 
+# Combine multiple discretization boxes into one
+
+input_filename = "cactus/iof5-uniform-p2.s5"
+output_filename = "cactus/iof5-uniform-p2-combined.s5"
+
+include_parameters = {}
+# include_parameters = {"iteration": 0}
+
+
+
 indent_level = 0
 def indent():
     global indent_level
@@ -27,13 +37,9 @@ def message(*msgs):
 
 
 
-# Combine multiple discretization boxes into one
-filename = "cactus/iof5-uniform-p2.s5"
-filename2 = "cactus/iof5-uniform-p2-combined.s5"
-
 # Read project
 file = H5.H5File()
-file.openFile(filename, H5.H5F_ACC_RDONLY, H5.FileAccPropList())
+file.openFile(input_filename, H5.H5F_ACC_RDONLY, H5.FileAccPropList())
 message("Reading project...")
 project = SIO.readProject(file)
 indent()
@@ -230,15 +236,15 @@ cpl = H5.FileCreatPropList()
 apl = H5.FileAccPropList()
 apl.setFcloseDegree(H5.H5F_CLOSE_STRONG)
 # apl.setLibverBounds(H5.H5F_LIBVER_LATEST, H5.H5F_LIBVER_LATEST)
-file2 = H5.H5File(filename2, H5.H5F_ACC_TRUNC, cpl, apl)
+file2 = H5.H5File(output_filename, H5.H5F_ACC_TRUNC, cpl, apl)
 project2.write(file2)
 file2.close()
 
 message()
 message("Copying data..")
 
-hfile = h5py.File(filename, "r")
-hfile2 = h5py.File(filename2, "r+", libver='latest')
+hfile = h5py.File(input_filename, "r")
+hfile2 = h5py.File(output_filename, "r+", libver='latest')
 
 
 
@@ -252,6 +258,28 @@ for field2 in project2.fields().values():
     for discretefield2 in field2.discretefields().values():
         message("DiscreteField \"%s\"" % discretefield2.name())
         discretefield = field.discretefields()[discretefield2.name()]
+
+        found_parameter = False
+        skip_parameter = True
+        configuration = discretefield.configuration()
+        for parametervalue in configuration.parametervalues().values():
+            parameter = parametervalue.parameter()
+            if parameter.name() in include_parameters:
+                found_parameter = True
+                value = None
+                if parametervalue.value_type == parametervalue.type_int:
+                    value = parametervalue.getValue_int()
+                elif parametervalue.value_type == parametervalue.type_double:
+                    value = parametervalue.getValue_double()
+                elif parametervalue.value_type == parametervalue.type_string:
+                    value = parametervalue.getValue_string()
+                if value == include_parameters[parameter.name()]:
+                    skip_parameter = False
+        if found_parameter and skip_parameter:
+            indent()
+            message("Skipping...")
+            outdent()
+            continue
 
         # Loop over datasets to be written
         indent()
@@ -293,11 +321,14 @@ for field2 in project2.fields().values():
                 dataset = \
                     hfile2.create_dataset("%s/%s" % (path2, name2),
                                           dtype='double', shape=shape2,
-                                          chunks=tuple(chunksize), shuffle=True,
+                                          chunks=tuple(chunksize),
+                                          shuffle=True,
                                           compression='gzip',
                                           compression_opts=clevel)
 
                 # Loop over datasets to be read
+                points_total = discretizationblock2.box().size()
+                points_read = 0
                 indent()
                 for discretefieldblock in \
                         discretefield.discretefieldblocks().values():
@@ -305,6 +336,7 @@ for field2 in project2.fields().values():
                             discretefieldblock.name())
                     discretizationblock = \
                         discretefieldblock.discretizationblock()
+                    indent()
 
                     discretefieldblockcomponent = \
                         discretefieldblock.storage_indices()[
@@ -317,21 +349,34 @@ for field2 in project2.fields().values():
                     assert (tensorcomponent.storage_index() ==
                             tensorcomponent2.storage_index())
 
-                    # Read dataset
-                    path = discretefieldblockcomponent.getPath()
-                    name = discretefieldblockcomponent.getName()
-                    lower = discretizationblock.box().lower()
-                    upper = discretizationblock.box().upper()
-                    shape = discretizationblock.box().shape()
-                    message("box=%s:%s" % (lower, upper))
-                    data = hfile["%s/%s" % (path, name)]
-                    data_shape = np.flipud(data.shape)
-                    assert (data_shape == shape).all()
+                    if (discretefieldblockcomponent.data_type ==
+                        discretefieldblockcomponent.type_range):
+                        # TODO: implement this
+                        pass
 
-                    # Write into dataset
-                    dataset[lower[2]:upper[2],
-                            lower[1]:upper[1],
-                            lower[0]:upper[0]] = data
+                    else:
+                        # Read dataset
+                        path = discretefieldblockcomponent.getPath()
+                        name = discretefieldblockcomponent.getName()
+                        lower = discretizationblock.box().lower()
+                        upper = discretizationblock.box().upper()
+                        shape = discretizationblock.box().shape()
+                        # TODO: disregard overlap (ghost zones)
+                        points_read += discretizationblock.box().size()
+                        message("box=%s:%s   %d/%d (%d%%)" %
+                                (lower, upper, points_read, points_total,
+                                 100.0 * points_read / points_total))
+                        data = hfile["%s/%s" % (path, name)]
+                        data_shape = np.flipud(data.shape)
+                        assert (data_shape == shape).all()
+    
+                        # Write into dataset
+                        dataset[lower[2]:upper[2],
+                                lower[1]:upper[1],
+                                lower[0]:upper[0]] = data
+    
+
+                    outdent()
                 outdent()
 
         outdent()

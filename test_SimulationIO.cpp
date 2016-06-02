@@ -434,9 +434,9 @@ TEST(CoordinateSystem, HDF5) {
     auto p1 = readProject(file);
     ostringstream buf;
     buf << *p1->coordinatesystems().at("cs1");
-    EXPECT_EQ("CoordinateSystem \"cs1\": Configuration \"conf1\" Project "
-              "\"p1\" Manifold \"m1\"\n",
-              buf.str());
+    EXPECT_EQ(
+        "CoordinateSystem \"cs1\": Configuration \"conf1\" Manifold \"m1\"\n",
+        buf.str());
   }
   remove(filename);
 }
