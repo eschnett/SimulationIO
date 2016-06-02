@@ -235,7 +235,7 @@ int main(int argc, char **argv) {
   if (have_error) {
     cerr << "Synposis:\n"
          << argv[0]
-         << " [--copy|--extlink] <output file name> {<input file name>}*\n";
+         << " [--copy|--extlink]? <output file name> {<input file name>}*\n";
     return 1;
   }
   if (action == action_unset)
