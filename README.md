@@ -3,61 +3,126 @@
 [![Coverage Status](https://coveralls.io/repos/eschnett/SimulationIO/badge.svg?branch=master&service=github)](https://coveralls.io/github/eschnett/SimulationIO?branch=master)
 [![codecov.io](https://codecov.io/github/eschnett/SimulationIO/coverage.svg?branch=master)](https://codecov.io/github/eschnett/SimulationIO?branch=master)
 
-Efficient and convenient I/O for large PDE simulations
+SimulationIO is a library for efficient and convenient I/O for large
+PDE simulations. The intent is to abstract away from details such as
+files and formats and describe the simulation as one or more
+discretizations of a manifold, complete with tangent space,
+fiber-bundles, and sub-manifolds. The project is currently in a
+working beta.
 
-## Current state
+More information can be found in
+[this presnetation](https://github.com/Yurlungur/simulationio-and-yt)
+on SimulationIO and related tools.
 
-This repository contains a working prototype of a library that can be used to write and read simulation output, as would be necessary e.g. for the Cactus framework. There are substantially complete test cases, a simple example, an `h5ls` like utility, and a converter from the current Cactus format.
+## Components
 
-## Outdated sketches
-This repository contains a few sketches describing brainstorming results in various forms in the subdirectory `sketches`:
-- `AMR IO Library.md`: Original document
-- `simulations.{gliffy,svg,png}`: Graphical representation
-- `SimulationIO.hpp`: Description as C++ header file
-- `SimulationIO.jl`: Begin of an implementation in Julia
+SimulationIO has several components:
+- A collection of object files that can be linked against. For now,
+  only static linking is supported.
+- Several utility programs that can, for example, convert HDF5 output
+  from the [Einstein Toolkit](http://einsteintoolkit.org/) into the
+  SimulationIO format.
+- A python library, pysimulationio that wraps the object files into a
+  single shared python API.
 
-## Ideas
-- Add a UUID to every object
-  - can't just create UUIDs
-  - probably need to handle set of UUIDs?
-- Run benchmarks with large datasets
-- Add parallelism
-- Add sub-manifolds, sub-tangentspaces, etc.
-- Allow writing just part of a project, or adding to / modifying a project
-  - idea: whenever creating an HDF5 object, check whether it already exists; if so, check whether it looks as expected
-- Allow removing parts of a project, deleting it from a file?
-- Implement (value) equality comparison operators for our objects
-- Replace H5 SWIG interface with standard Python HDF5 library. To do this, obtain low-level HDF5 ids from Python, and create H5 objects from these.
-- Allow coordinates that are not fields, but are e.g. uniform, or uniform per dimension
-- Create `Data` class by splitting off from `DiscreteFieldBlockComponent`
-- Create `Value` class by splitting off from `ParameterValue`? Unify this with `Data`?
-- Range field should use a dataset instead of an attribute
-- In discrete manifold, distinguish between vertex, cell, and other centerings
-- Introduce min/max for discrete fields? For scalars only? Keep array for other tensor types, indexed by stored component? How are missing data indicated? nan?
-- Create DataSpace from vector<int>
-- Implement SILO writer (for VisIt) (or can this be a SILO wrapper?)
-- Measure performance of RegionCalculus
+# Requirements
 
-## Sub-Manifolds
-- Set of parent manifolds
-### Sub-Discretizations
-- Set of parent discretizations
-- If directions aligned:
-  - Map directions: int[sum-dim] -> [0..dim-1]
-  - Needs to handle points, lines, planes
-- If commensurate:
-  - Grid spacing ratio (rational)
-  - Offset (rational)
-  - Needs to handle AMR, multigrid, vertex/cell centering
+SimulationIO relies on a modern version of HDF5 and a modern version
+of MPI.
 
-## Sub-Tangentspaces
-- Set of parent tangentspaces (?)
-### Sub-Bases
-- Set of parent bases
-- If directions aligned:
-  - Map directions
-  - Needs to handle (projections onto) points, lines, planes
+## Installing
 
-## Coordinates
-- Want domain extents in terms of coordinate systems
-  - Add min/max attribute to coordinate systems? Or coordinate fields?
+The python library depends on but is nequired for the rest of the
+library. Therefore, it is installed separately.
+
+### Installng the core library
+
+To install the utilities and object files, clone the repository. Then
+set your environment variables so that the make system can find your
+HDF5 and MPI libraries. There are defaults set, but they may not work
+for you. The following environment variables are supported (and in
+this case set to the default):
+
+```bash
+CXX=g++
+```
+
+You may use CXX to set a compiler other than g++, for example the
+intel compilers.
+
+```bash
+MPI_NAME=mpich
+MPI_DIR=/usr
+MPI_LIBS="-lmpichcxx -lmpich"
+```
+
+This assumes that the mpi include directory is `${MPI_DIR}/include`
+and lib directory is `${MPI_DIR}/lib/x86_64-gnu`. You may also
+explicitly set these values:
+
+```bash
+MPI_INCLUDE=${MPI_DIR}/include/${MPI_NAME}
+MPI_CPPFLAGS=-I${MPI_INCLUDE}
+MPI_CXXFLAGS=
+MPI_LINK=${MPI_DIR}/lib/x86_64-gnu
+MPI_LDFLAGS="-L${MPI_LINK} -Wl,-rpath,${MPI_LINK}"
+```
+
+Similarly, for HDF5:
+
+```bash
+HDF5_DIR=/usr/local/hdf5
+HDF5_INCLUDE=${HDF5_DIR}/include
+HDF5_CPPFLAGS=-I{HDF5_INCLUDE}
+HDF5_CXXFLAGS=
+HDF5_LINK=${HDF5_DIR}/lib
+HDF5_LDFLAGS="-L${HDF5_LINK} -Wl,-rpath,${HDF5_LINK}"
+HDF5_LIBS="-lhdf5_cpp -lhdf5"
+```
+
+Once you've set your environment variables, run
+
+```bash
+make -j N
+```
+
+where `N` is the number of processors you'd like to use. This
+generates the object files and utilities. If you'd like to install the
+utilities in a global location you can set that location with the
+shell variables
+
+```bash
+PREFIX=/usr/local
+BIN_DIR=bin
+```
+
+then type `make install` to install the to copy the utilities to
+`${PREFIX}/${BIN_DIR}`. You may need to use administrator priveleges.
+
+### Installing the Python API
+
+If you've run `make` all you need to do is run
+
+```bash
+python setup.py
+```
+
+as usual for python packages.
+
+
+### Hangups
+
+- If you need to install the python API locally, use
+
+```bash
+python setup.py --user
+```
+
+- Anaconda python will probably use its own version of hdf5. If you
+  use Anaconda python, make sure to point to it. The appropriate shell
+  variable setting is
+
+```bash
+HDF5_DIR=/path/to/anaconda/environment/root
+```
+
