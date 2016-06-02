@@ -321,7 +321,8 @@ for field2 in project2.fields().values():
                 dataset = \
                     hfile2.create_dataset("%s/%s" % (path2, name2),
                                           dtype='double', shape=shape2,
-                                          chunks=tuple(chunksize), shuffle=True,
+                                          chunks=tuple(chunksize),
+                                          shuffle=True,
                                           compression='gzip',
                                           compression_opts=clevel)
 
@@ -348,25 +349,32 @@ for field2 in project2.fields().values():
                     assert (tensorcomponent.storage_index() ==
                             tensorcomponent2.storage_index())
 
-                    # Read dataset
-                    path = discretefieldblockcomponent.getPath()
-                    name = discretefieldblockcomponent.getName()
-                    lower = discretizationblock.box().lower()
-                    upper = discretizationblock.box().upper()
-                    shape = discretizationblock.box().shape()
-                    # TODO: disregard overlap (ghost zones)
-                    points_read += discretizationblock.box().size()
-                    message("box=%s:%s   %d/%d (%d%%)" %
-                            (lower, upper, points_read, points_total,
-                             100.0 * points_read / points_total))
-                    data = hfile["%s/%s" % (path, name)]
-                    data_shape = np.flipud(data.shape)
-                    assert (data_shape == shape).all()
+                    if (discretefieldblockcomponent.data_type ==
+                        discretefieldblockcomponent.type_range):
+                        # TODO: implement this
+                        pass
 
-                    # Write into dataset
-                    dataset[lower[2]:upper[2],
-                            lower[1]:upper[1],
-                            lower[0]:upper[0]] = data
+                    else:
+                        # Read dataset
+                        path = discretefieldblockcomponent.getPath()
+                        name = discretefieldblockcomponent.getName()
+                        lower = discretizationblock.box().lower()
+                        upper = discretizationblock.box().upper()
+                        shape = discretizationblock.box().shape()
+                        # TODO: disregard overlap (ghost zones)
+                        points_read += discretizationblock.box().size()
+                        message("box=%s:%s   %d/%d (%d%%)" %
+                                (lower, upper, points_read, points_total,
+                                 100.0 * points_read / points_total))
+                        data = hfile["%s/%s" % (path, name)]
+                        data_shape = np.flipud(data.shape)
+                        assert (data_shape == shape).all()
+    
+                        # Write into dataset
+                        dataset[lower[2]:upper[2],
+                                lower[1]:upper[1],
+                                lower[0]:upper[0]] = data
+    
 
                     outdent()
                 outdent()

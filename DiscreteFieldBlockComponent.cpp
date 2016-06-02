@@ -270,6 +270,20 @@ string DiscreteFieldBlockComponent::getPath() const {
   return buf.str();
 }
 string DiscreteFieldBlockComponent::getName() const {
+  if (!(data_type == type_dataset || data_type == type_extlink ||
+        data_type == type_copy))
+    std::cerr << "DiscreteFieldBlockComponent::getName: data_type="
+              << (data_type == type_empty
+                      ? "type_empty"
+                      : data_type == type_dataset
+                            ? "type_dataset"
+                            : data_type == type_extlink
+                                  ? "type_extlink"
+                                  : data_type == type_copy
+                                        ? "type_copy"
+                                        : data_type == type_range ? "type_range"
+                                                                  : "[error]")
+              << "\n";
   assert(data_type == type_dataset || data_type == type_extlink ||
          data_type == type_copy);
   return "data";
