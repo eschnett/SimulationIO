@@ -167,8 +167,8 @@ coverage:
 
 install:
 	@cp sio-example $(PREFIX)/$(BIN_SUBDIR)
-	@cp sio-list $(PREFIX)/$(BIN_DIR)
-	@cp sio-convert-carpet-output $(PREFIX)/$(BIN_DIR)
+	@cp sio-list $(PREFIX)/$(BIN_SUBDIR)
+	@cp sio-convert-carpet-output $(PREFIX)/$(BIN_SUBDIR)
 
 clean:
 	$(RM) -r *.dSYM
