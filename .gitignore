@@ -60,7 +60,7 @@ test_SimulationIO
 links.txt
 libs.txt
 includes.txt
-compiler.txt
+cxx.txt
 flags.txt
 lib_sources.txt
 

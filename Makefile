@@ -10,7 +10,7 @@ DEFAULT_HDF5_DIR = /usr/local/hdf5
 DEFAULT_MPI_NAME = mpich
 DEFAULT_MPI_LIBS= -lmpichcxx -lmpich
 DEFAULT_PREFIX = /usr/local
-DEFAULT_BIN_DIR = bin
+DEFAULT_BIN_SUBDIR = bin
 
 CXX ?= $(DEFAULT_CXX)
 PY_PACKAGE_DIR=pysimulationio
@@ -55,23 +55,23 @@ ALL_EXE = \
 	test_RegionCalculus test_SimulationIO
 
 HDF5_DIR ?= $(DEFAULT_HDF5_DIR)
-HDF5_INCLUDE ?= $(HDF5_DIR)/include
-HDF5_CPPFLAGS ?= -I$(HDF5_INCLUDE)
+HDF5_INCDIR ?= $(HDF5_DIR)/include
+HDF5_CPPFLAGS ?= -I$(HDF5_INCDIR)
 HDF5_CXXFLAGS ?=
-HDF5_LINK ?= $(HDF5_DIR)/lib
-HDF5_LDFLAGS ?= -L$(HDF5_LINK) -Wl,-rpath,$(HDF5_LINK)
+HDF5_LIBDIR ?= $(HDF5_DIR)/lib
+HDF5_LDFLAGS ?= -L$(HDF5_LIBDIR) -Wl,-rpath,$(HDF5_LIBDIR)
 HDF5_LIBS ?= -lhdf5_cpp -lhdf5
 
 MPI_NAME ?= $(DEFAULT_MPI_NAME)
 MPI_DIR ?= $(DEFAULT_MPI_DIR)
-MPI_INCLUDE ?= $(MPI_DIR)/include/$(MPI_NAME)
-MPI_CPPFLAGS ?= -I$(MPI_INCLUDE)
+MPI_INCDIR ?= $(MPI_DIR)/include/$(MPI_NAME)
+MPI_CPPFLAGS ?= -I$(MPI_INCDIR)
 MPI_CXXFLAGS ?=
-MPI_LINK ?= $(MPI_DIR)/lib/x86_64-gnu
-MPI_LDFLAGS ?= -L$(MPI_LINK) -Wl,-rpath,$(MPI_LINK)
+MPI_LIBDIR ?= $(MPI_DIR)/lib/x86_64-gnu
+MPI_LDFLAGS ?= -L$(MPI_LIBDIR) -Wl,-rpath,$(MPI_LIBDIR)
 MPI_LIBS ?= $(DEFAULT_MPI_LIBS)
 PREFIX ?= $(DEFAULT_PREFIX)
-BIN_DIR ?= $(DEFAULT_BIN_DIR)
+BIN_SUBDIR ?= $(DEFAULT_BIN_SUBDIR)
 
 GTEST_VERSION = release-1.7.0
 GTEST_DIR = googletest-${GTEST_VERSION}
@@ -90,22 +90,22 @@ endif
 
 all: $(ALL_EXE) meta
 
-meta: includes.txt links.txt libs.txt compiler.txt flags.txt lib_sources.txt
+meta: includes.txt links.txt libs.txt cxx.txt flags.txt lib_sources.txt
 
 includes.txt: $(ALL_SRC)
-	@echo $(HDF5_INCLUDE) > includes.txt
-	@echo $(MPI_INCLUDE) >> includes.txt
+	@echo $(HDF5_INCDIR) > includes.txt
+	@echo $(MPI_INCDIR) >> includes.txt
 
 links.txt: $(ALL_SRC)
-	@echo $(HDF5_LINK) > links.txt
-	@echo $(MPI_LINK) >> links.txt
+	@echo $(HDF5_LIBDIR) > links.txt
+	@echo $(MPI_LIBDIR) >> links.txt
 
 libs.txt: $(ALL_SRC)
 	@echo $(HDF5_LIBS) > libs.txt
 	@echo $(MPI_LIBS) >> libs.txt
 
-compiler.txt: $(ALL_SRC)
-	@echo $(CXX) > compiler.txt
+cxx.txt: $(ALL_SRC)
+	@echo $(CXX) > cxx.txt
 
 flags.txt: $(ALL_SRC)
 	@echo $(CXX_FLAGS_BASE) > flags.txt
@@ -166,7 +166,7 @@ coverage:
 	-lcov --list coverage.info
 
 install:
-	@cp sio-example $(PREFIX)/$(BIN_DIR)
+	@cp sio-example $(PREFIX)/$(BIN_SUBDIR)
 	@cp sio-list $(PREFIX)/$(BIN_DIR)
 	@cp sio-convert-carpet-output $(PREFIX)/$(BIN_DIR)
 
@@ -192,7 +192,7 @@ distclean: clean
 	$(RM) includes.txt
 	$(RM) links.txt
 	$(RM) libs.txt
-	$(RM) compiler.txt
+	$(RM) cxx.txt
 	$(RM) flags.txt
 	$(RM) lib_sources.txt
 

@@ -38,9 +38,9 @@ try:
     links = [path.realpath(x) for x in links]
     link_args = ["-Wl,-rpath,{}".format(p) for p in links]
 
-    with open('compiler.txt','r') as f:
-        cc = f.read().strip()
-    environ["CC"] = cc
+    with open('cxx.txt','r') as f:
+        cxx = f.read().strip()
+    environ["CC"] = cxx # Python only looks at CC.
 
     with open('libs.txt','r') as f:
         libs = [x. strip() for x in f.readlines()]
@@ -58,15 +58,14 @@ all_object_files = glob.glob(path.join(here,'*.o'))
 if len(all_object_files) == 0:
     raise IOError("There are missing object files! Try running "
                   +"'make' to build SimulationIO.")
-object_files = [src.replace('cpp','o') for src in lib_sources]
+object_files = [src.replace('.cpp','.o') for src in lib_sources]
 
 swig_modules = ['H5','SimulationIO','RegionCalculus']
 swig_module_files = [path.join(here,"{}.py".format(m)) for m in swig_modules]
 swig_module_targets = [path.join(here,'pysimulationio',"{}.py".format(m))\
                        for m in swig_modules]
 swig_wrap_files = (
-    [path.join(here,"{}_wrap.cpp".format(m)) for m in swig_modules]
-    +[path.join(here,"{}_wrap.cxx".format(m)) for m in swig_modules]
+    [path.join(here,"{}_wrap.cxx".format(m)) for m in swig_modules]
     +[path.join(here,"{}_wrap.o".format(m)) for m in swig_modules])
 swig_opts = ['-c++','-Wall']
 

@@ -84,22 +84,22 @@ and lib directory is `${MPI_DIR}/lib/x86_64-gnu`. You may also
 explicitly set these values:
 
 ```bash
-MPI_INCLUDE=${MPI_DIR}/include/${MPI_NAME}
-MPI_CPPFLAGS=-I${MPI_INCLUDE}
+MPI_INCDIR=${MPI_DIR}/include/${MPI_NAME}
+MPI_CPPFLAGS=-I${MPI_INCDIR}
 MPI_CXXFLAGS=
-MPI_LINK=${MPI_DIR}/lib/x86_64-gnu
-MPI_LDFLAGS="-L${MPI_LINK} -Wl,-rpath,${MPI_LINK}"
+MPI_LIBDIR=${MPI_DIR}/lib/x86_64-gnu
+MPI_LDFLAGS="-L${MPI_LIBDIR} -Wl,-rpath,${MPI_LIBDIR}"
 ```
 
 Similarly, for HDF5:
 
 ```bash
 HDF5_DIR=/usr/local/hdf5
-HDF5_INCLUDE=${HDF5_DIR}/include
-HDF5_CPPFLAGS=-I{HDF5_INCLUDE}
+HDF5_INCDIR=${HDF5_DIR}/include
+HDF5_CPPFLAGS=-I{HDF5_INCDIR}
 HDF5_CXXFLAGS=
-HDF5_LINK=${HDF5_DIR}/lib
-HDF5_LDFLAGS="-L${HDF5_LINK} -Wl,-rpath,${HDF5_LINK}"
+HDF5_LIBDIR=${HDF5_DIR}/lib
+HDF5_LDFLAGS="-L${HDF5_LIBDIR} -Wl,-rpath,${HDF5_LIBDIR}"
 HDF5_LIBS="-lhdf5_cpp -lhdf5"
 ```
 
