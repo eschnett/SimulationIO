@@ -116,11 +116,11 @@ shell variables
 
 ```bash
 PREFIX=/usr/local
-BIN_DIR=bin
+BIN_SUBDIR=bin
 ```
 
 then type `make install` to install the to copy the utilities to
-`${PREFIX}/${BIN_DIR}`. You may need to use administrator priveleges.
+`${PREFIX}/${BIN_SUBDIR}`. You may need to use administrator priveleges.
 
 ### Installing the Python API
 
