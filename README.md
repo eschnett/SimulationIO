@@ -61,10 +61,9 @@ library. Therefore, it is installed separately.
 ### Installng the core library
 
 To install the utilities and object files, clone the repository. Then
-set your environment variables so that the make system can find your
-HDF5 and MPI libraries. There are defaults set, but they may not work
-for you. The following environment variables are supported (and in
-this case set to the default):
+open `Make.user` and change it to meet your needs. There are defaults
+set, but they may not work for you. The supported settings (and
+defaults) are below:
 
 ```bash
 CXX=g++
@@ -141,9 +140,10 @@ as usual for python packages.
 python setup.py --user
 ```
 
-- Anaconda python will probably use its own version of hdf5. If you
-  use Anaconda python, make sure to point to it. The appropriate shell
-  variable setting is
+- If you have h5py installed with python, setup.py will probably try
+  to link to the version of hdf5 it uses. The best solution to this is
+  to manually tell SimulationIO to point to that directory. If you are
+  using Anaconda python, this means:
 
 ```bash
 HDF5_DIR=/path/to/anaconda/environment/root

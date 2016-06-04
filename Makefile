@@ -1,18 +1,11 @@
+-include Make.user
+
 CPPFLAGS = $(GTEST_CPPFLAGS) $(HDF5_CPPFLAGS) $(MPI_CPPFLAGS)
 CXXFLAGS = $(GTEST_CXXFLAGS) $(HDF5_CXXFLAGS) $(MPI_CXXFLAGS) $(CXX_FLAGS_BASE)
 LDFLAGS = $(GTEST_LDFLAGS) $(HDF5_LDFLAGS) $(MPI_LDFLAGS)
 LIBS = $(GTEST_LIBS) $(HDF5_LIBS) $(MPI_LIBS)
 CXX_FLAGS_BASE = -Wall -std=c++0x -fPIC
 
-DEFAULT_CXX = g++
-DEFAULT_MPI_DIR = /usr/
-DEFAULT_HDF5_DIR = /usr/local/hdf5
-DEFAULT_MPI_NAME = mpich
-DEFAULT_MPI_LIBS= -lmpichcxx -lmpich
-DEFAULT_PREFIX = /usr/local
-DEFAULT_BIN_SUBDIR = bin
-
-CXX ?= $(DEFAULT_CXX)
 PY_PACKAGE_DIR=pysimulationio
 
 ifneq ($(COVERAGE),)
@@ -53,25 +46,6 @@ PYTHON_EXE = _H5.so _RegionCalculus.so _SimulationIO.so
 ALL_EXE = \
 	sio-benchmark sio-convert-carpet-output sio-list sio-example \
 	test_RegionCalculus test_SimulationIO
-
-HDF5_DIR ?= $(DEFAULT_HDF5_DIR)
-HDF5_INCDIR ?= $(HDF5_DIR)/include
-HDF5_CPPFLAGS ?= -I$(HDF5_INCDIR)
-HDF5_CXXFLAGS ?=
-HDF5_LIBDIR ?= $(HDF5_DIR)/lib
-HDF5_LDFLAGS ?= -L$(HDF5_LIBDIR) -Wl,-rpath,$(HDF5_LIBDIR)
-HDF5_LIBS ?= -lhdf5_cpp -lhdf5
-
-MPI_NAME ?= $(DEFAULT_MPI_NAME)
-MPI_DIR ?= $(DEFAULT_MPI_DIR)
-MPI_INCDIR ?= $(MPI_DIR)/include/$(MPI_NAME)
-MPI_CPPFLAGS ?= -I$(MPI_INCDIR)
-MPI_CXXFLAGS ?=
-MPI_LIBDIR ?= $(MPI_DIR)/lib/x86_64-gnu
-MPI_LDFLAGS ?= -L$(MPI_LIBDIR) -Wl,-rpath,$(MPI_LIBDIR)
-MPI_LIBS ?= $(DEFAULT_MPI_LIBS)
-PREFIX ?= $(DEFAULT_PREFIX)
-BIN_SUBDIR ?= $(DEFAULT_BIN_SUBDIR)
 
 GTEST_VERSION = release-1.7.0
 GTEST_DIR = googletest-${GTEST_VERSION}
