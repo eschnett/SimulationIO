@@ -71,6 +71,12 @@ swig_opts = ['-c++','-Wall']
 
 if 'COVERAGE' in os.environ.keys():
     link_args += '--coverage'
+    if 'clang' in cxx:
+        libs += 'profile_rt'
+    elif 'g++' in cxx:
+        libs += 'gcov'
+    else:
+        raise ValueError("Coverage not supported by your compiler.")
 
 # Overload the build and install commands so that swig behaves. See:
 # stackoverflow.com/questions/12491328/python-distutils-not-include-the-swig-generated-module
