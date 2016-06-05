@@ -1,7 +1,8 @@
 #! /usr/bin/env python
 
-import H5
-from SimulationIO import *
+import pysimulationio
+from pysimulationio import H5
+from pysimulationio.SimulationIO import *
 
 import numpy as np
 import h5py

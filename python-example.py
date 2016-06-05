@@ -4,8 +4,9 @@ from math import *
 
 import numpy as np
 
-import H5
-from SimulationIO import *
+import pysimulationio
+from pysimulationio import H5
+from pysimulationio.SimulationIO import *
 
 dim = 3
 dirnames = ["x", "y", "z"]
