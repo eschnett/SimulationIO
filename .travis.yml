@@ -52,10 +52,9 @@ script:
   - make -j2 test
   - ./sio-example && ./sio-list example.s5
   - python setup.py install --user
-  - BDIR=$(pwd) && cd ~ # can't run code locally anymore
-  - ls .local/lib/python2.7/site-packages/pysimulationio-0.1-py2.7-linux-x86_64.egg
-  - ls .local/lib/python2.7/site-packages/pysimulationio-0.1-py2.7-linux-x86_64.egg/pysimulationio
-  - ${BDIR}/python-example.py && ${BDIR}/sio-list python-example.s5
+  - BDIR=$(pwd) && cd ~ # must be outside of build directory
+  - python ${BDIR}/python-examples/write-sio-file.py
+  - python ${BDIR}/python-examples/read-sio-file.py python-example.s5
   # - ./julia-example.jl && ./list julia-example.s5
 after_success:
   - make -j2 coverage
