@@ -1,7 +1,7 @@
 # SimulationIO
-[![Build Status](https://travis-ci.org/eschnett/SimulationIO.svg?branch=master)](https://travis-ci.org/eschnett/SimulationIO)
-[![Coverage Status](https://coveralls.io/repos/eschnett/SimulationIO/badge.svg?branch=master&service=github)](https://coveralls.io/github/eschnett/SimulationIO?branch=master)
-[![codecov.io](https://codecov.io/github/eschnett/SimulationIO/coverage.svg?branch=master)](https://codecov.io/github/eschnett/SimulationIO?branch=master)
+[![Build Status](https://travis-ci.org/eschnett/SimulationIO.svg?branch=release-0.1)](https://travis-ci.org/eschnett/SimulationIO)
+[![Coverage Status](https://coveralls.io/repos/eschnett/SimulationIO/badge.svg?branch=release-0.1&service=github)](https://coveralls.io/github/eschnett/SimulationIO?branch=release-0.1)
+[![codecov.io](https://codecov.io/github/eschnett/SimulationIO/coverage.svg?branch=release-0.1)](https://codecov.io/github/eschnett/SimulationIO?branch=release-0.1)
 
 SimulationIO is a library for efficient and convenient I/O for large
 PDE simulations. The intent is to abstract away from details such as
