@@ -48,7 +48,7 @@ compiler:
   - clang
   - gcc
 script:
-  - make -j2 COVERAGE=1 CXX="$CXX" HDF5_DIR="$HDF5_DIR"
+  - make -j2 COVERAGE=1 CXX="$CXX" HDF5_DIR="$HDF5_DIR" MPI_NAME=openmpi MPI_LIBS=-lmpi
   - make -j2 test
   - ./example && ./list example.s5
   - ./python-example.py && ./list python-example.s5
