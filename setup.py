@@ -40,7 +40,11 @@ try:
 
     with open('libs.txt','r') as f:
         libs = [x. strip() for x in f.readlines()]
-    libs = reduce(lambda x,y: x+y,[x.split(' ') for x in libs])
+    libs = [x.split(' ') for x in libs]
+    reduced_libs = [] # implement reduce by hand to avoid importing it
+    for l in libs:    # so things are agnostic between python 2 and 3
+        reduced_libs += l
+    libs = reduced_libs
     libs = [x.lstrip('-l') for x in libs]
 
     with open('lib_sources.txt','r') as f:
