@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 
+from __future__ import print_function
 import numpy as np
 import h5py
 
@@ -7,11 +8,13 @@ from math import *
 import sys
 
 
-
 # Read metadata and data directly
 
-filename = "example.s5"
-file = h5py.File(filename, 'r')
+try:
+    filename = sys.argv[1]
+except:
+    filename = "example.s5"
+f = h5py.File(filename, 'r')
 
 rsum = 0.0
 rsum2 = 0.0
@@ -20,7 +23,7 @@ rmax = -sys.float_info.max
 rcount = 0.0
 ngrids = 0
 
-field = file['fields']['rho']
+field = f['fields']['rho']
 discretefield = field['discretefields']['rho']
 for discretefieldblockname in discretefield['discretefieldblocks']:
     discretefieldblock = discretefield['discretefieldblocks'][discretefieldblockname]
@@ -37,4 +40,6 @@ for discretefieldblockname in discretefield['discretefieldblocks']:
 
 ravg = rsum / rcount
 rnorm2 = sqrt(rsum2 / rcount)
-print "rho: ngrids=%d npoints=%g min=%g max=%g avg=%g norm2=%g" % (ngrids, rcount, rmin, rmax, ravg, rnorm2)
+print("rho: ngrids=%d npoints=%g min=%g max=%g avg=%g norm2=%g"
+      % (ngrids, rcount, rmin, rmax, ravg, rnorm2))
+f.close()

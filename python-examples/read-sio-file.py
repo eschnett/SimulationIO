@@ -1,25 +1,21 @@
 #! /usr/bin/env python
 
+from __future__ import print_function
 import pysimulationio
-from pysimulationio import H5
-from pysimulationio.SimulationIO import *
-
 import numpy as np
 import h5py
-
 from math import *
 import sys
-
-
 
 # Read metadata via SimulationIO, then access data via path
 
 # Read project
-filename = "example.s5"
-file = H5.H5File(filename, H5.H5F_ACC_RDONLY, H5.FileCreatPropList(),
-                 H5.FileAccPropList())
-project = readProject(file)
-file = h5py.File(filename, 'r')
+try:
+    filename = sys.argv[1]
+except:
+    filename = "example.s5"
+project,file_handle = pysimulationio.readProject(filename)
+f = h5py.File(filename, 'r')
 
 rsum = 0.0
 rsum2 = 0.0
@@ -47,7 +43,7 @@ for discretefieldblockname in discretefield.discretefieldblocks:
     # ravg = rsum / rcount
     # print "Average radius: %g" % ravg
 
-    data = file[path][name]
+    data = f[path][name]
     ngrids += 1
     for val in np.nditer(data):
         rsum += val
@@ -58,4 +54,7 @@ for discretefieldblockname in discretefield.discretefieldblocks:
 
 ravg = rsum / rcount
 rnorm2 = sqrt(rsum2 / rcount)
-print "rho: ngrids=%d npoints=%g min=%g max=%g avg=%g norm2=%g" % (ngrids, rcount, rmin, rmax, ravg, rnorm2)
+print("rho: ngrids=%d npoints=%g min=%g max=%g avg=%g norm2=%g"
+      % (ngrids, rcount, rmin, rmax, ravg, rnorm2))
+f.close()
+file_handle.close()
