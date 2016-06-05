@@ -52,7 +52,8 @@ script:
   - make -j2 test
   - ./sio-example && ./sio-list example.s5
   - python setup.py install --user
-  - ./python-example.py && ./sio-list python-example.s5
+  - BDIR=$(pwd) && cd ~ # can't run code locally anymore
+  - ${BDIR}/python-example.py && ${BDIR}/sio-list python-example.s5
   # - ./julia-example.jl && ./list julia-example.s5
 after_success:
   - make -j2 coverage
