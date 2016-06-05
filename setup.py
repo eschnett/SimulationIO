@@ -1,15 +1,15 @@
 """The setup module for pysimulationio
 """
 
+from os import path, environ
+import os, glob
+from shutil import rmtree
 from setuptools import setup, find_packages
 from setuptools.extension import Extension
 from distutils.sysconfig import get_python_lib, get_python_inc
 from distutils.command.build import build
 from setuptools.command.install import install
 from distutils.command.clean import clean
-from os import path, environ
-import os, glob
-from shutil import rmtree
 
 # access some simple stuff
 here = path.abspath(path.dirname(__file__))
@@ -68,6 +68,9 @@ swig_wrap_files = (
     [path.join(here,"{}_wrap.cxx".format(m)) for m in swig_modules]
     +[path.join(here,"{}_wrap.o".format(m)) for m in swig_modules])
 swig_opts = ['-c++','-Wall']
+
+if 'COVERAGE' in os.environ.keys():
+    link_args += '--coverage'
 
 # Overload the build and install commands so that swig behaves. See:
 # stackoverflow.com/questions/12491328/python-distutils-not-include-the-swig-generated-module
