@@ -1,7 +1,16 @@
-import pysimulationio.H5 as H5
-import pysimulationio.RegionCalculus as RegionCalculus
-import pysimulationio.SimulationIO as SimulationIO
-from pysimulationio.SimulationIO import createProject
+import sys
+python_version = sys.version_info.major
+
+if python_version > 2: # python version compatibility
+    import pysimulationio.H5 as H5
+    import pysimulationio.RegionCalculus as RegionCalculus
+    import pysimulationio.SimulationIO as SimulationIO
+    from pysimulationio.SimulationIO import createProject
+else:
+    import H5
+    import RegionCalculus
+    import SimulationIO
+    from SimulationIO import createProject
 
 def readProject(filename):
     f = H5.H5File(filename,
