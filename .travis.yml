@@ -51,7 +51,7 @@ script:
   - make -j2 COVERAGE=1 CXX="$CXX" HDF5_DIR="$HDF5_DIR" MPI_NAME=openmpi MPI_LIBS=-lmpi
   - make -j2 test
   - ./sio-example && ./sio-list example.s5
-  - python setup.py install
+  - python setup.py install --user
   - ./python-example.py && ./sio-list python-example.s5
   # - ./julia-example.jl && ./list julia-example.s5
 after_success:
