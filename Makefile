@@ -9,7 +9,7 @@ CXX_FLAGS_BASE = -Wall -std=c++0x -fPIC
 PY_PACKAGE_DIR=pysimulationio
 
 ifneq ($(COVERAGE),)
-CXXFLAGS += --coverage
+CXX_FLAGS_BASE += --coverage
 endif
 
 RC_SRCS =
