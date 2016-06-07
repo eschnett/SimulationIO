@@ -34,6 +34,24 @@ inline std::string quote(const std::string &str) {
   return buf.str();
 }
 
+// Convert a vector
+template <typename R, typename T>
+std::vector<R> make_vector(const std::vector<T> &v) {
+  std::vector<R> r(v.size());
+  for (std::size_t i = 0; i < r.size(); ++i)
+    r[i] = v[i];
+  return r;
+}
+
+// Reverse a vector
+template <typename T> void reverse(std::vector<T> &v) {
+  std::reverse(v.begin(), v.end());
+}
+template <typename T> std::vector<T> reversed(std::vector<T> r) {
+  reverse(r);
+  return r;
+}
+
 // Insert an element into a map, ensuring that the key does not yet exist
 template <typename Key, typename Value, typename Key1, typename Value1>
 typename std::map<Key, Value>::iterator

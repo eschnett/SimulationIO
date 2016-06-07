@@ -5,8 +5,6 @@ using PyCall
 @pyimport H5
 @pyimport SimulationIO as SIO
 
-using HDF5
-
 
 
 # Read metadata via SimulationIO, then access data via path
@@ -34,7 +32,6 @@ tensorcomponentname = "scalar"
 # Read project
 file = H5.H5File(filename, H5.H5F_ACC_RDONLY)
 project = SIO.readProject(file)
-file = h5open(filename, "r")
 
 rsum = 0.0
 rsum2 = 0.0
@@ -69,22 +66,9 @@ for discretefieldblock in discretefield[:discretefieldblocks]()[:itervalues]()
                   discretefieldblock[:discretefieldblockcomponents]())
     @assert discretefieldblockcomponent !== nothing
 
-    dataset = discretefieldblockcomponent[:getData_dataset]()
-    # TODO: check whether dataset is nullptr (None)
-    path = dataset[:path]
-    name = dataset[:name]
+    dataset = discretefieldblockcomponent[:copyobj]()
+    data = dataset[:readData_double]()
 
-    # Note: Cannot pass HDF5 identifiers between H5 and HDF5
-    # data = h5py.Dataset(dataset.getId())
-    # rsum = 0.0
-    # rcount = 0.0
-    # for val in np.nditer(data):
-    #     rsum += val
-    #     rcount += 1.0
-    # ravg = rsum / rcount
-    # print "Average radius: %g" % ravg
-
-    data = read(file[path][name])
     ngrids += 1
     for val in data
         rsum += val

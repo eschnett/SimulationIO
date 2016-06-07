@@ -3,6 +3,7 @@
 using PyCall
 
 @pyimport H5
+@pyimport RegionCalculus as RC
 @pyimport SimulationIO as SIO
 
 const dim = 3
@@ -44,7 +45,10 @@ blocks = []
 for pk in 1:npk, pj in 1:npj, pi in 1:npi
     p = pi-1 + npi * (pj-1 + npj * (pk-1)) + 1
     block = discretization[:createDiscretizationBlock]("grid.$(p-1)")
-    block[:setBox]((nli*pi, nlj*pj, nlk*pk), (nli, nlj, nlk))
+    lo = RC.point_t((nli*pi, nlj*pj, nlk*pk))
+    hi = lo[:__add__](RC.point_t((nli, nlj, nlk)))
+    box = RC.box_t(lo, hi)
+    block[:setBox](box)
     push!(blocks, block)
 end
 
@@ -70,9 +74,7 @@ for d in 1:dim
         scalar3d_component = get(scalar3d[:storage_indices](), 0)
         component = block[:createDiscreteFieldBlockComponent](
             "scalar", scalar3d_component)
-        dataspace = H5.DataSpace[:make]((nli, nlj, nlk))
-        datatype = H5.DataType(H5.PredType[:NATIVE_DOUBLE])
-        component[:setData_double]()
+        component[:createDataSet_double]()
     end
     push!(coordinates,
         coordinatesystem[:createCoordinateField](dirnames[d], d-1, field))
@@ -97,12 +99,12 @@ for p in 1:ngrids
     scalar3d_component = get(scalar3d[:storage_indices](), 0)
     rho_component = rho_block[:createDiscreteFieldBlockComponent](
         "scalar", scalar3d_component)
-    rho_component[:setData_double]()
+    rho_component[:createDataSet_double]()
     for d in 1:dim
         vector3d_component = get(vector3d[:storage_indices](), d-1)
         vel_component = vel_block[:createDiscreteFieldBlockComponent](
             dirnames[d], vector3d_component)
-        vel_component[:setData_double]()
+        vel_component[:createDataSet_double]()
     end
 end
 
@@ -142,7 +144,7 @@ for pk in 1:npk, pj in 1:npj, pi in 1:npi
         block = get(discretefield[:discretefieldblocks](),
             "$(discretefield[:name]())-$(blocks[p][:name]())")
         component = get(block[:discretefieldblockcomponents](), "scalar")
-        component[:writeData_double](
+        component[:dataset]()[:writeData_double](
             reshape((coordx, coordy, coordz)[d], npoints))
     end
     # Write rho
@@ -152,7 +154,7 @@ for pk in 1:npk, pj in 1:npj, pi in 1:npi
         block = get(discretefield[:discretefieldblocks](),
             "$(discretefield[:name]())-$(blocks[p][:name]())")
         component = get(block[:discretefieldblockcomponents](), "scalar")
-        component[:writeData_double](reshape(datarho, npoints))
+        component[:dataset]()[:writeData_double](reshape(datarho, npoints))
     end
     # Write velocity
     for d in 1:dim
@@ -161,7 +163,7 @@ for pk in 1:npk, pj in 1:npj, pi in 1:npi
         block = get(discretefield[:discretefieldblocks](),
             "$(discretefield[:name]())-$(blocks[p][:name]())")
         component = get(block[:discretefieldblockcomponents](), dirnames[d])
-        component[:writeData_double](
+        component[:dataset]()[:writeData_double](
             reshape((datavelx, datavely, datavelz)[d], npoints))
     end
 end

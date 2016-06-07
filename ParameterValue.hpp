@@ -31,7 +31,12 @@ public:
   const map<string, weak_ptr<Configuration>> &configurations() const {
     return m_configurations;
   }
-  enum { type_empty, type_int, type_double, type_string } value_type;
+  enum value_type_t {
+    type_empty,
+    type_int,
+    type_double,
+    type_string,
+  } value_type;
   long long value_int;
   double value_double;
   string value_string;

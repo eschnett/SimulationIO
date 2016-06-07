@@ -3,20 +3,19 @@
 %module RegionCalculus
 
 %{
-#include "RegionCalculus.hpp"
-#include <sstream>
+  #include "RegionCalculus.hpp"
+  #include <sstream>
 
-typedef RegionCalculus::box<int,1> box1;
-typedef RegionCalculus::box<int,2> box2;
-typedef RegionCalculus::box<int,3> box3;
-typedef RegionCalculus::box<int,4> box4;
-typedef RegionCalculus::region<int,1> region1;
-typedef RegionCalculus::region<int,2> region2;
-typedef RegionCalculus::region<int,3> region3;
-typedef RegionCalculus::region<int,4> region4;
+  using namespace RegionCalculus;
 
-typedef RegionCalculus::dbox<int> ibox;
-typedef RegionCalculus::dregion<int> iregion;
+  typedef RegionCalculus::box<long long, 1> box1;
+  typedef RegionCalculus::box<long long, 2> box2;
+  typedef RegionCalculus::box<long long, 3> box3;
+  typedef RegionCalculus::box<long long, 4> box4;
+  typedef RegionCalculus::region<long long, 1> region1;
+  typedef RegionCalculus::region<long long, 2> region2;
+  typedef RegionCalculus::region<long long, 3> region3;
+  typedef RegionCalculus::region<long long, 4> region4;
 %}
 
 %include <std_string.i>
@@ -30,23 +29,26 @@ struct region1;
 struct region2;
 struct region3;
 struct region4;
-struct ibox;
-struct iregion;
+
+struct point_t;
+struct box_t;
+struct region_t;
 
 %template(vector_int) std::vector<int>;
+%template(vector_long_long) std::vector<long long>;
 %template(vector_box1) std::vector<box1>;
 %template(vector_box2) std::vector<box2>;
 %template(vector_box3) std::vector<box3>;
 %template(vector_box4) std::vector<box4>;
-%template(vector_ibox) std::vector<ibox>;
+%template(vector_box_t) std::vector<box_t>;
 
 %rename("union") box1::setunion(const box1& b) const;
 struct box1 {
   box1();
-  box1(const std::vector<int>& lo, const std::vector<int>& hi);
+  box1(const std::vector<long long>& lo, const std::vector<long long>& hi);
   bool empty() const;
-  std::vector<int> shape() const;
-  int size() const;
+  std::vector<long long> shape() const;
+  long long size() const;
   box1 bounding_box(const box1& b) const;
 
   bool operator==(const box1& b) const;
@@ -56,7 +58,7 @@ struct box1 {
   bool operator<(const box1& b) const;
   bool operator>(const box1& b) const;
 
-  bool contains(const std::vector<int>& p) const;
+  bool contains(const std::vector<long long>& p) const;
   bool isdisjoint(const box1& b) const;
   bool issubset(const box1& b) const;
   bool issuperset(const box1& b) const;
@@ -76,10 +78,10 @@ struct box1 {
 %rename("union") box2::setunion(const box2& b) const;
 struct box2 {
   box2();
-  box2(const std::vector<int>& lo, const std::vector<int>& hi);
+  box2(const std::vector<long long>& lo, const std::vector<long long>& hi);
   bool empty() const;
-  std::vector<int> shape() const;
-  int size() const;
+  std::vector<long long> shape() const;
+  long long size() const;
   box2 bounding_box(const box2& b) const;
 
   bool operator==(const box2& b) const;
@@ -89,7 +91,7 @@ struct box2 {
   bool operator<(const box2& b) const;
   bool operator>(const box2& b) const;
 
-  bool contains(const std::vector<int>& p) const;
+  bool contains(const std::vector<long long>& p) const;
   bool isdisjoint(const box2& b) const;
   bool issubset(const box2& b) const;
   bool issuperset(const box2& b) const;
@@ -109,10 +111,10 @@ struct box2 {
 %rename("union") box3::setunion(const box3& b) const;
 struct box3 {
   box3();
-  box3(const std::vector<int>& lo, const std::vector<int>& hi);
+  box3(const std::vector<long long>& lo, const std::vector<long long>& hi);
   bool empty() const;
-  std::vector<int> shape() const;
-  int size() const;
+  std::vector<long long> shape() const;
+  long long size() const;
   box3 bounding_box(const box3& b) const;
 
   bool operator==(const box3& b) const;
@@ -122,7 +124,7 @@ struct box3 {
   bool operator<(const box3& b) const;
   bool operator>(const box3& b) const;
 
-  bool contains(const std::vector<int>& p) const;
+  bool contains(const std::vector<long long>& p) const;
   bool isdisjoint(const box3& b) const;
   bool issubset(const box3& b) const;
   bool issuperset(const box3& b) const;
@@ -142,10 +144,10 @@ struct box3 {
 %rename("union") box4::setunion(const box4& b) const;
 struct box4 {
   box4();
-  box4(const std::vector<int>& lo, const std::vector<int>& hi);
+  box4(const std::vector<long long>& lo, const std::vector<long long>& hi);
   bool empty() const;
-  std::vector<int> shape() const;
-  int size() const;
+  std::vector<long long> shape() const;
+  long long size() const;
   box4 bounding_box(const box4& b) const;
 
   bool operator==(const box4& b) const;
@@ -155,7 +157,7 @@ struct box4 {
   bool operator<(const box4& b) const;
   bool operator>(const box4& b) const;
 
-  bool contains(const std::vector<int>& p) const;
+  bool contains(const std::vector<long long>& p) const;
   bool isdisjoint(const box4& b) const;
   bool issubset(const box4& b) const;
   bool issuperset(const box4& b) const;
@@ -177,7 +179,7 @@ struct region1 {
   region1();
   region1(const box1& b);
   bool empty() const;
-  int size() const;
+  long long size() const;
   box1 bounding_box() const;
 
   bool operator==(const region1& r) const;
@@ -187,7 +189,7 @@ struct region1 {
   bool operator<(const region1& r) const;
   bool operator>(const region1& r) const;
 
-  bool contains(const std::vector<int>& p) const;
+  bool contains(const std::vector<long long>& p) const;
   bool isdisjoint(const box1& b) const;
   bool issubset(const box1& b) const;
   bool issuperset(const box1& b) const;
@@ -214,7 +216,7 @@ struct region2 {
   region2();
   region2(const box2& b);
   bool empty() const;
-  int size() const;
+  long long size() const;
   box2 bounding_box() const;
 
   bool operator==(const region2& r) const;
@@ -224,7 +226,7 @@ struct region2 {
   bool operator<(const region2& r) const;
   bool operator>(const region2& r) const;
 
-  bool contains(const std::vector<int>& p) const;
+  bool contains(const std::vector<long long>& p) const;
   bool isdisjoint(const box2& b) const;
   bool issubset(const box2& b) const;
   bool issuperset(const box2& b) const;
@@ -251,7 +253,7 @@ struct region3 {
   region3();
   region3(const box3& b);
   bool empty() const;
-  int size() const;
+  long long size() const;
   box3 bounding_box() const;
 
   bool operator==(const region3& r) const;
@@ -261,7 +263,7 @@ struct region3 {
   bool operator<(const region3& r) const;
   bool operator>(const region3& r) const;
 
-  bool contains(const std::vector<int>& p) const;
+  bool contains(const std::vector<long long>& p) const;
   bool isdisjoint(const box3& b) const;
   bool issubset(const box3& b) const;
   bool issuperset(const box3& b) const;
@@ -288,7 +290,7 @@ struct region4 {
   region4();
   region4(const box4& b);
   bool empty() const;
-  int size() const;
+  long long size() const;
   box4 bounding_box() const;
 
   bool operator==(const region4& r) const;
@@ -298,7 +300,7 @@ struct region4 {
   bool operator<(const region4& r) const;
   bool operator>(const region4& r) const;
 
-  bool contains(const std::vector<int>& p) const;
+  bool contains(const std::vector<long long>& p) const;
   bool isdisjoint(const box4& b) const;
   bool issubset(const box4& b) const;
   bool issuperset(const box4& b) const;
@@ -320,47 +322,93 @@ struct region4 {
   region4 symmetric_difference(const region4& r) const;
 };
 
-%rename("union") ibox::setunion(const ibox& b) const;
-struct ibox {
-  ibox();
-  ibox(int d);
-  ibox(const std::vector<int>& lo, const std::vector<int>& hi);
+struct point_t {
+  point_t();
+  point_t(int d);
+  point_t(const std::vector<int>& p);
+  // operator std::vector<int>() const;
+
+  // Access and conversion
+  // T operator[](int d) const;
+  // T& operator[](int d);
+  %extend {
+    long long __getitem__(int d) const {
+      return (*self)[d];
+    }
+    void __setitem__(int d, long long x) {
+      (*self)[d] = x;
+    }
+    void __setitem__(int d, int x) {
+      (*self)[d] = x;
+    }
+  }
+  point_t subpoint(int dir) const;
+  point_t superpoint(int dir, long long x) const;
+  point_t superpoint(int dir, int x) const;
 
   // Predicates
   bool valid() const;
+  void reset();
   int rank() const;
-  bool empty() const;
-  std::vector<int> lower() const;
-  std::vector<int> upper() const;
-  std::vector<int> shape() const;
-  int size() const;
+  %extend {
+    int __len__() const {
+      return self->rank();
+    }
+  }
 
-  // Shift and scale operators
-  ibox& operator>>=(const std::vector<int>& p);
-  ibox& operator<<=(const std::vector<int>& p);
-  ibox& operator*=(const std::vector<int>& p);
-  ibox operator>>(const std::vector<int>& p) const;
-  ibox operator<<(const std::vector<int>& p) const;
-  ibox operator*(const std::vector<int>& p) const;
+  // Unary operators
+  point_t operator+() const;
+  point_t operator-() const;
+  point_t operator~() const;
+  // dpoint<bool> operator!() const;
 
-  // Comparison operators
-  bool operator==(const ibox& b) const;
-  bool operator!=(const ibox& b) const;
-  bool operator<=(const ibox& b) const;
-  bool operator>=(const ibox& b) const;
-  bool operator<(const ibox& b) const;
-  bool operator>(const ibox& b) const;
-  bool contains(const std::vector<int>& p) const;
-  bool isdisjoint(const ibox& b) const;
-  bool issubset(const ibox& b) const;
-  bool issuperset(const ibox& b) const;
-  bool is_strict_subset(const ibox& b) const;
-  bool is_strict_superset(const ibox& b) const;
+  // Binary operators
+  point_t operator+(const point_t &p) const;
+  point_t operator-(const point_t &p) const;
+  point_t operator*(const point_t &p) const;
+  point_t operator/(const point_t &p) const;
+  point_t operator%(const point_t &p) const;
+  point_t operator&(const point_t &p) const;
+  point_t operator|(const point_t &p) const;
+  point_t operator^(const point_t &p) const;
+  // dpoint<bool> operator&&(const dpoint &p) const;
+  // dpoint<bool> operator||(const dpoint &p) const;
 
-  // Set operations
-  ibox bounding_box(const ibox& b) const;
-  ibox operator&(const ibox& b) const;
-  ibox intersection(const ibox& b) const;
+  // Unary functions
+  point_t abs() const;
+
+  // Binary functions
+  point_t min(const point_t &p) const;
+  point_t max(const point_t &p) const;
+
+  // // Comparison operators
+  // dpoint<bool> operator==(const point_t &p) const;
+  // dpoint<bool> operator!=(const point_t &p) const;
+  // dpoint<bool> operator<(const point_t &p) const;
+  // dpoint<bool> operator>(const point_t &p) const;
+  // dpoint<bool> operator<=(const point_t &p) const;
+  // dpoint<bool> operator>=(const point_t &p) const;
+
+  bool equal_to(const point_t &p) const;
+  %extend {
+    bool __eq__(const point_t &p) const { return self->equal_to(p); }
+    bool __ne__(const point_t &p) const { return !self->equal_to(p); }
+  }
+  bool less(const point_t &p) const;
+  %extend {
+    bool __lt__(const point_t &p) const { return self->less(p); }
+    bool __gt__(const point_t &p) const { return p.less(*self); }
+    bool __le__(const point_t &p) const { return !p.less(*self); }
+    bool __ge__(const point_t &p) const { return !self->less(p); }
+  }
+
+  // Reductions
+  bool all() const;
+  bool any() const;
+  long long minval() const;
+  long long maxval() const;
+  long long sum() const;
+  long long prod() const;
 
   // Output
   %extend {
@@ -372,51 +420,110 @@ struct ibox {
   }
 };
 
-%rename("union") iregion::setunion(const iregion& r) const;
-struct iregion {
-  iregion();
-  iregion(int d);
-  iregion(const ibox& b);
-  iregion(const std::vector<ibox>& bs);
+%rename("union") box_t::setunion(const box_t& b) const;
+struct box_t {
+  box_t();
+  box_t(int d);
+  box_t(const point_t& lo, const point_t& hi);
+  // %extend {
+  //   box_t(const std::vector<int>& lo, const std::vector<int>& hi) {
+  //     return box_t(point_t(lo), point_t(hi));
+  //   }
+  // }
+
+  // Predicates
+  bool valid() const;
+  void reset();
+  int rank() const;
+  bool empty() const;
+  point_t lower() const;
+  point_t upper() const;
+  point_t shape() const;
+  long long size() const;
+
+  // Shift and scale operators
+  box_t& operator>>=(const point_t& p);
+  box_t& operator<<=(const point_t& p);
+  box_t& operator*=(const point_t& p);
+  box_t operator>>(const point_t& p) const;
+  box_t operator<<(const point_t& p) const;
+  box_t operator*(const point_t& p) const;
+
+  // Comparison operators
+  bool operator==(const box_t& b) const;
+  bool operator!=(const box_t& b) const;
+  bool operator<=(const box_t& b) const;
+  bool operator>=(const box_t& b) const;
+  bool operator<(const box_t& b) const;
+  bool operator>(const box_t& b) const;
+  bool contains(const point_t& p) const;
+  bool isdisjoint(const box_t& b) const;
+  bool issubset(const box_t& b) const;
+  bool issuperset(const box_t& b) const;
+  bool is_strict_subset(const box_t& b) const;
+  bool is_strict_superset(const box_t& b) const;
+
+  // Set operations
+  box_t bounding_box(const box_t& b) const;
+  box_t operator&(const box_t& b) const;
+  box_t intersection(const box_t& b) const;
+
+  // Output
   %extend {
-    std::vector<ibox> boxes() const {
-      std::vector<ibox> rs = *self;
+    std::string __str__() const {
+      std::ostringstream buf;
+      buf << *self;
+      return buf.str();
+    }
+  }
+};
+
+%rename("union") region_t::setunion(const region_t& r) const;
+struct region_t {
+  region_t();
+  region_t(int d);
+  region_t(const box_t& b);
+  region_t(const std::vector<box_t>& bs);
+  %extend {
+    std::vector<box_t> boxes() const {
+      std::vector<box_t> rs = *self;
       return rs;
     }
   }
 
   // Predicates
   bool valid() const;
+  void reset();
   int rank() const;
   bool empty() const;
-  int size() const;
+  long long size() const;
 
   // Set operations
-  ibox bounding_box() const;
-  iregion operator&(const iregion& r) const;
-  iregion operator-(const iregion& r) const;
-  iregion operator|(const iregion& r) const;
-  iregion operator^(const iregion& r) const;
-  iregion intersection(const iregion& r) const;
-  iregion difference(const iregion& r) const;
-  iregion setunion(const iregion& r) const;
-  iregion symmetric_difference(const iregion& r) const;
+  box_t bounding_box() const;
+  region_t operator&(const region_t& r) const;
+  region_t operator-(const region_t& r) const;
+  region_t operator|(const region_t& r) const;
+  region_t operator^(const region_t& r) const;
+  region_t intersection(const region_t& r) const;
+  region_t difference(const region_t& r) const;
+  region_t setunion(const region_t& r) const;
+  region_t symmetric_difference(const region_t& r) const;
 
   // Set comparison operators
-  bool contains(const std::vector<int>& p) const;
-  bool isdisjoint(const iregion& r) const;
+  bool contains(const point_t& p) const;
+  bool isdisjoint(const region_t& r) const;
 
   // Comparison operators
-  bool operator<=(const iregion& r) const;
-  bool operator>=(const iregion& r) const;
-  bool operator<(const iregion& r) const;
-  bool operator>(const iregion& r) const;
-  bool issubset(const iregion& r) const;
-  bool issuperset(const iregion& r) const;
-  bool is_strict_subset(const iregion& r) const;
-  bool is_strict_superset(const iregion& r) const;
-  bool operator==(const iregion& r) const;
-  bool operator!=(const iregion& r) const;
+  bool operator<=(const region_t& r) const;
+  bool operator>=(const region_t& r) const;
+  bool operator<(const region_t& r) const;
+  bool operator>(const region_t& r) const;
+  bool issubset(const region_t& r) const;
+  bool issuperset(const region_t& r) const;
+  bool is_strict_subset(const region_t& r) const;
+  bool is_strict_superset(const region_t& r) const;
+  bool operator==(const region_t& r) const;
+  bool operator!=(const region_t& r) const;
 
   // Output
   %extend {

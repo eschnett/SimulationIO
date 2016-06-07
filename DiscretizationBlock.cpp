@@ -17,7 +17,7 @@ void read_active(const H5::H5Location &group,
   static_assert(D > 0, "");
   if (active.valid())
     return;
-  vector<RegionCalculus::box<hssize_t, D>> boxes;
+  vector<RegionCalculus::box<long long, D>> boxes;
   auto boxtype =
       discretizationblock.discretization()->manifold()->project()->boxtypes.at(
           D);
@@ -28,8 +28,8 @@ void read_active(const H5::H5Location &group,
     try {
       H5::readAttribute(group, "active", boxes, boxtype);
       active = region_t(
-          RegionCalculus::make_unique<RegionCalculus::wregion<hssize_t, D>>(
-              RegionCalculus::region<hssize_t, D>(std::move(boxes))));
+          RegionCalculus::make_unique<RegionCalculus::wregion<long long, D>>(
+              RegionCalculus::region<long long, D>(std::move(boxes))));
     } catch (H5::AttributeIException ex) {
       // do nothing
     }
@@ -40,8 +40,8 @@ void read_active(const H5::H5Location &group,
     try {
       H5::readAttribute(group, "active", boxes, boxtype);
       active = region_t(
-          RegionCalculus::make_unique<RegionCalculus::wregion<hssize_t, D>>(
-              RegionCalculus::region<hssize_t, D>(std::move(boxes))));
+          RegionCalculus::make_unique<RegionCalculus::wregion<long long, D>>(
+              RegionCalculus::region<long long, D>(std::move(boxes))));
     } catch (H5::DataTypeIException ex) {
       // do nothing
     }
@@ -62,12 +62,12 @@ void DiscretizationBlock::read(
   assert(H5::readGroupAttribute<string>(group, "discretization", "name") ==
          discretization->name());
   if (group.attrExists("offset")) {
-    vector<hssize_t> offset, shape;
+    vector<long long> offset, shape;
     H5::readAttribute(group, "offset", offset);
-    std::reverse(offset.begin(), offset.end());
+    reverse(offset);
     H5::readAttribute(group, "shape", shape);
-    std::reverse(shape.begin(), shape.end());
-    m_box = box_t(offset, point_t(offset) + shape);
+    reverse(shape);
+    m_box = box_t(point_t(offset), point_t(offset) + point_t(shape));
   }
   if (group.attrExists("active")) {
     // TODO read_active<0>(group, *this, active);
@@ -100,8 +100,8 @@ void write_active(const H5::H5Location &group,
   static_assert(D > 0, "");
   if (active.rank() != D)
     return;
-  vector<RegionCalculus::box<hssize_t, D>> boxes =
-      dynamic_cast<const RegionCalculus::wregion<hssize_t, D> *>(
+  vector<RegionCalculus::box<long long, D>> boxes =
+      dynamic_cast<const RegionCalculus::wregion<long long, D> *>(
           active.val.get())
           ->val;
   auto boxtype =
@@ -125,11 +125,10 @@ void DiscretizationBlock::write(const H5::CommonFG &loc,
   H5::createSoftLink(group, "discretization", "..");
   if (box().valid()) {
     // TODO: write using boxtype HDF5 type
-    vector<hssize_t> offset = box().lower(), shape = box().shape();
-    std::reverse(offset.begin(), offset.end());
-    H5::createAttribute(group, "offset", offset);
-    std::reverse(shape.begin(), shape.end());
-    H5::createAttribute(group, "shape", shape);
+    H5::createAttribute(group, "offset",
+                        vector<long long>(box().lower().reversed()));
+    H5::createAttribute(group, "shape",
+                        vector<long long>(box().shape().reversed()));
   }
   if (active().valid()) {
     // TODO write_active<0>(group, *this, active);

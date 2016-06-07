@@ -1,9 +1,10 @@
 #! /usr/bin/env python
 
 from math import *
+import os
+import re
 import sys
 
-import h5py
 import numpy as np
 
 import H5
@@ -14,11 +15,33 @@ import SimulationIO as SIO
 
 # Combine multiple discretization boxes into one
 
-input_filename = "cactus/iof5-uniform-p2.s5"
-output_filename = "cactus/iof5-uniform-p2-combined.s5"
-
 include_parameters = {}
-# include_parameters = {"iteration": 0}
+
+print sys.argv
+if len(sys.argv) not in {3, 4}:
+    print "Synopsis:"
+    print "    %s [--iteration=<iter>] <inputfile> <outputfile>" % sys.argv[0]
+    sys.exit(1)
+
+argc = 1
+if sys.argv[argc].startswith("-"):
+    m = re.match(r"--iteration=(\d+)", sys.argv[argc])
+    if m:
+        iteration = int(m.group(1))
+        include_parameters["iteration"] = iteration
+    argc += 1
+
+input_filename = sys.argv[argc]
+argc += 1
+output_filename = sys.argv[argc]
+argc += 1
+
+if not os.access(input_filename, os.R_OK):
+    print "Error: Input file \"%s\" does not exist" % input_filename
+    sys.exit(2)
+if os.path.exists(output_filename):
+    print "Error: Output file \"%s\" exists already" % output_filename
+    sys.exit(3)
 
 
 
@@ -45,7 +68,6 @@ project = SIO.readProject(file)
 indent()
 message("Project \"%s\"" % project.name())
 outdent()
-file.close()
 
 # Create project
 message()
@@ -131,11 +153,11 @@ for manifold in project.manifolds().values():
             boxes.append(discretizationblock.box())
             actives.append(discretizationblock.active())
         outdent()
-        combined_box = RC.ibox(manifold.dimension())
+        combined_box = RC.box_t(manifold.dimension())
         for box in boxes:
             combined_box = combined_box.bounding_box(box)
         message("combined_box: %s" % combined_box)
-        combined_active = RC.iregion(manifold.dimension())
+        combined_active = RC.region_t(manifold.dimension())
         for active in actives:
             if active.valid():
                 combined_active = combined_active.union(active)
@@ -205,6 +227,7 @@ for field in project.fields().values():
                 discretefieldblockcomponent2 = \
                     discretefieldblock2.createDiscreteFieldBlockComponent(
                         tensorcomponent2.name(), tensorcomponent2)
+                dataset2 = discretefieldblockcomponent2.createDataSet_double()
 
     outdent()
 outdent()
@@ -235,16 +258,12 @@ outdent()
 cpl = H5.FileCreatPropList()
 apl = H5.FileAccPropList()
 apl.setFcloseDegree(H5.H5F_CLOSE_STRONG)
-# apl.setLibverBounds(H5.H5F_LIBVER_LATEST, H5.H5F_LIBVER_LATEST)
+apl.setLibverBounds(H5.H5F_LIBVER_LATEST, H5.H5F_LIBVER_LATEST)
 file2 = H5.H5File(output_filename, H5.H5F_ACC_TRUNC, cpl, apl)
 project2.write(file2)
-file2.close()
 
 message()
 message("Copying data..")
-
-hfile = h5py.File(input_filename, "r")
-hfile2 = h5py.File(output_filename, "r+", libver='latest')
 
 
 
@@ -293,41 +312,16 @@ for field2 in project2.fields().values():
                     discretefieldblockcomponent2.tensorcomponent()
                 message("TensorComponent \"%s\"" % tensorcomponent2.name())
 
-                # Create dataset
-                discretefieldblockcomponent2.setData_double()
-                path2 = discretefieldblockcomponent2.getPath()
-                name2 = discretefieldblockcomponent2.getName()
-                lower2 = discretizationblock2.box().lower()
-                upper2 = discretizationblock2.box().upper()
-                shape2 = discretizationblock2.box().shape()
-                message("combined_box=%s:%s" % (lower2, upper2))
-                # Guessing a good chunk size:
-                # - chunk should fit in L3 cache
-                # - chunk should be larger than stripe size
-                # - chunk should be larger than bandwidth-latency product
-                # A typical L3 cache size is several MByte
-                # A typical stripe size is 128 kByte
-                # A typical disk latency-bandwidth product is
-                #    L = 1 / (10,000/min) / 2 = 0.006 sec
-                #    BW = 100 MByte/sec
-                #    BW * L = 600 kByte
-                # We choose a chunk size of 64^3:
-                #    64^3 * 8 B = 2 MByte
-                # Maybe 32^3 would be a better size?
-                chunksize = [min(64, sz) for sz in shape2]
-                # shuffling improves compression
-                # level 1 is fast, but still offers good compression
-                clevel = 1
-                dataset = \
-                    hfile2.create_dataset("%s/%s" % (path2, name2),
-                                          dtype='double', shape=shape2,
-                                          chunks=tuple(chunksize),
-                                          shuffle=True,
-                                          compression='gzip',
-                                          compression_opts=clevel)
+                box2 = discretizationblock2.box()
+                lower2 = box2.lower()
+                upper2 = box2.upper()
+                shape2 = box2.shape()
+                message("combined_box=%s" % box2)
+
+                dataset2 = discretefieldblockcomponent2.dataset()
 
                 # Loop over datasets to be read
-                points_total = discretizationblock2.box().size()
+                points_total = box2.size()
                 points_read = 0
                 indent()
                 for discretefieldblock in \
@@ -349,32 +343,31 @@ for field2 in project2.fields().values():
                     assert (tensorcomponent.storage_index() ==
                             tensorcomponent2.storage_index())
 
-                    if (discretefieldblockcomponent.data_type ==
-                        discretefieldblockcomponent.type_range):
+                    datarange = discretefieldblockcomponent.datarange()
+                    copyobj = discretefieldblockcomponent.copyobj()
+                    if datarange:
                         # TODO: implement this
                         pass
 
-                    else:
+                    elif copyobj:
                         # Read dataset
-                        path = discretefieldblockcomponent.getPath()
-                        name = discretefieldblockcomponent.getName()
-                        lower = discretizationblock.box().lower()
-                        upper = discretizationblock.box().upper()
-                        shape = discretizationblock.box().shape()
+                        box = copyobj.box()
+                        lower = box.lower()
+                        upper = box.upper()
+                        shape = box.shape()
                         # TODO: disregard overlap (ghost zones)
-                        points_read += discretizationblock.box().size()
-                        message("box=%s:%s   %d/%d (%d%%)" %
-                                (lower, upper, points_read, points_total,
+                        points_read += copyobj.box().size()
+                        message("box=%s   %d/%d (%d%%)" %
+                                (box, points_read, points_total,
                                  100.0 * points_read / points_total))
-                        data = hfile["%s/%s" % (path, name)]
-                        data_shape = np.flipud(data.shape)
-                        assert (data_shape == shape).all()
+                        data = copyobj.readData_double()
     
                         # Write into dataset
-                        dataset[lower[2]:upper[2],
-                                lower[1]:upper[1],
-                                lower[0]:upper[0]] = data
+                        dataset2.writeData_double(data, box)
     
+                    else:
+                        # unhandled datablock type
+                        assert False
 
                     outdent()
                 outdent()
@@ -384,8 +377,7 @@ for field2 in project2.fields().values():
     outdent()
 outdent()
 
-hfile2.close()
-hfile.close()
+file2.close()
 
 message()
 message("Done.")

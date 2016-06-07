@@ -683,7 +683,8 @@ int main(int argc, char **argv) {
                 double data_origin = origin.at(direction);
                 vector<double> data_delta(manifold->dimension(), 0.0);
                 data_delta.at(direction) = delta.at(direction);
-                discretefieldblockcomponent->setData(data_origin, data_delta);
+                discretefieldblockcomponent->createDataRange(data_origin,
+                                                             data_delta);
               }
             }
           }
@@ -775,10 +776,10 @@ int main(int argc, char **argv) {
                   tensorcomponent->name());
           switch (action) {
           case action_copy:
-            discretefieldblockcomponent->setData(inputfile, name);
+            discretefieldblockcomponent->createCopyObj(inputfile, name);
             break;
           case action_extlink:
-            discretefieldblockcomponent->setData(inputfilename, name);
+            discretefieldblockcomponent->createExtLink(inputfilename, name);
             break;
           default:
             assert(0);
