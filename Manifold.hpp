@@ -101,6 +101,8 @@ private:
 public:
   virtual ~Manifold() {}
 
+  void merge(const shared_ptr<Manifold> &manifold);
+
   virtual ostream &output(ostream &os, int level = 0) const;
   friend ostream &operator<<(ostream &os, const Manifold &manifold) {
     return manifold.output(os);

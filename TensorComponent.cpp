@@ -18,6 +18,13 @@ void TensorComponent::read(const H5::CommonFG &loc, const string &entry,
   H5::readAttribute(group, "indexvalues", m_indexvalues);
 }
 
+void TensorComponent::merge(
+    const shared_ptr<TensorComponent> &tensorcomponent) {
+  assert(tensortype()->name() == tensorcomponent->tensortype()->name());
+  assert(m_storage_index == tensorcomponent->storage_index());
+  assert(m_indexvalues == tensorcomponent->indexvalues());
+}
+
 ostream &TensorComponent::output(ostream &os, int level) const {
   os << indent(level) << "TensorComponent " << quote(name()) << ": TensorType "
      << quote(tensortype()->name()) << " storage_index=" << storage_index()

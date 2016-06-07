@@ -99,6 +99,8 @@ private:
 public:
   virtual ~Discretization() {}
 
+  void merge(const shared_ptr<Discretization> &discretization);
+
   virtual ostream &output(ostream &os, int level = 0) const;
   friend ostream &operator<<(ostream &os,
                              const Discretization &discretization) {

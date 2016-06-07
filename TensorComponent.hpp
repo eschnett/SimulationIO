@@ -103,6 +103,8 @@ private:
 public:
   virtual ~TensorComponent() {}
 
+  void merge(const shared_ptr<TensorComponent> &tensorcomponent);
+
   virtual ostream &output(ostream &os, int level = 0) const;
   friend ostream &operator<<(ostream &os,
                              const TensorComponent &tensorcomponent) {

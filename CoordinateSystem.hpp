@@ -93,6 +93,8 @@ private:
 public:
   virtual ~CoordinateSystem() {}
 
+  void merge(const shared_ptr<CoordinateSystem> &coordinatesystem);
+
   virtual ostream &output(ostream &os, int level = 0) const;
   friend ostream &operator<<(ostream &os,
                              const CoordinateSystem &coordinatesystem) {

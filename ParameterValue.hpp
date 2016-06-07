@@ -78,6 +78,8 @@ private:
 public:
   virtual ~ParameterValue() {}
 
+  void merge(const shared_ptr<ParameterValue> &parametervalue);
+
   void setValue();
   void setValue(long long i);
   void setValue(int i) { setValue((long long)i); }

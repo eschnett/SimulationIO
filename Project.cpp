@@ -70,6 +70,65 @@ void Project::read(const H5::CommonFG &loc) {
                 });
 }
 
+void Project::merge(const shared_ptr<Project> &project) {
+  // TODO: combine types
+  for (const auto &iter : project->parameters()) {
+    const auto &parameter = iter.second;
+    if (!m_parameters.count(parameter->name()))
+      createParameter(parameter->name());
+    m_parameters.at(parameter->name())->merge(parameter);
+  }
+  for (const auto &iter : project->configurations()) {
+    const auto &configuration = iter.second;
+    if (!m_configurations.count(configuration->name()))
+      createConfiguration(configuration->name());
+    m_configurations.at(configuration->name())->merge(configuration);
+  }
+  for (const auto &iter : project->tensortypes()) {
+    const auto &tensortype = iter.second;
+    if (!m_tensortypes.count(tensortype->name()))
+      createTensorType(tensortype->name(), tensortype->dimension(),
+                       tensortype->rank());
+    m_tensortypes.at(tensortype->name())->merge(tensortype);
+  }
+  for (const auto &iter : project->manifolds()) {
+    const auto &manifold = iter.second;
+    if (!m_manifolds.count(manifold->name()))
+      createManifold(manifold->name(),
+                     m_configurations.at(manifold->configuration()->name()),
+                     manifold->dimension());
+    m_manifolds.at(manifold->name())->merge(manifold);
+  }
+  for (const auto &iter : project->tangentspaces()) {
+    const auto &tangentspace = iter.second;
+    if (!m_tangentspaces.count(tangentspace->name()))
+      createTangentSpace(
+          tangentspace->name(),
+          m_configurations.at(tangentspace->configuration()->name()),
+          tangentspace->dimension());
+    m_tangentspaces.at(tangentspace->name())->merge(tangentspace);
+  }
+  for (const auto &iter : project->fields()) {
+    const auto &field = iter.second;
+    if (!m_fields.count(field->name()))
+      createField(field->name(),
+                  m_configurations.at(field->configuration()->name()),
+                  m_manifolds.at(field->manifold()->name()),
+                  m_tangentspaces.at(field->tangentspace()->name()),
+                  m_tensortypes.at(field->tensortype()->name()));
+    m_fields.at(field->name())->merge(field);
+  }
+  for (const auto &iter : project->coordinatesystems()) {
+    const auto &coordinatesystem = iter.second;
+    if (!m_coordinatesystems.count(coordinatesystem->name()))
+      createCoordinateSystem(
+          coordinatesystem->name(),
+          m_configurations.at(coordinatesystem->configuration()->name()),
+          m_manifolds.at(coordinatesystem->manifold()->name()));
+    m_coordinatesystems.at(coordinatesystem->name())->merge(coordinatesystem);
+  }
+}
+
 void Project::createStandardTensorTypes() {
   auto s0d = createTensorType("Scalar0D", 0, 0);
   s0d->createTensorComponent("scalar", 0, vector<int>{});

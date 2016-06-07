@@ -94,6 +94,8 @@ private:
 public:
   virtual ~DiscreteFieldBlock() {}
 
+  void merge(const shared_ptr<DiscreteFieldBlock> &discretefieldblock);
+
   virtual ostream &output(ostream &os, int level = 0) const;
   friend ostream &operator<<(ostream &os,
                              const DiscreteFieldBlock &discretefieldblock) {

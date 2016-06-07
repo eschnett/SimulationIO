@@ -31,6 +31,26 @@ void CoordinateSystem::read(const H5::CommonFG &loc, const string &entry,
   m_manifold->insert(name(), shared_from_this());
 }
 
+void CoordinateSystem::merge(
+    const shared_ptr<CoordinateSystem> &coordinatesystem) {
+  assert(project()->name() == coordinatesystem->project()->name());
+  assert(m_configuration->name() == coordinatesystem->configuration()->name());
+  assert(m_manifold->name() == coordinatesystem->manifold()->name());
+  for (const auto &iter : coordinatesystem->coordinatefields()) {
+    const auto &coordinatefield = iter.second;
+    if (!m_coordinatefields.count(coordinatefield->name()))
+      createCoordinateField(
+          coordinatefield->name(), coordinatefield->direction(),
+          project()->fields().at(coordinatefield->field()->name()));
+    m_coordinatefields.at(coordinatefield->name())->merge(coordinatefield);
+  }
+  for (const auto &iter : coordinatesystem->directions()) {
+    auto direction = iter.first;
+    assert(m_directions.at(direction)->name() ==
+           coordinatesystem->directions().at(direction)->name());
+  }
+}
+
 ostream &CoordinateSystem::output(ostream &os, int level) const {
   os << indent(level) << "CoordinateSystem " << quote(name())
      << ": Configuration " << quote(configuration()->name()) << " Manifold "

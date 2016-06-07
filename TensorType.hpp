@@ -89,6 +89,8 @@ private:
 public:
   virtual ~TensorType() {}
 
+  void merge(const shared_ptr<TensorType> &tensortype);
+
   virtual ostream &output(ostream &os, int level = 0) const;
   friend ostream &operator<<(ostream &os, const TensorType &tensortype) {
     return tensortype.output(os);

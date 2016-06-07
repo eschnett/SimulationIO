@@ -99,6 +99,8 @@ private:
 public:
   virtual ~Configuration() {}
 
+  void merge(const shared_ptr<Configuration> &configuration);
+
   virtual ostream &output(ostream &os, int level = 0) const;
   friend ostream &operator<<(ostream &os, const Configuration &configuration) {
     return configuration.output(os);

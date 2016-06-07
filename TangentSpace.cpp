@@ -31,6 +31,19 @@ void TangentSpace::read(const H5::CommonFG &loc, const string &entry,
   m_configuration->insert(name(), shared_from_this());
 }
 
+void TangentSpace::merge(const shared_ptr<TangentSpace> &tangentspace) {
+  assert(project()->name() == tangentspace->project()->name());
+  assert(m_configuration->name() == tangentspace->configuration()->name());
+  assert(m_dimension == tangentspace->dimension());
+  for (const auto &iter : tangentspace->bases()) {
+    const auto &basis = iter.second;
+    if (!m_bases.count(basis->name()))
+      createBasis(basis->name(), project()->configurations().at(
+                                     basis->configuration()->name()));
+    m_bases.at(basis->name())->merge(basis);
+  }
+}
+
 ostream &TangentSpace::output(ostream &os, int level) const {
   os << indent(level) << "TangentSpace " << quote(name()) << ": Configuration "
      << quote(configuration()->name()) << " dim=" << dimension() << "\n";

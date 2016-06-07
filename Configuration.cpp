@@ -45,6 +45,15 @@ void Configuration::read(const H5::CommonFG &loc, const string &entry,
   // assert(H5::checkGroupNames(group, "tangentspaces", manifolds));
 }
 
+void Configuration::merge(const shared_ptr<Configuration> &configuration) {
+  assert(project()->name() == configuration->project()->name());
+  for (const auto &iter : configuration->parametervalues()) {
+    const auto &parametervalue = iter.second;
+    if (!m_parametervalues.count(parametervalue->name()))
+      insertParameterValue(parametervalue);
+  }
+}
+
 ostream &Configuration::output(ostream &os, int level) const {
   os << indent(level) << "Configuration " << quote(name()) << "\n";
   for (const auto &val : parametervalues())

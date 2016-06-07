@@ -45,6 +45,33 @@ void Manifold::read(const H5::CommonFG &loc, const string &entry,
   m_configuration->insert(name(), shared_from_this());
 }
 
+void Manifold::merge(const shared_ptr<Manifold> &manifold) {
+  assert(project()->name() == manifold->project()->name());
+  assert(m_configuration->name() == manifold->configuration()->name());
+  assert(m_dimension == manifold->dimension());
+  for (const auto &iter : manifold->discretizations()) {
+    const auto &discretization = iter.second;
+    if (!m_discretizations.count(discretization->name()))
+      createDiscretization(discretization->name(),
+                           project()->configurations().at(
+                               discretization->configuration()->name()));
+    m_discretizations.at(discretization->name())->merge(discretization);
+  }
+  for (const auto &iter : manifold->subdiscretizations()) {
+    const auto &subdiscretization = iter.second;
+    if (!m_subdiscretizations.count(subdiscretization->name()))
+      createSubDiscretization(
+          subdiscretization->name(),
+          discretizations().at(
+              subdiscretization->parent_discretization()->name()),
+          discretizations().at(
+              subdiscretization->child_discretization()->name()),
+          subdiscretization->factor(), subdiscretization->offset());
+    m_subdiscretizations.at(subdiscretization->name())
+        ->merge(subdiscretization);
+  }
+}
+
 ostream &Manifold::output(ostream &os, int level) const {
   os << indent(level) << "Manifold " << quote(name()) << ": Configuration "
      << quote(configuration()->name()) << " dim=" << dimension() << "\n";

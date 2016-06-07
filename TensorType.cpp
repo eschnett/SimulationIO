@@ -24,6 +24,25 @@ void TensorType::read(const H5::CommonFG &loc, const string &entry,
   // TODO: check storage_indices
 }
 
+void TensorType::merge(const shared_ptr<TensorType> &tensortype) {
+  assert(project()->name() == tensortype->project()->name());
+  assert(m_dimension == tensortype->dimension());
+  assert(m_rank == tensortype->rank());
+  for (const auto &iter : tensortype->tensorcomponents()) {
+    const auto &tensorcomponent = iter.second;
+    if (!m_tensorcomponents.count(tensorcomponent->name()))
+      createTensorComponent(tensorcomponent->name(),
+                            tensorcomponent->storage_index(),
+                            tensorcomponent->indexvalues());
+    m_tensorcomponents.at(tensorcomponent->name())->merge(tensorcomponent);
+  }
+  for (const auto &iter : tensortype->storage_indices()) {
+    auto storage_index = iter.first;
+    assert(m_storage_indices.at(storage_index)->name() ==
+           tensortype->storage_indices().at(storage_index)->name());
+  }
+}
+
 ostream &TensorType::output(ostream &os, int level) const {
   os << indent(level) << "TensorType " << quote(name())
      << ": dim=" << dimension() << " rank=" << rank() << "\n";

@@ -45,6 +45,46 @@ void ParameterValue::read(const H5::CommonFG &loc, const string &entry,
   // assert(H5::checkGroupNames(group, "configurations", configurations));
 }
 
+void ParameterValue::merge(const shared_ptr<ParameterValue> &parametervalue) {
+  assert(parameter()->name() == parametervalue->parameter()->name());
+  // Cannot insert "configurations" since configurations have not been merged
+  // yet
+  if (value_type == type_empty) {
+    value_type = parametervalue->value_type;
+    switch (value_type) {
+    case type_empty:
+      break;
+    case type_int:
+      value_int = parametervalue->value_int;
+      break;
+    case type_double:
+      value_double = parametervalue->value_double;
+      break;
+    case type_string:
+      value_string = parametervalue->value_string;
+      break;
+    default:
+      assert(0);
+    }
+  }
+  assert(value_type == parametervalue->value_type);
+  switch (value_type) {
+  case type_empty:
+    break;
+  case type_int:
+    assert(value_int == parametervalue->value_int);
+    break;
+  case type_double:
+    assert(value_double == parametervalue->value_double);
+    break;
+  case type_string:
+    assert(value_string == parametervalue->value_string);
+    break;
+  default:
+    assert(0);
+  }
+}
+
 void ParameterValue::setValue() { value_type = type_empty; }
 void ParameterValue::setValue(long long i) {
   value_int = i;

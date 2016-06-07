@@ -46,20 +46,20 @@ TEST(Project, HDF5) {
     buf << *project;
     orig = buf.str();
   }
+  shared_ptr<Project> p1;
   {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);
-    auto p2 = readProject(file);
+    p1 = readProject(file);
     ostringstream buf;
-    buf << *p2;
+    buf << *p1;
     EXPECT_EQ(orig, buf.str());
   }
   remove(filename);
 }
 
-// This test sets up the global variable "project", which is necessary for
-// most
-// of the following tests. It must be the last of the "Project" tests. TODO:
-// Avoid this dependency.
+// This test sets up the global variable "project", which is necessary for most
+// of the following tests. It must be the last of the "Project" tests.
+// TODO: Avoid this dependency.
 TEST(Project, setup) {
   project->createStandardTensorTypes();
   EXPECT_EQ(15, project->tensortypes().size());
@@ -777,6 +777,31 @@ TEST(DiscreteFieldBlockComponent, HDF5) {
               "    DataRange: origin=-1 delta=[0.222222,0.2,0.181818]\n",
               buf.str());
   }
+  remove(filename);
+}
+
+TEST(Project, merge) {
+  auto filename = "project.s5";
+  string orig = [&] {
+    ostringstream buf;
+    buf << *project;
+    return buf.str();
+  }();
+  {
+    auto file = H5::H5File(filename, H5F_ACC_TRUNC);
+    project->write(file);
+  }
+  auto project2 = [&] {
+    auto file = H5::H5File(filename, H5F_ACC_RDONLY);
+    return readProject(file);
+  }();
+  project2->merge(project);
+  string curr = [&] {
+    ostringstream buf;
+    buf << *project2;
+    return buf.str();
+  }();
+  EXPECT_EQ(orig, curr);
   remove(filename);
 }
 
