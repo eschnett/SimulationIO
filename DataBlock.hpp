@@ -2,6 +2,7 @@
 #define DATABLOCK_HPP
 
 #include "H5Helpers.hpp"
+#include "Helpers.hpp"
 #include "RegionCalculus.hpp"
 
 #include <algorithm>

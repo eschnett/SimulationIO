@@ -34,7 +34,6 @@ struct point_t;
 struct box_t;
 struct region_t;
 
-%template(vector_int) std::vector<int>;
 %template(vector_long_long) std::vector<long long>;
 %template(vector_box1) std::vector<box1>;
 %template(vector_box2) std::vector<box2>;
@@ -325,8 +324,8 @@ struct region4 {
 struct point_t {
   point_t();
   point_t(int d);
-  point_t(const std::vector<int>& p);
-  // operator std::vector<int>() const;
+  point_t(const std::vector<long long>& p);
+  // operator std::vector<long long>() const;
 
   // Access and conversion
   // T operator[](int d) const;
@@ -338,13 +337,9 @@ struct point_t {
     void __setitem__(int d, long long x) {
       (*self)[d] = x;
     }
-    void __setitem__(int d, int x) {
-      (*self)[d] = x;
-    }
   }
   point_t subpoint(int dir) const;
   point_t superpoint(int dir, long long x) const;
-  point_t superpoint(int dir, int x) const;
 
   // Predicates
   bool valid() const;
@@ -425,11 +420,6 @@ struct box_t {
   box_t();
   box_t(int d);
   box_t(const point_t& lo, const point_t& hi);
-  // %extend {
-  //   box_t(const std::vector<int>& lo, const std::vector<int>& hi) {
-  //     return box_t(point_t(lo), point_t(hi));
-  //   }
-  // }
 
   // Predicates
   bool valid() const;
