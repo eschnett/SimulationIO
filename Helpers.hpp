@@ -22,6 +22,13 @@ inline int ipow(int base, int exp) {
   return res;
 }
 
+// Indented output
+const int indentsize = 2;
+const char indentchar = ' ';
+inline std::string indent(int level) {
+  return std::string(level * indentsize, indentchar);
+}
+
 // Quote a string
 inline std::string quote(const std::string &str) {
   std::ostringstream buf;
@@ -65,13 +72,17 @@ checked_emplace(std::map<Key, Value> &m, Key1 &&key, Value1 &&value) {
   return iter;
 }
 
-// Indented output
-const int indentsize = 2;
-const char indentchar = ' ';
-inline std::string indent(int level) {
-  return std::string(level * indentsize, indentchar);
+// Extract keys from a map
+template <typename Key, typename Value>
+std::vector<Key> keys(const std::map<Key, Value> &m) {
+  std::vector<Key> r;
+  for (const auto &kv : m)
+    r.push_back(kv.first);
+  return r;
+}
 }
 
+namespace std {
 // Output a vector
 template <typename T>
 std::ostream &operator<<(std::ostream &os, const std::vector<T> &values) {

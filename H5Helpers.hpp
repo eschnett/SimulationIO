@@ -3,6 +3,8 @@
 
 // HDF5 helpers
 
+#include "Helpers.hpp"
+
 #include <H5Cpp.h>
 
 #include <algorithm>
@@ -231,13 +233,7 @@ inline std::string dump(const H5::DataType &type) {
     assert(iret == ndims);
     // H5::DataType etype = ???;
     buf << /*dump(etype)*/ "[unknown-element-type]"
-        << ":array[";
-    for (int d = 0; d < ndims; ++d) {
-      if (d > 0)
-        buf << ",";
-      buf << dims[d];
-    }
-    buf << "]";
+        << ":array" << dims;
     return buf.str();
   }
   default:
