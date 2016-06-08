@@ -183,7 +183,7 @@ public:
 };
 
 // A multi-linear range
-class DataRange final : public DataBlock {
+class DataRange : public DataBlock {
   double m_origin;
   vector<double> m_delta;
 
@@ -210,7 +210,7 @@ public:
 };
 
 // An HDF5 dataset
-class DataSet final : public DataBlock {
+class DataSet : public DataBlock {
   H5::DataSpace m_dataspace;
   H5::DataType m_datatype;
   mutable bool m_have_location;
@@ -286,7 +286,7 @@ public:
 };
 
 // A copy of an existing HDF5 dataset
-class CopyObj final : public DataBlock {
+class CopyObj : public DataBlock {
   H5::Group m_group;
   string m_name;
 
@@ -339,7 +339,7 @@ public:
 };
 
 // An external linke to an HDF5 dataset
-class ExtLink final : public DataBlock {
+class ExtLink : public DataBlock {
   string m_filename;
   string m_objname;
 

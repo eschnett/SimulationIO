@@ -1400,7 +1400,7 @@ public:
           subboxes[subbox1] = old_pos;
         } else {
           if (active0) {
-            // The current box changed; finalize it
+            // The current box changed; ize it
             res.push_back(box<T, D>(subbox0.lower().superpoint(D - 1, old_pos),
                                     subbox0.upper().superpoint(D - 1, pos)));
           }
@@ -1795,7 +1795,7 @@ template <typename T> struct vregion {
 
 // Wrapper classes (using pointers)
 
-template <typename T, int D> struct wpoint final : vpoint<T> {
+template <typename T, int D> struct wpoint : vpoint<T> {
   point<T, D> val;
 
   wpoint(const wpoint &p) = default;
@@ -1983,7 +1983,7 @@ template <typename T, int D> struct wpoint final : vpoint<T> {
   // }
 };
 
-template <typename T, int D> struct wbox final : vbox<T> {
+template <typename T, int D> struct wbox : vbox<T> {
   box<T, D> val;
 
   wbox(const wbox &b) = default;
@@ -2098,7 +2098,7 @@ template <typename T, int D> struct wbox final : vbox<T> {
   // }
 };
 
-template <typename T, int D> struct wregion final : vregion<T> {
+template <typename T, int D> struct wregion : vregion<T> {
   region<T, D> val;
 
   wregion(const wregion &r) = default;
