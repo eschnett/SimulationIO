@@ -15,16 +15,14 @@
 
 namespace SimulationIO {
 
+using namespace RegionCalculus;
+
 using std::make_shared;
 using std::ostream;
 using std::shared_ptr;
 using std::string;
 using std::vector;
 using std::weak_ptr;
-
-typedef RegionCalculus::dpoint<hssize_t> point_t;
-typedef RegionCalculus::dbox<hssize_t> box_t;
-typedef RegionCalculus::dregion<hssize_t> region_t;
 
 class DiscreteFieldBlock;
 

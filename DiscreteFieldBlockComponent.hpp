@@ -2,6 +2,7 @@
 #define DISCRETEFIELDBLOCKCOMPONENT_HPP
 
 #include "Common.hpp"
+#include "DataBlock.hpp"
 #include "DiscreteFieldBlock.hpp"
 #include "TensorComponent.hpp"
 
@@ -14,6 +15,7 @@
 
 namespace SimulationIO {
 
+using std::dynamic_pointer_cast;
 using std::make_shared;
 using std::map;
 using std::ostream;
@@ -28,6 +30,10 @@ class DiscreteFieldBlockComponent
   // Tensor component for a discrete field on a particular region
   weak_ptr<DiscreteFieldBlock> m_discretefieldblock; // parent
   shared_ptr<TensorComponent> m_tensorcomponent;     // without backlink
+  shared_ptr<DataBlock> m_datablock;
+
+  static string dataname() { return "data"; }
+
 public:
   shared_ptr<DiscreteFieldBlock> discretefieldblock() const {
     return m_discretefieldblock.lock();
@@ -35,22 +41,19 @@ public:
   shared_ptr<TensorComponent> tensorcomponent() const {
     return m_tensorcomponent;
   }
-
-  enum {
-    type_empty,
-    type_dataset,
-    type_extlink,
-    type_copy,
-    type_range
-  } data_type;
-  H5::DataSpace data_dataspace;
-  H5::DataType data_datatype;
-  mutable H5::DataSet data_dataset;
-  string data_extlink_filename, data_extlink_objname;
-  H5::hid data_copy_loc;
-  string data_copy_name;
-  double data_range_origin;
-  vector<double> data_range_delta;
+  shared_ptr<DataBlock> datablock() const { return m_datablock; }
+  shared_ptr<DataRange> datarange() const {
+    return dynamic_pointer_cast<DataRange>(m_datablock);
+  }
+  shared_ptr<DataSet> dataset() const {
+    return dynamic_pointer_cast<DataSet>(m_datablock);
+  }
+  shared_ptr<CopyObj> copyobj() const {
+    return dynamic_pointer_cast<CopyObj>(m_datablock);
+  }
+  shared_ptr<ExtLink> extlink() const {
+    return dynamic_pointer_cast<ExtLink>(m_datablock);
+  }
 
   virtual bool invariant() const {
     bool inv =
@@ -69,23 +72,9 @@ public:
         inv &= dfbd.second->tensorcomponent().get() != tensorcomponent().get();
     // Ensure mapping from storage_indices is correct
     inv &= discretefieldblock()
-                   ->storage_indices()
-                   .at(tensorcomponent()->storage_index())
-                   .get() == this &&
-           (data_type == type_empty || data_type == type_dataset ||
-            data_type == type_extlink || data_type == type_copy ||
-            data_type == type_range) &&
-           !data_extlink_filename.empty() == (data_type == type_extlink) &&
-           !data_extlink_objname.empty() == (data_type == type_extlink) &&
-           data_copy_loc.valid() == (data_type == type_copy) &&
-           !data_copy_name.empty() == (data_type == type_copy) &&
-           !data_range_delta.empty() == (data_type == type_range) &&
-           (int(data_range_delta.size()) ==
-            discretefieldblock()
-                ->discretizationblock()
-                ->discretization()
-                ->manifold()
-                ->dimension()) == (data_type == type_range);
+               ->storage_indices()
+               .at(tensorcomponent()->storage_index())
+               .get() == this;
     return inv;
   }
 
@@ -103,7 +92,7 @@ public:
       const shared_ptr<DiscreteFieldBlock> &discretefieldblock,
       const shared_ptr<TensorComponent> &tensorcomponent)
       : Common(name), m_discretefieldblock(discretefieldblock),
-        m_tensorcomponent(tensorcomponent), data_type(type_empty) {}
+        m_tensorcomponent(tensorcomponent) {}
   DiscreteFieldBlockComponent(hidden) : Common(hidden()) {}
 
 private:
@@ -133,12 +122,6 @@ public:
   void merge(const shared_ptr<DiscreteFieldBlockComponent>
                  &discretefieldblockcomponent);
 
-  void setData();
-  template <typename T> void setData();
-  void setData(const string &filename, const string &objname);
-  void setData(const H5::H5Location &loc, const string &name);
-  void setData(double origin, const vector<double> &delta);
-
   virtual ostream &output(ostream &os, int level = 0) const;
   friend ostream &
   operator<<(ostream &os,
@@ -148,10 +131,23 @@ public:
   virtual void write(const H5::CommonFG &loc,
                      const H5::H5Location &parent) const;
 
+  void unsetDataBlock();
+  shared_ptr<DataRange> createDataRange(double origin,
+                                        const vector<double> &delta);
+  template <typename T> shared_ptr<DataSet> createDataSet() {
+    assert(!m_datablock);
+    auto res = make_shared<DataSet>(
+        T(), discretefieldblock()->discretizationblock()->box());
+    m_datablock = res;
+    return res;
+  }
+  shared_ptr<CopyObj> createCopyObj(const H5::Group &group, const string &name);
+  shared_ptr<CopyObj> createCopyObj(const H5::H5File &file, const string &name);
+  shared_ptr<ExtLink> createExtLink(const string &filename,
+                                    const string &objname);
+
   string getPath() const;
   string getName() const;
-  // This expects that setData was called to create a dataset
-  template <typename T> void writeData(const vector<T> &data) const;
 };
 }
 

@@ -507,13 +507,13 @@ TEST(DiscretizationBlock, create) {
   auto d1 = m1->discretizations().at("d1");
   EXPECT_TRUE(d1->discretizationblocks().empty());
   auto db1 = d1->createDiscretizationBlock("db1");
-  // vector<hssize_t> offset(m1->dimension(), 3);
-  // vector<hssize_t> shape(m1->dimension());
+  // vector<long long> offset(m1->dimension(), 3);
+  // vector<long long> shape(m1->dimension());
   // shape.at(0) = 9;
   // shape.at(1) = 10;
   // shape.at(2) = 11;
-  vector<hssize_t> offset = {3, 3, 3};
-  vector<hssize_t> shape = {9, 10, 11};
+  vector<long long> offset = {3, 3, 3};
+  vector<long long> shape = {9, 10, 11};
   db1->setBox(box_t(offset, shape));
   EXPECT_EQ(1, d1->discretizationblocks().size());
   EXPECT_EQ(db1, d1->discretizationblocks().at("db1"));
@@ -719,31 +719,29 @@ TEST(DiscreteFieldBlockComponent, create) {
   EXPECT_EQ(dfbd4, dfb1->storage_indices().at(byy1->storage_index()));
   EXPECT_EQ(dfb1->storage_indices().end(),
             dfb1->storage_indices().find(byz1->storage_index()));
-  EXPECT_EQ(DiscreteFieldBlockComponent::type_empty, dfbd1->data_type);
-  EXPECT_EQ(DiscreteFieldBlockComponent::type_empty, dfbd2->data_type);
-  EXPECT_EQ(DiscreteFieldBlockComponent::type_empty, dfbd3->data_type);
-  EXPECT_EQ(DiscreteFieldBlockComponent::type_empty, dfbd4->data_type);
-  dfbd1->setData("discretizationfieldblockcomponent.s5",
-                 project->name() + "/tensortypes/Scalar3D");
-  dfbd1->setData();
-  dfbd2->setData("discretizationfieldblockcomponent.s5",
-                 project->name() + "/tensortypes/Scalar3D");
-  const auto datatype = H5::getType(0.0);
+  EXPECT_FALSE(bool(dfbd1->datablock()));
+  EXPECT_FALSE(bool(dfbd2->datablock()));
+  EXPECT_FALSE(bool(dfbd3->datablock()));
+  EXPECT_FALSE(bool(dfbd4->datablock()));
+  dfbd1->createExtLink("discretizationfieldblockcomponent.s5",
+                       project->name() + "/tensortypes/Scalar3D");
+  dfbd1->unsetDataBlock();
+  dfbd2->createExtLink("discretizationfieldblockcomponent.s5",
+                       project->name() + "/tensortypes/Scalar3D");
   // TODO: get rank and shape from manifold and discretization block
   const int rank = 3;
   const hsize_t dims[rank] = {11, 10, 9};
-  auto dataspace = H5::DataSpace(rank, dims);
-  dfbd3->setData<double>();
+  dfbd3->createDataSet<double>();
   double origin = -1.0;
   vector<double> delta(rank);
   for (int d = 0; d < rank; ++d) {
     delta.at(d) = 2.0 / dims[rank - 1 - d];
   }
-  dfbd4->setData(origin, delta);
-  EXPECT_EQ(DiscreteFieldBlockComponent::type_empty, dfbd1->data_type);
-  EXPECT_EQ(DiscreteFieldBlockComponent::type_extlink, dfbd2->data_type);
-  EXPECT_EQ(DiscreteFieldBlockComponent::type_dataset, dfbd3->data_type);
-  EXPECT_EQ(DiscreteFieldBlockComponent::type_range, dfbd4->data_type);
+  dfbd4->createDataRange(origin, delta);
+  EXPECT_FALSE(bool(dfbd1->datablock()));
+  EXPECT_TRUE(bool(dfbd2->extlink()));
+  EXPECT_TRUE(bool(dfbd3->dataset()));
+  EXPECT_TRUE(bool(dfbd4->datarange()));
 }
 
 TEST(DiscreteFieldBlockComponent, HDF5) {
@@ -766,18 +764,17 @@ TEST(DiscreteFieldBlockComponent, HDF5) {
               "DiscretizationBlock \"db1\"\n"
               "  DiscreteFieldBlockComponent \"dfbd1\": DiscreteFieldBlock "
               "\"dfb1\" TensorComponent \"00\"\n"
-              "    data: empty\n"
               "  DiscreteFieldBlockComponent \"dfbd2\": DiscreteFieldBlock "
               "\"dfb1\" TensorComponent \"01\"\n"
-              "    data: external link to "
+              "    ExtLink: "
               "\"discretizationfieldblockcomponent.s5\":\"p1/tensortypes/"
               "Scalar3D\"\n"
               "  DiscreteFieldBlockComponent \"dfbd3\": DiscreteFieldBlock "
               "\"dfb1\" TensorComponent \"02\"\n"
-              "    data: copy of (?):\"data\"\n"
+              "    CopyObj: ???:\"data\"\n"
               "  DiscreteFieldBlockComponent \"dfbd4\": DiscreteFieldBlock "
               "\"dfb1\" TensorComponent \"11\"\n"
-              "    data: range origin=-1 delta=[0.222222,0.2,0.181818]\n",
+              "    DataRange: origin=-1 delta=[0.222222,0.2,0.181818]\n",
               buf.str());
   }
   remove(filename);

@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
         ostringstream name;
         name << "grid." << p;
         auto block = discretization->createDiscretizationBlock(name.str());
-        vector<hssize_t> offset(dim), shape(dim);
+        vector<long long> offset(dim), shape(dim);
         offset.at(0) = nli * pi;
         offset.at(1) = nlj * pj;
         offset.at(2) = nlk * pk;
@@ -96,7 +96,7 @@ int main(int argc, char **argv) {
       auto scalar3d_component = scalar3d->storage_indices().at(0);
       auto component = block->createDiscreteFieldBlockComponent(
           "scalar", scalar3d_component);
-      component->setData<double>();
+      component->createDataSet<double>();
     }
     coordinates.push_back(
         coordinatesystem->createCoordinateField(dirnames[d], d, field));
@@ -114,7 +114,7 @@ int main(int argc, char **argv) {
   for (int i = 0; i < ngrids; ++i) {
     const hsize_t dims[dim] = {nlk, nlj, nli};
     auto dataspace = H5::DataSpace(dim, dims);
-    auto datatype = H5::getType(double());
+    auto datatype = H5::getType(double{});
     // Create discrete region
     auto rho_block = discretized_rho->createDiscreteFieldBlock(
         rho->name() + "-" + blocks.at(i)->name(), blocks.at(i));
@@ -124,12 +124,12 @@ int main(int argc, char **argv) {
     auto scalar3d_component = scalar3d->storage_indices().at(0);
     auto rho_component = rho_block->createDiscreteFieldBlockComponent(
         "scalar", scalar3d_component);
-    rho_component->setData<double>();
+    rho_component->createDataSet<double>();
     for (int d = 0; d < dim; ++d) {
       auto vector3d_component = vector3d->storage_indices().at(d);
       auto vel_component = vel_block->createDiscreteFieldBlockComponent(
           dirnames[d], vector3d_component);
-      vel_component->setData<double>();
+      vel_component->createDataSet<double>();
     }
   }
 
@@ -177,7 +177,8 @@ int main(int argc, char **argv) {
           auto block = discretefield->discretefieldblocks().at(
               discretefield->name() + "-" + blocks.at(p)->name());
           auto component = block->discretefieldblockcomponents().at("scalar");
-          component->writeData(d == 0 ? coordx : d == 1 ? coordy : coordz);
+          component->dataset()->writeData(d == 0 ? coordx : d == 1 ? coordy
+                                                                   : coordz);
         }
         // Write rho
         {
@@ -186,7 +187,7 @@ int main(int argc, char **argv) {
           auto block = discretefield->discretefieldblocks().at(
               discretefield->name() + "-" + blocks.at(p)->name());
           auto component = block->discretefieldblockcomponents().at("scalar");
-          component->writeData(datarho);
+          component->dataset()->writeData(datarho);
         }
         // Write velocity
         for (int d = 0; d < dim; ++d) {
@@ -196,8 +197,8 @@ int main(int argc, char **argv) {
               discretefield->name() + "-" + blocks.at(p)->name());
           auto component =
               block->discretefieldblockcomponents().at(dirnames[d]);
-          component->writeData(d == 0 ? datavelx : d == 1 ? datavely
-                                                          : datavelz);
+          component->dataset()->writeData(
+              d == 0 ? datavelx : d == 1 ? datavely : datavelz);
         }
       }
 

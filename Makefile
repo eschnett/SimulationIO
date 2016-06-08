@@ -15,6 +15,7 @@ SIO_SRCS =					\
 	Configuration.cpp			\
 	CoordinateField.cpp			\
 	CoordinateSystem.cpp			\
+	DataBlock.cpp				\
 	DiscreteField.cpp			\
 	DiscreteFieldBlock.cpp			\
 	DiscreteFieldBlockComponent.cpp		\
@@ -40,7 +41,8 @@ ALL_SRCS =					\
 	merge.cpp				\
 	test_RegionCalculus.cpp			\
 	test_SimulationIO.cpp
-PYTHON_EXE = _H5.so _RegionCalculus.so _SimulationIO.so
+SWIG_SRCS = H5.i RegionCalculus.i SimulationIO.i
+PYTHON_EXE = $(SWIG_SRCS:%.i=_%.so)
 ALL_EXE =							\
 	$(PYTHON_EXE)						\
 	benchmark convert-carpet-output copy example list merge	\
@@ -94,11 +96,10 @@ check: $(ALL_EXE)
 	./copy example.s5 example2.s5
 	./list example2.s5
 	./python-example.py
+	./python-read.py
 	-$(HDF5_DIR)/bin/h5format_convert python-example.s5
 	./python-read-direct.py
-	./python-read.py
 #	./julia-example.jl
-#	-h5format_convert julia-example.s5
 #	./julia-read.jl
 	echo SUCCESS
 
@@ -131,8 +132,16 @@ endif
 _%.so: %_wrap.o $(SIO_SRCS:%.cpp=%.o)
 	$(CXX) $(make-dynamiclib) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $(PYTHON_LDFLAGS) -o $@ $^ $(LIBS) $(PYTHON_LIBS)
 
-%_wrap.cpp: %.i
-	swig -v -Wall -Wextra -c++ -python $*.i
+%_wrap.cpp %.py: %.i
+	$(RM) $*_wrap.cpp
+	swig -MD -v -Wall -Wextra -c++ -python $*.i
+	mv $*_wrap.d $*_wrap.cpp.d.tmp
+	{								   \
+	  perl -p -e 's{$*_wrap.cxx}{$*_wrap.cpp}g' < $*_wrap.cpp.d.tmp && \
+	  perl -p -e 's{\#.*}{};s{^[^:]*: *}{};s{ *\\$$}{};s{$$}{ :}'	   \
+	    < $*_wrap.cpp.d.tmp;					   \
+	} > $*_wrap.cpp.d
+	$(RM) $*_wrap.cpp.d.tmp
 	mv $*_wrap.cxx $*_wrap.cpp
 .PRECIOUS: $(PYTHON_EXE:_%.so=%_wrap.cpp)
 .PRECIOUS: $(PYTHON_EXE:_%.so=%_wrap.o)
@@ -145,13 +154,15 @@ _%.so: %_wrap.o $(SIO_SRCS:%.cpp=%.o)
 
 # Taken from <http://mad-scientist.net/make/autodep.html> as written by Paul D.
 # Smith <psmith@gnu.org>, originally developed by Tom Tromey <tromey@cygnus.com>
-PROCESS_DEPENDENCIES =							  \
-  {									  \
-    perl -p -e 's{$*.o.tmp}{$*.o}g' < $*.o.d &&				  \
-    perl -p -e 's{\#.*}{};s{^[^:]*: *}{};s{ *\\$$}{};s{$$}{ :}' < $*.o.d; \
-  } > $*.d &&								  \
-  $(RM) $*.o.d
--include $(ALL_SRCS:%.cpp=%.d)
+PROCESS_DEPENDENCIES =							      \
+  mv $*.o.d $*.o.d.tmp &&						      \
+  {									      \
+    perl -p -e 's{$*.o.tmp}{$*.o}g' < $*.o.d.tmp &&			      \
+    perl -p -e 's{\#.*}{};s{^[^:]*: *}{};s{ *\\$$}{};s{$$}{ :}' < $*.o.d.tmp; \
+  } > $*.o.d &&								      \
+  $(RM) $*.o.d.tmp
+-include $(ALL_SRCS:%.cpp=%.o.d)
+-include $(SWIG_SRCS:%.i=%_wrap.cpp.d) $(SWIG_SRCS:%.i=%_wrap.o.d)
 
 coverage:
 	-lcov --directory . --capture --output-file coverage.info
@@ -165,10 +176,12 @@ clean:
 	$(RM) -r *.dSYM
 	$(RM) *.gcda *.gcno coverage.info
 	$(RM) gtest-all.o
-	$(RM) -- $(ALL_SRCS:%.cpp=%.o) $(ALL_SRCS:%.cpp=%.d)
-	$(RM) -- $(PYTHON_EXE:_%.so=%_wrap.cxx) $(PYTHON_EXE:_%.so=%_wrap.cpp)
-	$(RM) -- $(PYTHON_EXE:_%.so=%_wrap.d) $(PYTHON_EXE:_%.so=%_wrap.o)
-	$(RM) -- $(PYTHON_EXE:_%.so=%.py) $(PYTHON_EXE:_%.so=%.pyc)
+	$(RM) -- $(ALL_SRCS:%.cpp=%.o) $(ALL_SRCS:%.cpp=%.o.d)
+	$(RM) -- $(SWIG_SRCS:%.i=%_wrap.cxx) $(SWIG_SRCS:%.i=%_wrap.cpp)
+	$(RM) -- $(SWIG_SRCS:%.i=%_wrap.cxx.d)
+	$(RM) -- $(SWIG_SRCS:%.i=%_wrap.o.d) $(SWIG_SRCS:%.i=%_wrap.o)
+	$(RM) -- $(SWIG_SRCS:%.i=_%.so)
+	$(RM) -- $(SWIG_SRCS:%.i=%.py) $(SWIG_SRCS:%.i=%.pyc)
 	$(RM) -- $(ALL_EXE)
 	$(RM) -- example.s5 example2.s5 python-example.s5 julia-example.s5
 
