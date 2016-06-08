@@ -196,17 +196,16 @@ public:
     assert(invariant());
   }
 
-  virtual bool invariant() const override {
+  virtual bool invariant() const {
     return DataBlock::invariant() && int(m_delta.size()) == rank();
   }
 
-  virtual ~DataRange() override {}
+  virtual ~DataRange() {}
 
   static shared_ptr<DataRange> read(const H5::Group &group, const string &entry,
                                     const box_t &box);
-  virtual ostream &output(ostream &os) const override;
-  virtual void write(const H5::Group &group,
-                     const string &entry) const override;
+  virtual ostream &output(ostream &os) const;
+  virtual void write(const H5::Group &group, const string &entry) const;
 };
 
 // An HDF5 dataset
@@ -225,7 +224,7 @@ public:
   bool have_dataset() const { return m_have_dataset; }
   H5::DataSet dataset() const { return m_dataset; }
 
-  virtual bool invariant() const override {
+  virtual bool invariant() const {
     bool inv = DataBlock::invariant();
     int ndims = m_dataspace.getSimpleExtentNdims();
     inv &= ndims == rank();
@@ -245,13 +244,12 @@ public:
   template <typename T>
   DataSet(T, const box_t &box) : DataSet(box, H5::getType(T{})) {}
 
-  virtual ~DataSet() override {}
+  virtual ~DataSet() {}
 
   static shared_ptr<DataSet> read(const H5::Group &group, const string &entry,
                                   const box_t &box);
-  virtual ostream &output(ostream &os) const override;
-  virtual void write(const H5::Group &group,
-                     const string &entry) const override;
+  virtual ostream &output(ostream &os) const;
+  virtual void write(const H5::Group &group, const string &entry) const;
 
 private:
   void create_dataset() const;
@@ -294,7 +292,7 @@ public:
   H5::Group group() const { return m_group; }
   string name() const { return m_name; }
 
-  virtual bool invariant() const override {
+  virtual bool invariant() const {
     return DataBlock::invariant()
            // && m_group.valid()
            && !m_name.empty();
@@ -306,13 +304,12 @@ public:
   CopyObj(const box_t &box, const H5::H5File &file, const string &name)
       : CopyObj(box, file.openGroup("/"), name) {}
 
-  virtual ~CopyObj() override {}
+  virtual ~CopyObj() {}
 
   static shared_ptr<CopyObj> read(const H5::Group &group, const string &entry,
                                   const box_t &box);
-  virtual ostream &output(ostream &os) const override;
-  virtual void write(const H5::Group &group,
-                     const string &entry) const override;
+  virtual ostream &output(ostream &os) const;
+  virtual void write(const H5::Group &group, const string &entry) const;
 
   template <typename T> vector<T> readData(const box_t &databox) const {
     assert(databox <= box());
@@ -347,20 +344,19 @@ public:
   string filename() const { return m_filename; }
   string objname() const { return m_objname; }
 
-  virtual bool invariant() const override {
+  virtual bool invariant() const {
     return DataBlock::invariant() && !m_filename.empty() && !m_objname.empty();
   }
 
   ExtLink(const box_t &box, const string &filename, const string &objname)
       : DataBlock(box), m_filename(filename), m_objname(objname) {}
 
-  virtual ~ExtLink() override {}
+  virtual ~ExtLink() {}
 
   static shared_ptr<ExtLink> read(const H5::Group &group, const string &entry,
                                   const box_t &box);
-  virtual ostream &output(ostream &os) const override;
-  virtual void write(const H5::Group &group,
-                     const string &entry) const override;
+  virtual ostream &output(ostream &os) const;
+  virtual void write(const H5::Group &group, const string &entry) const;
 
   // TODO: implement readData
 };
