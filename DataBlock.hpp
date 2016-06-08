@@ -302,7 +302,7 @@ public:
   CopyObj(const box_t &box, const H5::Group &group, const string &name)
       : DataBlock(box), m_group(group), m_name(name) {}
   CopyObj(const box_t &box, const H5::H5File &file, const string &name)
-      : CopyObj(box, file.openGroup("/"), name) {}
+      : DataBlock(box), m_group(file.openGroup("/")), m_name(name) {}
 
   virtual ~CopyObj() {}
 
