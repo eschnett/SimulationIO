@@ -117,7 +117,8 @@ public:
   norm_t &operator+=(T x) { return *this += norm_t(x); }
   norm_t operator+(T x) const { return *this + norm_t(x); }
 
-  norm_t(const std::vector<T> &xs) : norm_t() {
+  norm_t(const std::vector<T> &xs) {
+    *this = norm_t();
     for (auto x : xs)
       *this += x;
   }
@@ -242,7 +243,13 @@ public:
     assert(invariant());
   }
   template <typename T>
-  DataSet(T, const box_t &box) : DataSet(box, H5::getType(T{})) {}
+  DataSet(T, const box_t &box)
+      : DataBlock(box), m_dataspace(H5::DataSpace(
+                            rank(), reversed(vector<hsize_t>(shape())).data())),
+        m_datatype(H5::getType(T{})), m_have_location(false),
+        m_have_dataset(false) {
+    assert(invariant());
+  }
 
   virtual ~DataSet() {}
 
