@@ -49,6 +49,9 @@ try:
 
     with open('lib_sources.txt','r') as f:
         lib_sources = f.read().strip().split(' ')
+
+    with open('using_coverage.txt','r') as f:
+        using_coverage = bool(int(f.read().strip()))
 except IOError:
     raise IOError("There is missing metadata. Try running "
                   +"'make meta' to generate it.")
@@ -69,12 +72,12 @@ swig_wrap_files = (
     +[path.join(here,"{}_wrap.o".format(m)) for m in swig_modules])
 swig_opts = ['-c++','-Wall']
 
-if 'COVERAGE' in os.environ.keys():
-    link_args += '--coverage'
+if using_coverage:
+    link_args.append('--coverage')
     if 'clang' in cxx:
-        libs += 'profile_rt'
+        libs.append('profile_rt')
     elif 'g++' in cxx:
-        libs += 'gcov'
+        libs.append('gcov')
     else:
         raise ValueError("Coverage not supported by your compiler.")
 
