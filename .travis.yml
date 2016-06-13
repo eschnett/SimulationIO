@@ -54,7 +54,6 @@ script:
   - python setup.py install --user
   - BDIR=$(pwd) && cd ~ # must be outside of build directory
   - python ${BDIR}/python-examples/write-sio-file.py
-  - python ${BDIR}/python-examples/read-sio-file.py python-example.s5
   # - ./julia-example.jl && ./list julia-example.s5
 after_success:
   - make -j2 coverage
