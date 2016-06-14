@@ -42,6 +42,7 @@ before_install:
   - pip install --user codecov
   - pip install --user --upgrade pip
   - pip install --user --upgrade setuptools
+  - pip install --user numpy # OS X is missing this
   - gem install coveralls-lcov
   - h5ls --version
   - mpirun --version
