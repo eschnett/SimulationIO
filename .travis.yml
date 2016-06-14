@@ -54,7 +54,7 @@ script:
   - make -j2 COVERAGE=1 CXX="$CXX" HDF5_DIR="$HDF5_DIR" MPI_NAME=openmpi MPI_LIBS=-lmpi
   - make -j2 test
   - ./sio-example && ./sio-list example.s5
-  - python setup.py install --user --prefix= # workaround for bug in setuptools
+  - CFLAGS="-O0" python setup.py install --user --prefix= # workaround for bug in setuptools
   - BDIR=$(pwd) && cd ~ # must be outside of build directory
   - python ${BDIR}/python-examples/write-sio-file.py
   - python ${BDIR}/python-examples/read-sio-file-no-h5py.py python-example.s5
