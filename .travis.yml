@@ -20,6 +20,7 @@ before_install:
       brew install homebrew/science/hdf5
       brew install lcov
       brew install open-mpi
+      brew install python
       brew install swig
     fi
   - |
@@ -39,6 +40,8 @@ before_install:
       export PATH="$HDF5_DIR/bin:$PATH"
     fi
   - pip install --user codecov
+  - pip install --user --upgrade pip
+  - pip install --user --upgrade setuptools
   - gem install coveralls-lcov
   - h5ls --version
   - mpirun --version
