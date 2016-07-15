@@ -58,7 +58,7 @@ MPI_DIR = /opt/local
 MPI_CPPFLAGS = -I$(MPI_DIR)/include/openmpi-gcc6
 MPI_CXXFLAGS =
 MPI_LDFLAGS = -L$(MPI_DIR)/lib/openmpi-gcc6 -Wl,-rpath,$(MPI_DIR)/lib/openmpi-gcc6
-MPI_LIBS = -lmpi_cxx -lmpi
+MPI_LIBS = -lmpi
 
 PYTHON_DIR = /opt/local/Library/Frameworks/Python.framework/Versions/2.7
 PYTHON_CPPFLAGS = -I$(PYTHON_DIR)/include/python2.7
