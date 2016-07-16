@@ -1,6 +1,4 @@
-comment:
-  layout: header, changes, diff
+comment: off
 coverage:
   status:
     patch: false
-comment: off
