@@ -50,7 +50,7 @@ void DataRange::write(const H5::Group &group, const string &entry) const {
 
 shared_ptr<DataSet> DataSet::read(const H5::Group &group, const string &entry,
                                   const box_t &box) {
-// Reading a dataset always produces either CopyObj or ExtLink
+// Reading a dataset always produces either CopyObj
 #if 0
   auto lapl = H5::take_hid(H5Pcreate(H5P_LINK_ACCESS));
   assert(lapl.valid());
@@ -164,7 +164,8 @@ shared_ptr<CopyObj> CopyObj::read(const H5::Group &group, const string &entry,
   auto exists = H5Lexists(group.getLocId(), entry.c_str(), lapl);
   assert(exists >= 0);
   if (exists) {
-    // entry is a link
+// entry is a link
+#if 0
     // Check whether it is an external link
     bool have_extlink;
     string filename, objname;
@@ -177,6 +178,9 @@ shared_ptr<CopyObj> CopyObj::read(const H5::Group &group, const string &entry,
       // assert(info.type == H5O_TYPE_DATASET);
       return make_shared<CopyObj>(box, group, entry);
     }
+#else
+    return make_shared<CopyObj>(box, group, entry);
+#endif
   }
   return nullptr;
 }
@@ -204,6 +208,8 @@ void CopyObj::write(const H5::Group &group, const string &entry) const {
 
 shared_ptr<ExtLink> ExtLink::read(const H5::Group &group, const string &entry,
                                   const box_t &box) {
+// Reading a dataset always produces a CopyObj
+#if 0
   auto lapl = H5::take_hid(H5Pcreate(H5P_LINK_ACCESS));
   assert(lapl.valid());
   auto exists = H5Lexists(group.getLocId(), entry.c_str(), lapl);
@@ -218,6 +224,7 @@ shared_ptr<ExtLink> ExtLink::read(const H5::Group &group, const string &entry,
       return make_shared<ExtLink>(box, filename, objname);
     }
   }
+#endif
   return nullptr;
 }
 
