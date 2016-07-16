@@ -270,6 +270,9 @@ public:
     H5::DataSpace memspace, filespace;
     construct_spaces(databox, memspace, filespace);
     m_dataset.write(data.data(), H5::getType(T{}), memspace, filespace);
+  }
+  template <typename T> void writeData(const vector<T> &data) const {
+    writeData(data, box());
 
     // TODO: Add function to add / update minimum and maximum; call it after
     // copying
@@ -284,9 +287,6 @@ public:
     H5::createAttribute(m_dataset, "maximum", norm.max());
     H5::createAttribute(m_dataset, "sum_abs", norm.sum_abs());
     H5::createAttribute(m_dataset, "sum_abs_squared", norm.sum_abs_squared());
-  }
-  template <typename T> void writeData(const vector<T> &data) const {
-    writeData(data, box());
   }
 };
 
