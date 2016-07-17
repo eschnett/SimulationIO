@@ -28,7 +28,7 @@ void read_active(const H5::H5Location &group,
     try {
       H5::readAttribute(group, "active", boxes, boxtype);
       active = region_t(
-          RegionCalculus::make_unique<RegionCalculus::wregion<long long, D>>(
+          RegionCalculus::make_unique1<RegionCalculus::wregion<long long, D>>(
               RegionCalculus::region<long long, D>(std::move(boxes))));
     } catch (H5::AttributeIException ex) {
       // do nothing
@@ -40,7 +40,7 @@ void read_active(const H5::H5Location &group,
     try {
       H5::readAttribute(group, "active", boxes, boxtype);
       active = region_t(
-          RegionCalculus::make_unique<RegionCalculus::wregion<long long, D>>(
+          RegionCalculus::make_unique1<RegionCalculus::wregion<long long, D>>(
               RegionCalculus::region<long long, D>(std::move(boxes))));
     } catch (H5::DataTypeIException ex) {
       // do nothing
