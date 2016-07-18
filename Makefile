@@ -8,6 +8,18 @@ ifneq ($(COVERAGE),)
 CXXFLAGS += --coverage
 endif
 
+os = $(shell uname)
+ifeq ($(os), Linux)
+make-dynamiclib = -shared
+dynamiclib-suffix = so
+else ifeq ($(os), Darwin)
+make-dynamiclib = -dynamiclib
+dynamiclib-suffix = dylib
+else
+make-dynamiclib = -shared
+dynamiclib-suffix = so
+endif
+
 RC_SRCS =
 SIO_SRCS =					\
 	Basis.cpp				\
@@ -44,6 +56,7 @@ ALL_SRCS =					\
 SWIG_SRCS = H5.i RegionCalculus.i SimulationIO.i
 PYTHON_EXE = $(SWIG_SRCS:%.i=_%.so)
 ALL_EXE =							\
+	libSimulationIO.a libSimulationIO.$(dynamiclib-suffix)	\
 	$(PYTHON_EXE)						\
 	benchmark convert-carpet-output copy example list merge	\
 	test_RegionCalculus test_SimulationIO
@@ -84,9 +97,9 @@ gtest-all.o: gtest
 
 test_RegionCalculus.o: gtest
 test_SimulationIO.o: gtest
-test_RegionCalculus: $(RC_SRCS:%.cpp=%.o) test_RegionCalculus.o gtest-all.o
+test_RegionCalculus: test_RegionCalculus.o gtest-all.o libSimulationIO.a
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
-test_SimulationIO: $(SIO_SRCS:%.cpp=%.o) test_SimulationIO.o gtest-all.o
+test_SimulationIO: test_SimulationIO.o gtest-all.o libSimulationIO.a
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 check: $(ALL_EXE)
 	./test_RegionCalculus
@@ -103,32 +116,30 @@ check: $(ALL_EXE)
 #	./julia-read.jl
 	echo SUCCESS
 
-benchmark: $(SIO_SRCS:%.cpp=%.o) benchmark.o
+benchmark: benchmark.o libSimulationIO.a
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
-copy: $(SIO_SRCS:%.cpp=%.o) copy.o
+copy: copy.o libSimulationIO.a
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
-example: $(SIO_SRCS:%.cpp=%.o) example.o
+example: example.o libSimulationIO.a
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
-list: $(SIO_SRCS:%.cpp=%.o) list.o
+list: list.o libSimulationIO.a
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
-merge: $(SIO_SRCS:%.cpp=%.o) merge.o
+merge: merge.o libSimulationIO.a
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
-convert-carpet-output: $(SIO_SRCS:%.cpp=%.o) convert-carpet-output.o
+convert-carpet-output: convert-carpet-output.o libSimulationIO.a
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
-os = $(shell uname)
-ifeq ($(os), Linux)
-make-dynamiclib = -shared
-else ifeq ($(os), Darwin)
-make-dynamiclib = -dynamiclib
-else
-make-dynamiclib = -shared
-endif
+libSimulationIO.a: $(SIO_SRCS:%.cpp=%.o) $(RC_SRCS:%.cpp=%.o)
+	$(AR) -rc $@ $^
+	if [[ -n '$(RANLIB)' ]]; then $(RANLIB) $@; fi
+libSimulationIO.$(dynamiclib-suffix): $(SIO_SRCS:%.cpp=%.o) $(RC_SRCS:%.cpp=%.o)
+	$(CXX) $(make-dynamiclib) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
+
 _%.so: %_wrap.o $(SIO_SRCS:%.cpp=%.o)
 	$(CXX) $(make-dynamiclib) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $(PYTHON_LDFLAGS) -o $@ $^ $(LIBS) $(PYTHON_LIBS)
 
@@ -178,10 +189,11 @@ clean:
 	$(RM) gtest-all.o
 	$(RM) -- $(ALL_SRCS:%.cpp=%.o) $(ALL_SRCS:%.cpp=%.o.d)
 	$(RM) -- $(SWIG_SRCS:%.i=%_wrap.cxx) $(SWIG_SRCS:%.i=%_wrap.cpp)
-	$(RM) -- $(SWIG_SRCS:%.i=%_wrap.cxx.d)
+	$(RM) -- $(SWIG_SRCS:%.i=%_wrap.cpp.d)
 	$(RM) -- $(SWIG_SRCS:%.i=%_wrap.o.d) $(SWIG_SRCS:%.i=%_wrap.o)
 	$(RM) -- $(SWIG_SRCS:%.i=_%.so)
 	$(RM) -- $(SWIG_SRCS:%.i=%.py) $(SWIG_SRCS:%.i=%.pyc)
+	$(RM) -- libSimulationIO.a libSimulationIO.$(dynamiclib-suffix)
 	$(RM) -- $(ALL_EXE)
 	$(RM) -- example.s5 example2.s5 python-example.s5 julia-example.s5
 
