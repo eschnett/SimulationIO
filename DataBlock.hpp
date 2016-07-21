@@ -246,7 +246,7 @@ public:
   DataSet(T, const box_t &box)
       : DataBlock(box), m_dataspace(H5::DataSpace(
                             rank(), reversed(vector<hsize_t>(shape())).data())),
-        m_datatype(H5::getType(T{})), m_have_location(false),
+        m_datatype(H5::DataType(H5::getType(T{}))), m_have_location(false),
         m_have_dataset(false) {
     assert(invariant());
   }
