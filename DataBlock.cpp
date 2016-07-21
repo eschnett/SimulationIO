@@ -4,6 +4,54 @@
 
 namespace SimulationIO {
 
+namespace {
+vector<hsize_t> choose_chunksize(const vector<hsize_t> &size,
+                                 hsize_t typesize) {
+  // Guess a good chunk size:
+  // - chunk should fit in L3 cache
+  // - chunk should be larger than stripe size
+  // - chunk should be larger than bandwidth-latency product
+  // A typical L3 cache size is several MByte
+  // A typical stripe size is 128 kByte
+  // A typical disk latency-bandwidth product is
+  //    L = 1 / (10,000/min) / 2 = 0.006 sec
+  //    BW = 100 MByte/sec
+  //    BW * L = 600 kByte
+  // We choose a chunk size of 64^3:
+  //    64^3 * 8 B = 2 MByte
+  int dim = size.size();
+  hsize_t length = 1;
+  for (int d = 0; d < dim; ++d)
+    length *= size.at(d);
+  if (length == 0)
+    return size;
+  hsize_t target_bytes = 2 * 1024 * 2014;
+  hsize_t target_chunklength =
+      min(length, max(hsize_t(1), target_bytes / typesize));
+  vector<hsize_t> chunksize(dim, 1);
+  hsize_t chunklength = 1;
+  assert(chunklength <= target_chunklength);
+  for (;;) {
+    hsize_t old_chunklength = chunklength;
+    // Loop in C index order
+    for (int dir = dim - 1; dir >= 0; --dir) {
+      vector<hsize_t> new_chunksize(chunksize);
+      new_chunksize.at(dir) = min(2 * chunksize.at(dir), size.at(dir));
+      hsize_t new_chunklength = 1;
+      for (int d = 0; d < dim; ++d)
+        new_chunklength *= new_chunksize.at(d);
+      if (new_chunklength > target_chunklength)
+        return chunksize;
+      chunksize = new_chunksize;
+      chunklength = new_chunklength;
+    }
+    // Ensure progress
+    if (chunklength == old_chunklength)
+      return chunksize;
+  }
+}
+}
+
 // DataBlock
 
 const vector<DataBlock::reader_t> DataBlock::readers = {
@@ -111,22 +159,7 @@ void DataSet::create_dataset() const {
   const int dim = dataspace().getSimpleExtentNdims();
   vector<hsize_t> size(dim);
   dataspace().getSimpleExtentDims(size.data());
-  vector<hsize_t> chunksize(dim);
-  // Guess a good chunk size:
-  // - chunk should fit in L3 cache
-  // - chunk should be larger than stripe size
-  // - chunk should be larger than bandwidth-latency product
-  // A typical L3 cache size is several MByte
-  // A typical stripe size is 128 kByte
-  // A typical disk latency-bandwidth product is
-  //    L = 1 / (10,000/min) / 2 = 0.006 sec
-  //    BW = 100 MByte/sec
-  //    BW * L = 600 kByte
-  // We choose a chunk size of 64^3:
-  //    64^3 * 8 B = 2 MByte
-  const hsize_t linear_size = 64;
-  for (int d = 0; d < dim; ++d)
-    chunksize.at(d) = std::min(linear_size, size.at(d));
+  auto chunksize = choose_chunksize(size, datatype().getSize());
   proplist.setChunk(dim, chunksize.data());
   proplist.setShuffle(); // Shuffling improves compression
   const int level = 1;   // Level 1 is fast, but still offers good compression
