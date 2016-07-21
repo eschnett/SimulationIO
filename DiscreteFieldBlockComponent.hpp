@@ -134,10 +134,17 @@ public:
   void unsetDataBlock();
   shared_ptr<DataRange> createDataRange(double origin,
                                         const vector<double> &delta);
+  shared_ptr<DataSet> createDataSet(const H5::DataType &type) {
+    assert(!m_datablock);
+    auto res = make_shared<DataSet>(
+        discretefieldblock()->discretizationblock()->box(), type);
+    m_datablock = res;
+    return res;
+  }
   template <typename T> shared_ptr<DataSet> createDataSet() {
     assert(!m_datablock);
     auto res = make_shared<DataSet>(
-        T(), discretefieldblock()->discretizationblock()->box());
+        discretefieldblock()->discretizationblock()->box(), H5::getType(T{}));
     m_datablock = res;
     return res;
   }
