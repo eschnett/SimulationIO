@@ -116,7 +116,8 @@ void Configuration::insertParameterValue(
     const shared_ptr<ParameterValue> &parametervalue) {
   for (const auto &val : parametervalues())
     assert(val.second->parameter().get() != parametervalue->parameter().get());
-  checked_emplace(m_parametervalues, parametervalue->name(), parametervalue);
+  checked_emplace(m_parametervalues, parametervalue->name(), parametervalue,
+                  "Configuration", "parametervalues");
   parametervalue->insert(shared_from_this());
 }
 }

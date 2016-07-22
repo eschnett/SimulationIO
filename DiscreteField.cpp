@@ -100,7 +100,7 @@ shared_ptr<DiscreteFieldBlock> DiscreteField::createDiscreteFieldBlock(
   auto discretefieldblock =
       DiscreteFieldBlock::create(name, shared_from_this(), discretizationblock);
   checked_emplace(m_discretefieldblocks, discretefieldblock->name(),
-                  discretefieldblock);
+                  discretefieldblock, "DiscreteField", "discretefieldblocks");
   assert(discretefieldblock->invariant());
   return discretefieldblock;
 }
@@ -111,7 +111,7 @@ DiscreteField::readDiscreteFieldBlock(const H5::CommonFG &loc,
   auto discretefieldblock =
       DiscreteFieldBlock::create(loc, entry, shared_from_this());
   checked_emplace(m_discretefieldblocks, discretefieldblock->name(),
-                  discretefieldblock);
+                  discretefieldblock, "DiscreteField", "discretefieldblocks");
   assert(discretefieldblock->invariant());
   return discretefieldblock;
 }

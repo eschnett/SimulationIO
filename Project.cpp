@@ -326,7 +326,8 @@ void Project::write(const H5::CommonFG &loc,
 
 shared_ptr<Parameter> Project::createParameter(const string &name) {
   auto parameter = Parameter::create(name, shared_from_this());
-  checked_emplace(m_parameters, parameter->name(), parameter);
+  checked_emplace(m_parameters, parameter->name(), parameter, "Project",
+                  "parametesr");
   assert(parameter->invariant());
   return parameter;
 }
@@ -334,14 +335,16 @@ shared_ptr<Parameter> Project::createParameter(const string &name) {
 shared_ptr<Parameter> Project::readParameter(const H5::CommonFG &loc,
                                              const string &entry) {
   auto parameter = Parameter::create(loc, entry, shared_from_this());
-  checked_emplace(m_parameters, parameter->name(), parameter);
+  checked_emplace(m_parameters, parameter->name(), parameter, "Project",
+                  "parameters");
   assert(parameter->invariant());
   return parameter;
 }
 
 shared_ptr<Configuration> Project::createConfiguration(const string &name) {
   auto configuration = Configuration::create(name, shared_from_this());
-  checked_emplace(m_configurations, configuration->name(), configuration);
+  checked_emplace(m_configurations, configuration->name(), configuration,
+                  "Project", "configurations");
   assert(configuration->invariant());
   return configuration;
 }
@@ -349,7 +352,8 @@ shared_ptr<Configuration> Project::createConfiguration(const string &name) {
 shared_ptr<Configuration> Project::readConfiguration(const H5::CommonFG &loc,
                                                      const string &entry) {
   auto configuration = Configuration::create(loc, entry, shared_from_this());
-  checked_emplace(m_configurations, configuration->name(), configuration);
+  checked_emplace(m_configurations, configuration->name(), configuration,
+                  "Project", "configurations");
   assert(configuration->invariant());
   return configuration;
 }
@@ -358,7 +362,8 @@ shared_ptr<TensorType> Project::createTensorType(const string &name,
                                                  int dimension, int rank) {
   auto tensortype =
       TensorType::create(name, shared_from_this(), dimension, rank);
-  checked_emplace(m_tensortypes, tensortype->name(), tensortype);
+  checked_emplace(m_tensortypes, tensortype->name(), tensortype, "Project",
+                  "tensortypes");
   assert(tensortype->invariant());
   return tensortype;
 }
@@ -366,7 +371,8 @@ shared_ptr<TensorType> Project::createTensorType(const string &name,
 shared_ptr<TensorType> Project::readTensorType(const H5::CommonFG &loc,
                                                const string &entry) {
   auto tensortype = TensorType::create(loc, entry, shared_from_this());
-  checked_emplace(m_tensortypes, tensortype->name(), tensortype);
+  checked_emplace(m_tensortypes, tensortype->name(), tensortype, "Project",
+                  "tensortypes");
   assert(tensortype->invariant());
   return tensortype;
 }
@@ -377,7 +383,8 @@ Project::createManifold(const string &name,
                         int dimension) {
   auto manifold =
       Manifold::create(name, shared_from_this(), configuration, dimension);
-  checked_emplace(m_manifolds, manifold->name(), manifold);
+  checked_emplace(m_manifolds, manifold->name(), manifold, "Project",
+                  "manifolds");
   assert(manifold->invariant());
   return manifold;
 }
@@ -385,7 +392,8 @@ Project::createManifold(const string &name,
 shared_ptr<Manifold> Project::readManifold(const H5::CommonFG &loc,
                                            const string &entry) {
   auto manifold = Manifold::create(loc, entry, shared_from_this());
-  checked_emplace(m_manifolds, manifold->name(), manifold);
+  checked_emplace(m_manifolds, manifold->name(), manifold, "Project",
+                  "manifolds");
   assert(manifold->invariant());
   return manifold;
 }
@@ -396,7 +404,8 @@ Project::createTangentSpace(const string &name,
                             int dimension) {
   auto tangentspace =
       TangentSpace::create(name, shared_from_this(), configuration, dimension);
-  checked_emplace(m_tangentspaces, tangentspace->name(), tangentspace);
+  checked_emplace(m_tangentspaces, tangentspace->name(), tangentspace,
+                  "Project", "tangentspaces");
   assert(tangentspace->invariant());
   return tangentspace;
 }
@@ -404,7 +413,8 @@ Project::createTangentSpace(const string &name,
 shared_ptr<TangentSpace> Project::readTangentSpace(const H5::CommonFG &loc,
                                                    const string &entry) {
   auto tangentspace = TangentSpace::create(loc, entry, shared_from_this());
-  checked_emplace(m_tangentspaces, tangentspace->name(), tangentspace);
+  checked_emplace(m_tangentspaces, tangentspace->name(), tangentspace,
+                  "Project", "tangentspaces");
   assert(tangentspace->invariant());
   return tangentspace;
 }
@@ -417,7 +427,7 @@ Project::createField(const string &name,
                      const shared_ptr<TensorType> &tensortype) {
   auto field = Field::create(name, shared_from_this(), configuration, manifold,
                              tangentspace, tensortype);
-  checked_emplace(m_fields, field->name(), field);
+  checked_emplace(m_fields, field->name(), field, "Project", "fields");
   assert(field->invariant());
   return field;
 }
@@ -425,7 +435,7 @@ Project::createField(const string &name,
 shared_ptr<Field> Project::readField(const H5::CommonFG &loc,
                                      const string &entry) {
   auto field = Field::create(loc, entry, shared_from_this());
-  checked_emplace(m_fields, field->name(), field);
+  checked_emplace(m_fields, field->name(), field, "Project", "fields");
   assert(field->invariant());
   return field;
 }
@@ -437,7 +447,7 @@ Project::createCoordinateSystem(const string &name,
   auto coordinatesystem = CoordinateSystem::create(name, shared_from_this(),
                                                    configuration, manifold);
   checked_emplace(m_coordinatesystems, coordinatesystem->name(),
-                  coordinatesystem);
+                  coordinatesystem, "Project", "coordinatesystems");
   assert(coordinatesystem->invariant());
   return coordinatesystem;
 }
@@ -447,7 +457,7 @@ Project::readCoordinateSystem(const H5::CommonFG &loc, const string &entry) {
   auto coordinatesystem =
       CoordinateSystem::create(loc, entry, shared_from_this());
   checked_emplace(m_coordinatesystems, coordinatesystem->name(),
-                  coordinatesystem);
+                  coordinatesystem, "Project", "coordinatesystems");
   assert(coordinatesystem->invariant());
   return coordinatesystem;
 }

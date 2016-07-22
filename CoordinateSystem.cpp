@@ -92,8 +92,10 @@ CoordinateSystem::createCoordinateField(const string &name, int direction,
                                         const shared_ptr<Field> &field) {
   auto coordinatefield =
       CoordinateField::create(name, shared_from_this(), direction, field);
-  checked_emplace(m_coordinatefields, coordinatefield->name(), coordinatefield);
-  checked_emplace(m_directions, coordinatefield->direction(), coordinatefield);
+  checked_emplace(m_coordinatefields, coordinatefield->name(), coordinatefield,
+                  "CoordinateSystem", "coordinatefields");
+  checked_emplace(m_directions, coordinatefield->direction(), coordinatefield,
+                  "CoordinateSystem", "directions");
   assert(coordinatefield->invariant());
   return coordinatefield;
 }
@@ -103,8 +105,10 @@ CoordinateSystem::readCoordinateField(const H5::CommonFG &loc,
                                       const string &entry) {
   auto coordinatefield =
       CoordinateField::create(loc, entry, shared_from_this());
-  checked_emplace(m_coordinatefields, coordinatefield->name(), coordinatefield);
-  checked_emplace(m_directions, coordinatefield->direction(), coordinatefield);
+  checked_emplace(m_coordinatefields, coordinatefield->name(), coordinatefield,
+                  "CoordinateSystem", "coordinatefields");
+  checked_emplace(m_directions, coordinatefield->direction(), coordinatefield,
+                  "CoordinateSystem", "directions");
   assert(coordinatefield->invariant());
   return coordinatefield;
 }

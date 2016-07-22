@@ -99,11 +99,12 @@ DiscreteFieldBlock::createDiscreteFieldBlockComponent(
       name, shared_from_this(), tensorcomponent);
   checked_emplace(m_discretefieldblockcomponents,
                   discretefieldblockcomponent->name(),
-                  discretefieldblockcomponent);
+                  discretefieldblockcomponent, "DiscreteFieldBlock",
+                  "discretefieldblockcomponents");
   checked_emplace(
       m_storage_indices,
       discretefieldblockcomponent->tensorcomponent()->storage_index(),
-      discretefieldblockcomponent);
+      discretefieldblockcomponent, "DiscreteFieldBlock", "storage_indices");
   assert(discretefieldblockcomponent->invariant());
   return discretefieldblockcomponent;
 }
@@ -115,11 +116,12 @@ DiscreteFieldBlock::readDiscreteFieldBlockComponent(const H5::CommonFG &loc,
       DiscreteFieldBlockComponent::create(loc, entry, shared_from_this());
   checked_emplace(m_discretefieldblockcomponents,
                   discretefieldblockcomponent->name(),
-                  discretefieldblockcomponent);
+                  discretefieldblockcomponent, "DiscreteFieldBlock",
+                  "discretefieldblockcomponents");
   checked_emplace(
       m_storage_indices,
       discretefieldblockcomponent->tensorcomponent()->storage_index(),
-      discretefieldblockcomponent);
+      discretefieldblockcomponent, "DiscreteFieldBlock", "storage_indices");
   assert(discretefieldblockcomponent->invariant());
   return discretefieldblockcomponent;
 }

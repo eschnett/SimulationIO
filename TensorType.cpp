@@ -71,9 +71,10 @@ TensorType::createTensorComponent(const string &name, int stored_component,
                                   const vector<int> &indexvalues) {
   auto tensorcomponent = TensorComponent::create(name, shared_from_this(),
                                                  stored_component, indexvalues);
-  checked_emplace(m_tensorcomponents, tensorcomponent->name(), tensorcomponent);
+  checked_emplace(m_tensorcomponents, tensorcomponent->name(), tensorcomponent,
+                  "TensorType", "tensorcomponents");
   checked_emplace(m_storage_indices, tensorcomponent->storage_index(),
-                  tensorcomponent);
+                  tensorcomponent, "TensorType", "storage_indices");
   assert(tensorcomponent->invariant());
   return tensorcomponent;
 }
@@ -82,9 +83,10 @@ shared_ptr<TensorComponent>
 TensorType::readTensorComponent(const H5::CommonFG &loc, const string &entry) {
   auto tensorcomponent =
       TensorComponent::create(loc, entry, shared_from_this());
-  checked_emplace(m_tensorcomponents, tensorcomponent->name(), tensorcomponent);
+  checked_emplace(m_tensorcomponents, tensorcomponent->name(), tensorcomponent,
+                  "TensorType", "tensorcomponents");
   checked_emplace(m_storage_indices, tensorcomponent->storage_index(),
-                  tensorcomponent);
+                  tensorcomponent, "TensorType", "storage_indices");
   assert(tensorcomponent->invariant());
   return tensorcomponent;
 }
