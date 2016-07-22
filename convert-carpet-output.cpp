@@ -258,7 +258,7 @@ int main(int argc, char **argv) {
   const int dim = 3;
   auto manifold = project->createManifold("domain", global_configuration, dim);
   auto tangentspace =
-      project->createTangentSpace("space", global_configuration, dim);
+      project->createTangentSpace("tangentspace", global_configuration, dim);
   // Discretization for Manifold
   map<string, map<int, vector<shared_ptr<Discretization>>>>
       discretizations; // [configuration][mapindex][reflevel]

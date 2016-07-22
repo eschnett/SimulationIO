@@ -49,7 +49,8 @@ int main(int argc, char **argv) {
 
   // Manifold and TangentSpace, both 3D
   auto manifold = project->createManifold("domain", configuration, dim);
-  auto tangentspace = project->createTangentSpace("space", configuration, dim);
+  auto tangentspace =
+      project->createTangentSpace("tangentspace", configuration, dim);
 
   // Discretization for Manifold
   auto discretization =
