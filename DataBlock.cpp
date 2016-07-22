@@ -154,16 +154,19 @@ void DataSet::create_dataset() const {
     return;
   assert(m_have_location);
   auto proplist = H5::DSetCreatPropList();
-  proplist.setFletcher32();
   assert(dataspace().isSimple());
   const int dim = dataspace().getSimpleExtentNdims();
   vector<hsize_t> size(dim);
   dataspace().getSimpleExtentDims(size.data());
-  auto chunksize = choose_chunksize(size, datatype().getSize());
-  proplist.setChunk(dim, chunksize.data());
-  proplist.setShuffle(); // Shuffling improves compression
-  const int level = 1;   // Level 1 is fast, but still offers good compression
-  proplist.setDeflate(level);
+  if (dim > 0) {
+    // Zero-dimensional (scalar) datasets cannot be chunked
+    auto chunksize = choose_chunksize(size, datatype().getSize());
+    proplist.setChunk(dim, chunksize.data());
+    proplist.setShuffle(); // Shuffling improves compression
+    const int level = 1;   // Level 1 is fast, but still offers good compression
+    proplist.setDeflate(level);
+    proplist.setFletcher32();
+  }
   assert(m_have_location);
   m_dataset = m_location_group.createDataSet(m_location_name, datatype(),
                                              dataspace(), proplist);

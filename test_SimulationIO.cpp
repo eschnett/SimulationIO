@@ -361,6 +361,9 @@ TEST(Manifold, create) {
   auto m1 = project->createManifold("m1", conf1, 3);
   EXPECT_EQ(1, project->manifolds().size());
   EXPECT_EQ(m1, project->manifolds().at("m1"));
+  auto m0 = project->createManifold("m0", conf1, 0);
+  EXPECT_EQ(2, project->manifolds().size());
+  EXPECT_EQ(m0, project->manifolds().at("m0"));
 }
 
 TEST(Manifold, HDF5) {
@@ -375,6 +378,9 @@ TEST(Manifold, HDF5) {
     ostringstream buf;
     buf << *p1->manifolds().at("m1");
     EXPECT_EQ("Manifold \"m1\": Configuration \"conf1\" dim=3\n", buf.str());
+    ostringstream buf0;
+    buf0 << *p1->manifolds().at("m0");
+    EXPECT_EQ("Manifold \"m0\": Configuration \"conf1\" dim=0\n", buf0.str());
   }
   remove(filename);
 }
@@ -385,6 +391,9 @@ TEST(TangentSpace, create) {
   auto s1 = project->createTangentSpace("s1", conf1, 3);
   EXPECT_EQ(1, project->tangentspaces().size());
   EXPECT_EQ(s1, project->tangentspaces().at("s1"));
+  auto s0 = project->createTangentSpace("s0", conf1, 0);
+  EXPECT_EQ(2, project->tangentspaces().size());
+  EXPECT_EQ(s0, project->tangentspaces().at("s0"));
 }
 
 TEST(TangentSpace, HDF5) {
@@ -400,6 +409,10 @@ TEST(TangentSpace, HDF5) {
     buf << *p1->tangentspaces().at("s1");
     EXPECT_EQ("TangentSpace \"s1\": Configuration \"conf1\" dim=3\n",
               buf.str());
+    ostringstream buf0;
+    buf0 << *p1->tangentspaces().at("s0");
+    EXPECT_EQ("TangentSpace \"s0\": Configuration \"conf1\" dim=0\n",
+              buf0.str());
   }
   remove(filename);
 }
@@ -413,6 +426,12 @@ TEST(Field, create) {
   auto f1 = project->createField("f1", conf1, m1, s1, s3d);
   EXPECT_EQ(1, project->fields().size());
   EXPECT_EQ(&*f1, &*project->fields().at("f1"));
+  auto m0 = project->manifolds().at("m0");
+  auto s0 = project->tangentspaces().at("s0");
+  auto s0d = project->tensortypes().at("Scalar0D");
+  auto f0 = project->createField("f0", conf1, m0, s0, s0d);
+  EXPECT_EQ(2, project->fields().size());
+  EXPECT_EQ(&*f0, &*project->fields().at("f0"));
 }
 
 TEST(Field, HDF5) {
@@ -429,6 +448,11 @@ TEST(Field, HDF5) {
     EXPECT_EQ("Field \"f1\": Configuration \"conf1\" Manifold \"m1\" "
               "TangentSpace \"s1\" TensorType \"SymmetricTensor3D\"\n",
               buf.str());
+    ostringstream buf0;
+    buf0 << *p1->fields().at("f0");
+    EXPECT_EQ("Field \"f0\": Configuration \"conf1\" Manifold \"m0\" "
+              "TangentSpace \"s0\" TensorType \"Scalar0D\"\n",
+              buf0.str());
   }
   remove(filename);
 }
@@ -469,6 +493,11 @@ TEST(Discretization, create) {
   EXPECT_EQ(2, m1->discretizations().size());
   EXPECT_EQ(d1, m1->discretizations().at("d1"));
   EXPECT_EQ(d2, m1->discretizations().at("d2"));
+  auto m0 = project->manifolds().at("m0");
+  EXPECT_TRUE(m0->discretizations().empty());
+  auto d0 = m0->createDiscretization("d0", conf1);
+  EXPECT_EQ(1, m0->discretizations().size());
+  EXPECT_EQ(d0, m0->discretizations().at("d0"));
 }
 
 TEST(Discretization, HDF5) {
@@ -483,11 +512,15 @@ TEST(Discretization, HDF5) {
     ostringstream buf;
     buf << *p1->manifolds().at("m1")->discretizations().at("d1");
     buf << *p1->manifolds().at("m1")->discretizations().at("d2");
-    EXPECT_EQ("Discretization \"d1\": Configuration \"conf1\" Manifold "
-              "\"m1\"\n"
-              "Discretization \"d2\": Configuration \"conf1\" Manifold "
-              "\"m1\"\n",
-              buf.str());
+    EXPECT_EQ(
+        "Discretization \"d1\": Configuration \"conf1\" Manifold \"m1\"\n"
+        "Discretization \"d2\": Configuration \"conf1\" Manifold \"m1\"\n",
+        buf.str());
+    ostringstream buf0;
+    buf0 << *p1->manifolds().at("m0")->discretizations().at("d0");
+    EXPECT_EQ(
+        "Discretization \"d0\": Configuration \"conf1\" Manifold \"m0\"\n",
+        buf0.str());
   }
   remove(filename);
 }
@@ -527,16 +560,20 @@ TEST(DiscretizationBlock, create) {
   auto d1 = m1->discretizations().at("d1");
   EXPECT_TRUE(d1->discretizationblocks().empty());
   auto db1 = d1->createDiscretizationBlock("db1");
-  // vector<long long> offset(m1->dimension(), 3);
-  // vector<long long> shape(m1->dimension());
-  // shape.at(0) = 9;
-  // shape.at(1) = 10;
-  // shape.at(2) = 11;
   vector<long long> offset = {3, 3, 3};
   vector<long long> shape = {9, 10, 11};
   db1->setBox(box_t(offset, shape));
   EXPECT_EQ(1, d1->discretizationblocks().size());
   EXPECT_EQ(db1, d1->discretizationblocks().at("db1"));
+  auto m0 = project->manifolds().at("m0");
+  auto d0 = m0->discretizations().at("d0");
+  EXPECT_TRUE(d0->discretizationblocks().empty());
+  auto db0 = d0->createDiscretizationBlock("db0");
+  vector<long long> offset0 = {};
+  vector<long long> shape0 = {};
+  db0->setBox(box_t(offset0, shape0));
+  EXPECT_EQ(1, d0->discretizationblocks().size());
+  EXPECT_EQ(db0, d0->discretizationblocks().at("db0"));
 }
 
 TEST(DiscretizationBlock, HDF5) {
@@ -554,6 +591,11 @@ TEST(DiscretizationBlock, HDF5) {
               "  DiscretizationBlock \"db1\": Discretization \"d1\" "
               "box=([3,3,3]:[9,10,11])\n",
               buf.str());
+    ostringstream buf0;
+    buf0 << *p1->manifolds().at("m0")->discretizations().at("d0");
+    EXPECT_EQ("Discretization \"d0\": Configuration \"conf1\" Manifold \"m0\"\n"
+              "  DiscretizationBlock \"db0\": Discretization \"d0\" box=(1)\n",
+              buf0.str());
   }
   remove(filename);
 }
@@ -565,6 +607,11 @@ TEST(Basis, create) {
   auto b1 = s1->createBasis("b1", conf1);
   EXPECT_EQ(1, s1->bases().size());
   EXPECT_EQ(b1, s1->bases().at("b1"));
+  auto s0 = project->tangentspaces().at("s0");
+  EXPECT_TRUE(s0->bases().empty());
+  auto b0 = s0->createBasis("b0", conf1);
+  EXPECT_EQ(1, s0->bases().size());
+  EXPECT_EQ(b0, s0->bases().at("b0"));
 }
 
 TEST(Basis, HDF5) {
@@ -580,6 +627,10 @@ TEST(Basis, HDF5) {
     buf << *p1->tangentspaces().at("s1")->bases().at("b1");
     EXPECT_EQ("Basis \"b1\": Configuration \"conf1\" TangentSpace \"s1\"\n",
               buf.str());
+    ostringstream buf0;
+    buf0 << *p1->tangentspaces().at("s0")->bases().at("b0");
+    EXPECT_EQ("Basis \"b0\": Configuration \"conf1\" TangentSpace \"s0\"\n",
+              buf0.str());
   }
   remove(filename);
 }
@@ -631,6 +682,15 @@ TEST(DiscreteField, create) {
   auto df1 = f1->createDiscreteField("df1", conf1, d1, b1);
   EXPECT_EQ(1, f1->discretefields().size());
   EXPECT_EQ(df1, f1->discretefields().at("df1"));
+  auto f0 = project->fields().at("f0");
+  auto m0 = f0->manifold();
+  auto d0 = m0->discretizations().at("d0");
+  auto s0 = f0->tangentspace();
+  auto b0 = s0->bases().at("b0");
+  EXPECT_TRUE(f0->discretefields().empty());
+  auto df0 = f0->createDiscreteField("df0", conf1, d0, b0);
+  EXPECT_EQ(1, f0->discretefields().size());
+  EXPECT_EQ(df0, f0->discretefields().at("df0"));
 }
 
 TEST(DiscreteField, HDF5) {
@@ -649,6 +709,13 @@ TEST(DiscreteField, HDF5) {
               "  DiscreteField \"df1\": Configuration \"conf1\" Field \"f1\" "
               "Discretization \"d1\" Basis \"b1\"\n",
               buf.str());
+    ostringstream buf0;
+    buf0 << *p1->fields().at("f0");
+    EXPECT_EQ("Field \"f0\": Configuration \"conf1\" Manifold \"m0\" "
+              "TangentSpace \"s0\" TensorType \"Scalar0D\"\n"
+              "  DiscreteField \"df0\": Configuration \"conf1\" Field \"f0\" "
+              "Discretization \"d0\" Basis \"b0\"\n",
+              buf0.str());
   }
   remove(filename);
 }
@@ -691,6 +758,14 @@ TEST(DiscreteFieldBlock, create) {
   auto dfb1 = df1->createDiscreteFieldBlock("dfb1", db1);
   EXPECT_EQ(1, df1->discretefieldblocks().size());
   EXPECT_EQ(dfb1, df1->discretefieldblocks().at("dfb1"));
+  auto f0 = project->fields().at("f0");
+  auto df0 = f0->discretefields().at("df0");
+  auto d0 = df0->discretization();
+  auto db0 = d0->discretizationblocks().at("db0");
+  EXPECT_TRUE(df0->discretefieldblocks().empty());
+  auto dfb0 = df0->createDiscreteFieldBlock("dfb0", db0);
+  EXPECT_EQ(1, df0->discretefieldblocks().size());
+  EXPECT_EQ(dfb0, df0->discretefieldblocks().at("dfb0"));
 }
 
 TEST(DiscreteFieldBlock, HDF5) {
@@ -709,6 +784,13 @@ TEST(DiscreteFieldBlock, HDF5) {
               "  DiscreteFieldBlock \"dfb1\": DiscreteField \"df1\" "
               "DiscretizationBlock \"db1\"\n",
               buf.str());
+    ostringstream buf0;
+    buf0 << *p1->fields().at("f0")->discretefields().at("df0");
+    EXPECT_EQ("DiscreteField \"df0\": Configuration \"conf1\" Field \"f0\" "
+              "Discretization \"d0\" Basis \"b0\"\n"
+              "  DiscreteFieldBlock \"dfb0\": DiscreteField \"df0\" "
+              "DiscretizationBlock \"db0\"\n",
+              buf0.str());
   }
   remove(filename);
 }
@@ -754,14 +836,35 @@ TEST(DiscreteFieldBlockComponent, create) {
   dfbd3->createDataSet<double>();
   double origin = -1.0;
   vector<double> delta(rank);
-  for (int d = 0; d < rank; ++d) {
+  for (int d = 0; d < rank; ++d)
     delta.at(d) = 2.0 / dims[rank - 1 - d];
-  }
   dfbd4->createDataRange(origin, delta);
   EXPECT_FALSE(bool(dfbd1->datablock()));
   EXPECT_TRUE(bool(dfbd2->extlink()));
   EXPECT_TRUE(bool(dfbd3->dataset()));
   EXPECT_TRUE(bool(dfbd4->datarange()));
+
+  auto f0 = project->fields().at("f0");
+  auto df0 = f0->discretefields().at("df0");
+  auto dfb0 = df0->discretefieldblocks().at("dfb0");
+  auto tt0 = f0->tensortype();
+  auto b0 = tt0->tensorcomponents().at("scalar");
+  EXPECT_TRUE(dfb0->discretefieldblockcomponents().empty());
+  auto dfbd0 = dfb0->createDiscreteFieldBlockComponent("dfbd0", b0);
+  EXPECT_EQ(1, dfb0->discretefieldblockcomponents().size());
+  EXPECT_EQ(dfbd0, dfb0->discretefieldblockcomponents().at("dfbd0"));
+  EXPECT_EQ(dfbd0, dfb0->storage_indices().at(b0->storage_index()));
+  EXPECT_FALSE(bool(dfbd0->datablock()));
+  // TODO: get rank and shape from manifold and discretization block
+  const int rank0 = 0;
+  double origin0 = -1.0;
+  vector<double> delta0(rank0);
+  dfbd0->createDataRange(origin0, delta0);
+  EXPECT_TRUE(bool(dfbd0->datarange()));
+  dfbd0->unsetDataBlock();
+  EXPECT_FALSE(bool(dfbd0->datarange()));
+  dfbd0->createDataSet<double>();
+  EXPECT_TRUE(bool(dfbd0->dataset()));
 }
 
 TEST(DiscreteFieldBlockComponent, HDF5) {
@@ -794,6 +897,19 @@ TEST(DiscreteFieldBlockComponent, HDF5) {
               "\"dfb1\" TensorComponent \"11\"\n"
               "    DataRange: origin=-1 delta=[0.222222,0.2,0.181818]\n",
               buf.str());
+    ostringstream buf0;
+    buf0 << *p1->fields()
+                 .at("f0")
+                 ->discretefields()
+                 .at("df0")
+                 ->discretefieldblocks()
+                 .at("dfb0");
+    EXPECT_EQ("DiscreteFieldBlock \"dfb0\": DiscreteField \"df0\" "
+              "DiscretizationBlock \"db0\"\n"
+              "  DiscreteFieldBlockComponent \"dfbd0\": DiscreteFieldBlock "
+              "\"dfb0\" TensorComponent \"scalar\"\n"
+              "    CopyObj: ???:\"data\"\n",
+              buf0.str());
   }
   remove(filename);
 }
