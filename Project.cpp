@@ -135,16 +135,11 @@ void Project::createStandardTensorTypes() {
 
   auto v0d = createTensorType("Vector0D", 0, 1);
 
-  auto st0d = createTensorType("SymmetricTensor0D", 0, 2);
-
   auto s1d = createTensorType("Scalar1D", 1, 0);
   s1d->createTensorComponent("scalar", 0, vector<int>{});
 
   auto v1d = createTensorType("Vector1D", 1, 1);
   v1d->createTensorComponent("0", 0, {0});
-
-  auto st1d = createTensorType("SymmetricTensor1D", 1, 2);
-  st1d->createTensorComponent("00", 0, {0, 0});
 
   auto s2d = createTensorType("Scalar2D", 2, 0);
   s2d->createTensorComponent("scalar", 0, vector<int>{});

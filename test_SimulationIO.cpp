@@ -58,11 +58,11 @@ TEST(Project, HDF5) {
 }
 
 // This test sets up the global variable "project", which is necessary for most
-// of the following tests. It must be the last of the "Project" tests.
+// of the following tests. This must be the last of the "Project" tests.
 // TODO: Avoid this dependency.
 TEST(Project, setup) {
   project->createStandardTensorTypes();
-  EXPECT_EQ(15, project->tensortypes().size());
+  EXPECT_EQ(13, project->tensortypes().size());
 }
 
 TEST(Parameter, create) {
@@ -269,69 +269,88 @@ TEST(TensorTypes, HDF5) {
     ostringstream buf;
     for (const auto &tt : p1->tensortypes())
       buf << *tt.second;
-    EXPECT_EQ(
-        "TensorType \"Scalar0D\": dim=0 rank=0\n  TensorComponent \"scalar\": "
-        "TensorType \"Scalar0D\" storage_index=0 indexvalues=[]\nTensorType "
-        "\"Scalar1D\": dim=1 rank=0\n  TensorComponent \"scalar\": TensorType "
-        "\"Scalar1D\" storage_index=0 indexvalues=[]\nTensorType \"Scalar2D\": "
-        "dim=2 rank=0\n  TensorComponent \"scalar\": TensorType \"Scalar2D\" "
-        "storage_index=0 indexvalues=[]\nTensorType \"Scalar3D\": dim=3 "
-        "rank=0\n  TensorComponent \"scalar\": TensorType \"Scalar3D\" "
-        "storage_index=0 indexvalues=[]\nTensorType \"Scalar4D\": dim=4 "
-        "rank=0\n  TensorComponent \"scalar\": TensorType \"Scalar4D\" "
-        "storage_index=0 indexvalues=[]\nTensorType \"SymmetricTensor0D\": "
-        "dim=0 rank=2\nTensorType \"SymmetricTensor1D\": dim=1 rank=2\n  "
-        "TensorComponent \"00\": TensorType \"SymmetricTensor1D\" "
-        "storage_index=0 indexvalues=[0,0]\nTensorType \"SymmetricTensor2D\": "
-        "dim=2 rank=2\n  TensorComponent \"00\": TensorType "
-        "\"SymmetricTensor2D\" storage_index=0 indexvalues=[0,0]\n  "
-        "TensorComponent \"01\": TensorType \"SymmetricTensor2D\" "
-        "storage_index=1 indexvalues=[0,1]\n  TensorComponent \"11\": "
-        "TensorType \"SymmetricTensor2D\" storage_index=2 "
-        "indexvalues=[1,1]\nTensorType \"SymmetricTensor3D\": dim=3 rank=2\n  "
-        "TensorComponent \"00\": TensorType \"SymmetricTensor3D\" "
-        "storage_index=0 indexvalues=[0,0]\n  TensorComponent \"01\": "
-        "TensorType \"SymmetricTensor3D\" storage_index=1 indexvalues=[0,1]\n  "
-        "TensorComponent \"02\": TensorType \"SymmetricTensor3D\" "
-        "storage_index=2 indexvalues=[0,2]\n  TensorComponent \"11\": "
-        "TensorType \"SymmetricTensor3D\" storage_index=3 indexvalues=[1,1]\n  "
-        "TensorComponent \"12\": TensorType \"SymmetricTensor3D\" "
-        "storage_index=4 indexvalues=[1,2]\n  TensorComponent \"22\": "
-        "TensorType \"SymmetricTensor3D\" storage_index=5 "
-        "indexvalues=[2,2]\nTensorType \"SymmetricTensor4D\": dim=4 rank=2\n  "
-        "TensorComponent \"00\": TensorType \"SymmetricTensor4D\" "
-        "storage_index=0 indexvalues=[0,0]\n  TensorComponent \"01\": "
-        "TensorType \"SymmetricTensor4D\" storage_index=1 indexvalues=[0,1]\n  "
-        "TensorComponent \"02\": TensorType \"SymmetricTensor4D\" "
-        "storage_index=2 indexvalues=[0,2]\n  TensorComponent \"03\": "
-        "TensorType \"SymmetricTensor4D\" storage_index=3 indexvalues=[0,3]\n  "
-        "TensorComponent \"11\": TensorType \"SymmetricTensor4D\" "
-        "storage_index=4 indexvalues=[1,1]\n  TensorComponent \"12\": "
-        "TensorType \"SymmetricTensor4D\" storage_index=5 indexvalues=[1,2]\n  "
-        "TensorComponent \"13\": TensorType \"SymmetricTensor4D\" "
-        "storage_index=6 indexvalues=[1,3]\n  TensorComponent \"22\": "
-        "TensorType \"SymmetricTensor4D\" storage_index=7 indexvalues=[2,2]\n  "
-        "TensorComponent \"23\": TensorType \"SymmetricTensor4D\" "
-        "storage_index=8 indexvalues=[2,3]\n  TensorComponent \"33\": "
-        "TensorType \"SymmetricTensor4D\" storage_index=9 "
-        "indexvalues=[3,3]\nTensorType \"Vector0D\": dim=0 rank=1\nTensorType "
-        "\"Vector1D\": dim=1 rank=1\n  TensorComponent \"0\": TensorType "
-        "\"Vector1D\" storage_index=0 indexvalues=[0]\nTensorType "
-        "\"Vector2D\": dim=2 rank=1\n  TensorComponent \"0\": TensorType "
-        "\"Vector2D\" storage_index=0 indexvalues=[0]\n  TensorComponent "
-        "\"1\": TensorType \"Vector2D\" storage_index=1 "
-        "indexvalues=[1]\nTensorType \"Vector3D\": dim=3 rank=1\n  "
-        "TensorComponent \"0\": TensorType \"Vector3D\" storage_index=0 "
-        "indexvalues=[0]\n  TensorComponent \"1\": TensorType \"Vector3D\" "
-        "storage_index=1 indexvalues=[1]\n  TensorComponent \"2\": TensorType "
-        "\"Vector3D\" storage_index=2 indexvalues=[2]\nTensorType "
-        "\"Vector4D\": dim=4 rank=1\n  TensorComponent \"0\": TensorType "
-        "\"Vector4D\" storage_index=0 indexvalues=[0]\n  TensorComponent "
-        "\"1\": TensorType \"Vector4D\" storage_index=1 indexvalues=[1]\n  "
-        "TensorComponent \"2\": TensorType \"Vector4D\" storage_index=2 "
-        "indexvalues=[2]\n  TensorComponent \"3\": TensorType \"Vector4D\" "
-        "storage_index=3 indexvalues=[3]\n",
-        buf.str());
+    EXPECT_EQ("TensorType \"Scalar0D\": dim=0 rank=0\n"
+              "  TensorComponent \"scalar\": TensorType \"Scalar0D\" "
+              "storage_index=0 indexvalues=[]\n"
+              "TensorType \"Scalar1D\": dim=1 rank=0\n"
+              "  TensorComponent \"scalar\": TensorType \"Scalar1D\" "
+              "storage_index=0 indexvalues=[]\n"
+              "TensorType \"Scalar2D\": dim=2 rank=0\n"
+              "  TensorComponent \"scalar\": TensorType \"Scalar2D\" "
+              "storage_index=0 indexvalues=[]\n"
+              "TensorType \"Scalar3D\": dim=3 rank=0\n"
+              "  TensorComponent \"scalar\": TensorType \"Scalar3D\" "
+              "storage_index=0 indexvalues=[]\n"
+              "TensorType \"Scalar4D\": dim=4 rank=0\n"
+              "  TensorComponent \"scalar\": TensorType \"Scalar4D\" "
+              "storage_index=0 indexvalues=[]\n"
+              "TensorType \"SymmetricTensor2D\": dim=2 rank=2\n"
+              "  TensorComponent \"00\": TensorType \"SymmetricTensor2D\" "
+              "storage_index=0 indexvalues=[0,0]\n"
+              "  TensorComponent \"01\": TensorType \"SymmetricTensor2D\" "
+              "storage_index=1 indexvalues=[0,1]\n"
+              "  TensorComponent \"11\": TensorType \"SymmetricTensor2D\" "
+              "storage_index=2 indexvalues=[1,1]\n"
+              "TensorType \"SymmetricTensor3D\": dim=3 rank=2\n"
+              "  TensorComponent \"00\": TensorType \"SymmetricTensor3D\" "
+              "storage_index=0 indexvalues=[0,0]\n"
+              "  TensorComponent \"01\": TensorType \"SymmetricTensor3D\" "
+              "storage_index=1 indexvalues=[0,1]\n"
+              "  TensorComponent \"02\": TensorType \"SymmetricTensor3D\" "
+              "storage_index=2 indexvalues=[0,2]\n"
+              "  TensorComponent \"11\": TensorType \"SymmetricTensor3D\" "
+              "storage_index=3 indexvalues=[1,1]\n"
+              "  TensorComponent \"12\": TensorType \"SymmetricTensor3D\" "
+              "storage_index=4 indexvalues=[1,2]\n"
+              "  TensorComponent \"22\": TensorType \"SymmetricTensor3D\" "
+              "storage_index=5 indexvalues=[2,2]\n"
+              "TensorType \"SymmetricTensor4D\": dim=4 rank=2\n"
+              "  TensorComponent \"00\": TensorType \"SymmetricTensor4D\" "
+              "storage_index=0 indexvalues=[0,0]\n"
+              "  TensorComponent \"01\": TensorType \"SymmetricTensor4D\" "
+              "storage_index=1 indexvalues=[0,1]\n"
+              "  TensorComponent \"02\": TensorType \"SymmetricTensor4D\" "
+              "storage_index=2 indexvalues=[0,2]\n"
+              "  TensorComponent \"03\": TensorType \"SymmetricTensor4D\" "
+              "storage_index=3 indexvalues=[0,3]\n"
+              "  TensorComponent \"11\": TensorType \"SymmetricTensor4D\" "
+              "storage_index=4 indexvalues=[1,1]\n"
+              "  TensorComponent \"12\": TensorType \"SymmetricTensor4D\" "
+              "storage_index=5 indexvalues=[1,2]\n"
+              "  TensorComponent \"13\": TensorType \"SymmetricTensor4D\" "
+              "storage_index=6 indexvalues=[1,3]\n"
+              "  TensorComponent \"22\": TensorType \"SymmetricTensor4D\" "
+              "storage_index=7 indexvalues=[2,2]\n"
+              "  TensorComponent \"23\": TensorType \"SymmetricTensor4D\" "
+              "storage_index=8 indexvalues=[2,3]\n"
+              "  TensorComponent \"33\": TensorType \"SymmetricTensor4D\" "
+              "storage_index=9 indexvalues=[3,3]\n"
+              "TensorType \"Vector0D\": dim=0 rank=1\n"
+              "TensorType \"Vector1D\": dim=1 rank=1\n"
+              "  TensorComponent \"0\": TensorType \"Vector1D\" "
+              "storage_index=0 indexvalues=[0]\n"
+              "TensorType \"Vector2D\": dim=2 rank=1\n"
+              "  TensorComponent \"0\": TensorType \"Vector2D\" "
+              "storage_index=0 indexvalues=[0]\n"
+              "  TensorComponent \"1\": TensorType \"Vector2D\" "
+              "storage_index=1 indexvalues=[1]\n"
+              "TensorType \"Vector3D\": dim=3 rank=1\n"
+              "  TensorComponent \"0\": TensorType \"Vector3D\" "
+              "storage_index=0 indexvalues=[0]\n"
+              "  TensorComponent \"1\": TensorType \"Vector3D\" "
+              "storage_index=1 indexvalues=[1]\n"
+              "  TensorComponent \"2\": TensorType \"Vector3D\" "
+              "storage_index=2 indexvalues=[2]\n"
+              "TensorType \"Vector4D\": dim=4 rank=1\n"
+              "  TensorComponent \"0\": TensorType \"Vector4D\" "
+              "storage_index=0 indexvalues=[0]\n"
+              "  TensorComponent \"1\": TensorType \"Vector4D\" "
+              "storage_index=1 indexvalues=[1]\n"
+              "  TensorComponent \"2\": TensorType \"Vector4D\" "
+              "storage_index=2 indexvalues=[2]\n"
+              "  TensorComponent \"3\": TensorType \"Vector4D\" "
+              "storage_index=3 indexvalues=[3]\n",
+              buf.str());
   }
   remove(filename);
 }
@@ -464,10 +483,11 @@ TEST(Discretization, HDF5) {
     ostringstream buf;
     buf << *p1->manifolds().at("m1")->discretizations().at("d1");
     buf << *p1->manifolds().at("m1")->discretizations().at("d2");
-    EXPECT_EQ(
-        "Discretization \"d1\": Configuration \"conf1\" Manifold \"m1\"\n"
-        "Discretization \"d2\": Configuration \"conf1\" Manifold \"m1\"\n",
-        buf.str());
+    EXPECT_EQ("Discretization \"d1\": Configuration \"conf1\" Manifold "
+              "\"m1\"\n"
+              "Discretization \"d2\": Configuration \"conf1\" Manifold "
+              "\"m1\"\n",
+              buf.str());
   }
   remove(filename);
 }
