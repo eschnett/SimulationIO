@@ -156,6 +156,7 @@ void ParameterValue::write(const H5::CommonFG &loc,
 }
 
 void ParameterValue::insert(const shared_ptr<Configuration> &configuration) {
-  checked_emplace(m_configurations, configuration->name(), configuration);
+  checked_emplace(m_configurations, configuration->name(), configuration,
+                  "ParameterValue", "configurations");
 }
 }

@@ -80,7 +80,7 @@ shared_ptr<Basis>
 TangentSpace::createBasis(const string &name,
                           const shared_ptr<Configuration> &configuration) {
   auto basis = Basis::create(name, shared_from_this(), configuration);
-  checked_emplace(m_bases, basis->name(), basis);
+  checked_emplace(m_bases, basis->name(), basis, "TangentSpace", "bases");
   assert(basis->invariant());
   return basis;
 }
@@ -88,7 +88,7 @@ TangentSpace::createBasis(const string &name,
 shared_ptr<Basis> TangentSpace::readBasis(const H5::CommonFG &loc,
                                           const string &entry) {
   auto basis = Basis::create(loc, entry, shared_from_this());
-  checked_emplace(m_bases, basis->name(), basis);
+  checked_emplace(m_bases, basis->name(), basis, "TangentSpace", "bases");
   assert(basis->invariant());
   return basis;
 }

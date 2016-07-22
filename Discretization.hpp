@@ -117,11 +117,13 @@ private:
   friend class SubDiscretization;
   void insertChild(const string &name,
                    const shared_ptr<SubDiscretization> &subdiscretization) {
-    checked_emplace(m_child_discretizations, name, subdiscretization);
+    checked_emplace(m_child_discretizations, name, subdiscretization,
+                    "Discretization", "child_discretizations");
   }
   void insertParent(const string &name,
                     const shared_ptr<SubDiscretization> &subdiscretization) {
-    checked_emplace(m_parent_discretizations, name, subdiscretization);
+    checked_emplace(m_parent_discretizations, name, subdiscretization,
+                    "Discretization", "parent_discretizations");
   }
   friend class DiscreteField;
   void noinsert(const shared_ptr<DiscreteField> &discretefield) {}

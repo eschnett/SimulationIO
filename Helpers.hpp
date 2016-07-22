@@ -7,6 +7,7 @@
 #include <map>
 #include <memory>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -63,11 +64,18 @@ template <typename T> std::vector<T> reversed(std::vector<T> r) {
 // Insert an element into a map, ensuring that the key does not yet exist
 template <typename Key, typename Value, typename Key1, typename Value1>
 typename std::map<Key, Value>::iterator
-checked_emplace(std::map<Key, Value> &m, Key1 &&key, Value1 &&value) {
+checked_emplace(std::map<Key, Value> &m, Key1 &&key, Value1 &&value,
+                const std::string &location, const std::string &entry) {
   auto res = m.insert(
       std::make_pair(std::forward<Key1>(key), std::forward<Value1>(value)));
   auto iter = std::move(res.first);
   auto did_insert = std::move(res.second);
+  if (!did_insert) {
+    std::ostringstream buf;
+    buf << "Key \"" << key << "\" exists already in map \"" << entry
+        << "\" of object \"" << location << "\"";
+    throw std::domain_error(buf.str());
+  }
   assert(did_insert);
   return iter;
 }

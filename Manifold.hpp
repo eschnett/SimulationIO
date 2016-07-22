@@ -127,11 +127,12 @@ private:
   friend class CoordinateSystem;
   void insert(const string &name,
               const shared_ptr<CoordinateSystem> &coordinatesystem) {
-    checked_emplace(m_coordinatesystems, name, coordinatesystem);
+    checked_emplace(m_coordinatesystems, name, coordinatesystem, "Manifold",
+                    "coordinatesystems");
   }
   friend class Field;
   void insert(const string &name, const shared_ptr<Field> &field) {
-    checked_emplace(m_fields, name, field);
+    checked_emplace(m_fields, name, field, "Manifold", "fields");
   }
 };
 }

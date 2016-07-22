@@ -52,7 +52,8 @@ void Parameter::write(const H5::CommonFG &loc,
 
 shared_ptr<ParameterValue> Parameter::createParameterValue(const string &name) {
   auto parametervalue = ParameterValue::create(name, shared_from_this());
-  checked_emplace(m_parametervalues, parametervalue->name(), parametervalue);
+  checked_emplace(m_parametervalues, parametervalue->name(), parametervalue,
+                  "Parameter", "parametervalues");
   assert(parametervalue->invariant());
   return parametervalue;
 }
@@ -60,7 +61,8 @@ shared_ptr<ParameterValue> Parameter::createParameterValue(const string &name) {
 shared_ptr<ParameterValue>
 Parameter::readParameterValue(const H5::CommonFG &loc, const string &entry) {
   auto parametervalue = ParameterValue::create(loc, entry, shared_from_this());
-  checked_emplace(m_parametervalues, parametervalue->name(), parametervalue);
+  checked_emplace(m_parametervalues, parametervalue->name(), parametervalue,
+                  "Parameter", "parametervalues");
   assert(parametervalue->invariant());
   return parametervalue;
 }

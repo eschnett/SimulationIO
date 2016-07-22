@@ -72,8 +72,10 @@ void Basis::write(const H5::CommonFG &loc, const H5::H5Location &parent) const {
 shared_ptr<BasisVector> Basis::createBasisVector(const string &name,
                                                  int direction) {
   auto basisvector = BasisVector::create(name, shared_from_this(), direction);
-  checked_emplace(m_basisvectors, basisvector->name(), basisvector);
-  checked_emplace(m_directions, basisvector->direction(), basisvector);
+  checked_emplace(m_basisvectors, basisvector->name(), basisvector, "Basis",
+                  "basisvectors");
+  checked_emplace(m_directions, basisvector->direction(), basisvector, "Basis",
+                  "directions");
   assert(basisvector->invariant());
   return basisvector;
 }
@@ -81,8 +83,10 @@ shared_ptr<BasisVector> Basis::createBasisVector(const string &name,
 shared_ptr<BasisVector> Basis::readBasisVector(const H5::CommonFG &loc,
                                                const string &entry) {
   auto basisvector = BasisVector::create(loc, entry, shared_from_this());
-  checked_emplace(m_basisvectors, basisvector->name(), basisvector);
-  checked_emplace(m_directions, basisvector->direction(), basisvector);
+  checked_emplace(m_basisvectors, basisvector->name(), basisvector, "Basis",
+                  "basisvectors");
+  checked_emplace(m_directions, basisvector->direction(), basisvector, "Basis",
+                  "directions");
   assert(basisvector->invariant());
   return basisvector;
 }

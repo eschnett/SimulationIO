@@ -77,7 +77,8 @@ Discretization::createDiscretizationBlock(const string &name) {
   auto discretizationblock =
       DiscretizationBlock::create(name, shared_from_this());
   checked_emplace(m_discretizationblocks, discretizationblock->name(),
-                  discretizationblock);
+                  discretizationblock, "Discretization",
+                  "discretizationblocks");
   assert(discretizationblock->invariant());
   return discretizationblock;
 }
@@ -88,7 +89,8 @@ Discretization::readDiscretizationBlock(const H5::CommonFG &loc,
   auto discretizationblock =
       DiscretizationBlock::create(loc, entry, shared_from_this());
   checked_emplace(m_discretizationblocks, discretizationblock->name(),
-                  discretizationblock);
+                  discretizationblock, "Discretization",
+                  "discretizationblocks");
   assert(discretizationblock->invariant());
   return discretizationblock;
 }

@@ -119,29 +119,33 @@ private:
   friend class Manifold;
   friend class TangentSpace;
   void insert(const string &name, const shared_ptr<Basis> &basis) {
-    checked_emplace(m_bases, name, basis);
+    checked_emplace(m_bases, name, basis, "Configuration", "bases");
   }
   void insert(const string &name,
               const shared_ptr<CoordinateSystem> &coordinatesystem) {
-    checked_emplace(m_coordinatesystems, name, coordinatesystem);
+    checked_emplace(m_coordinatesystems, name, coordinatesystem,
+                    "Configuration", "coordinatesystems");
   }
   void insert(const string &name,
               const shared_ptr<DiscreteField> &discretefield) {
-    checked_emplace(m_discretefields, name, discretefield);
+    checked_emplace(m_discretefields, name, discretefield, "Configuration",
+                    "discretefields");
   }
   void insert(const string &name,
               const shared_ptr<Discretization> &discretization) {
-    checked_emplace(m_discretizations, name, discretization);
+    checked_emplace(m_discretizations, name, discretization, "Configuration",
+                    "bases");
   }
   void insert(const string &name, const shared_ptr<Field> &field) {
-    checked_emplace(m_fields, name, field);
+    checked_emplace(m_fields, name, field, "Configuration", "fields");
   }
   void insert(const string &name, const shared_ptr<Manifold> &manifold) {
-    checked_emplace(m_manifolds, name, manifold);
+    checked_emplace(m_manifolds, name, manifold, "Configuration", "manifolds");
   }
   void insert(const string &name,
               const shared_ptr<TangentSpace> &tangentspace) {
-    checked_emplace(m_tangentspaces, name, tangentspace);
+    checked_emplace(m_tangentspaces, name, tangentspace, "Configuration",
+                    "tangentspaces");
   }
 };
 }

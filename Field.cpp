@@ -115,14 +115,16 @@ Field::createDiscreteField(const string &name,
                            const shared_ptr<Basis> &basis) {
   auto discretefield = DiscreteField::create(
       name, shared_from_this(), configuration, discretization, basis);
-  checked_emplace(m_discretefields, discretefield->name(), discretefield);
+  checked_emplace(m_discretefields, discretefield->name(), discretefield,
+                  "Field", "discretefields");
   assert(discretefield->invariant());
   return discretefield;
 }
 shared_ptr<DiscreteField> Field::readDiscreteField(const H5::CommonFG &loc,
                                                    const string &entry) {
   auto discretefield = DiscreteField::create(loc, entry, shared_from_this());
-  checked_emplace(m_discretefields, discretefield->name(), discretefield);
+  checked_emplace(m_discretefields, discretefield->name(), discretefield,
+                  "Field", "discretefields");
   assert(discretefield->invariant());
   return discretefield;
 }

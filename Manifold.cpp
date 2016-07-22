@@ -116,7 +116,8 @@ Manifold::createDiscretization(const string &name,
                                const shared_ptr<Configuration> &configuration) {
   auto discretization =
       Discretization::create(name, shared_from_this(), configuration);
-  checked_emplace(m_discretizations, discretization->name(), discretization);
+  checked_emplace(m_discretizations, discretization->name(), discretization,
+                  "Manifold", "discretizations");
   assert(discretization->invariant());
   return discretization;
 }
@@ -124,7 +125,8 @@ Manifold::createDiscretization(const string &name,
 shared_ptr<Discretization> Manifold::readDiscretization(const H5::CommonFG &loc,
                                                         const string &entry) {
   auto discretization = Discretization::create(loc, entry, shared_from_this());
-  checked_emplace(m_discretizations, discretization->name(), discretization);
+  checked_emplace(m_discretizations, discretization->name(), discretization,
+                  "Manifold", "discretizations");
   assert(discretization->invariant());
   return discretization;
 }
@@ -137,7 +139,7 @@ shared_ptr<SubDiscretization> Manifold::createSubDiscretization(
       SubDiscretization::create(name, shared_from_this(), parent_discretization,
                                 child_discretization, factor, offset);
   checked_emplace(m_subdiscretizations, subdiscretization->name(),
-                  subdiscretization);
+                  subdiscretization, "Manifold", "subdiscretizations");
   assert(subdiscretization->invariant());
   return subdiscretization;
 }
@@ -147,7 +149,7 @@ Manifold::readSubDiscretization(const H5::CommonFG &loc, const string &entry) {
   auto subdiscretization =
       SubDiscretization::create(loc, entry, shared_from_this());
   checked_emplace(m_subdiscretizations, subdiscretization->name(),
-                  subdiscretization);
+                  subdiscretization, "Manifold", "subdiscretizations");
   assert(subdiscretization->invariant());
   return subdiscretization;
 }
