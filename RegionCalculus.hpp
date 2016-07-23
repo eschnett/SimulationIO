@@ -541,7 +541,7 @@ template <typename T> struct box<T, 0> {
   // Set comparison operators
   bool contains(const point<T, D> &p) const { return !empty(); }
   bool isdisjoint(const box &b) const { return empty() | b.empty(); }
-  bool operator<=(const box &b) const { return m_full < b.m_full; }
+  bool operator<=(const box &b) const { return m_full <= b.m_full; }
   bool operator>=(const box &b) const { return b <= *this; }
   bool operator<(const box &b) const { return *this <= b && *this != b; }
   bool operator>(const box &b) const { return b < *this; }
