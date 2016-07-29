@@ -184,9 +184,14 @@ void DataSet::construct_spaces(const box_t &membox, H5::DataSpace &memspace,
   // filespace.getSimpleExtentDims(dims.data());
   // reverse(dims);
   // assert(all(point_t(dims) == shape()));
-  filespace.selectHyperslab(
-      H5S_SELECT_SET, reversed(vector<hsize_t>(membox.shape())).data(),
-      reversed(vector<hsize_t>(membox.lower() - box().lower())).data());
+  if (rank() == 0) {
+    // Cannot yet handle empty scalar box
+    assert(!membox.empty());
+  } else {
+    filespace.selectHyperslab(
+        H5S_SELECT_SET, reversed(vector<hsize_t>(membox.shape())).data(),
+        reversed(vector<hsize_t>(membox.lower() - box().lower())).data());
+  }
   memspace =
       H5::DataSpace(rank(), reversed(vector<hsize_t>(membox.shape())).data());
 }

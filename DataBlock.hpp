@@ -328,9 +328,14 @@ public:
     dataspace.getSimpleExtentDims(dims.data());
     reverse(dims);
     assert(all(point_t(dims) == shape()));
-    dataspace.selectHyperslab(
-        H5S_SELECT_SET, reversed(vector<hsize_t>(databox.shape())).data(),
-        reversed(vector<hsize_t>(databox.lower() - box().lower())).data());
+    if (rank() == 0) {
+      if (databox.empty())
+        return vector<T>();
+    } else {
+      dataspace.selectHyperslab(
+          H5S_SELECT_SET, reversed(vector<hsize_t>(databox.shape())).data(),
+          reversed(vector<hsize_t>(databox.lower() - box().lower())).data());
+    }
     auto memspace = H5::DataSpace(
         rank(), reversed(vector<hsize_t>(databox.shape())).data());
     vector<T> data(databox.size());
