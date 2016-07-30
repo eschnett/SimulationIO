@@ -114,6 +114,7 @@ void Manifold::write(const H5::CommonFG &loc,
 shared_ptr<Discretization>
 Manifold::createDiscretization(const string &name,
                                const shared_ptr<Configuration> &configuration) {
+  assert(configuration->project().get() == project().get());
   auto discretization =
       Discretization::create(name, shared_from_this(), configuration);
   checked_emplace(m_discretizations, discretization->name(), discretization,
@@ -135,6 +136,8 @@ shared_ptr<SubDiscretization> Manifold::createSubDiscretization(
     const string &name, const shared_ptr<Discretization> &parent_discretization,
     const shared_ptr<Discretization> &child_discretization,
     const vector<double> &factor, const vector<double> &offset) {
+  assert(parent_discretization->manifold().get() == this);
+  assert(child_discretization->manifold().get() == this);
   auto subdiscretization =
       SubDiscretization::create(name, shared_from_this(), parent_discretization,
                                 child_discretization, factor, offset);

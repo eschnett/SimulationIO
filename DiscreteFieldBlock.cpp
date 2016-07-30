@@ -95,6 +95,8 @@ void DiscreteFieldBlock::write(const H5::CommonFG &loc,
 shared_ptr<DiscreteFieldBlockComponent>
 DiscreteFieldBlock::createDiscreteFieldBlockComponent(
     const string &name, const shared_ptr<TensorComponent> &tensorcomponent) {
+  assert(tensorcomponent->tensortype().get() ==
+         discretefield()->field()->tensortype().get());
   auto discretefieldblockcomponent = DiscreteFieldBlockComponent::create(
       name, shared_from_this(), tensorcomponent);
   checked_emplace(m_discretefieldblockcomponents,

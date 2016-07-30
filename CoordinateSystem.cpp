@@ -90,6 +90,7 @@ void CoordinateSystem::write(const H5::CommonFG &loc,
 shared_ptr<CoordinateField>
 CoordinateSystem::createCoordinateField(const string &name, int direction,
                                         const shared_ptr<Field> &field) {
+  assert(field->project().get() == project().get());
   auto coordinatefield =
       CoordinateField::create(name, shared_from_this(), direction, field);
   checked_emplace(m_coordinatefields, coordinatefield->name(), coordinatefield,

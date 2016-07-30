@@ -46,9 +46,8 @@ void DiscreteFieldBlockComponent::merge(
     // Cannot combine DataBlocks
     assert(!discretefieldblockcomponent->datablock());
   } else {
-    // Cannot copy DataSet or CopyObj
-    assert(!discretefieldblockcomponent->dataset() &&
-           !discretefieldblockcomponent->copyobj());
+    // Cannot copy DataSet (yet)
+    assert(!discretefieldblockcomponent->dataset());
     m_datablock = discretefieldblockcomponent->datablock();
   }
 }

@@ -70,9 +70,10 @@ checked_emplace(std::map<Key, Value> &m, Key1 &&key, Value1 &&value,
       std::make_pair(std::forward<Key1>(key), std::forward<Value1>(value)));
   auto iter = std::move(res.first);
   auto did_insert = std::move(res.second);
-  if (!did_insert) {
+  if (__builtin_expect(!did_insert, false)) {
     std::ostringstream buf;
-    buf << "Key \"" << key << "\" exists already in map \"" << entry
+    const auto &key2 = iter->first; // "key" was forwarded and is now empty
+    buf << "Key \"" << key2 << "\" exists already in map \"" << entry
         << "\" of object \"" << location << "\"";
     throw std::domain_error(buf.str());
   }
