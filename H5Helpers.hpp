@@ -345,7 +345,7 @@ Attribute readAttribute(const H5Location &loc, const std::string &name,
                         std::vector<T> &values, const H5::DataType &type) {
   static_assert(!std::is_same<T, std::string>::value, "");
   static_assert(!detail::is_vector<T>::value, "");
-  assert(type.getSize() == sizeof values[0]);
+  assert(type.getSize() == sizeof(T));
   auto attr = loc.openAttribute(name);
   auto space = attr.getSpace();
   auto npoints = space.getSimpleExtentNpoints();
