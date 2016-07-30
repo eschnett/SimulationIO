@@ -50,7 +50,11 @@ void Configuration::merge(const shared_ptr<Configuration> &configuration) {
   for (const auto &iter : configuration->parametervalues()) {
     const auto &parametervalue = iter.second;
     if (!m_parametervalues.count(parametervalue->name()))
-      insertParameterValue(parametervalue);
+      insertParameterValue(project()
+                               ->parameters()
+                               .at(parametervalue->parameter()->name())
+                               ->parametervalues()
+                               .at(parametervalue->name()));
   }
 }
 
@@ -114,6 +118,7 @@ void Configuration::write(const H5::CommonFG &loc,
 
 void Configuration::insertParameterValue(
     const shared_ptr<ParameterValue> &parametervalue) {
+  assert(parametervalue->parameter()->project().get() == project().get());
   for (const auto &val : parametervalues())
     assert(val.second->parameter().get() != parametervalue->parameter().get());
   checked_emplace(m_parametervalues, parametervalue->name(), parametervalue,

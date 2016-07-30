@@ -97,6 +97,8 @@ void DiscreteField::write(const H5::CommonFG &loc,
 shared_ptr<DiscreteFieldBlock> DiscreteField::createDiscreteFieldBlock(
     const string &name,
     const shared_ptr<DiscretizationBlock> &discretizationblock) {
+  assert(discretizationblock->discretization()->manifold().get() ==
+         field()->manifold().get());
   auto discretefieldblock =
       DiscreteFieldBlock::create(name, shared_from_this(), discretizationblock);
   checked_emplace(m_discretefieldblocks, discretefieldblock->name(),
