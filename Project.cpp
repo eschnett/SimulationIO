@@ -238,7 +238,8 @@ void Project::createTypes() const {
   insertEnumField(enumtype, "TensorType", type_TensorType);
 
   auto double_type = H5::getType(double{});
-  auto int_type = H5::getType((long long){});
+  typedef long long long_long;
+  auto int_type = H5::getType(long_long{});
 
   // A range is described by its minimum (inclusive), maximum (inclusive), and
   // count (non-negative). Here we use double precision for all three fields,
