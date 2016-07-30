@@ -79,6 +79,7 @@ void TangentSpace::write(const H5::CommonFG &loc,
 shared_ptr<Basis>
 TangentSpace::createBasis(const string &name,
                           const shared_ptr<Configuration> &configuration) {
+  assert(configuration->project().get() == project().get());
   auto basis = Basis::create(name, shared_from_this(), configuration);
   checked_emplace(m_bases, basis->name(), basis, "TangentSpace", "bases");
   assert(basis->invariant());

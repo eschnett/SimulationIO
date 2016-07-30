@@ -113,6 +113,9 @@ Field::createDiscreteField(const string &name,
                            const shared_ptr<Configuration> &configuration,
                            const shared_ptr<Discretization> &discretization,
                            const shared_ptr<Basis> &basis) {
+  assert(configuration->project().get() == project().get());
+  assert(discretization->manifold().get() == manifold().get());
+  assert(basis->tangentspace().get() == tangentspace().get());
   auto discretefield = DiscreteField::create(
       name, shared_from_this(), configuration, discretization, basis);
   checked_emplace(m_discretefields, discretefield->name(), discretefield,

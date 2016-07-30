@@ -376,6 +376,7 @@ shared_ptr<Manifold>
 Project::createManifold(const string &name,
                         const shared_ptr<Configuration> &configuration,
                         int dimension) {
+  assert(configuration->project().get() == this);
   auto manifold =
       Manifold::create(name, shared_from_this(), configuration, dimension);
   checked_emplace(m_manifolds, manifold->name(), manifold, "Project",
@@ -397,6 +398,7 @@ shared_ptr<TangentSpace>
 Project::createTangentSpace(const string &name,
                             const shared_ptr<Configuration> &configuration,
                             int dimension) {
+  assert(configuration->project().get() == this);
   auto tangentspace =
       TangentSpace::create(name, shared_from_this(), configuration, dimension);
   checked_emplace(m_tangentspaces, tangentspace->name(), tangentspace,
@@ -420,6 +422,10 @@ Project::createField(const string &name,
                      const shared_ptr<Manifold> &manifold,
                      const shared_ptr<TangentSpace> &tangentspace,
                      const shared_ptr<TensorType> &tensortype) {
+  assert(configuration->project().get() == this);
+  assert(manifold->project().get() == this);
+  assert(tangentspace->project().get() == this);
+  assert(tensortype->project().get() == this);
   auto field = Field::create(name, shared_from_this(), configuration, manifold,
                              tangentspace, tensortype);
   checked_emplace(m_fields, field->name(), field, "Project", "fields");
