@@ -262,21 +262,35 @@ void Project::createTypes() const {
   regiontypes.clear();
   for (int d = 0; d <= 4; ++d) {
     // point_t
-    const hsize_t dim = max(1, d); // HDF5 requires at least 1 element
-    const hsize_t dims[1] = {dim};
-    // TODO: Handle d==0 correctly
-    auto pointtype = H5::ArrayType(H5::getType(hssize_t()), 1, dims);
+    auto pointtype = [&] {
+      const hsize_t dim = max(1, d); // HDF5 requires at least 1 element
+      const hsize_t dims[1] = {dim};
+      // TODO: Handle d==0 correctly
+      return H5::ArrayType(int_type, 1, dims);
+    }();
     pointtypes.push_back(pointtype);
     // box_t
-    vector<size_t> offsets;
-    size_t size = 0;
-    offsets.push_back(size);
-    size += pointtype.getSize();
-    offsets.push_back(size);
-    size += pointtype.getSize();
-    auto boxtype = H5::CompType(size);
-    boxtype.insertMember("lower", offsets.at(0), pointtype);
-    boxtype.insertMember("upper", offsets.at(1), pointtype);
+    auto boxtype = [&] {
+      vector<size_t> offsets;
+      size_t size = 0;
+      if (d == 0) {
+        offsets.push_back(size);
+        auto inttype = H5::getType(int{});
+        size += inttype.getSize();
+        auto boxtype = H5::CompType(size);
+        boxtype.insertMember("full", offsets.at(0), inttype);
+        return boxtype;
+      } else {
+        offsets.push_back(size);
+        size += pointtype.getSize();
+        offsets.push_back(size);
+        size += pointtype.getSize();
+        auto boxtype = H5::CompType(size);
+        boxtype.insertMember("lower", offsets.at(0), pointtype);
+        boxtype.insertMember("upper", offsets.at(1), pointtype);
+        return boxtype;
+      }
+    }();
     boxtypes.push_back(boxtype);
     // region_t
     auto regiontype = H5::VarLenType(&boxtype);
