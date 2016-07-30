@@ -215,7 +215,7 @@ void Project::insertEnumField(const H5::EnumType &type, const string &name,
   type.insert(name, &value);
 }
 void Project::createTypes() const {
-  enumtype = H5::EnumType(H5::getType(int()));
+  enumtype = H5::EnumType(H5::getType(int{}));
   insertEnumField(enumtype, "Basis", type_Basis);
   insertEnumField(enumtype, "BasisVector", type_BasisVector);
   insertEnumField(enumtype, "Configuration", type_Configuration);
@@ -236,6 +236,9 @@ void Project::createTypes() const {
   insertEnumField(enumtype, "TangentSpace", type_TangentSpace);
   insertEnumField(enumtype, "TensorComponent", type_TensorComponent);
   insertEnumField(enumtype, "TensorType", type_TensorType);
+
+  auto double_type = H5::getType(double{});
+  auto int_type = H5::getType((long long){});
 
   // A range is described by its minimum (inclusive), maximum (inclusive), and
   // count (non-negative). Here we use double precision for all three fields,
