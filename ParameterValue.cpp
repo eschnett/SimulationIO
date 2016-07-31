@@ -147,7 +147,11 @@ void ParameterValue::write(const H5::CommonFG &loc,
     H5::createAttribute(group, "data", value_double);
     break;
   case type_string:
-    H5::createAttribute(group, "data", value_string);
+    if (value_string.size() <= 16384)
+      H5::createAttribute(group, "data", value_string);
+    else
+      // Store large attributes in a dataset
+      H5::createDataSet(group, "data", value_string);
     break;
   default:
     assert(0);
