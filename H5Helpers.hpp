@@ -487,6 +487,19 @@ T readGroupAttribute(const CommonFG &loc, const std::string &groupname,
   return readAttribute<T>(group, attrname);
 }
 
+inline DataSet createDataSet(const CommonFG &loc, const std::string &name,
+                             const std::string &value) {
+  auto type = StrType(PredType::C_S1, value.size() + 1);
+  auto dataset = loc.createDataSet(name, type, DataSpace());
+  dataset.write(H5std_string(value), type);
+  return dataset;
+}
+
+inline DataSet createDataSet(const CommonFG &loc, const std::string &name,
+                             const char *value) {
+  return createDataSet(loc, name, std::string(value));
+}
+
 // Create a hard link
 // Note argument order: first link location, then link target
 inline herr_t createHardLink(const CommonFG &link_loc,
