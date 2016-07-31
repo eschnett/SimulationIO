@@ -19,7 +19,7 @@ shared_ptr<Project> read(const string &filename) {
   try {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);
     return readProject(file);
-  } catch (H5::FileIException error) {
+  } catch (const H5::FileIException &error) {
     cerr << "Could not read file " << quote(filename) << "\n";
     exit(2);
   }
@@ -32,7 +32,7 @@ void write(const shared_ptr<Project> &project, const string &filename) {
     auto file = H5::H5File(filename, H5F_ACC_TRUNC,
                            H5::FileCreatPropList::DEFAULT, fapl);
     project->write(file);
-  } catch (H5::FileIException error) {
+  } catch (const H5::FileIException &error) {
     cerr << "Could not write file " << quote(filename) << "\n";
     exit(2);
   }

@@ -46,7 +46,7 @@ int main(int argc, char **argv) {
         outputproject = project;
       else
         outputproject->merge(project);
-    } catch (H5::FileIException error) {
+    } catch (const H5::FileIException &error) {
       cerr << "Could not open file " << quote(filename) << " for reading.\n";
       return 2;
     }

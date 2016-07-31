@@ -28,7 +28,7 @@ void read_active(const H5::H5Location &group,
       active = region_t(
           RegionCalculus::make_unique1<RegionCalculus::wregion<long long, D>>(
               RegionCalculus::region<long long, D>(std::move(boxes))));
-    } catch (H5::AttributeIException ex) {
+    } catch (const H5::AttributeIException &ex) {
       // do nothing
     }
   }
@@ -60,7 +60,7 @@ void read_active<0>(const H5::H5Location &group,
       active = region_t(
           RegionCalculus::make_unique1<RegionCalculus::wregion<long long, D>>(
               RegionCalculus::region<long long, D>(std::move(boxes))));
-    } catch (H5::AttributeIException ex) {
+    } catch (const H5::AttributeIException &ex) {
       // do nothing
     }
   }
