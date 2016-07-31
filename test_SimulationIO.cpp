@@ -108,17 +108,21 @@ TEST(ParameterValue, create) {
   auto val2 = par2->createParameterValue("val2");
   auto val3 = par2->createParameterValue("val3");
   auto val4 = par3->createParameterValue("val4");
+  auto val5 = par3->createParameterValue("val5");
   val1->setValue(1);
   val2->setValue(2.0);
   val3->setValue(3.0);
   val4->setValue("four");
+  string x5(100000, 'x');
+  val5->setValue(x5);
   EXPECT_EQ(1, par1->parametervalues().size());
   EXPECT_EQ(2, par2->parametervalues().size());
-  EXPECT_EQ(1, par3->parametervalues().size());
+  EXPECT_EQ(2, par3->parametervalues().size());
   EXPECT_EQ(val1, par1->parametervalues().at("val1"));
   EXPECT_EQ(val2, par2->parametervalues().at("val2"));
   EXPECT_EQ(val3, par2->parametervalues().at("val3"));
   EXPECT_EQ(val4, par3->parametervalues().at("val4"));
+  EXPECT_EQ(val5, par3->parametervalues().at("val5"));
 }
 
 TEST(ParameterValue, HDF5) {
@@ -134,18 +138,22 @@ TEST(ParameterValue, HDF5) {
     buf << *p1->parameters().at("par1");
     buf << *p1->parameters().at("par2");
     buf << *p1->parameters().at("par3");
-    EXPECT_EQ("Parameter \"par1\"\n"
-              "  ParameterValue \"val1\": Parameter \"par1\"\n"
-              "    value: int(1)\n"
-              "Parameter \"par2\"\n"
-              "  ParameterValue \"val2\": Parameter \"par2\"\n"
-              "    value: double(2)\n"
-              "  ParameterValue \"val3\": Parameter \"par2\"\n"
-              "    value: double(3)\n"
-              "Parameter \"par3\"\n"
-              "  ParameterValue \"val4\": Parameter \"par3\"\n"
-              "    value: string(\"four\")\n",
-              buf.str());
+    string x5(100000, 'x');
+    string expected = "Parameter \"par1\"\n"
+                      "  ParameterValue \"val1\": Parameter \"par1\"\n"
+                      "    value: int(1)\n"
+                      "Parameter \"par2\"\n"
+                      "  ParameterValue \"val2\": Parameter \"par2\"\n"
+                      "    value: double(2)\n"
+                      "  ParameterValue \"val3\": Parameter \"par2\"\n"
+                      "    value: double(3)\n"
+                      "Parameter \"par3\"\n"
+                      "  ParameterValue \"val4\": Parameter \"par3\"\n"
+                      "    value: string(\"four\")\n"
+                      "  ParameterValue \"val5\": Parameter \"par3\"\n"
+                      "    value: string(\"" +
+                      x5 + "\")\n";
+    EXPECT_EQ(expected, buf.str());
   }
   remove(filename);
 }

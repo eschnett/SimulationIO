@@ -40,6 +40,18 @@ void ParameterValue::read(const H5::CommonFG &loc, const string &entry,
     default:
       assert(0);
     }
+  } else {
+    H5E_BEGIN_TRY {
+      try {
+        H5::readDataSet(group, "data", value_string);
+        value_type = type_string;
+      } catch (const H5::FileIException &ex) {
+        // do nothing
+      } catch (const H5::GroupIException &ex) {
+        // do nothing
+      }
+    }
+    H5E_END_TRY;
   }
   // Cannot check "configurations" since configurations have not been read yet
   // assert(H5::checkGroupNames(group, "configurations", configurations));

@@ -370,7 +370,6 @@ inline Attribute readAttribute(const H5Location &loc, const std::string &name,
   auto attr = loc.openAttribute(name);
   auto space = attr.getSpace();
   assert(space.getSimpleExtentType() == H5S_SCALAR);
-  // auto type = StrType(PredType::C_S1, H5T_VARIABLE);
   auto type = attr.getStrType();
   auto size = type.getSize();
   H5std_string buf;
@@ -498,6 +497,19 @@ inline DataSet createDataSet(const CommonFG &loc, const std::string &name,
 inline DataSet createDataSet(const CommonFG &loc, const std::string &name,
                              const char *value) {
   return createDataSet(loc, name, std::string(value));
+}
+
+inline DataSet readDataSet(const CommonFG &loc, const std::string &name,
+                           std::string &value) {
+  auto dataset = loc.openDataSet(name.c_str());
+  auto space = dataset.getSpace();
+  assert(space.getSimpleExtentType() == H5S_SCALAR);
+  auto type = dataset.getStrType();
+  auto size = type.getSize();
+  H5std_string buf;
+  dataset.read(buf, StrType(PredType::C_S1, size));
+  value = buf;
+  return dataset;
 }
 
 // Create a hard link
