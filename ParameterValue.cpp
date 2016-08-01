@@ -5,7 +5,11 @@
 
 #include "H5Helpers.hpp"
 
+#include <exception>
+#include <sstream>
+
 namespace SimulationIO {
+using namespace std;
 
 void ParameterValue::read(const H5::CommonFG &loc, const string &entry,
                           const shared_ptr<Parameter> &parameter) {
@@ -79,21 +83,32 @@ void ParameterValue::merge(const shared_ptr<ParameterValue> &parametervalue) {
       assert(0);
     }
   }
-  assert(value_type == parametervalue->value_type);
-  switch (value_type) {
-  case type_empty:
-    break;
-  case type_int:
-    assert(value_int == parametervalue->value_int);
-    break;
-  case type_double:
-    assert(value_double == parametervalue->value_double);
-    break;
-  case type_string:
-    assert(value_string == parametervalue->value_string);
-    break;
-  default:
-    assert(0);
+  bool isequal = value_type == parametervalue->value_type;
+  if (isequal) {
+    switch (value_type) {
+    case type_empty:
+      break;
+    case type_int:
+      isequal &= value_int == parametervalue->value_int;
+      break;
+    case type_double:
+      isequal &= value_double == parametervalue->value_double;
+      break;
+    case type_string:
+      isequal &= value_string == parametervalue->value_string;
+      break;
+    default:
+      assert(0);
+    }
+  }
+  if (!isequal) {
+    ostringstream buf;
+    buf << "Cannot merge differing ParameterValues:\n"
+        << indent(1) << "current:\n";
+    this->output(buf, 2);
+    buf << indent(1) << "new:\n";
+    parametervalue->output(buf, 2);
+    throw range_error(buf.str());
   }
 }
 
