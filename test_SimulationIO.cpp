@@ -922,7 +922,25 @@ TEST(DiscreteFieldBlockComponent, HDF5) {
   remove(filename);
 }
 
-TEST(Project, merge) {
+TEST(ProjectMerge, merge) {
+  // Clean up project to make merging possible
+  auto f0 = project->fields().at("f0");
+  auto df0 = f0->discretefields().at("df0");
+  auto dfb0 = df0->discretefieldblocks().at("dfb0");
+  auto dfbd0 = dfb0->discretefieldblockcomponents().at("dfbd0");
+  dfbd0->unsetDataBlock();
+  auto f1 = project->fields().at("f1");
+  auto df1 = f1->discretefields().at("df1");
+  auto dfb1 = df1->discretefieldblocks().at("dfb1");
+  auto dfbd1 = dfb1->discretefieldblockcomponents().at("dfbd1");
+  dfbd1->unsetDataBlock();
+  auto dfbd2 = dfb1->discretefieldblockcomponents().at("dfbd2");
+  dfbd2->unsetDataBlock();
+  auto dfbd3 = dfb1->discretefieldblockcomponents().at("dfbd3");
+  dfbd3->unsetDataBlock();
+  auto dfbd4 = dfb1->discretefieldblockcomponents().at("dfbd4");
+  dfbd4->unsetDataBlock();
+
   auto filename = "project.s5";
   string orig = [&] {
     ostringstream buf;
