@@ -18,8 +18,8 @@ void Discretization::read(const H5::CommonFG &loc, const string &entry,
   m_configuration = manifold->project()->configurations().at(
       H5::readGroupAttribute<string>(group, "configuration", "name"));
   assert(H5::readGroupAttribute<string>(
-             group, string("configuration/discretizations/") + name(),
-             "name") == name());
+             group, "configuration/discretizations/" + name(), "name") ==
+         name());
   H5::readGroup(group, "discretizationblocks",
                 [&](const H5::Group &group, const string &name) {
                   readDiscretizationBlock(group, name);
@@ -59,12 +59,11 @@ void Discretization::write(const H5::CommonFG &loc,
   H5::createHardLink(group, "..", parent, ".");
   H5::createSoftLink(group, "manifold", "..");
   // H5::createHardLink(group, "configuration", parent,
-  //                    string("project/configurations/") +
+  //                    "project/configurations/" +
   //                    configuration->name());
   H5::createSoftLink(group, "configuration",
-                     string("../project/configurations/") +
-                         configuration()->name());
-  H5::createHardLink(group, string("manifold/project/configurations/") +
+                     "../project/configurations/" + configuration()->name());
+  H5::createHardLink(group, "manifold/project/configurations/" +
                                 configuration()->name() + "/discretizations",
                      name(), group, ".");
   H5::createGroup(group, "discretizationblocks", discretizationblocks());

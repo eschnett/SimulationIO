@@ -54,8 +54,7 @@ void CoordinateField::write(const H5::CommonFG &loc,
   H5::createSoftLink(group, "coordinatesystem", "..");
   H5::createAttribute(group, "direction", direction());
   // H5::createHardLink(group, "field", parent,
-  //                    string("project/fields/") + field->name);
-  H5::createSoftLink(group, "field",
-                     string("../project/fields/") + field()->name());
+  //                    "project/fields/" + field->name);
+  H5::createSoftLink(group, "field", "../project/fields/" + field()->name());
 }
 }

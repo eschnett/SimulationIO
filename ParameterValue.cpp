@@ -143,7 +143,7 @@ void ParameterValue::write(const H5::CommonFG &loc,
                       "ParameterValue");
   H5::createAttribute(group, "name", name());
   // H5::createHardLink(group, "parameter", parent,
-  //                    string("project/parameters/") +
+  //                    "project/parameters/" +
   //                    parameter.lock()->name());
   // H5::createHardLink(group, "parameter", parent, ".");
   H5::createHardLink(group, "..", parent, ".");
