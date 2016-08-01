@@ -20,7 +20,7 @@ void DiscreteField::read(const H5::CommonFG &loc, const string &entry,
   m_configuration = field->project()->configurations().at(
       H5::readGroupAttribute<string>(group, "configuration", "name"));
   assert(H5::readGroupAttribute<string>(
-             group, string("configuration/discretefields/") + name(), "name") ==
+             group, "configuration/discretefields/" + name(), "name") ==
          name());
   m_discretization = field->manifold()->discretizations().at(
       H5::readGroupAttribute<string>(group, "discretization", "name"));
@@ -73,24 +73,22 @@ void DiscreteField::write(const H5::CommonFG &loc,
   H5::createHardLink(group, "..", parent, ".");
   H5::createSoftLink(group, "field", "..");
   // H5::createHardLink(group, "configuration", parent,
-  //                    string("project/configurations/") +
+  //                    "project/configurations/" +
   //                    configuration->name());
   H5::createSoftLink(group, "configuration",
-                     string("../project/configurations/") +
-                         configuration()->name());
-  H5::createHardLink(group, string("field/project/configurations/") +
+                     "../project/configurations/" + configuration()->name());
+  H5::createHardLink(group, "field/project/configurations/" +
                                 configuration()->name() + "/discretefields",
                      name(), group, ".");
   // H5::createHardLink(group, "discretization", parent,
-  //                    string("manifold/discretizations/") +
+  //                    "manifold/discretizations/" +
   //                        discretization->name());
   H5::createSoftLink(group, "discretization",
-                     string("../manifold/discretizations/") +
-                         discretization()->name());
+                     "../manifold/discretizations/" + discretization()->name());
   // H5::createHardLink(group, "basis", parent,
-  //                    string("tangentspace/bases/") + basis->name());
+  //                    "tangentspace/bases/" + basis->name());
   H5::createSoftLink(group, "basis",
-                     string("../tangentspace/bases/") + basis()->name());
+                     "../tangentspace/bases/" + basis()->name());
   createGroup(group, "discretefieldblocks", discretefieldblocks());
 }
 

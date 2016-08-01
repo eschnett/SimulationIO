@@ -19,8 +19,7 @@ void TangentSpace::read(const H5::CommonFG &loc, const string &entry,
   m_configuration = project->configurations().at(
       H5::readGroupAttribute<string>(group, "configuration", "name"));
   assert(H5::readGroupAttribute<string>(
-             group, string("configuration/tangentspaces/") + name(), "name") ==
-         name());
+             group, "configuration/tangentspaces/" + name(), "name") == name());
   H5::readAttribute(group, "dimension", m_dimension);
   H5::readGroup(group, "bases",
                 [&](const H5::Group &group, const string &name) {
@@ -65,10 +64,10 @@ void TangentSpace::write(const H5::CommonFG &loc,
   H5::createHardLink(group, "..", parent, ".");
   H5::createSoftLink(group, "project", "..");
   // H5::createHardLink(group, "configuration", parent,
-  //                    string("configurations/") + configuration->name());
+  //                    "configurations/" + configuration->name());
   H5::createSoftLink(group, "configuration",
-                     string("../configurations/") + configuration()->name());
-  H5::createHardLink(group, string("project/configurations/") +
+                     "../configurations/" + configuration()->name());
+  H5::createHardLink(group, "project/configurations/" +
                                 configuration()->name() + "/tangentspaces",
                      name(), group, ".");
   H5::createAttribute(group, "dimension", dimension());

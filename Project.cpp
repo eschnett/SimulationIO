@@ -320,11 +320,11 @@ void Project::write(const H5::CommonFG &loc,
   enumtype.commit(typegroup, "SimulationIO");
   rangetype.commit(typegroup, "Range");
   for (int d = 0; d < int(pointtypes.size()); ++d)
-    pointtypes.at(d).commit(typegroup, string("Point[") + itos(d) + "]");
+    pointtypes.at(d).commit(typegroup, "Point[" + itos(d) + "]");
   for (int d = 0; d < int(boxtypes.size()); ++d)
-    boxtypes.at(d).commit(typegroup, string("Box[") + itos(d) + "]");
+    boxtypes.at(d).commit(typegroup, "Box[" + itos(d) + "]");
   for (int d = 0; d < int(regiontypes.size()); ++d)
-    regiontypes.at(d).commit(typegroup, string("Region[") + itos(d) + "]");
+    regiontypes.at(d).commit(typegroup, "Region[" + itos(d) + "]");
   H5::createAttribute(group, "type", enumtype, "Project");
   H5::createAttribute(group, "name", name());
   // no link to parent

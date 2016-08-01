@@ -20,8 +20,7 @@ void CoordinateSystem::read(const H5::CommonFG &loc, const string &entry,
   m_manifold = project->manifolds().at(
       H5::readGroupAttribute<string>(group, "manifold", "name"));
   assert(H5::readGroupAttribute<string>(
-             group, string("project/coordinatesystems/") + name(), "name") ==
-         name());
+             group, "project/coordinatesystems/" + name(), "name") == name());
   H5::readGroup(group, "coordinatefields",
                 [&](const H5::Group &group, const string &name) {
                   readCoordinateField(group, name);
@@ -70,17 +69,16 @@ void CoordinateSystem::write(const H5::CommonFG &loc,
   H5::createHardLink(group, "..", parent, ".");
   H5::createSoftLink(group, "project", "..");
   // H5::createHardLink(group, "configuration", parent,
-  //                    string("configurations/") + configuration->name());
+  //                    "configurations/" + configuration->name());
   H5::createSoftLink(group, "configuration",
-                     string("../configurations/") + configuration()->name());
-  H5::createHardLink(group, string("project/configurations/") +
+                     "../configurations/" + configuration()->name());
+  H5::createHardLink(group, "project/configurations/" +
                                 configuration()->name() + "/coordinatesystems",
                      name(), group, ".");
   // H5::createHardLink(group, "manifold", parent,
-  //                    string("manifolds/") + manifold->name());
-  H5::createSoftLink(group, "manifold",
-                     string("../manifolds/") + manifold()->name());
-  H5::createHardLink(group, string("project/manifolds/") + manifold()->name() +
+  //                    "manifolds/" + manifold->name());
+  H5::createSoftLink(group, "manifold", "../manifolds/" + manifold()->name());
+  H5::createHardLink(group, "project/manifolds/" + manifold()->name() +
                                 "/coordinatesystems",
                      name(), group, ".");
   H5::createGroup(group, "coordinatefields", coordinatefields());

@@ -82,10 +82,10 @@ void DiscreteFieldBlock::write(const H5::CommonFG &loc,
   H5::createHardLink(group, "..", parent, ".");
   H5::createSoftLink(group, "discretefield", "..");
   // H5::createHardLink(group, "discretizationblock", parent,
-  //                    string("discretization/discretizationblocks/") +
+  //                    "discretization/discretizationblocks/" +
   //                        discretizationblock->name());
   H5::createSoftLink(group, "discretizationblock",
-                     string("../discretization/discretizationblocks/") +
+                     "../discretization/discretizationblocks/" +
                          discretizationblock()->name());
   H5::createGroup(group, "discretefieldblockcomponents",
                   discretefieldblockcomponents());

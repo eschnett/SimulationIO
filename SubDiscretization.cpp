@@ -21,14 +21,12 @@ void SubDiscretization::read(const H5::CommonFG &loc, const string &entry,
   m_parent_discretization = manifold->discretizations().at(
       H5::readGroupAttribute<string>(group, "parent_discretization", "name"));
   assert(H5::readGroupAttribute<string>(
-             group,
-             string("parent_discretization/child_discretizations/") + name(),
+             group, "parent_discretization/child_discretizations/" + name(),
              "name") == name());
   m_child_discretization = manifold->discretizations().at(
       H5::readGroupAttribute<string>(group, "child_discretization", "name"));
   assert(H5::readGroupAttribute<string>(
-             group,
-             string("child_discretization/parent_discretizations/") + name(),
+             group, "child_discretization/parent_discretizations/" + name(),
              "name") == name());
   H5::readAttribute(group, "factor", m_factor);
   std::reverse(m_factor.begin(), m_factor.end());
@@ -69,22 +67,20 @@ void SubDiscretization::write(const H5::CommonFG &loc,
   H5::createHardLink(group, "..", parent, ".");
   H5::createSoftLink(group, "manifold", "..");
   // H5::createHardLink(group, "parent_discretization", parent,
-  //                    string("discretizations/") +
+  //                    "discretizations/" +
   //                    parent_discretization->name());
   H5::createSoftLink(group, "parent_discretization",
-                     string("../discretizations/") +
-                         parent_discretization()->name());
-  H5::createHardLink(group, string("manifold/discretizations/") +
+                     "../discretizations/" + parent_discretization()->name());
+  H5::createHardLink(group, "manifold/discretizations/" +
                                 parent_discretization()->name() +
                                 "/child_discretizations",
                      name(), group, ".");
   // H5::createHardLink(group, "child_discretization", parent,
-  //                    string("discretizations/") +
+  //                    "discretizations/" +
   //                    child_discretization->name());
   H5::createSoftLink(group, "child_discretization",
-                     string("../discretizations/") +
-                         child_discretization()->name());
-  H5::createHardLink(group, string("manifold/discretizations/") +
+                     "../discretizations/" + child_discretization()->name());
+  H5::createHardLink(group, "manifold/discretizations/" +
                                 child_discretization()->name() +
                                 "/parent_discretizations",
                      name(), group, ".");

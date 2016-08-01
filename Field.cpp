@@ -21,15 +21,14 @@ void Field::read(const H5::CommonFG &loc, const string &entry,
       H5::readGroupAttribute<string>(group, "manifold", "name"));
   m_configuration = project->configurations().at(
       H5::readGroupAttribute<string>(group, "configuration", "name"));
-  assert(H5::readGroupAttribute<string>(
-             group, string("configuration/fields/") + name(), "name") ==
-         name());
-  assert(H5::readGroupAttribute<string>(
-             group, string("manifold/fields/") + name(), "name") == name());
+  assert(H5::readGroupAttribute<string>(group, "configuration/fields/" + name(),
+                                        "name") == name());
+  assert(H5::readGroupAttribute<string>(group, "manifold/fields/" + name(),
+                                        "name") == name());
   m_tangentspace = project->tangentspaces().at(
       H5::readGroupAttribute<string>(group, "tangentspace", "name"));
-  assert(H5::readGroupAttribute<string>(
-             group, string("tangentspace/fields/") + name(), "name") == name());
+  assert(H5::readGroupAttribute<string>(group, "tangentspace/fields/" + name(),
+                                        "name") == name());
   m_tensortype = project->tensortypes().at(
       H5::readGroupAttribute<string>(group, "tensortype", "name"));
   H5::readGroup(group, "discretefields",
@@ -81,30 +80,29 @@ void Field::write(const H5::CommonFG &loc, const H5::H5Location &parent) const {
   H5::createHardLink(group, "..", parent, ".");
   H5::createSoftLink(group, "project", "..");
   // H5::createHardLink(group, "configuration", parent,
-  //                    string("configurations/") + configuration->name());
+  //                    "configurations/" + configuration->name());
   H5::createSoftLink(group, "configuration",
-                     string("../configurations/") + configuration()->name());
-  H5::createHardLink(group, string("project/configurations/") +
+                     "../configurations/" + configuration()->name());
+  H5::createHardLink(group, "project/configurations/" +
                                 configuration()->name() + "/fields",
                      name(), group, ".");
   // H5::createHardLink(group, "manifold", parent,
-  //                    string("manifolds/") + manifold->name());
-  H5::createSoftLink(group, "manifold",
-                     string("../manifolds/") + manifold()->name());
-  H5::createHardLink(group, string("project/manifolds/") + manifold()->name() +
-                                "/fields",
+  //                    "manifolds/" + manifold->name());
+  H5::createSoftLink(group, "manifold", "../manifolds/" + manifold()->name());
+  H5::createHardLink(group,
+                     "project/manifolds/" + manifold()->name() + "/fields",
                      name(), group, ".");
   // H5::createHardLink(group, "tangentspace", parent,
-  //                    string("tangentspaces/") + tangentspace->name());
+  //                    "tangentspaces/" + tangentspace->name());
   H5::createSoftLink(group, "tangentspace",
-                     string("../tangentspaces/") + tangentspace()->name());
-  H5::createHardLink(group, string("project/tangentspaces/") +
-                                tangentspace()->name() + "/fields",
+                     "../tangentspaces/" + tangentspace()->name());
+  H5::createHardLink(group, "project/tangentspaces/" + tangentspace()->name() +
+                                "/fields",
                      name(), group, ".");
   // H5::createHardLink(group, "tensortype", parent,
-  //                    string("tensortypes/") + tensortype->name());
+  //                    "tensortypes/" + tensortype->name());
   H5::createSoftLink(group, "tensortype",
-                     string("../tensortypes/") + tensortype()->name());
+                     "../tensortypes/" + tensortype()->name());
   H5::createGroup(group, "discretefields", discretefields());
 }
 

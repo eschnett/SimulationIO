@@ -29,8 +29,7 @@ void Configuration::read(const H5::CommonFG &loc, const string &entry,
     auto parameter = project->parameters().at(parname);
     auto parametervalue = parameter->parametervalues().at(valname);
     assert(H5::readGroupAttribute<string>(
-               group, valname + string("/configurations/") + name(), "name") ==
-           name());
+               group, valname + "/configurations/" + name(), "name") == name());
     insertParameterValue(parametervalue);
   });
   // Cannot check "bases", "coordinatesystems", "discretefields",
@@ -100,10 +99,10 @@ void Configuration::write(const H5::CommonFG &loc,
   auto val_group = group.createGroup("parametervalues");
   for (const auto &val : parametervalues()) {
     H5::createHardLink(val_group, val.second->name(), parent,
-                       string("parameters/") + val.second->parameter()->name() +
+                       "parameters/" + val.second->parameter()->name() +
                            "/parametervalues/" + val.second->name());
     H5::createHardLink(
-        group, string("project/parameters/") + val.second->parameter()->name() +
+        group, "project/parameters/" + val.second->parameter()->name() +
                    "/parametervalues/" + val.second->name() + "/configurations",
         name(), group, ".");
   }

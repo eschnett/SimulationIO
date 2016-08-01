@@ -75,12 +75,11 @@ void DiscreteFieldBlockComponent::write(const H5::CommonFG &loc,
   H5::createSoftLink(group, "discretefieldblock", "..");
   // H5::createHardLink(
   //     group, "tensorcomponent", parent,
-  //     string("discretefield/field/tensortype/tensorcomponents/") +
+  //     "discretefield/field/tensortype/tensorcomponents/" +
   //         tensorcomponent->name());
-  H5::createSoftLink(
-      group, "tensorcomponent",
-      string("../discretefield/field/tensortype/tensorcomponents/") +
-          tensorcomponent()->name());
+  H5::createSoftLink(group, "tensorcomponent",
+                     "../discretefield/field/tensortype/tensorcomponents/" +
+                         tensorcomponent()->name());
   if (bool(datablock()))
     datablock()->write(group, dataname());
 }

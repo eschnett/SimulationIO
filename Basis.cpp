@@ -17,8 +17,8 @@ void Basis::read(const H5::CommonFG &loc, const string &entry,
          tangentspace->name());
   m_configuration = tangentspace->project()->configurations().at(
       H5::readGroupAttribute<string>(group, "configuration", "name"));
-  assert(H5::readGroupAttribute<string>(
-             group, string("configuration/bases/") + name(), "name") == name());
+  assert(H5::readGroupAttribute<string>(group, "configuration/bases/" + name(),
+                                        "name") == name());
   H5::readGroup(group, "basisvectors",
                 [&](const H5::Group &group, const string &name) {
                   readBasisVector(group, name);
@@ -57,12 +57,11 @@ void Basis::write(const H5::CommonFG &loc, const H5::H5Location &parent) const {
   H5::createHardLink(group, "..", parent, ".");
   H5::createSoftLink(group, "tangentspace", "..");
   // H5::createHardLink(group, "configuration", parent,
-  //                    string("project/configurations/") +
+  //                    "project/configurations/" +
   //                    configuration->name);
   H5::createSoftLink(group, "configuration",
-                     string("../project/configurations/") +
-                         configuration()->name());
-  H5::createHardLink(group, string("tangentspace/project/configurations/") +
+                     "../project/configurations/" + configuration()->name());
+  H5::createHardLink(group, "tangentspace/project/configurations/" +
                                 configuration()->name() + "/bases",
                      name(), group, ".");
   H5::createGroup(group, "basisvectors", basisvectors());
