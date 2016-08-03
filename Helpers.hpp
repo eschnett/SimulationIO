@@ -89,9 +89,7 @@ std::vector<Key> keys(const std::map<Key, Value> &m) {
     r.push_back(kv.first);
   return r;
 }
-}
 
-namespace std {
 // Output a vector
 template <typename T>
 std::ostream &operator<<(std::ostream &os, const std::vector<T> &values) {
