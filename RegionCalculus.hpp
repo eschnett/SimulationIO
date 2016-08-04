@@ -296,34 +296,21 @@ template <typename T, int D> struct point {
       elt[d] /= p.elt[d];
     return *this;
   }
-  // TODO
-  // template <typename U = T, typename std::enable_if<
-  //                               std::is_integral<U>::value>::type * =
-  //                               nullptr>
   point &operator%=(const point &p) {
     for (int d = 0; d < D; ++d)
       elt[d] %= p.elt[d];
     return *this;
   }
-  // template <typename U = T, typename std::enable_if<
-  //                               std::is_integral<U>::value>::type * =
-  //                               nullptr>
   point &operator&=(const point &p) {
     for (int d = 0; d < D; ++d)
       elt[d] &= p.elt[d];
     return *this;
   }
-  // template <typename U = T, typename std::enable_if<
-  //                               std::is_integral<U>::value>::type * =
-  //                               nullptr>
   point &operator|=(const point &p) {
     for (int d = 0; d < D; ++d)
       elt[d] |= p.elt[d];
     return *this;
   }
-  // template <typename U = T, typename std::enable_if<
-  //                               std::is_integral<U>::value>::type * =
-  //                               nullptr>
   point &operator^=(const point &p) {
     for (int d = 0; d < D; ++d)
       elt[d] ^= p.elt[d];
@@ -335,26 +322,10 @@ template <typename T, int D> struct point {
   point operator-(const point &p) const { return point(*this) -= p; }
   point operator*(const point &p) const { return point(*this) *= p; }
   point operator/(const point &p) const { return point(*this) /= p; }
-  // template <typename U = T, typename std::enable_if<
-  //                               std::is_integral<U>::value>::type * = nullptr>
-  point operator%(const point &p) const {
-    return point(*this) %= p;
-  }
-  // template <typename U = T, typename std::enable_if<
-  //                               std::is_integral<U>::value>::type * = nullptr>
-  point operator&(const point &p) const {
-    return point(*this) &= p;
-  }
-  // template <typename U = T, typename std::enable_if<
-  //                               std::is_integral<U>::value>::type * = nullptr>
-  point operator|(const point &p) const {
-    return point(*this) |= p;
-  }
-  // template <typename U = T, typename std::enable_if<
-  //                               std::is_integral<U>::value>::type * = nullptr>
-  point operator^(const point &p) const {
-    return point(*this) ^= p;
-  }
+  point operator%(const point &p) const { return point(*this) %= p; }
+  point operator&(const point &p) const { return point(*this) &= p; }
+  point operator|(const point &p) const { return point(*this) |= p; }
+  point operator^(const point &p) const { return point(*this) ^= p; }
   point<bool, D> operator&&(const point &p) const {
     return point<bool, D>(*this) &= point<bool, D>(p);
   }
@@ -363,35 +334,6 @@ template <typename T, int D> struct point {
   }
 
   // Unary functions
-  // template <typename U = T, typename std::enable_if<
-  //                               std::is_unsigned<U>::value>::type * =
-  //                               nullptr>
-  // point abs() const {
-  //   return *this;
-  // }
-
-  // template <typename U = T, typename std::enable_if<
-  //                               !std::is_unsigned<U>::value>::type * =
-  //                               nullptr>
-  // point abs() const {
-  //   using std::abs;
-  //   point r;
-  //   for (int d = 0; d < D; ++d)
-  //     r.elt[d] = abs(elt[d]);
-  //   return r;
-  // }
-
-  // point abs() const {
-  //   // handle unsigned types
-  //   if (T(-1) > T(0))
-  //     return *this;
-  //   using std::abs;
-  //   point r;
-  //   for (int d = 0; d < D; ++d)
-  //     r.elt[d] = abs(elt[d]);
-  //   return r;
-  // }
-
   point abs() const {
     point r;
     for (int d = 0; d < D; ++d)
@@ -438,8 +380,6 @@ template <typename T, int D> struct point {
     return eq(elt, p.elt);
   }
   bool less(const point &p) const {
-    // std::less<array<T, D>> lt;
-    // return lt(elt, p.elt;
     std::less<T> lt;
     for (int d = D - 1; d >= 0; --d) {
       if (lt(elt[d], p.elt[d]))
@@ -1964,46 +1904,11 @@ template <typename T, int D> struct wpoint : vpoint<T> {
   // Unary operators
   unique_ptr<vpoint<T>> operator+() const { return make_unique1<wpoint>(+val); }
   unique_ptr<vpoint<T>> operator-() const { return make_unique1<wpoint>(-val); }
-#if 0
-  // broken
-  unique_ptr<vpoint<T>> operator~() const { return make_unique1<wpoint>(~val); }
-#elif 0
-  // working
-private:
-  template <typename U = T, typename std::enable_if<
-                                std::is_integral<U>::value>::type * = nullptr>
-  unique_ptr<vpoint<T>> bit_not() const {
-    return make_unique1<wpoint>(~val);
-  }
-  template <typename U = T, typename std::enable_if<
-                                !std::is_integral<U>::value>::type * = nullptr>
-  unique_ptr<vpoint<T>> bit_not() const {
-    std::abort();
-  }
-
-public:
-  unique_ptr<vpoint<T>> operator~() const { return bit_not(); }
-#elif 0
-  // working
-  unique_ptr<vpoint<T>> operator~() const {
-    return make_unique1<wpoint>(
-        typename std::conditional<std::is_integral<T>::value,
-                                  bit_not<point<T, D>>,
-                                  error<point<T, D>>>::type()(val));
-  }
-#elif 1
-  // working
   unique_ptr<vpoint<T>> operator~() const {
     return make_unique1<wpoint>(
         typename call_if_integral<point<T, D>, bit_not<point<T, D>>>::type()(
             val));
   }
-#else
-  unique_ptr<vpoint<T>> operator~() const {
-    return make_unique1<wpoint>(
-        call_if_integral_t<point<T, D>, bit_not<point<T, D>>>()(val));
-  }
-#endif
   unique_ptr<vpoint<bool>> operator!() const {
     return make_unique1<wpoint<bool, D>>(!val);
   }
@@ -2025,76 +1930,6 @@ public:
     val /= dynamic_cast<const wpoint &>(p).val;
     return *this;
   }
-#if 0
-private:
-  template <typename U = T, typename std::enable_if<
-                                std::is_integral<U>::value>::type * = nullptr>
-  vpoint<T> &modulus_eq(const vpoint<T> &p) {
-    val %= dynamic_cast<const wpoint &>(p).val;
-    return *this;
-  }
-  template <typename U = T, typename std::enable_if<
-                                !std::is_integral<U>::value>::type * = nullptr>
-  vpoint<T> &modulus_eq(const vpoint<T> &p) {
-    std::abort();
-  }
-  template <typename U = T, typename std::enable_if<
-                                std::is_integral<U>::value>::type * = nullptr>
-  vpoint<T> &land_eq(const vpoint<T> &p) {
-    val &= dynamic_cast<const wpoint &>(p).val;
-    return *this;
-  }
-  template <typename U = T, typename std::enable_if<
-                                !std::is_integral<U>::value>::type * = nullptr>
-  vpoint<T> &land_eq(const vpoint<T> &p) {
-    std::abort();
-  }
-  template <typename U = T, typename std::enable_if<
-                                std::is_integral<U>::value>::type * = nullptr>
-  vpoint<T> &lor_eq(const vpoint<T> &p) {
-    val |= dynamic_cast<const wpoint &>(p).val;
-    return *this;
-  }
-  template <typename U = T, typename std::enable_if<
-                                !std::is_integral<U>::value>::type * = nullptr>
-  vpoint<T> &lor_eq(const vpoint<T> &p) {
-    std::abort();
-  }
-  template <typename U = T, typename std::enable_if<
-                                std::is_integral<U>::value>::type * = nullptr>
-  vpoint<T> &xlor_eq(const vpoint<T> &p) {
-    val ^= dynamic_cast<const wpoint &>(p).val;
-    return *this;
-  }
-  template <typename U = T, typename std::enable_if<
-                                !std::is_integral<U>::value>::type * = nullptr>
-  vpoint<T> &xlor_eq(const vpoint<T> &p) {
-    std::abort();
-  }
-
-public:
-  vpoint<T> &operator%=(const vpoint<T> &p) { return modulus_eq(p); }
-  vpoint<T> &operator&=(const vpoint<T> &p) { return land_eq(p); }
-  vpoint<T> &operator|=(const vpoint<T> &p) { return lor_eq(p); }
-  vpoint<T> &operator^=(const vpoint<T> &p) { return xlor_eq(p); }
-#elif 0
-  vpoint<T> &operator%=(const vpoint<T> &p) {
-    val %= dynamic_cast<const wpoint &>(p).val;
-    return *this;
-  }
-  vpoint<T> &operator&=(const vpoint<T> &p) {
-    val &= dynamic_cast<const wpoint &>(p).val;
-    return *this;
-  }
-  vpoint<T> &operator|=(const vpoint<T> &p) {
-    val |= dynamic_cast<const wpoint &>(p).val;
-    return *this;
-  }
-  vpoint<T> &operator^=(const vpoint<T> &p) {
-    val ^= dynamic_cast<const wpoint &>(p).val;
-    return *this;
-  }
-#else
   vpoint<T> &operator%=(const vpoint<T> &p) {
     typename call_if_integral<point<T, D>, modulus_eq<point<T, D>>>::type()(
         val, dynamic_cast<const wpoint &>(p).val);
@@ -2115,7 +1950,6 @@ public:
         val, dynamic_cast<const wpoint &>(p).val);
     return *this;
   }
-#endif
 
   // Binary operators
   unique_ptr<vpoint<T>> operator+(const vpoint<T> &p) const {
@@ -2130,70 +1964,6 @@ public:
   unique_ptr<vpoint<T>> operator/(const vpoint<T> &p) const {
     return make_unique1<wpoint>(val / dynamic_cast<const wpoint &>(p).val);
   }
-#if 0
-private:
-  template <typename U = T, typename std::enable_if<
-                                std::is_integral<U>::value>::type * = nullptr>
-  unique_ptr<vpoint<T>> modulus(const vpoint<T> &p) const {
-    return make_unique1<wpoint>(val % dynamic_cast<const wpoint &>(p).val);
-  }
-  template <typename U = T, typename std::enable_if<
-                                !std::is_integral<U>::value>::type * = nullptr>
-  unique_ptr<vpoint<T>> modulus(const vpoint<T> &p) const {
-    std::abort();
-  }
-  template <typename U = T, typename std::enable_if<
-                                std::is_integral<U>::value>::type * = nullptr>
-  unique_ptr<vpoint<T>> land(const vpoint<T> &p) const {
-    return make_unique1<wpoint>(val & dynamic_cast<const wpoint &>(p).val);
-  }
-  template <typename U = T, typename std::enable_if<
-                                !std::is_integral<U>::value>::type * = nullptr>
-  unique_ptr<vpoint<T>> land(const vpoint<T> &p) const {
-    std::abort();
-  }
-  template <typename U = T, typename std::enable_if<
-                                std::is_integral<U>::value>::type * = nullptr>
-  unique_ptr<vpoint<T>> lor(const vpoint<T> &p) const {
-    return make_unique1<wpoint>(val | dynamic_cast<const wpoint &>(p).val);
-  }
-  template <typename U = T, typename std::enable_if<
-                                !std::is_integral<U>::value>::type * = nullptr>
-  unique_ptr<vpoint<T>> lor(const vpoint<T> &p) const {
-    std::abort();
-  }
-  template <typename U = T, typename std::enable_if<
-                                std::is_integral<U>::value>::type * = nullptr>
-  unique_ptr<vpoint<T>> lxor(const vpoint<T> &p) const {
-    return make_unique1<wpoint>(val ^ dynamic_cast<const wpoint &>(p).val);
-  }
-  template <typename U = T, typename std::enable_if<
-                                !std::is_integral<U>::value>::type * = nullptr>
-  unique_ptr<vpoint<T>> lxor(const vpoint<T> &p) const {
-    std::abort();
-  }
-
-public:
-  unique_ptr<vpoint<T>> operator%(const vpoint<T> &p) const {
-    return modulus(p);
-  }
-  unique_ptr<vpoint<T>> operator&(const vpoint<T> &p) const { return land(p); }
-  unique_ptr<vpoint<T>> operator|(const vpoint<T> &p) const { return lor(p); }
-  unique_ptr<vpoint<T>> operator^(const vpoint<T> &p) const { return lxor(p); }
-#elif 0
-  unique_ptr<vpoint<T>> operator%(const vpoint<T> &p) const {
-    return make_unique1<wpoint>(val % dynamic_cast<const wpoint &>(p).val);
-  }
-  unique_ptr<vpoint<T>> operator&(const vpoint<T> &p) const {
-    return make_unique1<wpoint>(val & dynamic_cast<const wpoint &>(p).val);
-  }
-  unique_ptr<vpoint<T>> operator|(const vpoint<T> &p) const {
-    return make_unique1<wpoint>(val | dynamic_cast<const wpoint &>(p).val);
-  }
-  unique_ptr<vpoint<T>> operator^(const vpoint<T> &p) const {
-    return make_unique1<wpoint>(val ^ dynamic_cast<const wpoint &>(p).val);
-  }
-#else
   unique_ptr<vpoint<T>> operator%(const vpoint<T> &p) const {
     return make_unique1<wpoint>(
         typename call_if_integral<point<T, D>, modulus<point<T, D>>>::type()(
@@ -2214,7 +1984,6 @@ public:
         typename call_if_integral<point<T, D>, bit_xor<point<T, D>>>::type()(
             val, dynamic_cast<const wpoint &>(p).val));
   }
-#endif
   unique_ptr<vpoint<bool>> operator&&(const vpoint<T> &p) const {
     return make_unique1<wpoint<bool, D>>(val &&
                                          dynamic_cast<const wpoint &>(p).val);
