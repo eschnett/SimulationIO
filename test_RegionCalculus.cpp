@@ -1023,7 +1023,6 @@ TEST(RegionCalculus, point_double) {
   EXPECT_EQ("[0,1,2]", buf.str());
 }
 
-
 TEST(RegionCalculus, box_double) {
   typedef point<double, 3> point;
   typedef box<double, 3> box;
@@ -1202,6 +1201,12 @@ TEST(RegionCalculus, region_double) {
   ostringstream buf;
   buf << r12;
   EXPECT_EQ("{([0,0,0]:[1,1,1]),([1,1,1]:[2,2,2])}", buf.str());
+}
+
+TEST(RegionCalculus, double_) {
+  dpoint<double> p(3);
+  dbox<double> b(3);
+  dregion<double> r(3);
 }
 
 #include "src/gtest_main.cc"
