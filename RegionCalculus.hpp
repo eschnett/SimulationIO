@@ -335,23 +335,23 @@ template <typename T, int D> struct point {
   point operator-(const point &p) const { return point(*this) -= p; }
   point operator*(const point &p) const { return point(*this) *= p; }
   point operator/(const point &p) const { return point(*this) /= p; }
-  template <typename U = T, typename std::enable_if<
-                                std::is_integral<U>::value>::type * = nullptr>
+  // template <typename U = T, typename std::enable_if<
+  //                               std::is_integral<U>::value>::type * = nullptr>
   point operator%(const point &p) const {
     return point(*this) %= p;
   }
-  template <typename U = T, typename std::enable_if<
-                                std::is_integral<U>::value>::type * = nullptr>
+  // template <typename U = T, typename std::enable_if<
+  //                               std::is_integral<U>::value>::type * = nullptr>
   point operator&(const point &p) const {
     return point(*this) &= p;
   }
-  template <typename U = T, typename std::enable_if<
-                                std::is_integral<U>::value>::type * = nullptr>
+  // template <typename U = T, typename std::enable_if<
+  //                               std::is_integral<U>::value>::type * = nullptr>
   point operator|(const point &p) const {
     return point(*this) |= p;
   }
-  template <typename U = T, typename std::enable_if<
-                                std::is_integral<U>::value>::type * = nullptr>
+  // template <typename U = T, typename std::enable_if<
+  //                               std::is_integral<U>::value>::type * = nullptr>
   point operator^(const point &p) const {
     return point(*this) ^= p;
   }
