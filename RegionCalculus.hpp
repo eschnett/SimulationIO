@@ -1867,7 +1867,7 @@ template <typename T, int D> struct wpoint : vpoint<T> {
   // Unary operators
   unique_ptr<vpoint<T>> operator+() const { return make_unique1<wpoint>(+val); }
   unique_ptr<vpoint<T>> operator-() const { return make_unique1<wpoint>(-val); }
-
+#if 0
 private:
   template <typename U = T, typename std::enable_if<
                                 std::is_integral<U>::value>::type * = nullptr>
@@ -1882,6 +1882,8 @@ private:
 
 public:
   unique_ptr<vpoint<T>> operator~() const { return bit_not(); }
+#endif
+  unique_ptr<vpoint<T>> operator~() const { return make_unique1<wpoint>(~val); }
   unique_ptr<vpoint<bool>> operator!() const {
     return make_unique1<wpoint<bool, D>>(!val);
   }
@@ -1903,7 +1905,7 @@ public:
     val /= dynamic_cast<const wpoint &>(p).val;
     return *this;
   }
-
+#if 0
 private:
   template <typename U = T, typename std::enable_if<
                                 std::is_integral<U>::value>::type * = nullptr>
@@ -1955,6 +1957,23 @@ public:
   vpoint<T> &operator&=(const vpoint<T> &p) { return land_eq(p); }
   vpoint<T> &operator|=(const vpoint<T> &p) { return lor_eq(p); }
   vpoint<T> &operator^=(const vpoint<T> &p) { return xlor_eq(p); }
+#endif
+  vpoint<T> &operator%=(const vpoint<T> &p) {
+    val %= dynamic_cast<const wpoint &>(p).val;
+    return *this;
+  }
+  vpoint<T> &operator&=(const vpoint<T> &p) {
+    val &= dynamic_cast<const wpoint &>(p).val;
+    return *this;
+  }
+  vpoint<T> &operator|=(const vpoint<T> &p) {
+    val |= dynamic_cast<const wpoint &>(p).val;
+    return *this;
+  }
+  vpoint<T> &operator^=(const vpoint<T> &p) {
+    val ^= dynamic_cast<const wpoint &>(p).val;
+    return *this;
+  }
 
   // Binary operators
   unique_ptr<vpoint<T>> operator+(const vpoint<T> &p) const {
@@ -1969,7 +1988,7 @@ public:
   unique_ptr<vpoint<T>> operator/(const vpoint<T> &p) const {
     return make_unique1<wpoint>(val / dynamic_cast<const wpoint &>(p).val);
   }
-
+#if 0
 private:
   template <typename U = T, typename std::enable_if<
                                 std::is_integral<U>::value>::type * = nullptr>
@@ -2019,6 +2038,19 @@ public:
   unique_ptr<vpoint<T>> operator&(const vpoint<T> &p) const { return land(p); }
   unique_ptr<vpoint<T>> operator|(const vpoint<T> &p) const { return lor(p); }
   unique_ptr<vpoint<T>> operator^(const vpoint<T> &p) const { return lxor(p); }
+#endif
+  unique_ptr<vpoint<T>> operator%(const vpoint<T> &p) const {
+    return make_unique1<wpoint>(val % dynamic_cast<const wpoint &>(p).val);
+  }
+  unique_ptr<vpoint<T>> operator&(const vpoint<T> &p) const {
+    return make_unique1<wpoint>(val & dynamic_cast<const wpoint &>(p).val);
+  }
+  unique_ptr<vpoint<T>> operator|(const vpoint<T> &p) const {
+    return make_unique1<wpoint>(val | dynamic_cast<const wpoint &>(p).val);
+  }
+  unique_ptr<vpoint<T>> operator^(const vpoint<T> &p) const {
+    return make_unique1<wpoint>(val ^ dynamic_cast<const wpoint &>(p).val);
+  }
   unique_ptr<vpoint<bool>> operator&&(const vpoint<T> &p) const {
     return make_unique1<wpoint<bool, D>>(val &&
                                          dynamic_cast<const wpoint &>(p).val);
