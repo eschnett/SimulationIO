@@ -1204,9 +1204,11 @@ TEST(RegionCalculus, region_double) {
 }
 
 TEST(RegionCalculus, double_) {
-  dpoint<double> p(3);
-  dbox<double> b(3);
-  dregion<double> r(3);
+  for (int d = 0; d <= 4; ++d) {
+    dpoint<double> p(d);
+    dbox<double> b(d);
+    dregion<double> r(d);
+  }
 }
 
 #include "src/gtest_main.cc"

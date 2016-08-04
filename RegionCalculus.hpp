@@ -38,17 +38,38 @@ using std::unique;
 using std::unique_ptr;
 using std::vector;
 
-template <typename T> struct error {
-  T operator()() const { std::abort(); }
-  T operator()(const T &) const { std::abort(); }
-};
+////////////////////////////////////////////////////////////////////////////////
+// C++ helper functions
+////////////////////////////////////////////////////////////////////////////////
 
-template <typename T, typename F> struct call_if_integral {
-  typedef typename std::conditional<std::is_integral<T>::value, F,
-                                    error<T>>::type type;
-  T operator()() const { return type()(); }
-  T operator()(const T &x) const { type()(x); }
+namespace detail {
+// Abort when called
+template <typename T> struct error {
+  T operator()(const T &) const { std::abort(); }
+  T operator()(const T &, const T &) const { std::abort(); }
+  T operator()(const T &, const T &, const T &) const { std::abort(); }
+  T &operator()(T &) const { std::abort(); }
+  T &operator()(T &, const T &) const { std::abort(); }
+  T &operator()(T &, const T &, const T &) const { std::abort(); }
 };
+}
+
+// Call function object F if T is integral; otherwise, abort
+template <typename T, typename F> struct call_if_integral {
+  typedef typename T::value_type S;
+  typedef typename std::conditional<std::is_integral<S>::value, F,
+                                    detail::error<T>>::type type;
+  constexpr T operator()(const T &x) const { return type()(x); }
+  constexpr T operator()(const T &x, const T &y) const { return type()(x, y); }
+  constexpr T operator()(const T &x, const T &y, const T &z) const {
+    return type()(x, y, z);
+  }
+  T &operator()(T &x) const { return type()(x); }
+  T &operator()(T &x, const T &y) const { return type()(x, y); }
+  T &operator()(T &x, const T &y, const T &z) const { return type()(x, y, z); }
+};
+template <typename T, typename F>
+using call_if_integral_t = call_if_integral<T, F>;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Numerical functions
@@ -138,6 +159,9 @@ template <> struct largeint<unsigned long> { typedef unsigned long long type; };
 }
 
 template <typename T, int D> struct point {
+  typedef T value_type;
+  typedef int size_type;
+  constexpr size_type rank() const { return D; }
   array<T, D> elt;
   point() {
     for (int d = 0; d < D; ++d)
@@ -240,8 +264,6 @@ template <typename T, int D> struct point {
     return r;
   }
 
-  template <typename U = T, typename std::enable_if<
-                                std::is_integral<U>::value>::type * = nullptr>
   point operator~() const {
     point r;
     for (int d = 0; d < D; ++d)
@@ -276,29 +298,34 @@ template <typename T, int D> struct point {
       elt[d] /= p.elt[d];
     return *this;
   }
-  template <typename U = T, typename std::enable_if<
-                                std::is_integral<U>::value>::type * = nullptr>
+  // TODO
+  // template <typename U = T, typename std::enable_if<
+  //                               std::is_integral<U>::value>::type * =
+  //                               nullptr>
   point &operator%=(const point &p) {
     for (int d = 0; d < D; ++d)
       elt[d] %= p.elt[d];
     return *this;
   }
-  template <typename U = T, typename std::enable_if<
-                                std::is_integral<U>::value>::type * = nullptr>
+  // template <typename U = T, typename std::enable_if<
+  //                               std::is_integral<U>::value>::type * =
+  //                               nullptr>
   point &operator&=(const point &p) {
     for (int d = 0; d < D; ++d)
       elt[d] &= p.elt[d];
     return *this;
   }
-  template <typename U = T, typename std::enable_if<
-                                std::is_integral<U>::value>::type * = nullptr>
+  // template <typename U = T, typename std::enable_if<
+  //                               std::is_integral<U>::value>::type * =
+  //                               nullptr>
   point &operator|=(const point &p) {
     for (int d = 0; d < D; ++d)
       elt[d] |= p.elt[d];
     return *this;
   }
-  template <typename U = T, typename std::enable_if<
-                                std::is_integral<U>::value>::type * = nullptr>
+  // template <typename U = T, typename std::enable_if<
+  //                               std::is_integral<U>::value>::type * =
+  //                               nullptr>
   point &operator^=(const point &p) {
     for (int d = 0; d < D; ++d)
       elt[d] ^= p.elt[d];
@@ -511,6 +538,66 @@ template <typename T, int D>
 typename point<T, D>::prod_t prod(const point<T, D> &p) {
   return p.prod();
 }
+
+// Function objects
+template <typename T> struct bit_not;
+template <typename T, int D> struct bit_not<point<T, D>> {
+  constexpr point<T, D> operator()(const point<T, D> &p) const { return ~p; }
+};
+
+template <typename T> struct modulus_eq;
+template <typename T, int D> struct modulus_eq<point<T, D>> {
+  point<T, D> &operator()(point<T, D> &p, const point<T, D> &q) const {
+    return p %= q;
+  }
+};
+template <typename T> struct bit_and_eq;
+template <typename T, int D> struct bit_and_eq<point<T, D>> {
+  point<T, D> &operator()(point<T, D> &p, const point<T, D> &q) const {
+    return p &= q;
+  }
+};
+template <typename T> struct bit_or_eq;
+template <typename T, int D> struct bit_or_eq<point<T, D>> {
+  point<T, D> &operator()(point<T, D> &p, const point<T, D> &q) const {
+    return p |= q;
+  }
+};
+template <typename T> struct bit_xor_eq;
+template <typename T, int D> struct bit_xor_eq<point<T, D>> {
+  point<T, D> &operator()(point<T, D> &p, const point<T, D> &q) const {
+    return p ^= q;
+  }
+};
+
+template <typename T> struct modulus;
+template <typename T, int D> struct modulus<point<T, D>> {
+  constexpr point<T, D> operator()(const point<T, D> &p,
+                                   const point<T, D> &q) const {
+    return p % q;
+  }
+};
+template <typename T> struct bit_and;
+template <typename T, int D> struct bit_and<point<T, D>> {
+  constexpr point<T, D> operator()(const point<T, D> &p,
+                                   const point<T, D> &q) const {
+    return p & q;
+  }
+};
+template <typename T> struct bit_or;
+template <typename T, int D> struct bit_or<point<T, D>> {
+  constexpr point<T, D> operator()(const point<T, D> &p,
+                                   const point<T, D> &q) const {
+    return p | q;
+  }
+};
+template <typename T> struct bit_xor;
+template <typename T, int D> struct bit_xor<point<T, D>> {
+  constexpr point<T, D> operator()(const point<T, D> &p,
+                                   const point<T, D> &q) const {
+    return p ^ q;
+  }
+};
 }
 
 namespace std {
@@ -1879,7 +1966,11 @@ template <typename T, int D> struct wpoint : vpoint<T> {
   // Unary operators
   unique_ptr<vpoint<T>> operator+() const { return make_unique1<wpoint>(+val); }
   unique_ptr<vpoint<T>> operator-() const { return make_unique1<wpoint>(-val); }
-#if 1
+#if 0
+  // broken
+  unique_ptr<vpoint<T>> operator~() const { return make_unique1<wpoint>(~val); }
+#elif 0
+  // working
 private:
   template <typename U = T, typename std::enable_if<
                                 std::is_integral<U>::value>::type * = nullptr>
@@ -1895,16 +1986,24 @@ private:
 public:
   unique_ptr<vpoint<T>> operator~() const { return bit_not(); }
 #elif 0
-  unique_ptr<vpoint<T>> operator~() const { return make_unique1<wpoint>(~val); }
-#elif 0
+  // working
   unique_ptr<vpoint<T>> operator~() const {
     return make_unique1<wpoint>(
-        typename std::conditional<std::is_integral<T>::value, std::bit_not<T>,
-                                  error<T>>::type(val));
+        typename std::conditional<std::is_integral<T>::value,
+                                  bit_not<point<T, D>>,
+                                  error<point<T, D>>>::type()(val));
+  }
+#elif 0
+  // working
+  unique_ptr<vpoint<T>> operator~() const {
+    return make_unique1<wpoint>(
+        typename call_if_integral<point<T, D>, bit_not<point<T, D>>>::type()(
+            val));
   }
 #else
   unique_ptr<vpoint<T>> operator~() const {
-    return make_unique1<wpoint>(call_if_integral<T, std::bit_not<T>>()(val));
+    return make_unique1<wpoint>(
+        call_if_integral_t<point<T, D>, bit_not<point<T, D>>>()(val));
   }
 #endif
   unique_ptr<vpoint<bool>> operator!() const {
@@ -1928,7 +2027,7 @@ public:
     val /= dynamic_cast<const wpoint &>(p).val;
     return *this;
   }
-#if 1
+#if 0
 private:
   template <typename U = T, typename std::enable_if<
                                 std::is_integral<U>::value>::type * = nullptr>
@@ -1980,7 +2079,7 @@ public:
   vpoint<T> &operator&=(const vpoint<T> &p) { return land_eq(p); }
   vpoint<T> &operator|=(const vpoint<T> &p) { return lor_eq(p); }
   vpoint<T> &operator^=(const vpoint<T> &p) { return xlor_eq(p); }
-#else
+#elif 0
   vpoint<T> &operator%=(const vpoint<T> &p) {
     val %= dynamic_cast<const wpoint &>(p).val;
     return *this;
@@ -1995,6 +2094,27 @@ public:
   }
   vpoint<T> &operator^=(const vpoint<T> &p) {
     val ^= dynamic_cast<const wpoint &>(p).val;
+    return *this;
+  }
+#else
+  vpoint<T> &operator%=(const vpoint<T> &p) {
+    call_if_integral_t<point<T, D>, modulus_eq<point<T, D>>>()(
+        val, dynamic_cast<const wpoint &>(p).val);
+    return *this;
+  }
+  vpoint<T> &operator&=(const vpoint<T> &p) {
+    call_if_integral_t<point<T, D>, bit_and_eq<point<T, D>>>()(
+        val, dynamic_cast<const wpoint &>(p).val);
+    return *this;
+  }
+  vpoint<T> &operator|=(const vpoint<T> &p) {
+    call_if_integral_t<point<T, D>, bit_or_eq<point<T, D>>>()(
+        val, dynamic_cast<const wpoint &>(p).val);
+    return *this;
+  }
+  vpoint<T> &operator^=(const vpoint<T> &p) {
+    call_if_integral_t<point<T, D>, bit_xor_eq<point<T, D>>>()(
+        val, dynamic_cast<const wpoint &>(p).val);
     return *this;
   }
 #endif
@@ -2012,7 +2132,7 @@ public:
   unique_ptr<vpoint<T>> operator/(const vpoint<T> &p) const {
     return make_unique1<wpoint>(val / dynamic_cast<const wpoint &>(p).val);
   }
-#if 1
+#if 0
 private:
   template <typename U = T, typename std::enable_if<
                                 std::is_integral<U>::value>::type * = nullptr>
@@ -2062,7 +2182,7 @@ public:
   unique_ptr<vpoint<T>> operator&(const vpoint<T> &p) const { return land(p); }
   unique_ptr<vpoint<T>> operator|(const vpoint<T> &p) const { return lor(p); }
   unique_ptr<vpoint<T>> operator^(const vpoint<T> &p) const { return lxor(p); }
-#else
+#elif 0
   unique_ptr<vpoint<T>> operator%(const vpoint<T> &p) const {
     return make_unique1<wpoint>(val % dynamic_cast<const wpoint &>(p).val);
   }
@@ -2074,6 +2194,27 @@ public:
   }
   unique_ptr<vpoint<T>> operator^(const vpoint<T> &p) const {
     return make_unique1<wpoint>(val ^ dynamic_cast<const wpoint &>(p).val);
+  }
+#else
+  unique_ptr<vpoint<T>> operator%(const vpoint<T> &p) const {
+    return make_unique1<wpoint>(
+        call_if_integral_t<point<T, D>, modulus<point<T, D>>>()(
+            val, dynamic_cast<const wpoint &>(p).val));
+  }
+  unique_ptr<vpoint<T>> operator&(const vpoint<T> &p) const {
+    return make_unique1<wpoint>(
+        call_if_integral_t<point<T, D>, bit_and<point<T, D>>>()(
+            val, dynamic_cast<const wpoint &>(p).val));
+  }
+  unique_ptr<vpoint<T>> operator|(const vpoint<T> &p) const {
+    return make_unique1<wpoint>(
+        call_if_integral_t<point<T, D>, bit_or<point<T, D>>>()(
+            val, dynamic_cast<const wpoint &>(p).val));
+  }
+  unique_ptr<vpoint<T>> operator^(const vpoint<T> &p) const {
+    return make_unique1<wpoint>(
+        call_if_integral_t<point<T, D>, bit_xor<point<T, D>>>()(
+            val, dynamic_cast<const wpoint &>(p).val));
   }
 #endif
   unique_ptr<vpoint<bool>> operator&&(const vpoint<T> &p) const {
