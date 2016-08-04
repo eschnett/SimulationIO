@@ -68,8 +68,6 @@ template <typename T, typename F> struct call_if_integral {
   T &operator()(T &x, const T &y) const { return type()(x, y); }
   T &operator()(T &x, const T &y, const T &z) const { return type()(x, y, z); }
 };
-template <typename T, typename F>
-using call_if_integral_t = call_if_integral<T, F>;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Numerical functions
@@ -1993,7 +1991,7 @@ public:
                                   bit_not<point<T, D>>,
                                   error<point<T, D>>>::type()(val));
   }
-#elif 0
+#elif 1
   // working
   unique_ptr<vpoint<T>> operator~() const {
     return make_unique1<wpoint>(
@@ -2098,22 +2096,22 @@ public:
   }
 #else
   vpoint<T> &operator%=(const vpoint<T> &p) {
-    call_if_integral_t<point<T, D>, modulus_eq<point<T, D>>>()(
+    typename call_if_integral<point<T, D>, modulus_eq<point<T, D>>>::type()(
         val, dynamic_cast<const wpoint &>(p).val);
     return *this;
   }
   vpoint<T> &operator&=(const vpoint<T> &p) {
-    call_if_integral_t<point<T, D>, bit_and_eq<point<T, D>>>()(
+    typename call_if_integral<point<T, D>, bit_and_eq<point<T, D>>>::type()(
         val, dynamic_cast<const wpoint &>(p).val);
     return *this;
   }
   vpoint<T> &operator|=(const vpoint<T> &p) {
-    call_if_integral_t<point<T, D>, bit_or_eq<point<T, D>>>()(
+    typename call_if_integral<point<T, D>, bit_or_eq<point<T, D>>>::type()(
         val, dynamic_cast<const wpoint &>(p).val);
     return *this;
   }
   vpoint<T> &operator^=(const vpoint<T> &p) {
-    call_if_integral_t<point<T, D>, bit_xor_eq<point<T, D>>>()(
+    typename call_if_integral<point<T, D>, bit_xor_eq<point<T, D>>>::type()(
         val, dynamic_cast<const wpoint &>(p).val);
     return *this;
   }
@@ -2198,22 +2196,22 @@ public:
 #else
   unique_ptr<vpoint<T>> operator%(const vpoint<T> &p) const {
     return make_unique1<wpoint>(
-        call_if_integral_t<point<T, D>, modulus<point<T, D>>>()(
+        typename call_if_integral<point<T, D>, modulus<point<T, D>>>::type()(
             val, dynamic_cast<const wpoint &>(p).val));
   }
   unique_ptr<vpoint<T>> operator&(const vpoint<T> &p) const {
     return make_unique1<wpoint>(
-        call_if_integral_t<point<T, D>, bit_and<point<T, D>>>()(
+        typename call_if_integral<point<T, D>, bit_and<point<T, D>>>::type()(
             val, dynamic_cast<const wpoint &>(p).val));
   }
   unique_ptr<vpoint<T>> operator|(const vpoint<T> &p) const {
     return make_unique1<wpoint>(
-        call_if_integral_t<point<T, D>, bit_or<point<T, D>>>()(
+        typename call_if_integral<point<T, D>, bit_or<point<T, D>>>::type()(
             val, dynamic_cast<const wpoint &>(p).val));
   }
   unique_ptr<vpoint<T>> operator^(const vpoint<T> &p) const {
     return make_unique1<wpoint>(
-        call_if_integral_t<point<T, D>, bit_xor<point<T, D>>>()(
+        typename call_if_integral<point<T, D>, bit_xor<point<T, D>>>::type()(
             val, dynamic_cast<const wpoint &>(p).val));
   }
 #endif
