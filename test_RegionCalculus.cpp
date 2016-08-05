@@ -491,6 +491,22 @@ TEST(RegionCalculus, region2) {
         EXPECT_TRUE(rsetunion == ri);
         EXPECT_TRUE(rsymmetric_difference.empty());
       }
+      EXPECT_TRUE(rintersection == (ri & rj));
+      auto rintersection1 = ri;
+      rintersection1 &= rj;
+      EXPECT_TRUE(rintersection == rintersection1);
+      EXPECT_TRUE(rdifference == (ri - rj));
+      auto rdifference1 = ri;
+      rdifference1 -= rj;
+      EXPECT_TRUE(rdifference == rdifference1);
+      EXPECT_TRUE(rsetunion == (ri | rj));
+      auto rsetunion1 = ri;
+      rsetunion1 |= rj;
+      EXPECT_TRUE(rsetunion == rsetunion1);
+      EXPECT_TRUE(rsymmetric_difference == (ri ^ rj));
+      auto rsymmetric_difference1 = ri;
+      rsymmetric_difference1 ^= rj;
+      EXPECT_TRUE(rsymmetric_difference == rsymmetric_difference1);
     }
   }
   ostringstream buf;
@@ -685,6 +701,22 @@ TEST(RegionCalculus, dregion) {
         EXPECT_TRUE(rsetunion == ri);
         EXPECT_TRUE(rsymmetric_difference.empty());
       }
+      EXPECT_TRUE(rintersection == (ri & rj));
+      auto rintersection1 = ri;
+      rintersection1 &= rj;
+      EXPECT_TRUE(rintersection == rintersection1);
+      EXPECT_TRUE(rdifference == (ri - rj));
+      auto rdifference1 = ri;
+      rdifference1 -= rj;
+      EXPECT_TRUE(rdifference == rdifference1);
+      EXPECT_TRUE(rsetunion == (ri | rj));
+      auto rsetunion1 = ri;
+      rsetunion1 |= rj;
+      EXPECT_TRUE(rsetunion == rsetunion1);
+      EXPECT_TRUE(rsymmetric_difference == (ri ^ rj));
+      auto rsymmetric_difference1 = ri;
+      rsymmetric_difference1 ^= rj;
+      EXPECT_TRUE(rsymmetric_difference == rsymmetric_difference1);
     }
   }
   ostringstream buf;

@@ -2896,7 +2896,7 @@ template <typename T> struct dregion {
     if (r.val)
       val = r.val->copy();
   }
-  // dregion(dregion &&r) = default;
+  dregion(dregion &&r) = default;
   dregion &operator=(const dregion &r) {
     if (r.val)
       val = r.val->copy();
@@ -2904,7 +2904,7 @@ template <typename T> struct dregion {
       val = nullptr;
     return *this;
   }
-  // dregion &operator=(dregion &&r) = default;
+  dregion &operator=(dregion &&r) = default;
 
   template <int D>
   dregion(const region<T, D> &r) : val(make_unique1<wregion<T, D>>(r)) {}
@@ -2913,7 +2913,7 @@ template <typename T> struct dregion {
     if (val)
       this->val = val->copy();
   }
-  // dregion(unique_ptr<vregion<T>> &&val) : val(std::move(val)) {}
+  dregion(unique_ptr<vregion<T>> &&val) : val(std::move(val)) {}
 
   explicit dregion(int d) : val(vregion<T>::make(d)) {}
   dregion(const dbox<T> &b) : val(vregion<T>::make(*b.val)) {}
@@ -2921,14 +2921,14 @@ template <typename T> struct dregion {
     vector<unique_ptr<vbox<T>>> rs;
     for (const auto &b : bs)
       rs.push_back(b.val->copy());
-    val = vregion<T>::make(rs);
+    val = vregion<T>::make(std::move(rs));
   }
-  // dregion(vector<dbox<T>> &&bs) {
-  //   vector<unique_ptr<vbox<T>>> rs;
-  //   for (auto &b : bs)
-  //     rs.push_back(std::move(b.val));
-  //   val = vregion<T>::make(rs);
-  // }
+  dregion(vector<dbox<T>> &&bs) {
+    vector<unique_ptr<vbox<T>>> rs;
+    for (auto &b : bs)
+      rs.push_back(std::move(b.val));
+    val = vregion<T>::make(std::move(rs));
+  }
   operator vector<dbox<T>>() const {
     vector<unique_ptr<vbox<T>>> bs(*val);
     vector<dbox<T>> rs;
@@ -2979,6 +2979,12 @@ template <typename T> struct dregion {
   dregion operator|(const dregion &r) const { return dregion(*val | *r.val); }
   dregion operator^(const dbox<T> &b) const { return dregion(*val ^ *b.val); }
   dregion operator^(const dregion &r) const { return dregion(*val ^ *r.val); }
+
+  dregion &operator^=(const dregion &other) { return *this = *this ^ other; }
+  dregion &operator&=(const dregion &other) { return *this = *this & other; }
+  dregion &operator|=(const dregion &other) { return *this = *this | other; }
+  dregion &operator-=(const dregion &other) { return *this = *this - other; }
+
   dregion intersection(const dbox<T> &b) const { return *this & b; }
   dregion intersection(const dregion &r) const { return *this & r; }
   dregion difference(const dbox<T> &b) const { return *this - b; }
