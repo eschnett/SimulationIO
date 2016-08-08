@@ -340,7 +340,7 @@ void Project::write(const H5::CommonFG &loc,
 shared_ptr<Parameter> Project::createParameter(const string &name) {
   auto parameter = Parameter::create(name, shared_from_this());
   checked_emplace(m_parameters, parameter->name(), parameter, "Project",
-                  "parametesr");
+                  "parameters");
   assert(parameter->invariant());
   return parameter;
 }
