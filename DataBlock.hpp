@@ -150,6 +150,8 @@ public:
   }
 };
 
+////////////////////////////////////////////////////////////////////////////////
+
 // An abstract block of data
 class DataBlock {
   typedef function<shared_ptr<DataBlock>(const H5::Group &group,
@@ -172,6 +174,12 @@ public:
 
 protected:
   DataBlock(const box_t &box) : m_box(box) {}
+
+  void construct_spaces(const box_t &memshape, // allocated memory
+                        const box_t &membox,   // memory to be transferred
+                        const H5::DataSpace &dataspace, // file space
+                        H5::DataSpace &memspace,
+                        H5::DataSpace &filespace) const;
 
 public:
   virtual ~DataBlock() {}
@@ -260,16 +268,29 @@ public:
 
 private:
   void create_dataset() const;
-  void construct_spaces(const box_t &membox, H5::DataSpace &memspace,
-                        H5::DataSpace &filespace) const;
 
 public:
+  void writeData(const void *data, const H5::DataType &type,
+                 const box_t &datashape, const box_t &databox) const;
+  template <typename T>
+  void writeData(const T *data, const box_t &datashape,
+                 const box_t &databox) const {
+    writeData(data, H5::getType(T{}), datashape, databox);
+  }
+  template <typename T>
+  void writeData(const T *data, const box_t &databox) const {
+    writeData(data, databox, databox);
+  }
+
+  template <typename T>
+  void writeData(const vector<T> &data, const box_t &datashape,
+                 const box_t &databox) const {
+    assert(ptrdiff_t(data.size()) == datashape.size());
+    writeData(data.data(), datashape, databox);
+  }
   template <typename T>
   void writeData(const vector<T> &data, const box_t &databox) const {
-    create_dataset();
-    H5::DataSpace memspace, filespace;
-    construct_spaces(databox, memspace, filespace);
-    m_dataset.write(data.data(), H5::getType(T{}), memspace, filespace);
+    writeData(data.data(), databox, databox);
   }
   template <typename T> void writeData(const vector<T> &data) const {
     writeData(data, box());
@@ -318,28 +339,15 @@ public:
   virtual ostream &output(ostream &os) const;
   virtual void write(const H5::Group &group, const string &entry) const;
 
+  void readData(void *data, const H5::DataType &type, const box_t &datashape,
+                const box_t &databox) const;
+  template <typename T>
+  void readData(T *data, const box_t &datashape, const box_t &databox) const {
+    readData(data, H5::getType(T{}), datashape, databox);
+  }
   template <typename T> vector<T> readData(const box_t &databox) const {
-    assert(databox <= box());
-    auto dataset = group().openDataSet(name());
-    auto dataspace = dataset.getSpace();
-    int ndims = dataspace.getSimpleExtentNdims();
-    assert(ndims == rank());
-    vector<hsize_t> dims(rank());
-    dataspace.getSimpleExtentDims(dims.data());
-    reverse(dims);
-    assert(all(point_t(dims) == shape()));
-    if (rank() == 0) {
-      if (databox.empty())
-        return vector<T>();
-    } else {
-      dataspace.selectHyperslab(
-          H5S_SELECT_SET, reversed(vector<hsize_t>(databox.shape())).data(),
-          reversed(vector<hsize_t>(databox.lower() - box().lower())).data());
-    }
-    auto memspace = H5::DataSpace(
-        rank(), reversed(vector<hsize_t>(databox.shape())).data());
     vector<T> data(databox.size());
-    dataset.read(data.data(), H5::getType(T{}), memspace, dataspace);
+    readData(data.data(), databox, databox);
     return data;
   }
   template <typename T> vector<T> readData() const {

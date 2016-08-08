@@ -68,6 +68,34 @@ shared_ptr<DataBlock> DataBlock::read(const H5::Group &group,
   return nullptr;
 }
 
+void DataBlock::construct_spaces(const box_t &memshape, const box_t &membox,
+                                 const H5::DataSpace &dataspace,
+                                 H5::DataSpace &memspace,
+                                 H5::DataSpace &filespace) const {
+  if (rank() == 0)
+    assert(!membox.empty()); // HDF5 cannot handle an empty scalar box
+  assert(membox <= memshape);
+  assert(membox <= box());
+  // TODO: This might not work for scalar spaces
+  int ndims = dataspace.getSimpleExtentNdims();
+  assert(ndims == rank());
+  vector<hsize_t> dims(rank());
+  dataspace.getSimpleExtentDims(dims.data());
+  reverse(dims);
+  assert(all(point_t(dims) == shape()));
+  memspace =
+      H5::DataSpace(rank(), reversed(vector<hsize_t>(memshape.shape())).data());
+  if (rank() > 0)
+    memspace.selectHyperslab(
+        H5S_SELECT_SET, reversed(vector<hsize_t>(membox.shape())).data(),
+        reversed(vector<hsize_t>(membox.lower() - box().lower())).data());
+  filespace.copy(dataspace);
+  if (rank() > 0)
+    filespace.selectHyperslab(
+        H5S_SELECT_SET, reversed(vector<hsize_t>(membox.shape())).data(),
+        reversed(vector<hsize_t>(membox.lower() - box().lower())).data());
+}
+
 // DataRange
 
 shared_ptr<DataRange> DataRange::read(const H5::Group &group,
@@ -98,7 +126,7 @@ void DataRange::write(const H5::Group &group, const string &entry) const {
 
 shared_ptr<DataSet> DataSet::read(const H5::Group &group, const string &entry,
                                   const box_t &box) {
-// Reading a dataset always produces either CopyObj
+// Reading a dataset always produces a CopyObj
 #if 0
   auto lapl = H5::take_hid(H5Pcreate(H5P_LINK_ACCESS));
   assert(lapl.valid());
@@ -159,12 +187,13 @@ void DataSet::create_dataset() const {
   vector<hsize_t> size(dim);
   dataspace().getSimpleExtentDims(size.data());
   if (dim > 0) {
-// Temporarily disable this for benchmarks; to do: add run-time configuration
-// mechanism for this
-#if 0
     // Zero-dimensional (scalar) datasets cannot be chunked
     auto chunksize = choose_chunksize(size, datatype().getSize());
     proplist.setChunk(dim, chunksize.data());
+// Temporarily disable this for benchmarks; to do: add a run-time configuration
+// mechanism for this
+// TODO: re-enable compression
+#if 0
     proplist.setFletcher32();
     proplist.setShuffle(); // Shuffling improves compression
     const int level = 1;   // Level 1 is fast, but still offers good compression
@@ -177,27 +206,12 @@ void DataSet::create_dataset() const {
   m_have_dataset = true;
 }
 
-void DataSet::construct_spaces(const box_t &membox, H5::DataSpace &memspace,
-                               H5::DataSpace &filespace) const {
-  assert(membox <= box());
-  create_dataset();
-  filespace = m_dataspace;
-  // int ndims = filespace.getSimpleExtentNdims();
-  // assert(ndims == rank());
-  // vector<hsize_t> dims(rank());
-  // filespace.getSimpleExtentDims(dims.data());
-  // reverse(dims);
-  // assert(all(point_t(dims) == shape()));
-  if (rank() == 0) {
-    // Cannot yet handle empty scalar box
-    assert(!membox.empty());
-  } else {
-    filespace.selectHyperslab(
-        H5S_SELECT_SET, reversed(vector<hsize_t>(membox.shape())).data(),
-        reversed(vector<hsize_t>(membox.lower() - box().lower())).data());
-  }
-  memspace =
-      H5::DataSpace(rank(), reversed(vector<hsize_t>(membox.shape())).data());
+void DataSet::writeData(const void *data, const H5::DataType &type,
+                        const box_t &datashape, const box_t &databox) const {
+  // create_dataset();
+  H5::DataSpace memspace, filespace;
+  construct_spaces(datashape, databox, m_dataspace, memspace, filespace);
+  m_dataset.write(data, type, memspace, filespace);
 }
 
 // CopyObj
@@ -247,6 +261,25 @@ void CopyObj::write(const H5::Group &group, const string &entry) const {
   herr = H5Ocopy(this->group().getId(), name().c_str(), group.getId(),
                  entry.c_str(), ocpypl, lcpl);
   assert(!herr);
+}
+
+void CopyObj::readData(void *data, const H5::DataType &type,
+                       const box_t &datashape, const box_t &databox) const {
+  if (rank() == 0)
+    assert(!databox.empty()); // HDF5 cannot handle an empty scalar box
+  assert(databox <= datashape);
+  assert(databox <= box());
+  auto dataset = group().openDataSet(name());
+  auto dataspace = dataset.getSpace();
+  int ndims = dataspace.getSimpleExtentNdims();
+  assert(ndims == rank());
+  vector<hsize_t> dims(rank());
+  dataspace.getSimpleExtentDims(dims.data());
+  reverse(dims);
+  assert(all(point_t(dims) == shape()));
+  H5::DataSpace memspace, filespace;
+  construct_spaces(datashape, databox, dataspace, memspace, filespace);
+  dataset.read(data, type, memspace, filespace);
 }
 
 // ExtLink
