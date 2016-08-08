@@ -833,24 +833,6 @@ TEST(DiscreteFieldBlockComponent, create) {
   EXPECT_FALSE(bool(dfbd2->datablock()));
   EXPECT_FALSE(bool(dfbd3->datablock()));
   EXPECT_FALSE(bool(dfbd4->datablock()));
-  dfbd1->createExtLink("discretizationfieldblockcomponent.s5",
-                       project->name() + "/tensortypes/Scalar3D");
-  dfbd1->unsetDataBlock();
-  dfbd2->createExtLink("discretizationfieldblockcomponent.s5",
-                       project->name() + "/tensortypes/Scalar3D");
-  // TODO: get rank and shape from manifold and discretization block
-  const int rank = 3;
-  const hsize_t dims[rank] = {11, 10, 9};
-  dfbd3->createDataSet<double>();
-  double origin = -1.0;
-  vector<double> delta(rank);
-  for (int d = 0; d < rank; ++d)
-    delta.at(d) = 2.0 / dims[rank - 1 - d];
-  dfbd4->createDataRange(origin, delta);
-  EXPECT_FALSE(bool(dfbd1->datablock()));
-  EXPECT_TRUE(bool(dfbd2->extlink()));
-  EXPECT_TRUE(bool(dfbd3->dataset()));
-  EXPECT_TRUE(bool(dfbd4->datarange()));
 
   auto f0 = project->fields().at("f0");
   auto df0 = f0->discretefields().at("df0");
@@ -863,16 +845,6 @@ TEST(DiscreteFieldBlockComponent, create) {
   EXPECT_EQ(dfbd0, dfb0->discretefieldblockcomponents().at("dfbd0"));
   EXPECT_EQ(dfbd0, dfb0->storage_indices().at(b0->storage_index()));
   EXPECT_FALSE(bool(dfbd0->datablock()));
-  // TODO: get rank and shape from manifold and discretization block
-  const int rank0 = 0;
-  double origin0 = -1.0;
-  vector<double> delta0(rank0);
-  dfbd0->createDataRange(origin0, delta0);
-  EXPECT_TRUE(bool(dfbd0->datarange()));
-  dfbd0->unsetDataBlock();
-  EXPECT_FALSE(bool(dfbd0->datarange()));
-  dfbd0->createDataSet<double>();
-  EXPECT_TRUE(bool(dfbd0->dataset()));
 }
 
 TEST(DiscreteFieldBlockComponent, HDF5) {
@@ -897,13 +869,121 @@ TEST(DiscreteFieldBlockComponent, HDF5) {
               "\"dfb1\" TensorComponent \"00\"\n"
               "  DiscreteFieldBlockComponent \"dfbd2\": DiscreteFieldBlock "
               "\"dfb1\" TensorComponent \"01\"\n"
+              "  DiscreteFieldBlockComponent \"dfbd3\": DiscreteFieldBlock "
+              "\"dfb1\" TensorComponent \"02\"\n"
+              "  DiscreteFieldBlockComponent \"dfbd4\": DiscreteFieldBlock "
+              "\"dfb1\" TensorComponent \"11\"\n",
+              buf.str());
+    ostringstream buf0;
+    buf0 << *p1->fields()
+                 .at("f0")
+                 ->discretefields()
+                 .at("df0")
+                 ->discretefieldblocks()
+                 .at("dfb0");
+    EXPECT_EQ("DiscreteFieldBlock \"dfb0\": DiscreteField \"df0\" "
+              "DiscretizationBlock \"db0\"\n"
+              "  DiscreteFieldBlockComponent \"dfbd0\": DiscreteFieldBlock "
+              "\"dfb0\" TensorComponent \"scalar\"\n",
+              buf0.str());
+  }
+  remove(filename);
+}
+
+TEST(DataBlock, create) {
+  auto f1 = project->fields().at("f1");
+  auto df1 = f1->discretefields().at("df1");
+  auto dfb1 = df1->discretefieldblocks().at("dfb1");
+  auto tt1 = f1->tensortype();
+  auto bxx1 = tt1->tensorcomponents().at("00");
+  auto bxy1 = tt1->tensorcomponents().at("01");
+  auto bxz1 = tt1->tensorcomponents().at("02");
+  auto byy1 = tt1->tensorcomponents().at("11");
+  auto byz1 = tt1->tensorcomponents().at("12");
+  auto dfbd1 = dfb1->discretefieldblockcomponents().at("dfbd1");
+  auto dfbd2 = dfb1->discretefieldblockcomponents().at("dfbd2");
+  auto dfbd3 = dfb1->discretefieldblockcomponents().at("dfbd3");
+  auto dfbd4 = dfb1->discretefieldblockcomponents().at("dfbd4");
+  EXPECT_FALSE(bool(dfbd1->datablock()));
+  EXPECT_FALSE(bool(dfbd2->datablock()));
+  EXPECT_FALSE(bool(dfbd3->datablock()));
+  EXPECT_FALSE(bool(dfbd4->datablock()));
+  dfbd1->createExtLink("discretizationfieldblockcomponent.s5",
+                       project->name() + "/tensortypes/Scalar3D");
+  dfbd1->unsetDataBlock();
+  dfbd2->createExtLink("discretizationfieldblockcomponent.s5",
+                       project->name() + "/tensortypes/Scalar3D");
+  dfbd3->createDataSet<double>();
+  int rank =
+      dfb1->discretizationblock()->discretization()->manifold()->dimension();
+  auto dims = dfb1->discretizationblock()->box().shape();
+  double origin{-1.0};
+  auto delta = dpoint<double>(rank, 2.0) / dims;
+  dfbd4->createDataRange(origin, delta);
+  EXPECT_FALSE(bool(dfbd1->datablock()));
+  EXPECT_TRUE(bool(dfbd2->extlink()));
+  EXPECT_TRUE(bool(dfbd3->dataset()));
+  EXPECT_TRUE(bool(dfbd4->datarange()));
+
+  auto f0 = project->fields().at("f0");
+  auto df0 = f0->discretefields().at("df0");
+  auto dfb0 = df0->discretefieldblocks().at("dfb0");
+  auto tt0 = f0->tensortype();
+  auto b0 = tt0->tensorcomponents().at("scalar");
+  auto dfbd0 = dfb0->discretefieldblockcomponents().at("dfbd0");
+  EXPECT_FALSE(bool(dfbd0->datablock()));
+  int rank0 =
+      dfb0->discretizationblock()->discretization()->manifold()->dimension();
+  double origin0{-1.0};
+  dpoint<double> delta0(rank0);
+  dfbd0->createDataRange(origin0, delta0);
+  EXPECT_TRUE(bool(dfbd0->datarange()));
+  dfbd0->unsetDataBlock();
+  EXPECT_FALSE(bool(dfbd0->datarange()));
+  dfbd0->createDataSet<int>();
+  EXPECT_TRUE(bool(dfbd0->dataset()));
+}
+
+TEST(DataBlock, HDF5) {
+  auto filename = "datablock.s5";
+  {
+    auto file = H5::H5File(filename, H5F_ACC_TRUNC);
+    project->write(file);
+    auto f1 = project->fields().at("f1");
+    auto df1 = f1->discretefields().at("df1");
+    auto dfb1 = df1->discretefieldblocks().at("dfb1");
+    auto dfbd3 = dfb1->discretefieldblockcomponents().at("dfbd3");
+    auto ds = dfbd3->dataset();
+    auto shape = box_t(ds->box().lower(), point_t(vector<int>{10, 11, 12}));
+    auto box = ds->box();
+    vector<double> data(shape.size());
+    for (int n = 0; n < shape.size(); ++n)
+      data[n] = 42 + n;
+    ds->writeData(data, shape, box);
+  }
+  {
+    auto file = H5::H5File(filename, H5F_ACC_RDONLY);
+    auto p1 = readProject(file);
+    ostringstream buf;
+    buf << *p1->fields()
+                .at("f1")
+                ->discretefields()
+                .at("df1")
+                ->discretefieldblocks()
+                .at("dfb1");
+    EXPECT_EQ("DiscreteFieldBlock \"dfb1\": DiscreteField \"df1\" "
+              "DiscretizationBlock \"db1\"\n"
+              "  DiscreteFieldBlockComponent \"dfbd1\": DiscreteFieldBlock "
+              "\"dfb1\" TensorComponent \"00\"\n"
+              "  DiscreteFieldBlockComponent \"dfbd2\": DiscreteFieldBlock "
+              "\"dfb1\" TensorComponent \"01\"\n"
               "    CopyObj: ???:\"data\"\n"
               "  DiscreteFieldBlockComponent \"dfbd3\": DiscreteFieldBlock "
               "\"dfb1\" TensorComponent \"02\"\n"
               "    CopyObj: ???:\"data\"\n"
               "  DiscreteFieldBlockComponent \"dfbd4\": DiscreteFieldBlock "
               "\"dfb1\" TensorComponent \"11\"\n"
-              "    DataRange: origin=-1 delta=[0.222222,0.2,0.181818]\n",
+              "    DataRange: origin=-1 delta=[0.333333,0.285714,0.25]\n",
               buf.str());
     ostringstream buf0;
     buf0 << *p1->fields()
@@ -918,12 +998,48 @@ TEST(DiscreteFieldBlockComponent, HDF5) {
               "\"dfb0\" TensorComponent \"scalar\"\n"
               "    CopyObj: ???:\"data\"\n",
               buf0.str());
+    auto ds = p1->fields()
+                  .at("f1")
+                  ->discretefields()
+                  .at("df1")
+                  ->discretefieldblocks()
+                  .at("dfb1")
+                  ->discretefieldblockcomponents()
+                  .at("dfbd3")
+                  ->copyobj();
+    EXPECT_TRUE(bool(ds));
+    auto data = ds->readData<double>();
+    EXPECT_EQ(6 * 7 * 8, data.size());
+    ostringstream bufds;
+    bufds << data;
+    EXPECT_EQ("[42,43,44,45,46,47,49,50,51,52,53,54,56,57,58,59,60,61,63,64,65,"
+              "66,67,68,70,71,72,73,74,75,77,78,79,80,81,82,84,85,86,87,88,89,"
+              "98,99,100,101,102,103,105,106,107,108,109,110,112,113,114,115,"
+              "116,117,119,120,121,122,123,124,126,127,128,129,130,131,133,134,"
+              "135,136,137,138,140,141,142,143,144,145,154,155,156,157,158,159,"
+              "161,162,163,164,165,166,168,169,170,171,172,173,175,176,177,178,"
+              "179,180,182,183,184,185,186,187,189,190,191,192,193,194,196,197,"
+              "198,199,200,201,210,211,212,213,214,215,217,218,219,220,221,222,"
+              "224,225,226,227,228,229,231,232,233,234,235,236,238,239,240,241,"
+              "242,243,245,246,247,248,249,250,252,253,254,255,256,257,266,267,"
+              "268,269,270,271,273,274,275,276,277,278,280,281,282,283,284,285,"
+              "287,288,289,290,291,292,294,295,296,297,298,299,301,302,303,304,"
+              "305,306,308,309,310,311,312,313,322,323,324,325,326,327,329,330,"
+              "331,332,333,334,336,337,338,339,340,341,343,344,345,346,347,348,"
+              "350,351,352,353,354,355,357,358,359,360,361,362,364,365,366,367,"
+              "368,369,378,379,380,381,382,383,385,386,387,388,389,390,392,393,"
+              "394,395,396,397,399,400,401,402,403,404,406,407,408,409,410,411,"
+              "413,414,415,416,417,418,420,421,422,423,424,425,434,435,436,437,"
+              "438,439,441,442,443,444,445,446,448,449,450,451,452,453,455,456,"
+              "457,458,459,460,462,463,464,465,466,467,469,470,471,472,473,474,"
+              "476,477,478,479,480,481]",
+              bufds.str());
   }
   remove(filename);
 }
 
-TEST(ProjectMerge, merge) {
-  // Clean up project to make merging possible
+TEST(DataBlock, cleanup) {
+  // Remove data blocks again
   auto f0 = project->fields().at("f0");
   auto df0 = f0->discretefields().at("df0");
   auto dfb0 = df0->discretefieldblocks().at("dfb0");
@@ -940,7 +1056,9 @@ TEST(ProjectMerge, merge) {
   dfbd3->unsetDataBlock();
   auto dfbd4 = dfb1->discretefieldblockcomponents().at("dfbd4");
   dfbd4->unsetDataBlock();
+}
 
+TEST(ProjectMerge, merge) {
   auto filename = "project.s5";
   string orig = [&] {
     ostringstream buf;
