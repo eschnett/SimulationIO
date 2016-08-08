@@ -660,8 +660,8 @@ template <typename T, int D> struct box {
 
   // Predicates
   bool empty() const { return any(hi <= lo); }
-  point<T, D> lower() const { return empty() ? point<T, D>(0) : lo; }
-  point<T, D> upper() const { return empty() ? point<T, D>(0) : hi; }
+  point<T, D> lower() const { return lo; /* empty() ? point<T, D>(0) : lo; */ }
+  point<T, D> upper() const { return hi; /* empty() ? point<T, D>(0) : hi; */ }
   point<T, D> shape() const { return max(hi - lo, point<T, D>(0)); }
   typedef typename point<T, D>::prod_t prod_t;
   prod_t size() const { return prod(shape()); }
