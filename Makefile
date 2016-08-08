@@ -97,7 +97,7 @@ gtest-all.o: gtest
 
 test_RegionCalculus.o: gtest
 test_SimulationIO.o: gtest
-test_RegionCalculus: test_RegionCalculus.o gtest-all.o libSimulationIO.a
+test_RegionCalculus: test_RegionCalculus.o gtest-all.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 test_SimulationIO: test_SimulationIO.o gtest-all.o libSimulationIO.a
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
