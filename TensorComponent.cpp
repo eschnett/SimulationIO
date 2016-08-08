@@ -26,6 +26,7 @@ void TensorComponent::merge(
 }
 
 ostream &TensorComponent::output(ostream &os, int level) const {
+  using namespace Output;
   os << indent(level) << "TensorComponent " << quote(name()) << ": TensorType "
      << quote(tensortype()->name()) << " storage_index=" << storage_index()
      << " indexvalues=" << indexvalues() << "\n";

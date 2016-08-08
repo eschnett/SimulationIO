@@ -48,6 +48,7 @@ void SubDiscretization::merge(
 }
 
 ostream &SubDiscretization::output(ostream &os, int level) const {
+  using namespace Output;
   os << indent(level) << "SubDiscretization " << quote(name()) << ": Manifold "
      << quote(manifold()->name()) << " parent Discretization "
      << quote(parent_discretization()->name()) << " child Discretization "

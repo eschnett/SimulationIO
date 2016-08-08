@@ -19,6 +19,7 @@
 #include <vector>
 
 using namespace SimulationIO;
+using namespace Output;
 using namespace std;
 
 const char *const dirnames[] = {"x", "y", "z"};
