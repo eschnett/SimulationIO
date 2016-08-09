@@ -58,8 +58,10 @@ PYTHON_EXE = $(SWIG_SRCS:%.i=_%.so)
 ALL_EXE =							\
 	libSimulationIO.a libSimulationIO.$(dynamiclib-suffix)	\
 	$(PYTHON_EXE)						\
-	benchmark convert-carpet-output copy example list merge	\
-	test_RegionCalculus test_SimulationIO
+	test_RegionCalculus test_SimulationIO			\
+	sio-benchmark						\
+	sio-copy sio-example sio-list sio-merge			\
+	sio-convert-carpet-output
 
 HDF5_DIR = /opt/local
 HDF5_CPPFLAGS = -I$(HDF5_DIR)/include
@@ -104,10 +106,10 @@ test_SimulationIO: test_SimulationIO.o gtest-all.o libSimulationIO.a
 check: $(ALL_EXE)
 	./test_RegionCalculus
 	./test_SimulationIO
-	./example
-	./list example.s5
-	./copy example.s5 example2.s5
-	./list example2.s5
+	./sio-example
+	./sio-list example.s5
+	./sio-copy example.s5 example2.s5
+	./sio-list example2.s5
 	./python-example.py
 	./python-read.py
 	-$(HDF5_DIR)/bin/h5format_convert python-example.s5
@@ -116,22 +118,22 @@ check: $(ALL_EXE)
 #	./julia-read.jl
 	echo SUCCESS
 
-benchmark: benchmark.o libSimulationIO.a
+sio-benchmark: benchmark.o libSimulationIO.a
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
-copy: copy.o libSimulationIO.a
+sio-copy: copy.o libSimulationIO.a
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
-example: example.o libSimulationIO.a
+sio-example: example.o libSimulationIO.a
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
-list: list.o libSimulationIO.a
+sio-list: list.o libSimulationIO.a
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
-merge: merge.o libSimulationIO.a
+sio-merge: merge.o libSimulationIO.a
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
-convert-carpet-output: convert-carpet-output.o libSimulationIO.a
+sio-convert-carpet-output: convert-carpet-output.o libSimulationIO.a
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 libSimulationIO.a: $(SIO_SRCS:%.cpp=%.o) $(RC_SRCS:%.cpp=%.o)
@@ -202,4 +204,4 @@ distclean: clean
 	$(RM) -r $(GTEST_DIR)
 	$(RM) gtest
 
-.PHONY: all test coverage clean distclean
+.PHONY: all check coverage format clean distclean
