@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <complex>
 #include <map>
 #include <memory>
 #include <set>
@@ -119,6 +120,91 @@ herr_t iterateElems(const H5Location &loc, H5_index_t index_type,
   return iret;
 }
 
+// Convert a HDF5 datatype class to a string
+inline std::string className(H5T_class_t cls) {
+  switch (cls) {
+  case H5T_INTEGER:
+    return "integer";
+  case H5T_FLOAT:
+    return "float";
+  case H5T_TIME:
+    return "time";
+  case H5T_STRING:
+    return "string";
+  case H5T_BITFIELD:
+    return "bitfield";
+  case H5T_OPAQUE:
+    return "opaque";
+  case H5T_COMPOUND:
+    return "compound";
+  case H5T_REFERENCE:
+    return "reference";
+  case H5T_ENUM:
+    return "enum";
+  case H5T_VLEN:
+    return "vlen";
+  case H5T_ARRAY:
+    return "array";
+  default:
+    assert(0);
+  }
+  assert(0);
+}
+
+// Describe the structure of an HDF5 datatype
+inline std::string dump(const DataType &type) {
+  using namespace SimulationIO;
+  using namespace Output;
+  switch (type.getClass()) {
+  case H5T_INTEGER:
+    return "integer";
+  case H5T_FLOAT:
+    return "float";
+  case H5T_TIME:
+    return "time";
+  case H5T_STRING:
+    return "string";
+  case H5T_BITFIELD:
+    return "bitfield";
+  case H5T_OPAQUE:
+    return "opaque";
+  case H5T_COMPOUND: {
+    const CompType &comptype(*static_cast<const CompType *>(&type));
+    std::ostringstream buf;
+    buf << "compound{";
+    int n = comptype.getNmembers();
+    for (int i = 0; i < n; ++i) {
+      std::string mname = comptype.getMemberName(i);
+      size_t offset = comptype.getMemberOffset(i);
+      DataType mtype = comptype.getMemberDataType(i);
+      buf << mname << ":" << dump(mtype) << "@" << offset << ";";
+    }
+    buf << "}";
+    return buf.str();
+  }
+  case H5T_REFERENCE:
+    return "reference";
+  case H5T_ENUM:
+    return "enum";
+  case H5T_VLEN:
+    return "vlen";
+  case H5T_ARRAY: {
+    const ArrayType &arraytype(*static_cast<const ArrayType *>(&type));
+    std::ostringstream buf;
+    int ndims = H5Tget_array_ndims(arraytype.getId());
+    std::vector<hsize_t> dims(ndims);
+    int iret = H5Tget_array_dims(arraytype.getId(), dims.data());
+    assert(iret == ndims);
+    // DataType etype = ???;
+    buf << /*dump(etype)*/ "[unknown-element-type]"
+        << ":array" << dims;
+    return buf.str();
+  }
+  default:
+    assert(0);
+  }
+}
+
 // Get HDF5 datatype from C++ type
 
 inline IntType getType(const char &) { return IntType(PredType::NATIVE_CHAR); }
@@ -157,90 +243,11 @@ inline FloatType getType(const double &) {
 inline FloatType getType(const long double &) {
   return FloatType(PredType::NATIVE_LDOUBLE);
 }
-
-// Convert a HDF5 datatype class to a string
-inline std::string className(H5T_class_t cls) {
-  switch (cls) {
-  case H5T_INTEGER:
-    return "integer";
-  case H5T_FLOAT:
-    return "float";
-  case H5T_TIME:
-    return "time";
-  case H5T_STRING:
-    return "string";
-  case H5T_BITFIELD:
-    return "bitfield";
-  case H5T_OPAQUE:
-    return "opaque";
-  case H5T_COMPOUND:
-    return "compound";
-  case H5T_REFERENCE:
-    return "reference";
-  case H5T_ENUM:
-    return "enum";
-  case H5T_VLEN:
-    return "vlen";
-  case H5T_ARRAY:
-    return "array";
-  default:
-    assert(0);
-  }
-  assert(0);
-}
-
-// Describe the structure of an HDF5 datatype
-inline std::string dump(const H5::DataType &type) {
-  using namespace SimulationIO;
-  using namespace Output;
-  switch (type.getClass()) {
-  case H5T_INTEGER:
-    return "integer";
-  case H5T_FLOAT:
-    return "float";
-  case H5T_TIME:
-    return "time";
-  case H5T_STRING:
-    return "string";
-  case H5T_BITFIELD:
-    return "bitfield";
-  case H5T_OPAQUE:
-    return "opaque";
-  case H5T_COMPOUND: {
-    const H5::CompType &comptype(*static_cast<const H5::CompType *>(&type));
-    std::ostringstream buf;
-    buf << "compound{";
-    int n = comptype.getNmembers();
-    for (int i = 0; i < n; ++i) {
-      std::string mname = comptype.getMemberName(i);
-      // TODO: get member offset
-      H5::DataType mtype = comptype.getMemberDataType(i);
-      buf << mname << ":" << dump(mtype) << ";";
-    }
-    buf << "}";
-    return buf.str();
-  }
-  case H5T_REFERENCE:
-    return "reference";
-  case H5T_ENUM:
-    return "enum";
-  case H5T_VLEN:
-    return "vlen";
-  case H5T_ARRAY: {
-    const H5::ArrayType &arraytype(*static_cast<const H5::ArrayType *>(&type));
-    std::ostringstream buf;
-    int ndims = H5Tget_array_ndims(arraytype.getId());
-    std::vector<hsize_t> dims(ndims);
-    int iret = H5Tget_array_dims(arraytype.getId(), dims.data());
-    assert(iret == ndims);
-    // H5::DataType etype = ???;
-    buf << /*dump(etype)*/ "[unknown-element-type]"
-        << ":array" << dims;
-    return buf.str();
-  }
-  default:
-    assert(0);
-  }
+template <typename T> ArrayType getType(const std::complex<T> &) {
+  // If the type is written to a file, and the file is closed, then the type
+  // becomes invalid. We thus don't memoize the type.
+  hsize_t dims[1]{2};
+  return ArrayType(getType(T{}), 1, dims);
 }
 
 // Create attribute
@@ -251,7 +258,7 @@ Attribute createAttribute(const H5Location &loc, const std::string &name,
   static_assert(!std::is_same<T, std::string>::value, "");
   static_assert(!detail::is_vector<T>::value, "");
   assert(type.getSize() == sizeof value);
-  auto attr = loc.createAttribute(name, getType(value), DataSpace());
+  auto attr = loc.createAttribute(name, type, DataSpace());
   attr.write(type, &value);
   return attr;
 }
@@ -486,6 +493,19 @@ T readGroupAttribute(const CommonFG &loc, const std::string &groupname,
                      const std::string &attrname) {
   auto group = loc.openGroup(groupname);
   return readAttribute<T>(group, attrname);
+}
+
+template <typename T>
+T getAttribute(const H5Location &loc, const std::string &name,
+               const H5::DataType &type) {
+  T value;
+  readAttribute(loc, name, value, type);
+  return value;
+}
+
+template <typename T>
+T getAttribute(const H5Location &loc, const std::string &name) {
+  return getAttribute<T>(loc, name, getType(T{}));
 }
 
 inline DataSet createDataSet(const CommonFG &loc, const std::string &name,
