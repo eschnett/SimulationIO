@@ -2,11 +2,15 @@
 
 #include <gtest/gtest.h>
 
+#include <complex>
 #include <cstdio>
+#include <limits>
 #include <memory>
 #include <sstream>
 #include <string>
 
+using std::complex;
+using std::numeric_limits;
 using std::ostringstream;
 using std::remove;
 using std::shared_ptr;
@@ -24,6 +28,112 @@ TEST(ipow, ipow) {
   EXPECT_EQ(1, ipow(2, 0));
   EXPECT_EQ(2, ipow(2, 1));
   EXPECT_EQ(4, ipow(2, 2));
+}
+
+TEST(HDF5, types) {
+  auto filename = "types.s5";
+  {
+    auto file = H5::H5File(filename, H5F_ACC_TRUNC);
+    createAttribute(file, "char", numeric_limits<char>::max());
+    createAttribute(file, "signed char", numeric_limits<signed char>::max());
+    createAttribute(file, "unsigned char",
+                    numeric_limits<unsigned char>::max());
+    createAttribute(file, "short", numeric_limits<short>::max());
+    createAttribute(file, "unsigned short",
+                    numeric_limits<unsigned short>::max());
+    createAttribute(file, "int", numeric_limits<int>::max());
+    createAttribute(file, "unsigned int", numeric_limits<unsigned int>::max());
+    createAttribute(file, "long", numeric_limits<long>::max());
+    createAttribute(file, "unsigned long",
+                    numeric_limits<unsigned long>::max());
+    createAttribute(file, "long long", numeric_limits<long long>::max());
+    createAttribute(file, "unsigned long long",
+                    numeric_limits<unsigned long long>::max());
+    createAttribute(file, "float", numeric_limits<float>::min());
+    createAttribute(file, "double", numeric_limits<double>::min());
+    createAttribute(file, "long double", numeric_limits<long double>::min());
+    createAttribute(file, "complex<signed char>",
+                    complex<signed char>(numeric_limits<signed char>::min(),
+                                         numeric_limits<signed char>::max()));
+    createAttribute(file, "complex<short>",
+                    complex<short>(numeric_limits<short>::min(),
+                                   numeric_limits<short>::max()));
+    createAttribute(
+        file, "complex<int>",
+        complex<int>(numeric_limits<int>::min(), numeric_limits<int>::max()));
+    createAttribute(file, "complex<long>",
+                    complex<long>(numeric_limits<long>::min(),
+                                  numeric_limits<long>::max()));
+    createAttribute(file, "complex<long long>",
+                    complex<long long>(numeric_limits<long long>::min(),
+                                       numeric_limits<long long>::max()));
+    createAttribute(file, "complex<float>",
+                    complex<float>(numeric_limits<float>::min(),
+                                   numeric_limits<float>::max()));
+    createAttribute(file, "complex<double>",
+                    complex<double>(numeric_limits<double>::min(),
+                                    numeric_limits<double>::max()));
+    createAttribute(file, "complex<long double>",
+                    complex<long double>(numeric_limits<long double>::min(),
+                                         numeric_limits<long double>::max()));
+  }
+  {
+    auto file = H5::H5File(filename, H5F_ACC_RDONLY);
+    EXPECT_EQ(numeric_limits<char>::max(),
+              H5::getAttribute<char>(file, "char"));
+    EXPECT_EQ(numeric_limits<signed char>::max(),
+              H5::getAttribute<signed char>(file, "signed char"));
+    EXPECT_EQ(numeric_limits<unsigned char>::max(),
+              H5::getAttribute<unsigned char>(file, "unsigned char"));
+    EXPECT_EQ(numeric_limits<short>::max(),
+              H5::getAttribute<short>(file, "short"));
+    EXPECT_EQ(numeric_limits<unsigned short>::max(),
+              H5::getAttribute<unsigned short>(file, "unsigned short"));
+    EXPECT_EQ(numeric_limits<int>::max(), H5::getAttribute<int>(file, "int"));
+    EXPECT_EQ(numeric_limits<unsigned int>::max(),
+              H5::getAttribute<unsigned int>(file, "unsigned int"));
+    EXPECT_EQ(numeric_limits<long>::max(),
+              H5::getAttribute<long>(file, "long"));
+    EXPECT_EQ(numeric_limits<unsigned long>::max(),
+              H5::getAttribute<unsigned long>(file, "unsigned long"));
+    EXPECT_EQ(numeric_limits<long long>::max(),
+              H5::getAttribute<long long>(file, "long long"));
+    EXPECT_EQ(numeric_limits<unsigned long long>::max(),
+              H5::getAttribute<unsigned long long>(file, "unsigned long long"));
+    EXPECT_EQ(numeric_limits<float>::min(),
+              H5::getAttribute<float>(file, "float"));
+    EXPECT_EQ(numeric_limits<double>::min(),
+              H5::getAttribute<double>(file, "double"));
+    EXPECT_EQ(numeric_limits<long double>::min(),
+              H5::getAttribute<long double>(file, "long double"));
+    EXPECT_EQ(
+        complex<signed char>(numeric_limits<signed char>::min(),
+                             numeric_limits<signed char>::max()),
+        H5::getAttribute<complex<signed char>>(file, "complex<signed char>"));
+    EXPECT_EQ(complex<short>(numeric_limits<short>::min(),
+                             numeric_limits<short>::max()),
+              H5::getAttribute<complex<short>>(file, "complex<short>"));
+    EXPECT_EQ(
+        complex<int>(numeric_limits<int>::min(), numeric_limits<int>::max()),
+        H5::getAttribute<complex<int>>(file, "complex<int>"));
+    EXPECT_EQ(
+        complex<long>(numeric_limits<long>::min(), numeric_limits<long>::max()),
+        H5::getAttribute<complex<long>>(file, "complex<long>"));
+    EXPECT_EQ(complex<long long>(numeric_limits<long long>::min(),
+                                 numeric_limits<long long>::max()),
+              H5::getAttribute<complex<long long>>(file, "complex<long long>"));
+    EXPECT_EQ(complex<float>(numeric_limits<float>::min(),
+                             numeric_limits<float>::max()),
+              H5::getAttribute<complex<float>>(file, "complex<float>"));
+    EXPECT_EQ(complex<double>(numeric_limits<double>::min(),
+                              numeric_limits<double>::max()),
+              H5::getAttribute<complex<double>>(file, "complex<double>"));
+    EXPECT_EQ(
+        complex<long double>(numeric_limits<long double>::min(),
+                             numeric_limits<long double>::max()),
+        H5::getAttribute<complex<long double>>(file, "complex<long double>"));
+  }
+  remove(filename);
 }
 
 shared_ptr<Project> project;
