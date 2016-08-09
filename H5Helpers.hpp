@@ -192,6 +192,7 @@ inline std::string className(H5T_class_t cls) {
 // Describe the structure of an HDF5 datatype
 inline std::string dump(const H5::DataType &type) {
   using namespace SimulationIO;
+  using namespace Output;
   switch (type.getClass()) {
   case H5T_INTEGER:
     return "integer";

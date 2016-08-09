@@ -91,6 +91,7 @@ std::vector<Key> keys(const std::map<Key, Value> &m) {
 }
 
 // Output a vector
+namespace Output {
 template <typename T>
 std::ostream &operator<<(std::ostream &os, const std::vector<T> &values) {
   os << "[";
@@ -101,6 +102,7 @@ std::ostream &operator<<(std::ostream &os, const std::vector<T> &values) {
   }
   os << "]";
   return os;
+}
 }
 }
 

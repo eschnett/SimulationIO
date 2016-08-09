@@ -113,6 +113,7 @@ shared_ptr<DataRange> DataRange::read(const H5::Group &group,
 }
 
 ostream &DataRange::output(ostream &os) const {
+  using namespace Output;
   return os << "DataRange: origin=" << origin() << " delta=" << delta();
 }
 
@@ -156,6 +157,7 @@ shared_ptr<DataSet> DataSet::read(const H5::Group &group, const string &entry,
 }
 
 ostream &DataSet::output(ostream &os) const {
+  using namespace Output;
   auto cls = datatype().getClass();
   auto clsname = H5::className(cls);
   auto typesize = datatype().getSize();

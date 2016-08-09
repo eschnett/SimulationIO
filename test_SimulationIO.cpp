@@ -1011,6 +1011,7 @@ TEST(DataBlock, HDF5) {
     auto data = ds->readData<double>();
     EXPECT_EQ(6 * 7 * 8, data.size());
     ostringstream bufds;
+    using namespace Output;
     bufds << data;
     EXPECT_EQ("[42,43,44,45,46,47,49,50,51,52,53,54,56,57,58,59,60,61,63,64,65,"
               "66,67,68,70,71,72,73,74,75,77,78,79,80,81,82,84,85,86,87,88,89,"
