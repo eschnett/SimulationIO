@@ -69,3 +69,4 @@ dist
 build
 pysimulationio.egg-info
 
+using_coverage.txt

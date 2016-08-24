@@ -10,6 +10,9 @@ PY_PACKAGE_DIR=pysimulationio
 
 ifneq ($(COVERAGE),)
 CXX_FLAGS_BASE += --coverage
+USING_COVERAGE = 1
+else
+USING_COVERAGE = 0
 endif
 
 RC_SRCS =
@@ -46,6 +49,14 @@ PYTHON_EXE = _H5.so _RegionCalculus.so _SimulationIO.so
 ALL_EXE = \
 	sio-benchmark sio-convert-carpet-output sio-list sio-example \
 	test_RegionCalculus test_SimulationIO
+ALL_META = \
+	includes.txt \
+	links.txt \
+	libs.txt \
+	cxx.txt \
+	flags.txt \
+	lib_sources.txt \
+	using_coverage.txt
 
 GTEST_VERSION = release-1.7.0
 GTEST_DIR = googletest-${GTEST_VERSION}
@@ -64,7 +75,7 @@ endif
 
 all: $(ALL_EXE) meta
 
-meta: includes.txt links.txt libs.txt cxx.txt flags.txt lib_sources.txt
+meta: $(ALL_META) 
 
 includes.txt: $(ALL_SRC)
 	@echo $(HDF5_INCDIR) > includes.txt
@@ -86,6 +97,9 @@ flags.txt: $(ALL_SRC)
 
 lib_sources.txt: $(ALL_SRC)
 	@echo $(SIO_SRCS) > lib_sources.txt
+
+using_coverage.txt: $(ALL_SRC)
+	@echo $(USING_COVERAGE) > using_coverage.txt
 
 gtest:
 	$(RM) $@
@@ -157,17 +171,12 @@ clean:
 	$(RM) -- $(PYTHON_EXE:_%.so=${PY_PACKAGE_DIR}/%.pyc)
 	$(RM) -- $(PYTHON_EXE:%.so=${PY_PACKAGE_DIR}/%.so)
 	$(RM) ${PY_PACKAGE_DIR}/__init__.pyc
+	$(RM) -- $(ALL_META)
 
 distclean: clean
 	$(RM) $(GTEST_DIR).tar.gz
 	$(RM) -r $(GTEST_DIR)
 	$(RM) gtest
 	$(RM) example.s5
-	$(RM) includes.txt
-	$(RM) links.txt
-	$(RM) libs.txt
-	$(RM) cxx.txt
-	$(RM) flags.txt
-	$(RM) lib_sources.txt
 
 .PHONY: all test coverage clean distclean meta install
