@@ -126,7 +126,7 @@ then type `make install` to install the to copy the utilities to
 If you've run `make` all you need to do is run
 
 ```bash
-python setup.py
+python setup.py install
 ```
 
 as usual for python packages.
@@ -137,7 +137,7 @@ as usual for python packages.
 - If you need to install the python API locally, use
 
 ```bash
-python setup.py --user
+python setup.py install --user
 ```
 
 - If you have h5py installed with python, setup.py will probably try
