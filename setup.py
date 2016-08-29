@@ -72,8 +72,12 @@ swig_wrap_files = (
     +[path.join(here,"{}_wrap.o".format(m)) for m in swig_modules])
 swig_opts = ['-c++','-Wall']
 
-if using_coverage:
-    link_args.append('--coverage')
+# Somehow incompatible with lcov.
+# Also REALLY slow.
+# Also not used anyway.
+# TODO: Use Nose instead.
+# if using_coverage:
+#     link_args.append('--coverage')
 
 # Overload the build and install commands so that swig behaves. See:
 # stackoverflow.com/questions/12491328/python-distutils-not-include-the-swig-generated-module

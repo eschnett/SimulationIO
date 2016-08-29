@@ -149,7 +149,7 @@ PROCESS_DEPENDENCIES = \
 -include $(ALL_SRCS:%.cpp=%.d)
 
 coverage:
-	-lcov --directory . --capture --output-file coverage.info
+	-lcov --directory . --capture --output-file coverage.info --no-external
 	-lcov --remove coverage.info '/googletest-*' '/hdf5-*' '/usr/*' '/opt/*' '/Xcode.app/*' '*_wrap.cpp' --output-file coverage.info
 	-lcov --list coverage.info
 
