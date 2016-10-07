@@ -33,9 +33,10 @@ before_install:
       brew install homebrew/science/hdf5
       brew install lcov
       brew install open-mpi
+      brew install python
       brew install swig
       export HDF5_DIR="/usr/local"
-      export PYTHON_DIR="/System/Library/Frameworks/Python.framework/Versions/2.7"
+      export PYTHON_DIR="/usr/local"
     fi
   - |
     if [ `uname` = Linux ]; then
