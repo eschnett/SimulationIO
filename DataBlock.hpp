@@ -1,6 +1,7 @@
 #ifndef DATABLOCK_HPP
 #define DATABLOCK_HPP
 
+#include "Buffer.hpp"
 #include "H5Helpers.hpp"
 #include "Helpers.hpp"
 #include "RegionCalculus.hpp"
@@ -34,7 +35,7 @@ namespace detail {
 template <typename T> struct norm_traits {
   typedef typename std::conditional<std::is_integral<T>::value, double, T>::type
       real_type;
-  // neutral values and addition for group
+  // neutral values and addition for monoid
   static T min() {
     return std::numeric_limits<T>::has_infinity
                ? std::numeric_limits<T>::infinity()
@@ -50,7 +51,7 @@ template <typename T> struct norm_traits {
 };
 template <typename T> struct norm_traits<std::complex<T>> {
   typedef typename std::complex<T>::value_type real_type;
-  // neutral values and addition for group
+  // neutral values and addition for monoid
   static std::complex<T> min() {
     return {norm_traits<T>::min(), norm_traits<T>::min()};
   }
@@ -254,7 +255,8 @@ public:
   DataSet(T, const box_t &box)
       : DataBlock(box), m_dataspace(H5::DataSpace(
                             rank(), reversed(vector<hsize_t>(shape())).data())),
-        m_datatype(H5::DataType(H5::getType(T{}))), m_have_location(false),
+        // m_datatype(H5::DataType(H5::getType(T{}))), m_have_location(false),
+        m_datatype(H5::getType(T{})), m_have_location(false),
         m_have_dataset(false) {
     assert(invariant());
   }
@@ -270,7 +272,7 @@ private:
   void create_dataset() const;
 
 public:
-  void writeData(const void *data, const H5::DataType &type,
+  void writeData(const void *data, const H5::DataType &datatype,
                  const box_t &datashape, const box_t &databox) const;
   template <typename T>
   void writeData(const T *data, const box_t &datashape,
@@ -311,6 +313,53 @@ public:
   }
 };
 
+// An HDF5 dataset holding multiple concatenated blocks
+class DataBuffer {
+  H5::DataType m_datatype;
+  shared_ptr<dconcatenation_t> m_concatenation;
+  H5::DataSpace m_dataspace;
+  H5::DataSet m_dataset;
+
+  struct dbuffer_t {
+    virtual ~dbuffer_t() {}
+    static shared_ptr<dbuffer_t> make(const H5::DataType &datatype);
+  };
+  template <typename T> struct buffer_t : dbuffer_t { vector<T> vec; };
+  shared_ptr<dbuffer_t> m_buffer;
+
+public:
+  H5::DataType datatype() const { return m_datatype; }
+  shared_ptr<dconcatenation_t> concatenation() const { return m_concatenation; }
+
+  DataBuffer() = delete;
+  DataBuffer(int dim, const H5::DataType &datatype);
+
+  void write(const H5::Group &group, const string &entry) const;
+};
+
+// A pointer into a DataBuffer
+class DataBufferEntry : public DataBlock {
+  shared_ptr<DataBuffer> m_databuffer;
+  unique_ptr<dlinearization_t> m_linearization;
+
+public:
+  H5::DataType datatype() const { return m_databuffer->datatype(); }
+
+  virtual bool invariant() const {
+    assert(false);
+    return true;
+  }
+  virtual ~DataBufferEntry() {}
+
+  DataBufferEntry(const box_t &box, const H5::DataType &datatype,
+                  const shared_ptr<DataBuffer> &databuffer);
+
+  static shared_ptr<DataBufferEntry>
+  read(const H5::Group &group, const string &entry, const box_t &box);
+  virtual ostream &output(ostream &os) const;
+  virtual void write(const H5::Group &group, const string &entry) const;
+};
+
 // A copy of an existing HDF5 dataset
 class CopyObj : public DataBlock {
   H5::Group m_group;
@@ -339,8 +388,8 @@ public:
   virtual ostream &output(ostream &os) const;
   virtual void write(const H5::Group &group, const string &entry) const;
 
-  void readData(void *data, const H5::DataType &type, const box_t &datashape,
-                const box_t &databox) const;
+  void readData(void *data, const H5::DataType &datatype,
+                const box_t &datashape, const box_t &databox) const;
   template <typename T>
   void readData(T *data, const box_t &datashape, const box_t &databox) const {
     readData(data, H5::getType(T{}), datashape, databox);

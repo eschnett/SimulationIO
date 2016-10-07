@@ -1,6 +1,8 @@
 #ifndef REGIONCALCULUS_HPP
 #define REGIONCALCULUS_HPP
 
+#include "Helpers.hpp"
+
 #include <algorithm>
 #include <array>
 #include <cassert>
@@ -23,6 +25,8 @@
 #define REGIONCALCULUS_TREE 1
 
 namespace RegionCalculus {
+
+using SimulationIO::make_unique1;
 
 using std::abs;
 using std::array;
@@ -1644,10 +1648,6 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 
 namespace RegionCalculus {
-template <typename T, typename... Args>
-unique_ptr<T> make_unique1(Args &&... args) {
-  return unique_ptr<T>(new T(std::forward<Args>(args)...));
-}
 
 // Virtual classes
 
@@ -2608,6 +2608,11 @@ template <typename T> struct dpoint {
     if (p.val)
       val = vpoint<T>::make(*p.val);
   }
+  template <int D> operator point<T, D>() const {
+    assert(valid());
+    assert(rank() == D);
+    return dynamic_cast<const RegionCalculus::wpoint<T, D> *>(val.get())->val;
+  }
 
   bool valid() const { return bool(val); }
   void reset() { val.reset(); }
@@ -2800,6 +2805,11 @@ template <typename T> struct dbox {
     if (p.val)
       val = vbox<T>::make(*p.val);
   }
+  template <int D> operator box<T, D>() const {
+    assert(valid());
+    assert(rank() == D);
+    return dynamic_cast<const RegionCalculus::wbox<T, D> *>(val.get())->val;
+  }
 
   bool valid() const { return bool(val); }
   void reset() { val.reset(); }
@@ -2939,6 +2949,11 @@ template <typename T> struct dregion {
   template <typename U> dregion(const dregion<U> &p) {
     if (p.val)
       val = vregion<T>::make(*p.val);
+  }
+  template <int D> operator region<T, D>() const {
+    assert(valid());
+    assert(rank() == D);
+    return dynamic_cast<const RegionCalculus::wregion<T, D> *>(val.get())->val;
   }
 
   bool valid() const { return bool(val); }
