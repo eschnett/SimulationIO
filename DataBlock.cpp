@@ -221,9 +221,10 @@ void DataSet::writeData(const void *data, const H5::DataType &datatype,
 
 shared_ptr<DataBuffer::dbuffer_t>
 DataBuffer::dbuffer_t::make(const H5::DataType &datatype) {
+  typedef long long long_long;
   if (datatype == H5::getType(int{})) {
     return make_shared<buffer_t<int>>();
-  } else if (datatype == H5::getType((long long){})) {
+  } else if (datatype == H5::getType(long_long{})) {
     return make_shared<buffer_t<long long>>();
   } else if (datatype == H5::getType(float{})) {
     return make_shared<buffer_t<float>>();
