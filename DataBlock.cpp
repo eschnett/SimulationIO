@@ -55,7 +55,8 @@ vector<hsize_t> choose_chunksize(const vector<hsize_t> &size,
 // DataBlock
 
 const vector<DataBlock::reader_t> DataBlock::readers = {
-    DataRange::read, DataSet::read, CopyObj::read, ExtLink::read,
+    DataRange::read, DataSet::read, DataBufferEntry::read,
+    CopyObj::read,   ExtLink::read,
 };
 
 shared_ptr<DataBlock> DataBlock::read(const H5::Group &group,
@@ -208,12 +209,73 @@ void DataSet::create_dataset() const {
   m_have_dataset = true;
 }
 
-void DataSet::writeData(const void *data, const H5::DataType &type,
+void DataSet::writeData(const void *data, const H5::DataType &datatype,
                         const box_t &datashape, const box_t &databox) const {
   // create_dataset();
   H5::DataSpace memspace, filespace;
   construct_spaces(datashape, databox, m_dataspace, memspace, filespace);
-  m_dataset.write(data, type, memspace, filespace);
+  m_dataset.write(data, datatype, memspace, filespace);
+}
+
+// DataBuffer
+
+shared_ptr<DataBuffer::dbuffer_t>
+DataBuffer::dbuffer_t::make(const H5::DataType &datatype) {
+  typedef long long long_long;
+  if (datatype == H5::getType(int{})) {
+    return make_shared<buffer_t<int>>();
+  } else if (datatype == H5::getType(long_long{})) {
+    return make_shared<buffer_t<long long>>();
+  } else if (datatype == H5::getType(float{})) {
+    return make_shared<buffer_t<float>>();
+  } else if (datatype == H5::getType(double{})) {
+    return make_shared<buffer_t<double>>();
+  } else {
+    assert(0);
+  }
+}
+
+DataBuffer::DataBuffer(int dim, const H5::DataType &datatype)
+    : m_datatype(datatype), m_concatenation(dconcatenation_t::make(dim)),
+      m_buffer(dbuffer_t::make(datatype)) {}
+
+void DataBuffer::write(const H5::Group &group, const string &entry) const {
+  assert(false);
+}
+
+// DataBufferEntry
+
+DataBufferEntry::DataBufferEntry(const box_t &box, const H5::DataType &datatype,
+                                 const shared_ptr<DataBuffer> &databuffer)
+    : DataBlock(box), m_databuffer(databuffer) {
+  assert(datatype == databuffer->datatype());
+  m_linearization = databuffer->concatenation()->push_back(box);
+}
+
+shared_ptr<DataBufferEntry> DataBufferEntry::read(const H5::Group &group,
+                                                  const string &entry,
+                                                  const box_t &box) {
+  return nullptr;
+}
+
+ostream &DataBufferEntry::output(ostream &os) const {
+  using namespace Output;
+  auto cls = datatype().getClass();
+  auto clsname = H5::className(cls);
+  auto typesize = datatype().getSize();
+  // assert(dataspace().isSimple());
+  // int dim = dataspace().getSimpleExtentNdims();
+  // vector<hsize_t> size(dim);
+  // dataspace().getSimpleExtentDims(size.data());
+  // reverse(size);
+  os << "DataBufferEntry: type=" << clsname << "(" << (8 * typesize)
+     << " bit) box=" << m_linearization->box()
+     << " pos=" << m_linearization->pos();
+  return os;
+}
+
+void DataBufferEntry::write(const H5::Group &group, const string &entry) const {
+  m_databuffer->write(group, entry);
 }
 
 // CopyObj
@@ -265,7 +327,7 @@ void CopyObj::write(const H5::Group &group, const string &entry) const {
   assert(!herr);
 }
 
-void CopyObj::readData(void *data, const H5::DataType &type,
+void CopyObj::readData(void *data, const H5::DataType &datatype,
                        const box_t &datashape, const box_t &databox) const {
   if (rank() == 0)
     assert(!databox.empty()); // HDF5 cannot handle an empty scalar box
@@ -281,7 +343,7 @@ void CopyObj::readData(void *data, const H5::DataType &type,
   assert(all(point_t(dims) == shape()));
   H5::DataSpace memspace, filespace;
   construct_spaces(datashape, databox, dataspace, memspace, filespace);
-  dataset.read(data, type, memspace, filespace);
+  dataset.read(data, datatype, memspace, filespace);
 }
 
 // ExtLink

@@ -43,6 +43,11 @@ inline std::string quote(const std::string &str) {
   return buf.str();
 }
 
+template <typename T, typename... Args>
+std::unique_ptr<T> make_unique1(Args &&... args) {
+  return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
+
 // Convert a vector
 template <typename R, typename T>
 std::vector<R> make_vector(const std::vector<T> &v) {

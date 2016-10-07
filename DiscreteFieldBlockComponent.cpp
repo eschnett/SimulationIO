@@ -86,6 +86,24 @@ void DiscreteFieldBlockComponent::write(const H5::CommonFG &loc,
 
 void DiscreteFieldBlockComponent::unsetDataBlock() { m_datablock = nullptr; }
 
+shared_ptr<DataSet>
+DiscreteFieldBlockComponent::createDataSet(const H5::DataType &type) {
+  assert(!m_datablock);
+  auto res = make_shared<DataSet>(
+      discretefieldblock()->discretizationblock()->box(), type);
+  m_datablock = res;
+  return res;
+}
+
+shared_ptr<DataBufferEntry> DiscreteFieldBlockComponent::createDataBufferEntry(
+    const H5::DataType &type, const shared_ptr<DataBuffer> &databuffer) {
+  assert(!m_datablock);
+  auto res = make_shared<DataBufferEntry>(
+      discretefieldblock()->discretizationblock()->box(), type, databuffer);
+  m_datablock = res;
+  return res;
+}
+
 shared_ptr<DataRange>
 DiscreteFieldBlockComponent::createDataRange(double origin,
                                              const vector<double> &delta) {

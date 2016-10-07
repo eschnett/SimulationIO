@@ -8,6 +8,7 @@
 #include "RegionCalculus.hpp"
 
 #include <iostream>
+#include <limits>
 #include <map>
 #include <memory>
 #include <string>
@@ -17,6 +18,7 @@ namespace SimulationIO {
 
 using std::make_shared;
 using std::map;
+using std::numeric_limits;
 using std::ostream;
 using std::shared_ptr;
 using std::string;
@@ -73,6 +75,9 @@ public:
   mutable vector<H5::ArrayType> pointtypes;
   mutable vector<H5::CompType> boxtypes;
   mutable vector<H5::VarLenType> regiontypes;
+
+  mutable vector<H5::CompType> linearizationtypes;
+  mutable vector<H5::VarLenType> concatenationtypes;
 
   virtual bool invariant() const { return Common::invariant(); }
 

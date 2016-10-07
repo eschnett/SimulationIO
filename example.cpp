@@ -39,6 +39,10 @@ int main(int argc, char **argv) {
   // Project
   auto project = createProject("simulation");
 
+#if 0
+  auto databuffer = make_shared<DataBuffer>(dim, H5::getType(double{}));
+#endif
+
   // Configuration
   auto configuration = project->createConfiguration("global");
 
@@ -125,7 +129,11 @@ int main(int argc, char **argv) {
     auto scalar3d_component = scalar3d->storage_indices().at(0);
     auto rho_component = rho_block->createDiscreteFieldBlockComponent(
         "scalar", scalar3d_component);
+#if 1
     rho_component->createDataSet<double>();
+#else
+    rho_component->createDataBufferEntry(H5::getType(double{}), databuffer);
+#endif
     for (int d = 0; d < dim; ++d) {
       auto vector3d_component = vector3d->storage_indices().at(d);
       auto vel_component = vel_block->createDiscreteFieldBlockComponent(

@@ -24,6 +24,7 @@ RC_SRCS =
 SIO_SRCS =					\
 	Basis.cpp				\
 	BasisVector.cpp				\
+	Buffer.cpp				\
 	Configuration.cpp			\
 	CoordinateField.cpp			\
 	CoordinateSystem.cpp			\

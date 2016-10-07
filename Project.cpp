@@ -1,5 +1,6 @@
 #include "Project.hpp"
 
+#include "Buffer.hpp"
 #include "Configuration.hpp"
 #include "CoordinateSystem.hpp"
 #include "Field.hpp"
@@ -11,6 +12,7 @@
 #include "H5Helpers.hpp"
 
 #include <algorithm>
+#include <cstddef>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -241,24 +243,16 @@ void Project::createTypes() const {
   typedef long long long_long;
   auto int_type = H5::getType(long_long{});
 
+#if 0
   // A range is described by its minimum (inclusive), maximum (inclusive), and
   // count (non-negative). Here we use double precision for all three fields,
   // but other precisions are also possible. We use a floating point number to
   // describe the count for uniformity.
-  {
-    vector<size_t> offsets;
-    size_t size = 0;
-    offsets.push_back(size);
-    size += H5::getType(double()).getSize();
-    offsets.push_back(size);
-    size += H5::getType(double()).getSize();
-    offsets.push_back(size);
-    size += H5::getType(double()).getSize();
-    rangetype = H5::CompType(size);
-    rangetype.insertMember("minimum", offsets.at(0), H5::getType(double()));
-    rangetype.insertMember("maximum", offsets.at(1), H5::getType(double()));
-    rangetype.insertMember("count", offsets.at(2), H5::getType(double()));
-  }
+  rangetype = H5::CompType(sizeof(range_t));
+  rangetype.insertMember("minimum", offsetof(range_t, minimum), double_type);
+  rangetype.insertMember("maximum", offsetof(range_t, maximum), double_type);
+  rangetype.insertMember("count", offsetof(range_t, count), double_type);
+#endif
 
   // point, box, and region are defined in RegionCalculus.hpp
   pointtypes.clear();
@@ -299,6 +293,28 @@ void Project::createTypes() const {
     // region_t
     auto regiontype = H5::VarLenType(&boxtype);
     regiontypes.push_back(regiontype);
+
+    // TODO: Move these to Buffer.cpp
+    // linearization_t
+    auto linearizationtype = [&] {
+      vector<size_t> offsets;
+      size_t size = 0;
+      offsets.push_back(size);
+      size += boxtype.getSize();
+      offsets.push_back(size);
+      size += int_type.getSize();
+      auto type = H5::CompType(size);
+      type.insertMember("box", offsets.at(0), boxtype);
+      type.insertMember("pos", offsets.at(1), int_type);
+      return type;
+    }();
+    linearizationtypes.push_back(linearizationtype);
+    // concatenation_t
+    auto concatenationtype = [&] {
+      auto type = H5::VarLenType(&linearizationtype);
+      return type;
+    }();
+    concatenationtypes.push_back(concatenationtype);
   }
 }
 
@@ -318,7 +334,9 @@ void Project::write(const H5::CommonFG &loc,
   createTypes();
   auto typegroup = group.createGroup("types");
   enumtype.commit(typegroup, "SimulationIO");
+#if 0
   rangetype.commit(typegroup, "Range");
+#endif
   for (int d = 0; d < int(pointtypes.size()); ++d)
     pointtypes.at(d).commit(typegroup, "Point[" + itos(d) + "]");
   for (int d = 0; d < int(boxtypes.size()); ++d)
