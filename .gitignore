@@ -27,10 +27,6 @@
 *.out
 *.app
 *.dSYM
-benchmark
-convert-carpet-output
-example
-list
 selftest
 
 # Temporary files
@@ -55,8 +51,12 @@ HDF5 PERFORMANCE
 RegionCalculus.py
 test_RegionCalculus
 test_SimulationIO
-copy
 test_LazyPtr
 build
 external
-merge
+sio-benchmark
+sio-convert-carpet-output
+sio-copy
+sio-example
+sio-list
+sio-merge
