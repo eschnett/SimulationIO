@@ -1,11 +1,18 @@
-CXX = g++
-CPPFLAGS = $(GTEST_CPPFLAGS) $(HDF5_CPPFLAGS) $(MPI_CPPFLAGS) $(PYTHON_CPPFLAGS)
-CXXFLAGS = $(GTEST_CXXFLAGS) $(HDF5_CXXFLAGS) $(MPI_CXXFLAGS) $(PYTHON_CXXFLAGS) -g -Wall -std=c++0x -fPIC
+-include Make.user
+
+CPPFLAGS = $(GTEST_CPPFLAGS) $(HDF5_CPPFLAGS) $(MPI_CPPFLAGS)
+CXXFLAGS = $(GTEST_CXXFLAGS) $(HDF5_CXXFLAGS) $(MPI_CXXFLAGS) $(CXX_FLAGS_BASE)
 LDFLAGS = $(GTEST_LDFLAGS) $(HDF5_LDFLAGS) $(MPI_LDFLAGS)
 LIBS = $(GTEST_LIBS) $(HDF5_LIBS) $(MPI_LIBS)
+CXX_FLAGS_BASE = -Wall -std=c++0x -fPIC
+
+PY_PACKAGE_DIR=pysimulationio
 
 ifneq ($(COVERAGE),)
-CXXFLAGS += --coverage
+CXX_FLAGS_BASE += --coverage
+USING_COVERAGE = 1
+else
+USING_COVERAGE = 0
 endif
 
 RC_SRCS =
@@ -40,34 +47,59 @@ ALL_SRCS = \
 	test_SimulationIO.cpp
 PYTHON_EXE = _H5.so _RegionCalculus.so _SimulationIO.so
 ALL_EXE = \
-	$(PYTHON_EXE) \
-	benchmark convert-carpet-output list example \
+	sio-benchmark sio-convert-carpet-output sio-list sio-example \
 	test_RegionCalculus test_SimulationIO
+ALL_META = \
+	includes.txt \
+	links.txt \
+	libs.txt \
+	cxx.txt \
+	flags.txt \
+	lib_sources.txt \
+	using_coverage.txt
 
-HDF5_DIR = /opt/local
-HDF5_CPPFLAGS = -I$(HDF5_DIR)/include
-HDF5_CXXFLAGS =
-HDF5_LDFLAGS = -L$(HDF5_DIR)/lib -Wl,-rpath,$(HDF5_DIR)/lib
-HDF5_LIBS = -lhdf5_cpp -lhdf5
-
-MPI_DIR = /opt/local
-MPI_CPPFLAGS = -I$(MPI_DIR)/include/openmpi-gcc5
-MPI_CXXFLAGS =
-MPI_LDFLAGS = -L$(MPI_DIR)/lib/openmpi-gcc5 -Wl,-rpath,$(MPI_DIR)/lib/openmpi-gcc5
-MPI_LIBS = -lmpi_cxx -lmpi
-
-PYTHON_DIR = /opt/local/Library/Frameworks/Python.framework/Versions/2.7
-PYTHON_CPPFLAGS = -I$(PYTHON_DIR)/include/python2.7
-PYTHON_CXXFLAGS =
-PYTHON_LDFLAGS = -L$(PYTHON_DIR)/lib -Wl,-rpath,$(PYTHON_DIR)/lib
-PYTHON_LIBS = -lpython2.7
-
-GTEST_DIR = googletest-release-1.7.0
+GTEST_VERSION = release-1.7.0
+GTEST_DIR = googletest-${GTEST_VERSION}
 GTEST_CPPFLAGS = -isystem $(GTEST_DIR)/include -I$(GTEST_DIR)
 GTEST_CXXFLAGS = -pthread
 GTEST_LIBS =
 
-all: $(ALL_EXE)
+os = $(shell uname)
+ifeq ($(os), Linux)
+make-dynamiclib = -shared
+else ifeq ($(os), Darwin)
+make-dynamiclib = -dynamiclib
+else
+make-dynamiclib = -shared
+endif
+
+all: $(ALL_EXE) meta
+
+meta: $(ALL_META) 
+
+includes.txt: $(ALL_SRC)
+	@echo $(HDF5_INCDIR) > includes.txt
+	@echo $(MPI_INCDIR) >> includes.txt
+
+links.txt: $(ALL_SRC)
+	@echo $(HDF5_LIBDIR) > links.txt
+	@echo $(MPI_LIBDIR) >> links.txt
+
+libs.txt: $(ALL_SRC)
+	@echo $(HDF5_LIBS) > libs.txt
+	@echo $(MPI_LIBS) >> libs.txt
+
+cxx.txt: $(ALL_SRC)
+	@echo $(CXX) > cxx.txt
+
+flags.txt: $(ALL_SRC)
+	@echo $(CXX_FLAGS_BASE) > flags.txt
+
+lib_sources.txt: $(ALL_SRC)
+	@echo $(SIO_SRCS) > lib_sources.txt
+
+using_coverage.txt: $(ALL_SRC)
+	@echo $(USING_COVERAGE) > using_coverage.txt
 
 gtest:
 	$(RM) $@
@@ -88,34 +120,17 @@ test: test_RegionCalculus test_SimulationIO
 	./test_RegionCalculus
 	./test_SimulationIO
 
-benchmark: $(SIO_SRCS:%.cpp=%.o) benchmark.o
+sio-benchmark: $(SIO_SRCS:%.cpp=%.o) benchmark.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
-example: $(SIO_SRCS:%.cpp=%.o) example.o
+sio-example: $(SIO_SRCS:%.cpp=%.o) example.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
-list: $(SIO_SRCS:%.cpp=%.o) list.o
+sio-list: $(SIO_SRCS:%.cpp=%.o) list.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
-convert-carpet-output: $(SIO_SRCS:%.cpp=%.o) convert-carpet-output.o
+sio-convert-carpet-output: $(SIO_SRCS:%.cpp=%.o) convert-carpet-output.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
-
-os = $(shell uname)
-ifeq ($(os), Linux)
-make-dynamiclib = -shared
-else ifeq ($(os), Darwin)
-make-dynamiclib = -dynamiclib
-else
-make-dynamiclib = -shared
-endif
-_%.so: %_wrap.o $(SIO_SRCS:%.cpp=%.o)
-	$(CXX) $(make-dynamiclib) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $(PYTHON_LDFLAGS) -o $@ $^ $(LIBS) $(PYTHON_LIBS)
-
-%_wrap.cpp: %.i
-	swig -Wall -c++ -python $*.i
-	mv $*_wrap.cxx $*_wrap.cpp
-.PRECIOUS: $(PYTHON_EXE:_%.so=%_wrap.cpp)
-.PRECIOUS: $(PYTHON_EXE:_%.so=%_wrap.o)
 
 %.o: %.cpp
 	@$(RM) $*.o
@@ -125,18 +140,24 @@ _%.so: %_wrap.o $(SIO_SRCS:%.cpp=%.o)
 
 # Taken from <http://mad-scientist.net/make/autodep.html> as written by Paul D.
 # Smith <psmith@gnu.org>, originally developed by Tom Tromey <tromey@cygnus.com>
-PROCESS_DEPENDENCIES =							  \
-  {									  \
-    perl -p -e 's{$*.o.tmp}{$*.o}g' < $*.o.d &&				  \
-    perl -p -e 's{\#.*}{};s{^[^:]*: *}{};s{ *\\$$}{};s{$$}{ :}' < $*.o.d; \
-  } > $*.d &&								  \
+PROCESS_DEPENDENCIES = \
+  { \
+  	perl -p -e 's{$*.o.tmp}{$*.o}g' < $*.o.d && \
+  	perl -p -e 's{\#.*}{};s{^[^:]*: *}{};s{ *\\$$}{};s{$$}{ :}' < $*.o.d; \
+  } > $*.d && \
   $(RM) $*.o.d
 -include $(ALL_SRCS:%.cpp=%.d)
 
 coverage:
-	-lcov --directory . --capture --output-file coverage.info
-	-lcov --remove coverage.info '/googletest-*' '/hdf5-*' '/usr/*' '/opt/*' '/Xcode.app/*' '*_wrap.cpp' --output-file coverage.info
+	$(RM) build/*/*.gcno build/*/*.gcda
+	-lcov --directory . --capture --output-file coverage.info 
+	-lcov --remove coverage.info '/googletest-*' '/hdf5-*' '/usr/*' '/opt/*' '/Xcode.app/*' '*_wrap.cpp' 'build/*' --output-file coverage.info
 	-lcov --list coverage.info
+
+install:
+	@cp sio-example $(PREFIX)/$(BIN_SUBDIR)
+	@cp sio-list $(PREFIX)/$(BIN_SUBDIR)
+	@cp sio-convert-carpet-output $(PREFIX)/$(BIN_SUBDIR)
 
 clean:
 	$(RM) -r *.dSYM
@@ -147,10 +168,16 @@ clean:
 	$(RM) -- $(PYTHON_EXE:_%.so=%_wrap.d) $(PYTHON_EXE:_%.so=%_wrap.o)
 	$(RM) -- $(PYTHON_EXE:_%.so=%.py) $(PYTHON_EXE:_%.so=%.pyc)
 	$(RM) -- $(ALL_EXE)
+	$(RM) -- $(PYTHON_EXE:_%.so=${PY_PACKAGE_DIR}/%.py)
+	$(RM) -- $(PYTHON_EXE:_%.so=${PY_PACKAGE_DIR}/%.pyc)
+	$(RM) -- $(PYTHON_EXE:%.so=${PY_PACKAGE_DIR}/%.so)
+	$(RM) ${PY_PACKAGE_DIR}/__init__.pyc
+	$(RM) -- $(ALL_META)
 
 distclean: clean
 	$(RM) $(GTEST_DIR).tar.gz
 	$(RM) -r $(GTEST_DIR)
 	$(RM) gtest
+	$(RM) example.s5
 
-.PHONY: all test coverage clean distclean
+.PHONY: all test coverage clean distclean meta install

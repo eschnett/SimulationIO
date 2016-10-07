@@ -1,63 +1,151 @@
 # SimulationIO
-[![Build Status](https://travis-ci.org/eschnett/SimulationIO.svg?branch=master)](https://travis-ci.org/eschnett/SimulationIO)
-[![Coverage Status](https://coveralls.io/repos/eschnett/SimulationIO/badge.svg?branch=master&service=github)](https://coveralls.io/github/eschnett/SimulationIO?branch=master)
-[![codecov.io](https://codecov.io/github/eschnett/SimulationIO/coverage.svg?branch=master)](https://codecov.io/github/eschnett/SimulationIO?branch=master)
+[![Build Status](https://travis-ci.org/eschnett/SimulationIO.svg?branch=release-0.1)](https://travis-ci.org/eschnett/SimulationIO)
+[![Coverage Status](https://coveralls.io/repos/eschnett/SimulationIO/badge.svg?branch=release-0.1&service=github)](https://coveralls.io/github/eschnett/SimulationIO?branch=release-0.1)
+[![codecov.io](https://codecov.io/github/eschnett/SimulationIO/coverage.svg?branch=release-0.1)](https://codecov.io/github/eschnett/SimulationIO?branch=release-0.1)
 
-Efficient and convenient I/O for large PDE simulations
+SimulationIO is a library for efficient and convenient I/O for large
+PDE simulations. The intent is to abstract away from details such as
+files and formats and describe the simulation as one or more
+discretizations of a manifold, complete with tangent space,
+fiber-bundles, and sub-manifolds. The project is currently in a
+working beta.
 
-## Current state
+More information can be found in
+[this presentation](https://github.com/Yurlungur/simulationio-and-yt)
+on SimulationIO and related tools.
 
-This repository contains a working prototype of a library that can be used to write and read simulation output, as would be necessary e.g. for the Cactus framework. There are substantially complete test cases, a simple example, an `h5ls` like utility, and a converter from the current Cactus format.
+## Components
 
-## Outdated sketches
-This repository contains a few sketches describing brainstorming results in various forms in the subdirectory `sketches`:
-- `AMR IO Library.md`: Original document
-- `simulations.{gliffy,svg,png}`: Graphical representation
-- `SimulationIO.hpp`: Description as C++ header file
-- `SimulationIO.jl`: Begin of an implementation in Julia
+SimulationIO has several components:
+- A collection of object files that can be linked against. For now,
+  only static linking is supported.
+- Several utility programs that can, for example, convert HDF5 output
+  from the [Einstein Toolkit](http://einsteintoolkit.org/) into the
+  SimulationIO format.
+- A python library, pysimulationio that wraps the object files into a
+  single shared python API.
 
-## Ideas
-- Add a UUID to every object
-  - can't just create UUIDs
-  - probably need to handle set of UUIDs?
-- Run benchmarks with large datasets
-- Add parallelism
-- Add sub-manifolds, sub-tangentspaces, etc.
-- Allow writing just part of a project, or adding to / modifying a project
-  - idea: whenever creating an HDF5 object, check whether it already exists; if so, check whether it looks as expected
-- Allow removing parts of a project, deleting it from a file?
-- Implement (value) equality comparison operators for our objects
-- Replace H5 SWIG interface with standard Python HDF5 library. To do this, obtain low-level HDF5 ids from Python, and create H5 objects from these.
-- Allow coordinates that are not fields, but are e.g. uniform, or uniform per dimension
-- Create `Data` class by splitting off from `DiscreteFieldBlockComponent`
-- Create `Value` class by splitting off from `ParameterValue`? Unify this with `Data`?
-- Range field should use a dataset instead of an attribute
-- In discrete manifold, distinguish between vertex, cell, and other centerings
-- Introduce min/max for discrete fields? For scalars only? Keep array for other tensor types, indexed by stored component? How are missing data indicated? nan?
-- Create DataSpace from vector<int>
-- Implement SILO writer (for VisIt) (or can this be a SILO wrapper?)
-- Measure performance of RegionCalculus
+## Using
 
-## Sub-Manifolds
-- Set of parent manifolds
-### Sub-Discretizations
-- Set of parent discretizations
-- If directions aligned:
-  - Map directions: int[sum-dim] -> [0..dim-1]
-  - Needs to handle points, lines, planes
-- If commensurate:
-  - Grid spacing ratio (rational)
-  - Offset (rational)
-  - Needs to handle AMR, multigrid, vertex/cell centering
+- To convert output from the Einstein Toolkit:
 
-## Sub-Tangentspaces
-- Set of parent tangentspaces (?)
-### Sub-Bases
-- Set of parent bases
-- If directions aligned:
-  - Map directions
-  - Needs to handle (projections onto) points, lines, planes
+```bash
+sio-convert-carpet-output output_file.s5 /path/to/input_files/*.h5
+```
 
-## Coordinates
-- Want domain extents in terms of coordinate systems
-  - Add min/max attribute to coordinate systems? Or coordinate fields?
+- To look at the innards of a file:
+
+```bash
+sio-list filename.s5
+```
+
+- To generate an example file:
+
+```bash
+sio-example
+```
+
+- The repository also contains several python files which show how to
+  use the python API.
+
+## Requirements
+
+SimulationIO relies on a modern version of HDF5 and a modern version
+of MPI.
+
+## Installing
+
+The python library depends on but is nequired for the rest of the
+library. Therefore, it is installed separately.
+
+### Installng the core library
+
+To install the utilities and object files, clone the repository. Then
+open `Make.user` and change it to meet your needs. There are defaults
+set, but they may not work for you. The supported settings (and
+defaults) are below:
+
+```bash
+CXX=g++
+```
+
+You may use CXX to set a compiler other than g++, for example the
+intel compilers.
+
+```bash
+MPI_NAME=mpich
+MPI_DIR=/usr
+MPI_LIBS="-lmpichcxx -lmpich"
+```
+
+This assumes that the mpi include directory is `${MPI_DIR}/include`
+and lib directory is `${MPI_DIR}/lib/x86_64-gnu`. You may also
+explicitly set these values:
+
+```bash
+MPI_INCDIR=${MPI_DIR}/include/${MPI_NAME}
+MPI_CPPFLAGS=-I${MPI_INCDIR}
+MPI_CXXFLAGS=
+MPI_LIBDIR=${MPI_DIR}/lib/x86_64-gnu
+MPI_LDFLAGS="-L${MPI_LIBDIR} -Wl,-rpath,${MPI_LIBDIR}"
+```
+
+Similarly, for HDF5:
+
+```bash
+HDF5_DIR=/usr/local/hdf5
+HDF5_INCDIR=${HDF5_DIR}/include
+HDF5_CPPFLAGS=-I{HDF5_INCDIR}
+HDF5_CXXFLAGS=
+HDF5_LIBDIR=${HDF5_DIR}/lib
+HDF5_LDFLAGS="-L${HDF5_LIBDIR} -Wl,-rpath,${HDF5_LIBDIR}"
+HDF5_LIBS="-lhdf5_cpp -lhdf5"
+```
+
+Once you've set your environment variables, run
+
+```bash
+make -j N
+```
+
+where `N` is the number of processors you'd like to use. This
+generates the object files and utilities. If you'd like to install the
+utilities in a global location you can set that location with the
+shell variables
+
+```bash
+PREFIX=/usr/local
+BIN_SUBDIR=bin
+```
+
+then type `make install` to install the to copy the utilities to
+`${PREFIX}/${BIN_SUBDIR}`. You may need to use administrator priveleges.
+
+### Installing the Python API
+
+If you've run `make` all you need to do is run
+
+```bash
+python setup.py install
+```
+
+as usual for python packages.
+
+
+### Hangups
+
+- If you need to install the python API locally, use
+
+```bash
+python setup.py install --user
+```
+
+- If you have h5py installed with python, setup.py will probably try
+  to link to the version of hdf5 it uses. The best solution to this is
+  to manually tell SimulationIO to point to that directory. If you are
+  using Anaconda python, this means:
+
+```bash
+HDF5_DIR=/path/to/anaconda/environment/root
+```
+

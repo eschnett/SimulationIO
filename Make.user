@@ -1,0 +1,43 @@
+# Change these settings to match your system.
+
+# These settings are the ones you most likely need to change
+# ----------------------------------------------------------------------
+# The c++ compiler to use
+CXX = g++
+# The directory containing MPI
+MPI_DIR = /usr/
+# The directory containing hdf5
+HDF5_DIR = /usr/local/hdf5
+# different mpi implementations have different names
+MPI_NAME = mpich
+# Binaries installed to ${PREFIX}/${BIN_SUBDIR}
+PREFIX = /usr/local
+BIN_SUBDIR = bin
+
+# If the above options are insufficient to make things work, try
+# chaging these.
+# ----------------------------------------------------------------------
+# directory for HDF5 headers
+HDF5_INCDIR = $(HDF5_DIR)/include
+# Flags fed to the C++ compiler
+HDF5_CPPFLAGS = -I$(HDF5_INCDIR)
+HDF5_CXXFLAGS =
+# Directory for HDF5 dynamic libraries
+HDF5_LIBDIR = $(HDF5_DIR)/lib
+# flags fed to the linker
+HDF5_LDFLAGS = -L$(HDF5_LIBDIR) -Wl,-rpath,$(HDF5_LIBDIR)
+# library linker flags
+HDF5_LIBS = -lhdf5_cpp -lhdf5
+
+# directory for MPI headers
+MPI_INCDIR = $(MPI_DIR)/include/$(MPI_NAME)
+# flags for C++ compiler
+MPI_CPPFLAGS = -I$(MPI_INCDIR)
+MPI_CXXFLAGS =
+# Directory for MPI dynamic libraries
+MPI_LIBDIR = $(MPI_DIR)/lib/x86_64-gnu
+# Flags fed to linker
+MPI_LDFLAGS = -L$(MPI_LIBDIR) -Wl,-rpath,$(MPI_LIBDIR)
+# library linker flags
+MPI_LIBS= -l${MPI_NAME}cxx -l${MPI_NAME}
+

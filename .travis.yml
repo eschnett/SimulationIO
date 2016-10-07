@@ -3,6 +3,10 @@ notifications:
 os:
   - linux   # This is currently Ubuntu 12.04 LTS
   - osx
+language: cpp
+compiler:
+  - clang
+  - gcc
 sudo: false
 addons:
  apt:
@@ -20,42 +24,45 @@ before_install:
       brew install homebrew/science/hdf5
       brew install lcov
       brew install open-mpi
+      brew install python
       brew install swig
-      export PYTHON_DIR="/System/Library/Frameworks/Python.framework/Versions/2.7"
     fi
   - |
     if [ `uname` = Linux ]; then
-      export HDF5_DIR="$HOME/hdf5-1.8.16"
+      export HDF5_DIR="$HOME/hdf5-1.8.17"
       (
         mkdir external
         cd external
-        wget http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.16.tar.bz2
-        tar xjf hdf5-1.8.16.tar.bz2
-        mkdir hdf5-1.8.16-build
-        cd hdf5-1.8.16-build
-        `pwd`/../hdf5-1.8.16/configure --prefix="$HDF5_DIR" --enable-cxx
+        wget http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.17.tar.bz2
+        tar xjf hdf5-1.8.17.tar.bz2
+        mkdir hdf5-1.8.17-build
+        cd hdf5-1.8.17-build
+        `pwd`/../hdf5-1.8.17/configure --prefix="$HDF5_DIR" --enable-cxx
         make -j2
         make -j2 install
       )
-      export PYTHON_DIR="/usr"
       export PATH="$HDF5_DIR/bin:$PATH"
     fi
+  - pip install --user --upgrade pip
+  - pip install --user --upgrade setuptools
   - pip install --user codecov
+  - pip install --user numpy # OS X is missing this
   - gem install coveralls-lcov
+  - $CXX --version
   - h5ls --version
   - mpirun --version
   - lcov --version
-language: cpp
-compiler:
-  - clang
-  - gcc
 script:
-  - make -j2 COVERAGE=1 CXX="$CXX" HDF5_DIR="$HDF5_DIR" PYTHON_DIR="$PYTHON_DIR"
+  - make -j2 COVERAGE=1 CXX="$CXX" HDF5_DIR="$HDF5_DIR" MPI_NAME=openmpi MPI_LIBS=-lmpi
   - make -j2 test
-  - ./example && ./list example.s5
-  - ./python-example.py && ./list python-example.s5
+  - ./sio-example && ./sio-list example.s5
   # - ./julia-example.jl && ./list julia-example.s5
+  - CFLAGS="-O0" python setup.py install --user --prefix= # workaround for bug in setuptools
+  - BDIR=$(pwd) && cd ~ # must be outside of build directory
+  - python ${BDIR}/python-examples/write-sio-file.py
+  - python ${BDIR}/python-examples/read-sio-file-no-h5py.py python-example.s5
 after_success:
+  - cd ${BDIR}
   - make -j2 coverage
   - codecov
   - coveralls-lcov coverage.info
