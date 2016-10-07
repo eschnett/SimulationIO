@@ -57,7 +57,13 @@ before_install:
   - pip install --user h5py
   - pip install --user codecov
   - gem install coveralls-lcov
+  - which $CXX
+  - which python
+  - which h5ls
+  - which mpirun
+  - which lcov
   - $CXX --version
+  - python --version
   - h5ls --version
   - mpirun --version
   - lcov --version
