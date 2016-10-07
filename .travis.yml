@@ -36,7 +36,7 @@ before_install:
       brew install python
       brew install swig
       export HDF5_DIR="/usr/local"
-      export PYTHON_DIR="/usr/local"
+      export PYTHON_DIR="/usr/local/Cellar/python/2.7.12_1/Frameworks/Python.framework/Versions/2.7"
     fi
   - |
     if [ `uname` = Linux ]; then
