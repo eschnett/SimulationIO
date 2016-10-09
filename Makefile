@@ -13,7 +13,7 @@ ifeq ($(os), Linux)
 make-dynamiclib = -shared
 dynamiclib-suffix = so
 else ifeq ($(os), Darwin)
-make-dynamiclib = -dynamiclib
+make-dynamiclib = -dynamiclib -headerpad_max_install_names
 dynamiclib-suffix = dylib
 else
 make-dynamiclib = -shared
