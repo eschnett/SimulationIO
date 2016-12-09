@@ -30,6 +30,7 @@ for discretefieldblockname in discretefield.discretefieldblocks:
     discretefieldblock = discretefield.discretefieldblocks[discretefieldblockname]
     discretefieldblockcomponent = discretefieldblock.discretefieldblockcomponents['scalar']
     dataset = discretefieldblockcomponent.data_dataset
+
     path = discretefieldblockcomponent.getPath()
     name = discretefieldblockcomponent.getName()
 
