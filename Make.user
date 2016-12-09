@@ -41,3 +41,5 @@ MPI_LDFLAGS = -L$(MPI_LIBDIR) -Wl,-rpath,$(MPI_LIBDIR)
 # library linker flags
 MPI_LIBS= -l${MPI_NAME}cxx -l${MPI_NAME}
 
+# Directory binaries go
+INSTALL_BINDIR = ${PREFIX}/${BIN_SUBDIR}
