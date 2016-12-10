@@ -1,6 +1,6 @@
 // SWIG interface file
 
-%module H5
+%module(package="pysimulationio") H5
 
 %{
 #include <H5Cpp.h>

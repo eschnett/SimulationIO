@@ -114,6 +114,8 @@ class CustomClean(clean):
                 os.remove(f)
         if path.exists(path.join(here,'dist')):
             rmtree(path.join(here,'dist'))
+        if path.exists(path.join(here,'build')):
+            rmtree(path.join(here,'build'))
         if path.exists(path.join(here,'pysimulationio.egg-info')):
             rmtree(path.join(here,'pysimulationio.egg-info'))
         clean.run(self)
