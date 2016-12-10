@@ -155,9 +155,9 @@ coverage:
 	-lcov --list coverage.info
 
 install:
-	@cp sio-example $(PREFIX)/$(BIN_SUBDIR)
-	@cp sio-list $(PREFIX)/$(BIN_SUBDIR)
-	@cp sio-convert-carpet-output $(PREFIX)/$(BIN_SUBDIR)
+	@cp sio-example $(INSTALL_BINDIR)
+	@cp sio-list $(INSTALL_BINDIR)
+	@cp sio-convert-carpet-output $(INSTALL_BINDIR)
 
 clean:
 	$(RM) -r *.dSYM

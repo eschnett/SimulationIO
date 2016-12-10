@@ -1,6 +1,6 @@
 // SWIG interface file
 
-%module RegionCalculus
+%module(package="pysimulationio") RegionCalculus
 
 %{
 #include "RegionCalculus.hpp"

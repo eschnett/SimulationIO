@@ -1,6 +1,7 @@
 """The setup module for pysimulationio
 """
 
+from __future__ import print_function
 from os import path, environ
 import os, glob
 from shutil import rmtree
@@ -10,6 +11,8 @@ from distutils.sysconfig import get_python_lib, get_python_inc
 from distutils.command.build import build
 from setuptools.command.install import install
 from distutils.command.clean import clean
+
+DEBUG=False
 
 # access some simple stuff
 here = path.abspath(path.dirname(__file__))
@@ -111,9 +114,19 @@ class CustomClean(clean):
                 os.remove(f)
         if path.exists(path.join(here,'dist')):
             rmtree(path.join(here,'dist'))
+        if path.exists(path.join(here,'build')):
+            rmtree(path.join(here,'build'))
         if path.exists(path.join(here,'pysimulationio.egg-info')):
             rmtree(path.join(here,'pysimulationio.egg-info'))
         clean.run(self)
+
+if DEBUG:
+    print("links = ",links)
+    print("swig_opts = ",swig_opts)
+    print("link_args = ",link_args)
+    print("flags = ",flags)
+    print("libs = ",libs)
+    print("object_files = ",object_files)
 
 # The standard setup declarations
 setup(
@@ -124,7 +137,7 @@ setup(
     url = 'https://github.com/eschnett/SimulationIO',
     author = 'Erik Schnetter',
     author_email = 'eschnetter@perimeterinstitute.ca',
-    licence = 'LGPLv3+',
+    license = 'LGPLv3+',
     classifiers = [
         'Development status :: 4 - Beta',
         'Intended Audience :: Science/Research',
