@@ -1184,6 +1184,8 @@ TEST(ProjectMerge, merge) {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);
     return readProject(file);
   }();
+  // project2->parameters().at("par3")->parametervalues().at("val4")->setValue(
+  //     "valA");
   project2->merge(project);
   string curr = [&] {
     ostringstream buf;
