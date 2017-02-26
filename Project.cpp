@@ -363,6 +363,13 @@ shared_ptr<Parameter> Project::createParameter(const string &name) {
   return parameter;
 }
 
+shared_ptr<Parameter> Project::getParameter(const string &name) {
+  auto loc = m_parameters.find(name);
+  if (loc != m_parameters.end())
+    return loc->second;
+  return createParameter(name);
+}
+
 shared_ptr<Parameter> Project::readParameter(const H5::CommonFG &loc,
                                              const string &entry) {
   auto parameter = Parameter::create(loc, entry, shared_from_this());
