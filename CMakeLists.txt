@@ -6,7 +6,7 @@ cmake_policy(SET CMP0048 NEW)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 
-project(FunHPC VERSION 0.1.0 LANGUAGES C CXX)
+project(SimulationIO VERSION 0.1.0 LANGUAGES C CXX)
 set(PROJECT_DESCRIPTION "SimulationIO: Efficient and convenient I/O for large PDE simulations")
 set(PROJECT_URL "https://github.com/eschnett/SimulationIO")
 
@@ -31,12 +31,18 @@ include(${SWIG_USE_FILE})
 
 # Main project
 
-include_directories("${PROJECT_SOURCE_DIR}")
+configure_file(
+  "${PROJECT_SOURCE_DIR}/Config.hpp.in"
+  "${PROJECT_BINARY_DIR}/Config.hpp"
+  )
+
+include_directories("${PROJECT_SOURCE_DIR}" "${PROJECT_BINARY_DIR}")
 
 set(SIO_SRCS
   Basis.cpp
   BasisVector.cpp
   Buffer.cpp
+  Config.cpp
   Configuration.cpp
   CoordinateField.cpp
   CoordinateSystem.cpp
@@ -168,6 +174,7 @@ set(HEADERS
   )
 
 install(FILES ${HEADERS} DESTINATION include/SimulationIO)
+install(FILES "${PROJECT_BINARY_DIR}/Config.hpp" DESTINATION include/SimulationIO)
 install(TARGETS SimulationIO DESTINATION lib)
 install(TARGETS ${EXES} DESTINATION bin)
 
