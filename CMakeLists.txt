@@ -10,6 +10,8 @@ project(SimulationIO VERSION 0.1.0 LANGUAGES C CXX)
 set(PROJECT_DESCRIPTION "SimulationIO: Efficient and convenient I/O for large PDE simulations")
 set(PROJECT_URL "https://github.com/eschnett/SimulationIO")
 
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/Modules")
+
 # External dependencies
 
 find_package(HDF5 COMPONENTS C CXX REQUIRED)
@@ -25,6 +27,9 @@ set(Python_ADDITIONAL_VERSIONS 2.7)
 find_package(PythonInterp REQUIRED)
 find_package(PythonLibs REQUIRED)
 include_directories(${PYTHON_INCLUDE_DIRS})
+
+find_package(H5Py REQUIRED)
+find_package(NumPy REQUIRED)
 
 find_package(SWIG REQUIRED)
 include(${SWIG_USE_FILE})
