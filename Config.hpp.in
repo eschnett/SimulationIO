@@ -1,0 +1,32 @@
+#ifndef CONFIG_HPP
+#define CONFIG_HPP
+
+#include <string>
+
+namespace SimulationIO {
+
+#define SIMULATIONIO_VERSION_MAJOR @SimulationIO_VERSION_MAJOR@
+#define SIMULATIONIO_VERSION_MINOR @SimulationIO_VERSION_MINOR@
+#define SIMULATIONIO_VERSION_PATCH @SimulationIO_VERSION_PATCH@
+
+#define SIMULATIONIO_VERSION                                                   \
+  "@SimulationIO_VERSION_MAJOR@.@SimulationIO_VERSION_MINOR@."                 \
+  "@SimulationIO_VERSION_PATCH@"
+
+int versionMajor();
+int versionMinor();
+int versionPatch();
+
+std::string Version();
+
+void checkVersion(const char *header_version);
+
+#define SIMULATIONIO_CHECK_VERSION                                             \
+  (::SimulationIO::checkVersion(SIMULATIONIO_VERSION))
+}
+
+#define CONFIG_HPP_DONE
+#endif // #ifndef CONFIG_HPP
+#ifndef CONFIG_HPP_DONE
+#error "Cyclic include depencency"
+#endif
