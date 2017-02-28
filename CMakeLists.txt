@@ -34,6 +34,10 @@ find_package(NumPy REQUIRED)
 find_package(SWIG REQUIRED)
 include(${SWIG_USE_FILE})
 
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+# set(LIBS ${LIBS} Threads::Threads)
+
 # Main project
 
 configure_file(
@@ -129,11 +133,11 @@ include_directories("${GOOGLETEST_DIR}/include" "${GOOGLETEST_DIR}")
 
 add_executable(test_RegionCalculus test_RegionCalculus.cpp "${GOOGLETEST_DIR}/src/gtest-all.cc")
 set_property(TARGET test_RegionCalculus PROPERTY CXX_STANDARD 11)
-target_link_libraries(test_RegionCalculus SimulationIO)
+target_link_libraries(test_RegionCalculus SimulationIO Threads::Threads)
 
 add_executable(test_SimulationIO test_SimulationIO.cpp "${GOOGLETEST_DIR}/src/gtest-all.cc")
 set_property(TARGET test_SimulationIO PROPERTY CXX_STANDARD 11)
-target_link_libraries(test_SimulationIO SimulationIO)
+target_link_libraries(test_SimulationIO SimulationIO Threads::Threads)
 
 enable_testing()
 add_test(NAME test_RegionCalculus COMMAND ./test_RegionCalculus)
