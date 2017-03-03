@@ -47,7 +47,7 @@ if(NOT PYTHONINTERP_FOUND)
 endif()
 
 execute_process(COMMAND "${PYTHON_EXECUTABLE}" "-c"
-    "import h5py as h; print(h.version.version);"
+    "import h5py as h; print(h.__version__);"
     RESULT_VARIABLE _H5PY_SEARCH_SUCCESS
     OUTPUT_VARIABLE _H5PY_VALUES
     ERROR_VARIABLE _H5PY_ERROR_VALUE
