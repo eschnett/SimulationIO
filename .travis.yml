@@ -19,7 +19,10 @@ matrix:
 # Install, build, and test
 addons:
   apt:
+    sources:
+      - kalakris-cmake
     packages:
+      - cmake
       - lcov
       - libopenmpi-dev
       - openmpi-bin
