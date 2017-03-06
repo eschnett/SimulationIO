@@ -29,6 +29,10 @@ cache:
   directories:
     - $HOME/hdf5-1.10.0-patch1
 install:
+  - which $CXX
+  - $CXX --version
+  - which mpirun
+  - mpirun --version
   - |
     if [ "$TRAVIS_OS_NAME" = linux ]; then
       export HDF5_DIR="$HOME/hdf5-1.10.0-patch1"
@@ -59,19 +63,15 @@ install:
       export HDF5_DIR="/usr/local"
       export PYTHON_DIR="/usr/local/Cellar/python/2.7.12_1/Frameworks/Python.framework/Versions/2.7"
     fi
-  - export PATH="$HDF5_DIR/bin:$PYTHON_DIR/bin:$PATH"
+  - export PATH="$HDF5_DIR/bin:$PYTHON_DIR/bin:$PATH" && hash -r
+  - which h5ls
+  - h5ls --version
+  - which python
+  - python --version
   - pip install --user h5py
   - pip install --user codecov
   - gem install coveralls-lcov
-  - which $CXX
-  - which python
-  - which h5ls
-  - which mpirun
   - which lcov
-  - $CXX --version
-  - python --version
-  - h5ls --version
-  - mpirun --version
   - lcov --version
 script:
   - mkdir build && pushd build
