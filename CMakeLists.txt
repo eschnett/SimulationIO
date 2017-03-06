@@ -76,21 +76,24 @@ set(SIO_SRCS
 
 add_library(SimulationIO ${SIO_SRCS})
 target_link_libraries(SimulationIO ${LIBS})
-set_property(TARGET SimulationIO PROPERTY CXX_STANDARD 11)
+set_property(TARGET SimulationIO PROPERTY CXX_STANDARD_REQUIRED 11)
 set_property(TARGET SimulationIO PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 
 # SWIG bindings
 
 set_source_files_properties(H5.i PROPERTIES CPLUSPLUS ON)
 swig_add_module(H5 python H5.i)
+set_property(TARGET ${SWIG_MODULE_H5_REAL_NAME} PROPERTY CXX_STANDARD_REQUIRED 11)
 swig_link_libraries(H5 SimulationIO ${PYTHON_LIBRARIES})
 
 set_source_files_properties(RegionCalculus.i PROPERTIES CPLUSPLUS ON)
 swig_add_module(RegionCalculus python RegionCalculus.i)
+set_property(TARGET ${SWIG_MODULE_RegionCalculus_REAL_NAME} PROPERTY CXX_STANDARD_REQUIRED 11)
 swig_link_libraries(RegionCalculus SimulationIO ${PYTHON_LIBRARIES})
 
 set_source_files_properties(SimulationIO.i PROPERTIES CPLUSPLUS ON)
 swig_add_module(SimulationIO python SimulationIO.i)
+set_property(TARGET ${SWIG_MODULE_SimulationIO_REAL_NAME} PROPERTY CXX_STANDARD_REQUIRED 11)
 swig_link_libraries(SimulationIO SimulationIO ${PYTHON_LIBRARIES})
 
 # Tools
@@ -105,27 +108,27 @@ set(EXES
   )
 
 add_executable(sio-benchmark benchmark.cpp)
-set_property(TARGET sio-benchmark PROPERTY CXX_STANDARD 11)
+set_property(TARGET sio-benchmark PROPERTY CXX_STANDARD_REQUIRED 11)
 target_link_libraries(sio-benchmark SimulationIO)
 
 add_executable(sio-convert-carpet-output convert-carpet-output.cpp)
-set_property(TARGET sio-convert-carpet-output PROPERTY CXX_STANDARD 11)
+set_property(TARGET sio-convert-carpet-output PROPERTY CXX_STANDARD_REQUIRED 11)
 target_link_libraries(sio-convert-carpet-output SimulationIO)
 
 add_executable(sio-copy copy.cpp)
-set_property(TARGET sio-copy PROPERTY CXX_STANDARD 11)
+set_property(TARGET sio-copy PROPERTY CXX_STANDARD_REQUIRED 11)
 target_link_libraries(sio-copy SimulationIO)
 
 add_executable(sio-example example.cpp)
-set_property(TARGET sio-example PROPERTY CXX_STANDARD 11)
+set_property(TARGET sio-example PROPERTY CXX_STANDARD_REQUIRED 11)
 target_link_libraries(sio-example SimulationIO)
 
 add_executable(sio-list list.cpp)
-set_property(TARGET sio-list PROPERTY CXX_STANDARD 11)
+set_property(TARGET sio-list PROPERTY CXX_STANDARD_REQUIRED 11)
 target_link_libraries(sio-list SimulationIO)
 
 add_executable(sio-merge merge.cpp)
-set_property(TARGET sio-merge PROPERTY CXX_STANDARD 11)
+set_property(TARGET sio-merge PROPERTY CXX_STANDARD_REQUIRED 11)
 target_link_libraries(sio-merge SimulationIO)
 
 # Tests
@@ -134,11 +137,11 @@ set(GOOGLETEST_DIR "googletest-release-1.8.0/googletest")
 include_directories("${GOOGLETEST_DIR}/include" "${GOOGLETEST_DIR}")
 
 add_executable(test_RegionCalculus test_RegionCalculus.cpp "${GOOGLETEST_DIR}/src/gtest-all.cc")
-set_property(TARGET test_RegionCalculus PROPERTY CXX_STANDARD 11)
+set_property(TARGET test_RegionCalculus PROPERTY CXX_STANDARD_REQUIRED 11)
 target_link_libraries(test_RegionCalculus SimulationIO Threads::Threads)
 
 add_executable(test_SimulationIO test_SimulationIO.cpp "${GOOGLETEST_DIR}/src/gtest-all.cc")
-set_property(TARGET test_SimulationIO PROPERTY CXX_STANDARD 11)
+set_property(TARGET test_SimulationIO PROPERTY CXX_STANDARD_REQUIRED 11)
 target_link_libraries(test_SimulationIO SimulationIO Threads::Threads)
 
 enable_testing()
