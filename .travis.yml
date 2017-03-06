@@ -20,9 +20,10 @@ matrix:
 addons:
   apt:
     sources:
-      - kalakris-cmake
+      - george-edison55-precise-backports
     packages:
       - cmake
+      - cmake-data
       - lcov
       - libopenmpi-dev
       - openmpi-bin
