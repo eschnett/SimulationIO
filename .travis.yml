@@ -30,21 +30,10 @@ cache:
     - $HOME/hdf5-1.10.0-patch1
 install:
   - |
-    if [ `uname` = Darwin ]; then
-      brew update
-      brew install homebrew/science/hdf5
-      brew install lcov
-      brew install open-mpi
-      brew install python
-      brew install swig
-      export HDF5_DIR="/usr/local"
-      export PYTHON_DIR="/usr/local/Cellar/python/2.7.12_1/Frameworks/Python.framework/Versions/2.7"
-    fi
-  - |
-    if [ `uname` = Linux ]; then
+    if [ "$TRAVIS_OS_NAME" = linux ]; then
       export HDF5_DIR="$HOME/hdf5-1.10.0-patch1"
       # Check cache
-      if [ ! -d $HDF5_DIR ]; then
+      if [ ! -d "$HDF5_DIR" ]; then
         (
           mkdir external
           cd external
@@ -58,6 +47,17 @@ install:
         )
       fi
       export PYTHON_DIR="/usr"
+    fi
+  - |
+    if [ "$TRAVIS_OS_NAME" = osx ]; then
+      brew update
+      brew install homebrew/science/hdf5
+      brew install lcov
+      brew install open-mpi
+      brew install python
+      brew install swig
+      export HDF5_DIR="/usr/local"
+      export PYTHON_DIR="/usr/local/Cellar/python/2.7.12_1/Frameworks/Python.framework/Versions/2.7"
     fi
   - export PATH="$HDF5_DIR/bin:$PYTHON_DIR/bin:$PATH"
   - pip install --user h5py
@@ -74,9 +74,16 @@ install:
   - mpirun --version
   - lcov --version
 script:
-  - make -j2 COVERAGE=1 CXX="$CXX" HDF5_DIR="$HDF5_DIR" PYTHON_DIR="$PYTHON_DIR"
-  - make -j2 check
+  - mkdir build && pushd build
+  - cmake -DCMAKE_FIND_ROOT_PATH="$HDF5_DIR;$PYTHON_DIR" -DCMAKE_CXX_COMPILER="$CXX" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX="$HOME/install" ..
+  - make -j2
+  - make -j2 test CTEST_OUTPUT_ON_FAILURE=1
+  - make -j2 install
+  - popd
 after_success:
-  - make -j2 coverage
-  - codecov
-  - coveralls-lcov coverage.info
+  - mkdir -p "$HOME/bin" && ln -s "$(which $GCOV)" "$HOME/bin/gcov" && ls -l "$HOME/bin" && export PATH="$HOME/bin:$PATH" && hash -r
+  - mkdir build-coveralls && pushd build-coveralls
+  - cmake -DCMAKE_FIND_ROOT_PATH="$HDF5_DIR;$PYTHON_DIR" -DCMAKE_CXX_COMPILER="$CXX" -DCMAKE_BUILD_TYPE=Debug -DCOVERALLS=ON ..
+  - make -j2
+  - make -j2 coveralls CTEST_OUTPUT_ON_FAILURE=1
+  - popd
