@@ -39,7 +39,7 @@ install:
     if [ "$TRAVIS_OS_NAME" = linux ]; then
       export HDF5_DIR="$HOME/hdf5-1.10.0-patch1"
       # Check cache
-      if [ true || ! -d "$HDF5_DIR" ]; then
+      if [ ! -e "$HDF5_DIR/bin/h5ls" ]; then
         (
           mkdir external
           cd external
