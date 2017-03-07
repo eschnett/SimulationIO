@@ -150,7 +150,7 @@ add_test(NAME copy COMMAND ./sio-copy example.s5 example2.s5)
 add_test(NAME list2 COMMAND ./sio-list example2.s5)
 add_test(NAME python-example COMMAND env "PYTHONPATH=${PROJECT_BINARY_DIR}:$ENV{PYTHONPATH}" ${PYTHON_EXECUTABLE} "${PROJECT_SOURCE_DIR}/python-example.py")
 add_test(NAME python-read COMMAND env "PYTHONPATH=${PROJECT_BINARY_DIR}:$ENV{PYTHONPATH}" ${PYTHON_EXECUTABLE} "${PROJECT_SOURCE_DIR}/python-read.py")
-add_test(NAME h5format_convert COMMAND ${HDF5_DIR}/bin/h5format_convert "${PROJECT_SOURCE_DIR}/python-example.py")
+add_test(NAME h5format_convert COMMAND h5format_convert "${PROJECT_SOURCE_DIR}/python-example.py")
 add_test(NAME python-read-direct COMMAND env "PYTHONPATH=${PROJECT_BINARY_DIR}:$ENV{PYTHONPATH}" ${PYTHON_EXECUTABLE} "${PROJECT_SOURCE_DIR}/python-read-direct.py")
 
 # Install
