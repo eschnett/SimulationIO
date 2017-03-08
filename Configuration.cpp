@@ -11,7 +11,11 @@
 
 #include "H5Helpers.hpp"
 
+#include <exception>
+#include <sstream>
+
 namespace SimulationIO {
+using namespace std;
 
 void Configuration::read(const H5::CommonFG &loc, const string &entry,
                          const shared_ptr<Project> &project) {
@@ -47,6 +51,7 @@ void Configuration::read(const H5::CommonFG &loc, const string &entry,
 void Configuration::merge(const shared_ptr<Configuration> &configuration) {
   assert(project()->name() == configuration->project()->name());
   for (const auto &iter : configuration->parametervalues()) {
+    // TODO: Check for identical parameters, instead of parametervalue names
     const auto &parametervalue = iter.second;
     if (!m_parametervalues.count(parametervalue->name()))
       insertParameterValue(project()
@@ -118,8 +123,18 @@ void Configuration::write(const H5::CommonFG &loc,
 void Configuration::insertParameterValue(
     const shared_ptr<ParameterValue> &parametervalue) {
   assert(parametervalue->parameter()->project().get() == project().get());
-  for (const auto &val : parametervalues())
-    assert(val.second->parameter().get() != parametervalue->parameter().get());
+  for (const auto &val : parametervalues()) {
+    if (val.second->parameter().get() == parametervalue->parameter().get()) {
+      ostringstream buf;
+      buf << "Cannot merge Configurations \"" << name()
+          << "\" with conflicting Parameter settings:\n"
+          << indent(1) << "current:\n";
+      parametervalue->output(buf, 2);
+      buf << indent(1) << "new:\n";
+      val.second->output(buf, 2);
+      throw range_error(buf.str());
+    }
+  }
   checked_emplace(m_parametervalues, parametervalue->name(), parametervalue,
                   "Configuration", "parametervalues");
   parametervalue->insert(shared_from_this());

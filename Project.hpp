@@ -127,6 +127,7 @@ public:
   void write(const H5::CommonFG &loc) const { write(loc, H5::H5File()); }
 
   shared_ptr<Parameter> createParameter(const string &name);
+  shared_ptr<Parameter> getParameter(const string &name);
   shared_ptr<Parameter> readParameter(const H5::CommonFG &loc,
                                       const string &entry);
   shared_ptr<Configuration> createConfiguration(const string &name);

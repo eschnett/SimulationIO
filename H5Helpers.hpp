@@ -16,6 +16,7 @@
 #include <sstream>
 #include <string>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 namespace H5 {
@@ -28,37 +29,44 @@ struct is_vector<std::vector<T, Allocator>> : std::true_type {};
 
 // Wrapper for hid_t that ensures correct HDF5 reference counting
 class hid {
-  hid_t id;
+  hid_t m_id;
   void incref() {
     if (valid())
-      H5Iinc_ref(id);
+      H5Iinc_ref(m_id);
   }
   void decref() {
     if (valid())
-      H5Idec_ref(id);
+      H5Idec_ref(m_id);
   }
 
 public:
-  hid() : id(-1) {}
-  hid(hid_t id) : id(id) { incref(); }
-  struct take {};
-  hid(take, hid_t id) : id(id) { /* no incref */
+  hid() : m_id(-1) {}
+  // hid(hid_t id) : m_id(id) { incref(); }
+  hid(hid_t &&id) : m_id(id) { /* no incref */
   }
-  hid(const hid &id) : id(id) { incref(); }
+  hid(const hid &other) : m_id(other.m_id) { incref(); }
+  hid(hid &&other) : m_id(other.m_id) { other.m_id = -1; }
   ~hid() { decref(); }
-  operator hid_t() const { return id; }
   hid &operator=(const hid &other) {
-    if (&other != this) {
+    if (other.m_id != m_id) {
       decref();
-      id = other.id;
+      m_id = other.m_id;
       incref();
     }
     return *this;
   }
-  bool valid() const { return id >= 0; }
-  hid_t get() const { return id; }
+  hid &operator=(hid &&other) {
+    decref();
+    m_id = other.m_id;
+    other.m_id = -1;
+    return *this;
+  }
+  bool valid() const { return m_id >= 0; }
+  hid_t get() const { return m_id; }
+  operator hid_t() const { return get(); }
 };
-inline hid take_hid(hid_t id) { return hid(hid::take(), id); }
+// TOOD: phase out this function
+inline hid take_hid(hid_t id) { return hid(std::move(id)); }
 
 // Convert CommonFG to H5Location
 namespace detail {
