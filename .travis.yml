@@ -2,10 +2,11 @@
 notifications:
   email: false
 sudo: false
+dist: trusty
 
 # Build matrix
 os:
-  - linux                       # This is currently Ubuntu 12.04 LTS
+  - linux
   - osx
 language: cpp
 compiler:
@@ -57,12 +58,27 @@ install:
   - |
     if [ "$TRAVIS_OS_NAME" = osx ]; then
       brew update
-      brew install homebrew/science/hdf5
+      # brew install homebrew/science/hdf5
       brew install lcov
       brew install open-mpi
       brew install python
       brew install swig
-      export HDF5_DIR="/usr/local"
+      # export HDF5_DIR="/usr/local"
+      export HDF5_DIR="$HOME/hdf5-1.10.0-patch1"
+      # Check cache
+      if [ ! -e "$HDF5_DIR/bin/h5ls" ]; then
+        (
+          mkdir external
+          cd external
+          wget https://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.0-patch1/src/hdf5-1.10.0-patch1.tar.bz2
+          tar xjf hdf5-1.10.0-patch1.tar.bz2
+          mkdir hdf5-1.10.0-patch1-build
+          cd hdf5-1.10.0-patch1-build
+          `pwd`/../hdf5-1.10.0-patch1/configure --prefix="$HDF5_DIR" --enable-cxx
+          make -j2
+          make -j2 install
+        )
+      fi
       export PYTHON_DIR="/usr/local/Cellar/python/2.7.12_1/Frameworks/Python.framework/Versions/2.7"
     fi
   - export PATH="$HDF5_DIR/bin:$PYTHON_DIR/bin:$PATH" && hash -r

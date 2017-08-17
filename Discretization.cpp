@@ -63,8 +63,9 @@ void Discretization::write(const H5::CommonFG &loc,
   //                    configuration->name());
   H5::createSoftLink(group, "configuration",
                      "../project/configurations/" + configuration()->name());
-  H5::createHardLink(group, "manifold/project/configurations/" +
-                                configuration()->name() + "/discretizations",
+  H5::createHardLink(group,
+                     "manifold/project/configurations/" +
+                         configuration()->name() + "/discretizations",
                      name(), group, ".");
   H5::createGroup(group, "discretizationblocks", discretizationblocks());
   group.createGroup("child_discretizations");

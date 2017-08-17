@@ -100,9 +100,9 @@ void Manifold::write(const H5::CommonFG &loc,
   //                    "configurations/" + configuration->name());
   H5::createSoftLink(group, "configuration",
                      "../configurations/" + configuration()->name());
-  H5::createHardLink(group, "project/configurations/" +
-                                configuration()->name() + "/manifolds",
-                     name(), group, ".");
+  H5::createHardLink(
+      group, "project/configurations/" + configuration()->name() + "/manifolds",
+      name(), group, ".");
   H5::createAttribute(group, "dimension", dimension());
   H5::createGroup(group, "discretizations", discretizations());
   H5::createGroup(group, "subdiscretizations", subdiscretizations());

@@ -186,8 +186,8 @@ int main(int argc, char **argv) {
           auto block = discretefield->discretefieldblocks().at(
               discretefield->name() + "-" + blocks.at(p)->name());
           auto component = block->discretefieldblockcomponents().at("scalar");
-          component->dataset()->writeData(d == 0 ? coordx : d == 1 ? coordy
-                                                                   : coordz);
+          component->dataset()->writeData(d == 0 ? coordx
+                                                 : d == 1 ? coordy : coordz);
         }
         // Write rho
         {

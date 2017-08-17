@@ -51,8 +51,9 @@ void Field::merge(const shared_ptr<Field> &field) {
     const auto &discretefield = iter.second;
     if (!m_discretefields.count(discretefield->name()))
       createDiscreteField(
-          discretefield->name(), project()->configurations().at(
-                                     discretefield->configuration()->name()),
+          discretefield->name(),
+          project()->configurations().at(
+              discretefield->configuration()->name()),
           manifold()->discretizations().at(
               discretefield->discretization()->name()),
           tangentspace()->bases().at(discretefield->basis()->name()));
@@ -83,9 +84,9 @@ void Field::write(const H5::CommonFG &loc, const H5::H5Location &parent) const {
   //                    "configurations/" + configuration->name());
   H5::createSoftLink(group, "configuration",
                      "../configurations/" + configuration()->name());
-  H5::createHardLink(group, "project/configurations/" +
-                                configuration()->name() + "/fields",
-                     name(), group, ".");
+  H5::createHardLink(
+      group, "project/configurations/" + configuration()->name() + "/fields",
+      name(), group, ".");
   // H5::createHardLink(group, "manifold", parent,
   //                    "manifolds/" + manifold->name());
   H5::createSoftLink(group, "manifold", "../manifolds/" + manifold()->name());
@@ -96,9 +97,9 @@ void Field::write(const H5::CommonFG &loc, const H5::H5Location &parent) const {
   //                    "tangentspaces/" + tangentspace->name());
   H5::createSoftLink(group, "tangentspace",
                      "../tangentspaces/" + tangentspace()->name());
-  H5::createHardLink(group, "project/tangentspaces/" + tangentspace()->name() +
-                                "/fields",
-                     name(), group, ".");
+  H5::createHardLink(
+      group, "project/tangentspaces/" + tangentspace()->name() + "/fields",
+      name(), group, ".");
   // H5::createHardLink(group, "tensortype", parent,
   //                    "tensortypes/" + tensortype->name());
   H5::createSoftLink(group, "tensortype",

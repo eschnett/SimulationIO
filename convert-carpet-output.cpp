@@ -910,9 +910,10 @@ int main(int argc, char **argv) {
               offset.at(d) =
                   ioffset.at(d) - factor.at(d) * coarse_ioffset.at(d);
             manifold->createSubDiscretization(
-                subdiscretizationname, discretizations.at(configurationname)
-                                           .at(mapindex)
-                                           .at(refinementlevel - 1),
+                subdiscretizationname,
+                discretizations.at(configurationname)
+                    .at(mapindex)
+                    .at(refinementlevel - 1),
                 discretizations.at(configurationname)
                     .at(mapindex)
                     .at(refinementlevel),

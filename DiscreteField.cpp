@@ -77,8 +77,9 @@ void DiscreteField::write(const H5::CommonFG &loc,
   //                    configuration->name());
   H5::createSoftLink(group, "configuration",
                      "../project/configurations/" + configuration()->name());
-  H5::createHardLink(group, "field/project/configurations/" +
-                                configuration()->name() + "/discretefields",
+  H5::createHardLink(group,
+                     "field/project/configurations/" + configuration()->name() +
+                         "/discretefields",
                      name(), group, ".");
   // H5::createHardLink(group, "discretization", parent,
   //                    "manifold/discretizations/" +

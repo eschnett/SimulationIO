@@ -72,18 +72,20 @@ void SubDiscretization::write(const H5::CommonFG &loc,
   //                    parent_discretization->name());
   H5::createSoftLink(group, "parent_discretization",
                      "../discretizations/" + parent_discretization()->name());
-  H5::createHardLink(group, "manifold/discretizations/" +
-                                parent_discretization()->name() +
-                                "/child_discretizations",
+  H5::createHardLink(group,
+                     "manifold/discretizations/" +
+                         parent_discretization()->name() +
+                         "/child_discretizations",
                      name(), group, ".");
   // H5::createHardLink(group, "child_discretization", parent,
   //                    "discretizations/" +
   //                    child_discretization->name());
   H5::createSoftLink(group, "child_discretization",
                      "../discretizations/" + child_discretization()->name());
-  H5::createHardLink(group, "manifold/discretizations/" +
-                                child_discretization()->name() +
-                                "/parent_discretizations",
+  H5::createHardLink(group,
+                     "manifold/discretizations/" +
+                         child_discretization()->name() +
+                         "/parent_discretizations",
                      name(), group, ".");
   auto tmp_factor = factor();
   std::reverse(tmp_factor.begin(), tmp_factor.end());
