@@ -2,10 +2,11 @@
 notifications:
   email: false
 sudo: false
+dist: trusty
 
 # Build matrix
 os:
-  - linux                       # This is currently Ubuntu 12.04 LTS
+  - linux
   - osx
 language: cpp
 compiler:
