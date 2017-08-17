@@ -106,10 +106,11 @@ void Configuration::write(const H5::CommonFG &loc,
     H5::createHardLink(val_group, val.second->name(), parent,
                        "parameters/" + val.second->parameter()->name() +
                            "/parametervalues/" + val.second->name());
-    H5::createHardLink(
-        group, "project/parameters/" + val.second->parameter()->name() +
-                   "/parametervalues/" + val.second->name() + "/configurations",
-        name(), group, ".");
+    H5::createHardLink(group,
+                       "project/parameters/" + val.second->parameter()->name() +
+                           "/parametervalues/" + val.second->name() +
+                           "/configurations",
+                       name(), group, ".");
   }
   group.createGroup("bases");
   group.createGroup("coordinatesystems");

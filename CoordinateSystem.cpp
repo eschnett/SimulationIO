@@ -72,15 +72,16 @@ void CoordinateSystem::write(const H5::CommonFG &loc,
   //                    "configurations/" + configuration->name());
   H5::createSoftLink(group, "configuration",
                      "../configurations/" + configuration()->name());
-  H5::createHardLink(group, "project/configurations/" +
-                                configuration()->name() + "/coordinatesystems",
+  H5::createHardLink(group,
+                     "project/configurations/" + configuration()->name() +
+                         "/coordinatesystems",
                      name(), group, ".");
   // H5::createHardLink(group, "manifold", parent,
   //                    "manifolds/" + manifold->name());
   H5::createSoftLink(group, "manifold", "../manifolds/" + manifold()->name());
-  H5::createHardLink(group, "project/manifolds/" + manifold()->name() +
-                                "/coordinatesystems",
-                     name(), group, ".");
+  H5::createHardLink(
+      group, "project/manifolds/" + manifold()->name() + "/coordinatesystems",
+      name(), group, ".");
   H5::createGroup(group, "coordinatefields", coordinatefields());
   // TODO: output directions
 }

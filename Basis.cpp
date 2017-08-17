@@ -61,8 +61,9 @@ void Basis::write(const H5::CommonFG &loc, const H5::H5Location &parent) const {
   //                    configuration->name);
   H5::createSoftLink(group, "configuration",
                      "../project/configurations/" + configuration()->name());
-  H5::createHardLink(group, "tangentspace/project/configurations/" +
-                                configuration()->name() + "/bases",
+  H5::createHardLink(group,
+                     "tangentspace/project/configurations/" +
+                         configuration()->name() + "/bases",
                      name(), group, ".");
   H5::createGroup(group, "basisvectors", basisvectors());
   // TODO: output directions

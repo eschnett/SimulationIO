@@ -37,8 +37,9 @@ void TangentSpace::merge(const shared_ptr<TangentSpace> &tangentspace) {
   for (const auto &iter : tangentspace->bases()) {
     const auto &basis = iter.second;
     if (!m_bases.count(basis->name()))
-      createBasis(basis->name(), project()->configurations().at(
-                                     basis->configuration()->name()));
+      createBasis(
+          basis->name(),
+          project()->configurations().at(basis->configuration()->name()));
     m_bases.at(basis->name())->merge(basis);
   }
 }
@@ -67,8 +68,9 @@ void TangentSpace::write(const H5::CommonFG &loc,
   //                    "configurations/" + configuration->name());
   H5::createSoftLink(group, "configuration",
                      "../configurations/" + configuration()->name());
-  H5::createHardLink(group, "project/configurations/" +
-                                configuration()->name() + "/tangentspaces",
+  H5::createHardLink(group,
+                     "project/configurations/" + configuration()->name() +
+                         "/tangentspaces",
                      name(), group, ".");
   H5::createAttribute(group, "dimension", dimension());
   H5::createGroup(group, "bases", bases());

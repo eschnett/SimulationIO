@@ -1407,8 +1407,9 @@ public:
     prod_t old_subregion_size = 0; // number of points in the last subregion
     traverse_subregions([&](const T pos, const subregion_t &subregion) {
       const prod_t subregion_size = subregion.size();
-      total_size += old_subregion_size == 0 ? 0 : prod_t(pos - old_pos) *
-                                                      old_subregion_size;
+      total_size += old_subregion_size == 0
+                        ? 0
+                        : prod_t(pos - old_pos) * old_subregion_size;
       old_pos = pos;
       old_subregion_size = subregion_size;
     });
