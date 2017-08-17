@@ -63,6 +63,7 @@ install:
       brew install open-mpi
       brew install python
       brew install swig
+      # export HDF5_DIR="/usr/local"
       export HDF5_DIR="$HOME/hdf5-1.10.0-patch1"
       # Check cache
       if [ ! -e "$HDF5_DIR/bin/h5ls" ]; then
@@ -78,7 +79,6 @@ install:
           make -j2 install
         )
       fi
-      export HDF5_DIR="/usr/local"
       export PYTHON_DIR="/usr/local/Cellar/python/2.7.12_1/Frameworks/Python.framework/Versions/2.7"
     fi
   - export PATH="$HDF5_DIR/bin:$PYTHON_DIR/bin:$PATH" && hash -r
