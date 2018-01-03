@@ -32,6 +32,7 @@ addons:
       - swig
 cache:
   directories:
+    - $HOME/cmake-3.10.1
     - $HOME/hdf5-1.10.1
 install:
   - which $CXX
