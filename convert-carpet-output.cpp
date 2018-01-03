@@ -192,7 +192,7 @@ template <typename T> istream &operator>>(istream &is, vector<T> &v) {
   is >> expect(']');
   return is;
 }
-}
+} // namespace std
 
 int main(int argc, char **argv) {
 
@@ -830,9 +830,8 @@ int main(int argc, char **argv) {
           region_t effective_boundary =
               region_t(effective_domain.grow(4 * max_buffers)) -
               effective_domain;
-          region_t active = region &
-                            (region | effective_boundary)
-                                .shrink(lower_buffers, upper_buffers);
+          region_t active = region & (region | effective_boundary)
+                                         .shrink(lower_buffers, upper_buffers);
           cout << "    active: " << active << "\n";
           for (const auto &i2 : discretization->discretizationblocks()) {
             const auto &discretizationblock = i2.second;

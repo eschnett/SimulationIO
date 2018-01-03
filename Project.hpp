@@ -27,7 +27,7 @@ using std::vector;
 class Project;
 
 shared_ptr<Project> createProject(const string &name);
-shared_ptr<Project> readProject(const H5::CommonFG &loc);
+shared_ptr<Project> readProject(const H5::H5Location &loc);
 
 class Parameter;
 class Configuration;
@@ -87,7 +87,7 @@ public:
   Project &operator=(Project &&) = delete;
 
   friend shared_ptr<Project> createProject(const string &name);
-  friend shared_ptr<Project> readProject(const H5::CommonFG &loc);
+  friend shared_ptr<Project> readProject(const H5::H5Location &loc);
   Project(hidden, const string &name) : Common(name) { createTypes(); }
   Project(hidden) : Common(hidden()) {}
 
@@ -97,12 +97,12 @@ private:
     project->createTypes();
     return project;
   }
-  static shared_ptr<Project> create(const H5::CommonFG &loc) {
+  static shared_ptr<Project> create(const H5::H5Location &loc) {
     auto project = make_shared<Project>(hidden());
     project->read(loc);
     return project;
   }
-  void read(const H5::CommonFG &loc);
+  void read(const H5::H5Location &loc);
 
 public:
   virtual ~Project() {}
@@ -122,46 +122,46 @@ private:
   void createTypes() const;
 
 public:
-  virtual void write(const H5::CommonFG &loc,
+  virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
-  void write(const H5::CommonFG &loc) const { write(loc, H5::H5File()); }
+  void write(const H5::H5Location &loc) const { write(loc, H5::H5File()); }
 
   shared_ptr<Parameter> createParameter(const string &name);
   shared_ptr<Parameter> getParameter(const string &name);
-  shared_ptr<Parameter> readParameter(const H5::CommonFG &loc,
+  shared_ptr<Parameter> readParameter(const H5::H5Location &loc,
                                       const string &entry);
   shared_ptr<Configuration> createConfiguration(const string &name);
-  shared_ptr<Configuration> readConfiguration(const H5::CommonFG &loc,
+  shared_ptr<Configuration> readConfiguration(const H5::H5Location &loc,
                                               const string &entry);
   shared_ptr<TensorType> createTensorType(const string &name, int dimension,
                                           int rank);
-  shared_ptr<TensorType> readTensorType(const H5::CommonFG &loc,
+  shared_ptr<TensorType> readTensorType(const H5::H5Location &loc,
                                         const string &entry);
   shared_ptr<Manifold>
   createManifold(const string &name,
                  const shared_ptr<Configuration> &configuration, int dimension);
-  shared_ptr<Manifold> readManifold(const H5::CommonFG &loc,
+  shared_ptr<Manifold> readManifold(const H5::H5Location &loc,
                                     const string &entry);
   shared_ptr<TangentSpace>
   createTangentSpace(const string &name,
                      const shared_ptr<Configuration> &configuration,
                      int dimension);
-  shared_ptr<TangentSpace> readTangentSpace(const H5::CommonFG &loc,
+  shared_ptr<TangentSpace> readTangentSpace(const H5::H5Location &loc,
                                             const string &entry);
   shared_ptr<Field> createField(const string &name,
                                 const shared_ptr<Configuration> &configuration,
                                 const shared_ptr<Manifold> &manifold,
                                 const shared_ptr<TangentSpace> &tangentspace,
                                 const shared_ptr<TensorType> &tensortype);
-  shared_ptr<Field> readField(const H5::CommonFG &loc, const string &entry);
+  shared_ptr<Field> readField(const H5::H5Location &loc, const string &entry);
   shared_ptr<CoordinateSystem>
   createCoordinateSystem(const string &name,
                          const shared_ptr<Configuration> &configuration,
                          const shared_ptr<Manifold> &manifold);
-  shared_ptr<CoordinateSystem> readCoordinateSystem(const H5::CommonFG &loc,
+  shared_ptr<CoordinateSystem> readCoordinateSystem(const H5::H5Location &loc,
                                                     const string &entry);
 };
-}
+} // namespace SimulationIO
 
 #define PROJECT_HPP_DONE
 #endif // #ifndef PROJECT_HPP

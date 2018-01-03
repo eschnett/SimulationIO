@@ -91,13 +91,13 @@ private:
                                         storage_index, indexvalues);
   }
   static shared_ptr<TensorComponent>
-  create(const H5::CommonFG &loc, const string &entry,
+  create(const H5::H5Location &loc, const string &entry,
          const shared_ptr<TensorType> &tensortype) {
     auto tensorcomponent = make_shared<TensorComponent>(hidden());
     tensorcomponent->read(loc, entry, tensortype);
     return tensorcomponent;
   }
-  void read(const H5::CommonFG &loc, const string &entry,
+  void read(const H5::H5Location &loc, const string &entry,
             const shared_ptr<TensorType> &tensortype);
 
 public:
@@ -110,7 +110,7 @@ public:
                              const TensorComponent &tensorcomponent) {
     return tensorcomponent.output(os);
   }
-  virtual void write(const H5::CommonFG &loc,
+  virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
 
 private:
@@ -118,7 +118,7 @@ private:
   void noinsert(const shared_ptr<DiscreteFieldBlockComponent>
                     &discretefieldblockcomponent) {}
 };
-}
+} // namespace SimulationIO
 
 #define TENSORCOMPONENT_HPP_DONE
 #endif // #ifndef TENSORCOMPONENT_HPP

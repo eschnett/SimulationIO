@@ -8,7 +8,7 @@
 
 namespace SimulationIO {
 
-void SubDiscretization::read(const H5::CommonFG &loc, const string &entry,
+void SubDiscretization::read(const H5::H5Location &loc, const string &entry,
                              const shared_ptr<Manifold> &manifold) {
   m_manifold = manifold;
   auto group = loc.openGroup(entry);
@@ -57,7 +57,7 @@ ostream &SubDiscretization::output(ostream &os, int level) const {
   return os;
 }
 
-void SubDiscretization::write(const H5::CommonFG &loc,
+void SubDiscretization::write(const H5::H5Location &loc,
                               const H5::H5Location &parent) const {
   assert(invariant());
   auto group = loc.createGroup(name());
@@ -94,4 +94,4 @@ void SubDiscretization::write(const H5::CommonFG &loc,
   std::reverse(tmp_offset.begin(), tmp_offset.end());
   H5::createAttribute(group, "offset", tmp_offset);
 }
-}
+} // namespace SimulationIO

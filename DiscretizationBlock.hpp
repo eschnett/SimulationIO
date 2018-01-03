@@ -78,13 +78,13 @@ private:
     return make_shared<DiscretizationBlock>(hidden(), name, discretization);
   }
   static shared_ptr<DiscretizationBlock>
-  create(const H5::CommonFG &loc, const string &entry,
+  create(const H5::H5Location &loc, const string &entry,
          const shared_ptr<Discretization> &discretization) {
     auto discretizationblock = make_shared<DiscretizationBlock>(hidden());
     discretizationblock->read(loc, entry, discretization);
     return discretizationblock;
   }
-  void read(const H5::CommonFG &loc, const string &entry,
+  void read(const H5::H5Location &loc, const string &entry,
             const shared_ptr<Discretization> &discretization);
 
 public:
@@ -114,14 +114,14 @@ public:
                              const DiscretizationBlock &discretizationblock) {
     return discretizationblock.output(os);
   }
-  virtual void write(const H5::CommonFG &loc,
+  virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
 
 private:
   friend class DiscreteFieldBlock;
   void noinsert(const shared_ptr<DiscreteFieldBlock> &discretefieldblock) {}
 };
-}
+} // namespace SimulationIO
 
 #define DISCRETIZATIONBLOCK_HPP_DONE
 #endif // #ifndef DISCRETIZATIONBLOCK_HPP

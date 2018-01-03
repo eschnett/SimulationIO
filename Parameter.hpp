@@ -56,14 +56,14 @@ private:
                                       const shared_ptr<Project> &project) {
     return make_shared<Parameter>(hidden(), name, project);
   }
-  static shared_ptr<Parameter> create(const H5::CommonFG &loc,
+  static shared_ptr<Parameter> create(const H5::H5Location &loc,
                                       const string &entry,
                                       const shared_ptr<Project> &project) {
     auto parameter = make_shared<Parameter>(hidden());
     parameter->read(loc, entry, project);
     return parameter;
   }
-  void read(const H5::CommonFG &loc, const string &entry,
+  void read(const H5::H5Location &loc, const string &entry,
             const shared_ptr<Project> &project);
 
 public:
@@ -75,14 +75,14 @@ public:
   friend ostream &operator<<(ostream &os, const Parameter &parameter) {
     return parameter.output(os);
   }
-  virtual void write(const H5::CommonFG &loc,
+  virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
 
   shared_ptr<ParameterValue> createParameterValue(const string &name);
-  shared_ptr<ParameterValue> readParameterValue(const H5::CommonFG &loc,
+  shared_ptr<ParameterValue> readParameterValue(const H5::H5Location &loc,
                                                 const string &entry);
 };
-}
+} // namespace SimulationIO
 
 #define PARAMETER_HPP_DONE
 #endif // #ifndef PARAMETER_HPP

@@ -6,7 +6,7 @@ cmake_policy(SET CMP0048 NEW)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 
-project(SimulationIO VERSION 1.0.1 LANGUAGES C CXX)
+project(SimulationIO VERSION 2.0.0 LANGUAGES C CXX)
 set(PROJECT_DESCRIPTION "SimulationIO: Efficient and convenient I/O for large PDE simulations")
 set(PROJECT_URL "https://github.com/eschnett/SimulationIO")
 
@@ -18,27 +18,31 @@ find_package(HDF5 COMPONENTS C CXX REQUIRED)
 include_directories(${HDF5_INCLUDE_DIRS})
 set(LIBS ${LIBS} ${HDF5_LIBRARIES})
 
-# Note: We only require MPI since HDF5 might require MPI
+# Note: We only look for MPI since HDF5 might require MPI
 find_package(MPI REQUIRED)
-include_directories(${MPI_INCLUDE_DIRS})
-set(LIBS ${LIBS} ${MPI_LIBRARIES})
+# It seems that MPI_INCLUDE_DIRS and MPI_LIBRARIES are old names, and
+# MPI_CXX_INCLUDE_PATH and MPI_CXX_LIBRARIES are newer names
+include_directories(${MPI_INCLUDE_DIRS} ${MPI_CXX_INCLUDE_PATH})
+set(LIBS ${LIBS} ${MPI_LIBRARIES} ${MPI_CXX_LIBRARIES})
 
 set(Python_ADDITIONAL_VERSIONS 2.7)
 # This sets PYTHONINTERP_FOUND
 find_package(PythonInterp)
-# This sets PYTHONINTERP_FOUND
+# This sets PYTHONLIBS_FOUND
 find_package(PythonLibs)
 if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND)
   include_directories(${PYTHON_INCLUDE_DIRS})
 endif()
 
 if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND)
-  find_package(H5Py REQUIRED)
-  find_package(NumPy REQUIRED)
+  find_package(H5Py)
+  find_package(NumPy)
 endif()
 
-if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND)
-  find_package(SWIG REQUIRED)
+if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND AND H5PY_FOUND AND NUMPY_FOUND)
+  find_package(SWIG)
+endif()
+if(SWIG_FOUND)
   include(${SWIG_USE_FILE})
 endif()
 
@@ -91,7 +95,7 @@ set_property(TARGET SimulationIO PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 
 # SWIG bindings
 
-if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND)
+if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND AND H5PY_FOUND AND NUMPY_FOUND AND SWIG_FOUND)
   set_source_files_properties(H5.i PROPERTIES CPLUSPLUS ON)
   swig_add_module(H5 python H5.i)
   # set_property(TARGET ${SWIG_MODULE_H5_REAL_NAME} PROPERTY CXX_STANDARD 11
@@ -158,7 +162,7 @@ add_test(NAME example COMMAND ./sio-example)
 add_test(NAME list COMMAND ./sio-list example.s5)
 add_test(NAME copy COMMAND ./sio-copy example.s5 example2.s5)
 add_test(NAME list2 COMMAND ./sio-list example2.s5)
-if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND)
+if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND AND H5PY_FOUND AND NUMPY_FOUND AND SWIG_FOUND)
   add_test(NAME python-example COMMAND env "PYTHONPATH=${PROJECT_BINARY_DIR}:$ENV{PYTHONPATH}" ${PYTHON_EXECUTABLE} "${PROJECT_SOURCE_DIR}/python-example.py")
   add_test(NAME python-read COMMAND env "PYTHONPATH=${PROJECT_BINARY_DIR}:$ENV{PYTHONPATH}" ${PYTHON_EXECUTABLE} "${PROJECT_SOURCE_DIR}/python-read.py")
   add_test(NAME h5format_convert COMMAND h5format_convert python-example.s5)
@@ -201,7 +205,7 @@ install(FILES "${PROJECT_BINARY_DIR}/Config.hpp" DESTINATION include/SimulationI
 install(TARGETS SimulationIO DESTINATION lib)
 install(TARGETS ${EXES} DESTINATION bin)
 
-if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND)
+if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND AND H5PY_FOUND AND NUMPY_FOUND AND SWIG_FOUND)
   install(TARGETS ${SWIG_MODULE_H5_REAL_NAME} DESTINATION lib)
   install(TARGETS ${SWIG_MODULE_RegionCalculus_REAL_NAME} DESTINATION lib)
   install(TARGETS ${SWIG_MODULE_SimulationIO_REAL_NAME} DESTINATION lib)

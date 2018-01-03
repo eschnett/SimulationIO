@@ -7,7 +7,7 @@
 
 namespace SimulationIO {
 
-void DiscreteFieldBlock::read(const H5::CommonFG &loc, const string &entry,
+void DiscreteFieldBlock::read(const H5::H5Location &loc, const string &entry,
                               const shared_ptr<DiscreteField> &discretefield) {
   m_discretefield = discretefield;
   auto group = loc.openGroup(entry);
@@ -70,7 +70,7 @@ ostream &DiscreteFieldBlock::output(ostream &os, int level) const {
   return os;
 }
 
-void DiscreteFieldBlock::write(const H5::CommonFG &loc,
+void DiscreteFieldBlock::write(const H5::H5Location &loc,
                                const H5::H5Location &parent) const {
   assert(invariant());
   auto group = loc.createGroup(name());
@@ -112,7 +112,7 @@ DiscreteFieldBlock::createDiscreteFieldBlockComponent(
 }
 
 shared_ptr<DiscreteFieldBlockComponent>
-DiscreteFieldBlock::readDiscreteFieldBlockComponent(const H5::CommonFG &loc,
+DiscreteFieldBlock::readDiscreteFieldBlockComponent(const H5::H5Location &loc,
                                                     const string &entry) {
   auto discretefieldblockcomponent =
       DiscreteFieldBlockComponent::create(loc, entry, shared_from_this());
@@ -127,4 +127,4 @@ DiscreteFieldBlock::readDiscreteFieldBlockComponent(const H5::CommonFG &loc,
   assert(discretefieldblockcomponent->invariant());
   return discretefieldblockcomponent;
 }
-}
+} // namespace SimulationIO

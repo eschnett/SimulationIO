@@ -67,7 +67,7 @@ template <typename T> struct norm_traits<std::complex<T>> {
             norm_traits<T>::max(x.imag(), y.imag())};
   }
 };
-}
+} // namespace detail
 
 template <typename T> class norm_t {
   // Ensure that abs and sqrt signatures are correct
@@ -429,7 +429,7 @@ public:
 
   // TODO: implement readData
 };
-}
+} // namespace SimulationIO
 
 #define DATABLOCK_HPP_DONE
 #endif // #ifndef DATABLOCK_HPP

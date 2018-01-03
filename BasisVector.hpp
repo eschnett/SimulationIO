@@ -54,14 +54,14 @@ private:
   create(const string &name, const shared_ptr<Basis> &basis, int direction) {
     return make_shared<BasisVector>(hidden(), name, basis, direction);
   }
-  static shared_ptr<BasisVector> create(const H5::CommonFG &loc,
+  static shared_ptr<BasisVector> create(const H5::H5Location &loc,
                                         const string &entry,
                                         const shared_ptr<Basis> &basis) {
     auto basisvector = make_shared<BasisVector>(hidden());
     basisvector->read(loc, entry, basis);
     return basisvector;
   }
-  void read(const H5::CommonFG &loc, const string &entry,
+  void read(const H5::H5Location &loc, const string &entry,
             const shared_ptr<Basis> &basis);
 
 public:
@@ -73,10 +73,10 @@ public:
   friend ostream &operator<<(ostream &os, const BasisVector &basisvector) {
     return basisvector.output(os);
   }
-  virtual void write(const H5::CommonFG &loc,
+  virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
 };
-}
+} // namespace SimulationIO
 
 #define BASISVECTOR_HPP_DONE
 #endif // #ifndef BASISVECTOR_HPP

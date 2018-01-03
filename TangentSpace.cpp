@@ -7,7 +7,7 @@
 
 namespace SimulationIO {
 
-void TangentSpace::read(const H5::CommonFG &loc, const string &entry,
+void TangentSpace::read(const H5::H5Location &loc, const string &entry,
                         const shared_ptr<Project> &project) {
   m_project = project;
   auto group = loc.openGroup(entry);
@@ -37,9 +37,8 @@ void TangentSpace::merge(const shared_ptr<TangentSpace> &tangentspace) {
   for (const auto &iter : tangentspace->bases()) {
     const auto &basis = iter.second;
     if (!m_bases.count(basis->name()))
-      createBasis(
-          basis->name(),
-          project()->configurations().at(basis->configuration()->name()));
+      createBasis(basis->name(), project()->configurations().at(
+                                     basis->configuration()->name()));
     m_bases.at(basis->name())->merge(basis);
   }
 }
@@ -55,7 +54,7 @@ ostream &TangentSpace::output(ostream &os, int level) const {
   return os;
 }
 
-void TangentSpace::write(const H5::CommonFG &loc,
+void TangentSpace::write(const H5::H5Location &loc,
                          const H5::H5Location &parent) const {
   assert(invariant());
   auto group = loc.createGroup(name());
@@ -87,11 +86,11 @@ TangentSpace::createBasis(const string &name,
   return basis;
 }
 
-shared_ptr<Basis> TangentSpace::readBasis(const H5::CommonFG &loc,
+shared_ptr<Basis> TangentSpace::readBasis(const H5::H5Location &loc,
                                           const string &entry) {
   auto basis = Basis::create(loc, entry, shared_from_this());
   checked_emplace(m_bases, basis->name(), basis, "TangentSpace", "bases");
   assert(basis->invariant());
   return basis;
 }
-}
+} // namespace SimulationIO

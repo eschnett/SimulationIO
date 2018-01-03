@@ -11,7 +11,7 @@
 namespace SimulationIO {
 using namespace std;
 
-void ParameterValue::read(const H5::CommonFG &loc, const string &entry,
+void ParameterValue::read(const H5::H5Location &loc, const string &entry,
                           const shared_ptr<Parameter> &parameter) {
   m_parameter = parameter;
   value_type = type_empty;
@@ -150,7 +150,7 @@ ostream &ParameterValue::output(ostream &os, int level) const {
   return os;
 }
 
-void ParameterValue::write(const H5::CommonFG &loc,
+void ParameterValue::write(const H5::H5Location &loc,
                            const H5::H5Location &parent) const {
   assert(invariant());
   auto group = loc.createGroup(name());
@@ -191,4 +191,4 @@ void ParameterValue::insert(const shared_ptr<Configuration> &configuration) {
   checked_emplace(m_configurations, configuration->name(), configuration,
                   "ParameterValue", "configurations");
 }
-}
+} // namespace SimulationIO

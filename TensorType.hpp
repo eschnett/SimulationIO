@@ -76,14 +76,14 @@ private:
                                        int dimension, int rank) {
     return make_shared<TensorType>(hidden(), name, project, dimension, rank);
   }
-  static shared_ptr<TensorType> create(const H5::CommonFG &loc,
+  static shared_ptr<TensorType> create(const H5::H5Location &loc,
                                        const string &entry,
                                        const shared_ptr<Project> &project) {
     auto tensortype = make_shared<TensorType>(hidden());
     tensortype->read(loc, entry, project);
     return tensortype;
   }
-  void read(const H5::CommonFG &loc, const string &entry,
+  void read(const H5::H5Location &loc, const string &entry,
             const shared_ptr<Project> &project);
 
 public:
@@ -95,20 +95,20 @@ public:
   friend ostream &operator<<(ostream &os, const TensorType &tensortype) {
     return tensortype.output(os);
   }
-  virtual void write(const H5::CommonFG &loc,
+  virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
 
   shared_ptr<TensorComponent>
   createTensorComponent(const string &name, int storage_index,
                         const vector<int> &indexvalues);
-  shared_ptr<TensorComponent> readTensorComponent(const H5::CommonFG &loc,
+  shared_ptr<TensorComponent> readTensorComponent(const H5::H5Location &loc,
                                                   const string &entry);
 
 private:
   friend class Field;
   void noinsert(const shared_ptr<Field> &field) {}
 };
-}
+} // namespace SimulationIO
 
 #define TENSORTYPE_HPP_DONE
 #endif // #ifndef TENSORTYPE_HPP

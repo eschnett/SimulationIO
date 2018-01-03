@@ -6,7 +6,7 @@
 
 namespace SimulationIO {
 
-void TensorType::read(const H5::CommonFG &loc, const string &entry,
+void TensorType::read(const H5::H5Location &loc, const string &entry,
                       const shared_ptr<Project> &project) {
   m_project = project;
   auto group = loc.openGroup(entry);
@@ -51,7 +51,7 @@ ostream &TensorType::output(ostream &os, int level) const {
   return os;
 }
 
-void TensorType::write(const H5::CommonFG &loc,
+void TensorType::write(const H5::H5Location &loc,
                        const H5::H5Location &parent) const {
   assert(invariant());
   auto group = loc.createGroup(name());
@@ -80,7 +80,8 @@ TensorType::createTensorComponent(const string &name, int stored_component,
 }
 
 shared_ptr<TensorComponent>
-TensorType::readTensorComponent(const H5::CommonFG &loc, const string &entry) {
+TensorType::readTensorComponent(const H5::H5Location &loc,
+                                const string &entry) {
   auto tensorcomponent =
       TensorComponent::create(loc, entry, shared_from_this());
   checked_emplace(m_tensorcomponents, tensorcomponent->name(), tensorcomponent,
@@ -90,4 +91,4 @@ TensorType::readTensorComponent(const H5::CommonFG &loc, const string &entry) {
   assert(tensorcomponent->invariant());
   return tensorcomponent;
 }
-}
+} // namespace SimulationIO

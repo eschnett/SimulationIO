@@ -86,14 +86,14 @@ private:
                                           const shared_ptr<Project> &project) {
     return make_shared<Configuration>(hidden(), name, project);
   }
-  static shared_ptr<Configuration> create(const H5::CommonFG &loc,
+  static shared_ptr<Configuration> create(const H5::H5Location &loc,
                                           const string &entry,
                                           const shared_ptr<Project> &project) {
     auto configuration = make_shared<Configuration>(hidden());
     configuration->read(loc, entry, project);
     return configuration;
   }
-  void read(const H5::CommonFG &loc, const string &entry,
+  void read(const H5::H5Location &loc, const string &entry,
             const shared_ptr<Project> &project);
 
 public:
@@ -105,7 +105,7 @@ public:
   friend ostream &operator<<(ostream &os, const Configuration &configuration) {
     return configuration.output(os);
   }
-  virtual void write(const H5::CommonFG &loc,
+  virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
 
   void insertParameterValue(const shared_ptr<ParameterValue> &parametervalue);
@@ -148,7 +148,7 @@ private:
                     "tangentspaces");
   }
 };
-}
+} // namespace SimulationIO
 
 #define CONFIGURATION_HPP_DONE
 #endif // #ifndef CONFIGURATION_HPP

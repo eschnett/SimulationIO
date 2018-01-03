@@ -88,14 +88,14 @@ private:
     configuration->insert(name, manifold);
     return manifold;
   }
-  static shared_ptr<Manifold> create(const H5::CommonFG &loc,
+  static shared_ptr<Manifold> create(const H5::H5Location &loc,
                                      const string &entry,
                                      const shared_ptr<Project> &project) {
     auto manifold = make_shared<Manifold>(hidden());
     manifold->read(loc, entry, project);
     return manifold;
   }
-  void read(const H5::CommonFG &loc, const string &entry,
+  void read(const H5::H5Location &loc, const string &entry,
             const shared_ptr<Project> &project);
 
 public:
@@ -107,20 +107,20 @@ public:
   friend ostream &operator<<(ostream &os, const Manifold &manifold) {
     return manifold.output(os);
   }
-  virtual void write(const H5::CommonFG &loc,
+  virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
 
   shared_ptr<Discretization>
   createDiscretization(const string &name,
                        const shared_ptr<Configuration> &configuration);
-  shared_ptr<Discretization> readDiscretization(const H5::CommonFG &loc,
+  shared_ptr<Discretization> readDiscretization(const H5::H5Location &loc,
                                                 const string &entry);
   shared_ptr<SubDiscretization> createSubDiscretization(
       const string &name,
       const shared_ptr<Discretization> &parent_discretization,
       const shared_ptr<Discretization> &child_discretization,
       const vector<double> &factor, const vector<double> &offset);
-  shared_ptr<SubDiscretization> readSubDiscretization(const H5::CommonFG &loc,
+  shared_ptr<SubDiscretization> readSubDiscretization(const H5::H5Location &loc,
                                                       const string &entry);
 
 private:
@@ -135,7 +135,7 @@ private:
     checked_emplace(m_fields, name, field, "Manifold", "fields");
   }
 };
-}
+} // namespace SimulationIO
 
 #define MANIFOLD_HPP_DONE
 #endif // #ifndef MANIFOLD_HPP

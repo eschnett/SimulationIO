@@ -75,14 +75,14 @@ private:
     configuration->insert(name, tangentspace);
     return tangentspace;
   }
-  static shared_ptr<TangentSpace> create(const H5::CommonFG &loc,
+  static shared_ptr<TangentSpace> create(const H5::H5Location &loc,
                                          const string &entry,
                                          const shared_ptr<Project> &project) {
     auto tangentspace = make_shared<TangentSpace>(hidden());
     tangentspace->read(loc, entry, project);
     return tangentspace;
   }
-  void read(const H5::CommonFG &loc, const string &entry,
+  void read(const H5::H5Location &loc, const string &entry,
             const shared_ptr<Project> &project);
 
 public:
@@ -94,12 +94,12 @@ public:
   friend ostream &operator<<(ostream &os, const TangentSpace &tangentspace) {
     return tangentspace.output(os);
   }
-  virtual void write(const H5::CommonFG &loc,
+  virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
 
   shared_ptr<Basis> createBasis(const string &name,
                                 const shared_ptr<Configuration> &configuration);
-  shared_ptr<Basis> readBasis(const H5::CommonFG &loc, const string &entry);
+  shared_ptr<Basis> readBasis(const H5::H5Location &loc, const string &entry);
 
 private:
   friend class Field;
@@ -107,7 +107,7 @@ private:
     checked_emplace(m_fields, name, field, "TangentSpace", "fields");
   }
 };
-}
+} // namespace SimulationIO
 
 #define TANGENTSPACE_HPP_DONE
 #endif // #ifndef TANGENTSPACE_HPP

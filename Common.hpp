@@ -195,7 +195,7 @@ protected:
 public:
   virtual ~Common() {}
   virtual ostream &output(ostream &os, int level = 0) const = 0;
-  virtual void write(const H5::CommonFG &loc,
+  virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const = 0;
 
   // The association between names and integer values below MUST NOT BE
@@ -222,6 +222,6 @@ public:
     type_SubDiscretization = 19,
   };
 };
-}
+} // namespace SimulationIO
 
 #endif // #ifndef COMMON_HPP

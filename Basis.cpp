@@ -6,7 +6,7 @@
 
 namespace SimulationIO {
 
-void Basis::read(const H5::CommonFG &loc, const string &entry,
+void Basis::read(const H5::H5Location &loc, const string &entry,
                  const shared_ptr<TangentSpace> &tangentspace) {
   m_tangentspace = tangentspace;
   auto group = loc.openGroup(entry);
@@ -47,7 +47,8 @@ ostream &Basis::output(ostream &os, int level) const {
   return os;
 }
 
-void Basis::write(const H5::CommonFG &loc, const H5::H5Location &parent) const {
+void Basis::write(const H5::H5Location &loc,
+                  const H5::H5Location &parent) const {
   assert(invariant());
   auto group = loc.createGroup(name());
   H5::createAttribute(group, "type", tangentspace()->project()->enumtype,
@@ -80,7 +81,7 @@ shared_ptr<BasisVector> Basis::createBasisVector(const string &name,
   return basisvector;
 }
 
-shared_ptr<BasisVector> Basis::readBasisVector(const H5::CommonFG &loc,
+shared_ptr<BasisVector> Basis::readBasisVector(const H5::H5Location &loc,
                                                const string &entry) {
   auto basisvector = BasisVector::create(loc, entry, shared_from_this());
   checked_emplace(m_basisvectors, basisvector->name(), basisvector, "Basis",
@@ -90,4 +91,4 @@ shared_ptr<BasisVector> Basis::readBasisVector(const H5::CommonFG &loc,
   assert(basisvector->invariant());
   return basisvector;
 }
-}
+} // namespace SimulationIO

@@ -4,7 +4,7 @@
 
 namespace SimulationIO {
 
-void TensorComponent::read(const H5::CommonFG &loc, const string &entry,
+void TensorComponent::read(const H5::H5Location &loc, const string &entry,
                            const shared_ptr<TensorType> &tensortype) {
   m_tensortype = tensortype;
   auto group = loc.openGroup(entry);
@@ -33,7 +33,7 @@ ostream &TensorComponent::output(ostream &os, int level) const {
   return os;
 }
 
-void TensorComponent::write(const H5::CommonFG &loc,
+void TensorComponent::write(const H5::H5Location &loc,
                             const H5::H5Location &parent) const {
   assert(invariant());
   auto group = loc.createGroup(name());
@@ -46,4 +46,4 @@ void TensorComponent::write(const H5::CommonFG &loc,
   H5::createAttribute(group, "storage_index", storage_index());
   H5::createAttribute(group, "indexvalues", indexvalues());
 }
-}
+} // namespace SimulationIO
