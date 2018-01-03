@@ -73,40 +73,6 @@ public:
 // TOOD: phase out this function
 inline hid take_hid(hid_t id) { return hid(std::move(id)); }
 
-// Convert CommonFG to H5Location
-namespace detail {
-struct H5LocationDeleter {
-  void operator()(H5Location *loc) const {
-    auto objtype = H5Iget_type(loc->getId());
-    switch (objtype) {
-    case H5I_FILE:
-      delete static_cast<H5File *>(loc);
-      break;
-    case H5I_GROUP:
-      delete static_cast<Group *>(loc);
-      break;
-    default:
-      assert(0);
-    }
-  }
-};
-} // namespace detail
-inline std::unique_ptr<H5Location, detail::H5LocationDeleter>
-getLocation(const CommonFG &fg) {
-  auto locid = fg.getLocId();
-  assert(locid >= 0);
-  auto objtype = H5Iget_type(locid);
-  switch (objtype) {
-  case H5I_FILE: {
-    return {new H5File(locid), detail::H5LocationDeleter()};
-  }
-  case H5I_GROUP:
-    return {new Group(locid), detail::H5LocationDeleter()};
-  default:
-    assert(0);
-  }
-}
-
 // H5Literate
 namespace detail {
 template <typename Op> struct H5L_iterator {
