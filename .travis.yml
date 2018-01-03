@@ -20,11 +20,11 @@ matrix:
 # Install, build, and test
 addons:
   apt:
-    sources:
-      - george-edison55-precise-backports
+    # sources:
+    #   - george-edison55-precise-backports
     packages:
-      # - cmake
-      # - cmake-data
+      - cmake
+      - cmake-data
       - lcov
       - libopenmpi-dev
       - openmpi-bin
@@ -32,30 +32,30 @@ addons:
       - swig
 cache:
   directories:
-    - $HOME/cmake-3.10.1
+    # - $HOME/cmake-3.10.1
     - $HOME/hdf5-1.10.1
 install:
   - which $CXX
   - $CXX --version
   - |
     if [ "$TRAVIS_OS_NAME" = linux ]; then
-      export CMAKE_DIR="$HOME/cmake-3.10.1"
+      # export CMAKE_DIR="$HOME/cmake-3.10.1"
       export HDF5_DIR="$HOME/hdf5-1.10.1"
       export PATH="$CMAKE_DIR/bin:$HDF5_DIR/bin:$PATH"
       # Check cache
-      if [ ! -e "$CMAKE_DIR/bin/cmake" ]; then
-        (
-          mkdir -p external
-          cd external
-          wget https://cmake.org/files/v3.10/cmake-3.10.1.tar.gz
-          tar xzf cmake-3.10.1.tar.gz
-          mkdir cmake-3.10.1-build
-          cd cmake-3.10.1-build
-          `pwd`/../cmake-3.10.1/configure --prefix="CMAKE_DIR"
-          make -j2
-          make -j2 install
-        )
-      fi
+      # if [ ! -e "$CMAKE_DIR/bin/cmake" ]; then
+      #   (
+      #     mkdir -p external
+      #     cd external
+      #     wget https://cmake.org/files/v3.10/cmake-3.10.1.tar.gz
+      #     tar xzf cmake-3.10.1.tar.gz
+      #     mkdir cmake-3.10.1-build
+      #     cd cmake-3.10.1-build
+      #     `pwd`/../cmake-3.10.1/configure --prefix="CMAKE_DIR"
+      #     make -j2
+      #     make -j2 install
+      #   )
+      # fi
       if [ ! -e "$HDF5_DIR/bin/h5ls" ]; then
         (
           mkdir -p external
