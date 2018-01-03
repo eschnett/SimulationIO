@@ -23,8 +23,8 @@ addons:
     # sources:
     #   - george-edison55-precise-backports
     packages:
-      - cmake
-      - cmake-data
+      # - cmake
+      # - cmake-data
       - lcov
       - libopenmpi-dev
       - openmpi-bin
