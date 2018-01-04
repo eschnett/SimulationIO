@@ -586,7 +586,7 @@ struct Project {
   bool invariant() const;
 
   void createStandardTensorTypes();
-  void write(const H5::CommonFG& loc);
+  void write(const H5::H5Location& loc);
 
   std::shared_ptr<Parameter> createParameter(const string& name);
   std::shared_ptr<Configuration> createConfiguration(const string& name);
@@ -612,7 +612,7 @@ struct Project {
                            const std::shared_ptr<Manifold>& manifold);
 };
 std::shared_ptr<Project> createProject(const string& name);
-std::shared_ptr<Project> readProject(const H5::CommonFG& loc);
+std::shared_ptr<Project> readProject(const H5::H5Location& loc);
 // TODO: Support
 //    import h5py
 //    h5py.File(name,readwritetype).id.id

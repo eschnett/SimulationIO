@@ -32,6 +32,15 @@ namespace H5 {
     void setFcloseDegree(H5F_close_degree_t degree);
     void setLibverBounds(H5F_libver_t libver_low, H5F_libver_t libver_high);
   };
+  %nodefaultctor PredType;
+  struct PredType {
+    static const PredType NATIVE_INT;
+    static const PredType NATIVE_FLOAT;
+    static const PredType NATIVE_DOUBLE;
+    static const PredType NATIVE_HSIZE;
+    static const PredType NATIVE_HSSIZE;
+  };
+
   struct DataSpace {
     %extend {
       static DataSpace make(const std::vector<int>& idims) {
@@ -52,14 +61,6 @@ namespace H5 {
     }
     int getSimpleExtentNdims() const;
     int getSimpleExtentNpoints() const;
-  };
-  %nodefaultctor PredType;
-  struct PredType {
-    static const PredType NATIVE_INT;
-    static const PredType NATIVE_FLOAT;
-    static const PredType NATIVE_DOUBLE;
-    static const PredType NATIVE_HSIZE;
-    static const PredType NATIVE_HSSIZE;
   };
   struct DataType {
     DataType(const PredType& predtype);
@@ -86,12 +87,24 @@ namespace H5 {
       }
     }
   };
+
   struct Group;
-  %nodefaultctor CommonFG;
-  struct CommonFG {
+  %nodefaultctor H5Location;
+  %nodefaultdtor H5Location;
+  struct H5Location {
     Group createGroup(const std::string& name);
   };
-  struct H5File: CommonFG {
+  %nodefaultctor H5Object;
+  %nodefaultdtor H5Object;
+  struct H5Object: H5Location {
+  };
+  %nodefaultctor CommonFG;
+  %nodefaultdtor CommonFG;
+  struct CommonFG {
+  };
+  struct Group: CommonFG, H5Object {
+  };
+  struct H5File: Group {
     H5File();
     H5File(const std::string& filename, unsigned int flags);
     H5File(const std::string& filename, unsigned int flags,
@@ -103,7 +116,5 @@ namespace H5 {
     void openFile(const std::string& filename, unsigned int flags,
       const FileAccPropList& access_plist);
     void close();
-  };
-  struct Group: CommonFG {
   };
 }
