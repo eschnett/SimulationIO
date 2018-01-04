@@ -20,11 +20,7 @@ matrix:
 # Install, build, and test
 addons:
   apt:
-    # sources:
-    #   - george-edison55-precise-backports
     packages:
-      # - cmake
-      # - cmake-data
       - lcov
       - libopenmpi-dev
       - openmpi-bin
@@ -32,30 +28,15 @@ addons:
       - swig
 cache:
   directories:
-    # - $HOME/cmake-3.10.1
     - $HOME/hdf5-1.10.1
 install:
   - which $CXX
   - $CXX --version
   - |
     if [ "$TRAVIS_OS_NAME" = linux ]; then
-      # export CMAKE_DIR="$HOME/cmake-3.10.1"
       export HDF5_DIR="$HOME/hdf5-1.10.1"
-      export PATH="$CMAKE_DIR/bin:$HDF5_DIR/bin:$PATH"
+      export PATH="$HDF5_DIR/bin:$PATH"
       # Check cache
-      # if [ ! -e "$CMAKE_DIR/bin/cmake" ]; then
-      #   (
-      #     mkdir -p external
-      #     cd external
-      #     wget https://cmake.org/files/v3.10/cmake-3.10.1.tar.gz
-      #     tar xzf cmake-3.10.1.tar.gz
-      #     mkdir cmake-3.10.1-build
-      #     cd cmake-3.10.1-build
-      #     `pwd`/../cmake-3.10.1/configure --prefix="CMAKE_DIR"
-      #     make -j2
-      #     make -j2 install
-      #   )
-      # fi
       if [ ! -e "$HDF5_DIR/bin/h5ls" ]; then
         (
           mkdir -p external
@@ -70,7 +51,6 @@ install:
         )
       fi
       export PYTHON_DIR="/usr"
-      export PYTHON_BINDIR="/usr/bin"
     fi
   - |
     if [ "$TRAVIS_OS_NAME" = osx ]; then
@@ -78,28 +58,12 @@ install:
       brew install hdf5
       brew install lcov
       brew install open-mpi
-      # brew install python
       brew install swig
       export HDF5_DIR="/usr/local"
-      # export HDF5_DIR="$HOME/hdf5-1.10.1"
-      # # Check cache
-      # if [ ! -e "$HDF5_DIR/bin/h5ls" ]; then
-      #   (
-      #     mkdir external
-      #     cd external
-      #     wget https://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.1/src/hdf5-1.10.1.tar.bz2
-      #     tar xjf hdf5-1.10.1.tar.bz2
-      #     mkdir hdf5-1.10.1-build
-      #     cd hdf5-1.10.1-build
-      #     `pwd`/../hdf5-1.10.1/configure --prefix="$HDF5_DIR" --enable-cxx
-      #     make -j2
-      #     make -j2 install
-      #   )
-      # fi
       export PYTHON_DIR="/usr/local/Cellar/python/2.7.14/Frameworks/Python.framework/Versions/2.7"
-      export PYTHON_BINDIR="/usr/local/Cellar/python/2.7.14/bin"
+      export PATH="/usr/local/Cellar/python/2.7.14/bin:$PATH"
     fi
-  - export PATH="$HDF5_DIR/bin:$PYTHON_BINDIR:$PATH" && hash -r
+  - hash -r
   - which mpirun
   - mpirun --version
   - which h5ls
