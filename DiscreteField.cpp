@@ -6,7 +6,7 @@
 
 namespace SimulationIO {
 
-void DiscreteField::read(const H5::CommonFG &loc, const string &entry,
+void DiscreteField::read(const H5::H5Location &loc, const string &entry,
                          const shared_ptr<Field> &field) {
   m_field = field;
   auto group = loc.openGroup(entry);
@@ -62,7 +62,7 @@ ostream &DiscreteField::output(ostream &os, int level) const {
   return os;
 }
 
-void DiscreteField::write(const H5::CommonFG &loc,
+void DiscreteField::write(const H5::H5Location &loc,
                           const H5::H5Location &parent) const {
   assert(invariant());
   auto group = loc.createGroup(name());
@@ -107,7 +107,7 @@ shared_ptr<DiscreteFieldBlock> DiscreteField::createDiscreteFieldBlock(
 }
 
 shared_ptr<DiscreteFieldBlock>
-DiscreteField::readDiscreteFieldBlock(const H5::CommonFG &loc,
+DiscreteField::readDiscreteFieldBlock(const H5::H5Location &loc,
                                       const string &entry) {
   auto discretefieldblock =
       DiscreteFieldBlock::create(loc, entry, shared_from_this());
@@ -116,4 +116,4 @@ DiscreteField::readDiscreteFieldBlock(const H5::CommonFG &loc,
   assert(discretefieldblock->invariant());
   return discretefieldblock;
 }
-}
+} // namespace SimulationIO

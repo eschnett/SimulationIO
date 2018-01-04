@@ -15,7 +15,7 @@ namespace SimulationIO {
 using std::equal;
 using std::set;
 
-void Manifold::read(const H5::CommonFG &loc, const string &entry,
+void Manifold::read(const H5::H5Location &loc, const string &entry,
                     const shared_ptr<Project> &project) {
   this->m_project = project;
   auto group = loc.openGroup(entry);
@@ -87,7 +87,7 @@ ostream &Manifold::output(ostream &os, int level) const {
   return os;
 }
 
-void Manifold::write(const H5::CommonFG &loc,
+void Manifold::write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const {
   assert(invariant());
   auto group = loc.createGroup(name());
@@ -122,8 +122,8 @@ Manifold::createDiscretization(const string &name,
   return discretization;
 }
 
-shared_ptr<Discretization> Manifold::readDiscretization(const H5::CommonFG &loc,
-                                                        const string &entry) {
+shared_ptr<Discretization>
+Manifold::readDiscretization(const H5::H5Location &loc, const string &entry) {
   auto discretization = Discretization::create(loc, entry, shared_from_this());
   checked_emplace(m_discretizations, discretization->name(), discretization,
                   "Manifold", "discretizations");
@@ -147,7 +147,8 @@ shared_ptr<SubDiscretization> Manifold::createSubDiscretization(
 }
 
 shared_ptr<SubDiscretization>
-Manifold::readSubDiscretization(const H5::CommonFG &loc, const string &entry) {
+Manifold::readSubDiscretization(const H5::H5Location &loc,
+                                const string &entry) {
   auto subdiscretization =
       SubDiscretization::create(loc, entry, shared_from_this());
   checked_emplace(m_subdiscretizations, subdiscretization->name(),
@@ -155,4 +156,4 @@ Manifold::readSubDiscretization(const H5::CommonFG &loc, const string &entry) {
   assert(subdiscretization->invariant());
   return subdiscretization;
 }
-}
+} // namespace SimulationIO

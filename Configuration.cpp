@@ -17,7 +17,7 @@
 namespace SimulationIO {
 using namespace std;
 
-void Configuration::read(const H5::CommonFG &loc, const string &entry,
+void Configuration::read(const H5::H5Location &loc, const string &entry,
                          const shared_ptr<Project> &project) {
   m_project = project;
   auto group = loc.openGroup(entry);
@@ -26,16 +26,18 @@ void Configuration::read(const H5::CommonFG &loc, const string &entry,
   H5::readAttribute(group, "name", m_name);
   assert(H5::readGroupAttribute<string>(group, "project", "name") ==
          project->name());
-  H5::readGroup(group, "parametervalues", [&](const H5::Group &group,
-                                              const string &valname) {
-    auto parname =
-        H5::readGroupAttribute<string>(group, valname + "/parameter", "name");
-    auto parameter = project->parameters().at(parname);
-    auto parametervalue = parameter->parametervalues().at(valname);
-    assert(H5::readGroupAttribute<string>(
-               group, valname + "/configurations/" + name(), "name") == name());
-    insertParameterValue(parametervalue);
-  });
+  H5::readGroup(group, "parametervalues",
+                [&](const H5::Group &group, const string &valname) {
+                  auto parname = H5::readGroupAttribute<string>(
+                      group, valname + "/parameter", "name");
+                  auto parameter = project->parameters().at(parname);
+                  auto parametervalue =
+                      parameter->parametervalues().at(valname);
+                  assert(H5::readGroupAttribute<string>(
+                             group, valname + "/configurations/" + name(),
+                             "name") == name());
+                  insertParameterValue(parametervalue);
+                });
   // Cannot check "bases", "coordinatesystems", "discretefields",
   // "discretizations", "fields", "manifolds", "tangentspaces" since they have
   // not been read yet
@@ -92,7 +94,7 @@ ostream &Configuration::output(ostream &os, int level) const {
   return os;
 }
 
-void Configuration::write(const H5::CommonFG &loc,
+void Configuration::write(const H5::H5Location &loc,
                           const H5::H5Location &parent) const {
   assert(invariant());
   auto group = loc.createGroup(name());
@@ -140,4 +142,4 @@ void Configuration::insertParameterValue(
                   "Configuration", "parametervalues");
   parametervalue->insert(shared_from_this());
 }
-}
+} // namespace SimulationIO

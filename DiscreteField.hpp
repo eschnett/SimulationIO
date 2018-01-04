@@ -82,14 +82,14 @@ private:
     configuration->insert(name, discretefield);
     return discretefield;
   }
-  static shared_ptr<DiscreteField> create(const H5::CommonFG &loc,
+  static shared_ptr<DiscreteField> create(const H5::H5Location &loc,
                                           const string &entry,
                                           const shared_ptr<Field> &field) {
     auto discretefield = make_shared<DiscreteField>(hidden());
     discretefield->read(loc, entry, field);
     return discretefield;
   }
-  void read(const H5::CommonFG &loc, const string &entry,
+  void read(const H5::H5Location &loc, const string &entry,
             const shared_ptr<Field> &field);
 
 public:
@@ -101,16 +101,16 @@ public:
   friend ostream &operator<<(ostream &os, const DiscreteField &discretefield) {
     return discretefield.output(os);
   }
-  virtual void write(const H5::CommonFG &loc,
+  virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
 
   shared_ptr<DiscreteFieldBlock> createDiscreteFieldBlock(
       const string &name,
       const shared_ptr<DiscretizationBlock> &discretizationblock);
-  shared_ptr<DiscreteFieldBlock> readDiscreteFieldBlock(const H5::CommonFG &loc,
-                                                        const string &entry);
+  shared_ptr<DiscreteFieldBlock>
+  readDiscreteFieldBlock(const H5::H5Location &loc, const string &entry);
 };
-}
+} // namespace SimulationIO
 
 #define DISCRETEFIELD_HPP_DONE
 #endif // #ifndef DISCRETEFIELD_HPP

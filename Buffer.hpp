@@ -124,7 +124,7 @@ public:
     return make_unique1<linearization_t<D>>(push_back(box_t(box)));
   }
 };
-}
+} // namespace SimulationIO
 
 #define BUFFER_HPP_DONE
 #endif // #ifndef BUFFER_HPP

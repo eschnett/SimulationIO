@@ -6,7 +6,7 @@
 
 namespace SimulationIO {
 
-void Discretization::read(const H5::CommonFG &loc, const string &entry,
+void Discretization::read(const H5::H5Location &loc, const string &entry,
                           const shared_ptr<Manifold> &manifold) {
   m_manifold = manifold;
   auto group = loc.openGroup(entry);
@@ -48,7 +48,7 @@ ostream &Discretization::output(ostream &os, int level) const {
   return os;
 }
 
-void Discretization::write(const H5::CommonFG &loc,
+void Discretization::write(const H5::H5Location &loc,
                            const H5::H5Location &parent) const {
   assert(invariant());
   auto group = loc.createGroup(name());
@@ -84,7 +84,7 @@ Discretization::createDiscretizationBlock(const string &name) {
 }
 
 shared_ptr<DiscretizationBlock>
-Discretization::readDiscretizationBlock(const H5::CommonFG &loc,
+Discretization::readDiscretizationBlock(const H5::H5Location &loc,
                                         const string &entry) {
   auto discretizationblock =
       DiscretizationBlock::create(loc, entry, shared_from_this());
@@ -94,4 +94,4 @@ Discretization::readDiscretizationBlock(const H5::CommonFG &loc,
   assert(discretizationblock->invariant());
   return discretizationblock;
 }
-}
+} // namespace SimulationIO

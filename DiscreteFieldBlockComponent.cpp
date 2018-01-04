@@ -10,7 +10,7 @@ namespace SimulationIO {
 using std::ostringstream;
 
 void DiscreteFieldBlockComponent::read(
-    const H5::CommonFG &loc, const string &entry,
+    const H5::H5Location &loc, const string &entry,
     const shared_ptr<DiscreteFieldBlock> &discretefieldblock) {
   m_discretefieldblock = discretefieldblock;
   auto group = loc.openGroup(entry);
@@ -61,7 +61,7 @@ ostream &DiscreteFieldBlockComponent::output(ostream &os, int level) const {
   return os;
 }
 
-void DiscreteFieldBlockComponent::write(const H5::CommonFG &loc,
+void DiscreteFieldBlockComponent::write(const H5::H5Location &loc,
                                         const H5::H5Location &parent) const {
   assert(invariant());
   auto group = loc.createGroup(name());
@@ -152,4 +152,4 @@ string DiscreteFieldBlockComponent::getPath() const {
   return buf.str();
 }
 string DiscreteFieldBlockComponent::getName() const { return dataname(); }
-}
+} // namespace SimulationIO

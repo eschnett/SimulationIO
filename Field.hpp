@@ -103,13 +103,14 @@ private:
     tensortype->noinsert(field);
     return field;
   }
-  static shared_ptr<Field> create(const H5::CommonFG &loc, const string &entry,
+  static shared_ptr<Field> create(const H5::H5Location &loc,
+                                  const string &entry,
                                   const shared_ptr<Project> &project) {
     auto field = make_shared<Field>(hidden());
     field->read(loc, entry, project);
     return field;
   }
-  void read(const H5::CommonFG &loc, const string &entry,
+  void read(const H5::H5Location &loc, const string &entry,
             const shared_ptr<Project> &project);
 
 public:
@@ -121,7 +122,7 @@ public:
   friend ostream &operator<<(ostream &os, const Field &field) {
     return field.output(os);
   }
-  virtual void write(const H5::CommonFG &loc,
+  virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
 
   shared_ptr<DiscreteField>
@@ -129,14 +130,14 @@ public:
                       const shared_ptr<Configuration> &configuration,
                       const shared_ptr<Discretization> &discretization,
                       const shared_ptr<Basis> &basis);
-  shared_ptr<DiscreteField> readDiscreteField(const H5::CommonFG &loc,
+  shared_ptr<DiscreteField> readDiscreteField(const H5::H5Location &loc,
                                               const string &entry);
 
 private:
   friend class CoordinateField;
   void noinsert(const shared_ptr<CoordinateField> &coordinatefield) {}
 };
-}
+} // namespace SimulationIO
 
 #define FIELD_HPP_DONE
 #endif // #ifndef FIELD_HPP

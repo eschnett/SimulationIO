@@ -126,13 +126,13 @@ private:
     return subdiscretization;
   }
   static shared_ptr<SubDiscretization>
-  create(const H5::CommonFG &loc, const string &entry,
+  create(const H5::H5Location &loc, const string &entry,
          const shared_ptr<Manifold> &manifold) {
     auto subdiscretization = make_shared<SubDiscretization>(hidden());
     subdiscretization->read(loc, entry, manifold);
     return subdiscretization;
   }
-  void read(const H5::CommonFG &loc, const string &entry,
+  void read(const H5::H5Location &loc, const string &entry,
             const shared_ptr<Manifold> &manifold);
 
 public:
@@ -145,10 +145,10 @@ public:
                              const SubDiscretization &subdiscretization) {
     return subdiscretization.output(os);
   }
-  virtual void write(const H5::CommonFG &loc,
+  virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
 };
-}
+} // namespace SimulationIO
 
 #define SUBDISCRETIZATION_HPP_DONE
 #endif // #ifndef SUBDISCRETIZATION_HPP

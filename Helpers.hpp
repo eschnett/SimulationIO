@@ -108,8 +108,8 @@ std::ostream &operator<<(std::ostream &os, const std::vector<T> &values) {
   os << "]";
   return os;
 }
-}
-}
+} // namespace Output
+} // namespace SimulationIO
 
 #define HELPERS_HPP_DONE
 #endif // #ifndef HELPERS_HPP

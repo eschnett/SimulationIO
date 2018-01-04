@@ -81,13 +81,13 @@ private:
     return coordinatesystem;
   }
   static shared_ptr<CoordinateSystem>
-  create(const H5::CommonFG &loc, const string &entry,
+  create(const H5::H5Location &loc, const string &entry,
          const shared_ptr<Project> &project) {
     auto coordinatesystem = make_shared<CoordinateSystem>(hidden());
     coordinatesystem->read(loc, entry, project);
     return coordinatesystem;
   }
-  void read(const H5::CommonFG &loc, const string &entry,
+  void read(const H5::H5Location &loc, const string &entry,
             const shared_ptr<Project> &project);
 
 public:
@@ -100,16 +100,16 @@ public:
                              const CoordinateSystem &coordinatesystem) {
     return coordinatesystem.output(os);
   }
-  virtual void write(const H5::CommonFG &loc,
+  virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
 
   shared_ptr<CoordinateField>
   createCoordinateField(const string &name, int direction,
                         const shared_ptr<Field> &field);
-  shared_ptr<CoordinateField> readCoordinateField(const H5::CommonFG &loc,
+  shared_ptr<CoordinateField> readCoordinateField(const H5::H5Location &loc,
                                                   const string &entry);
 };
-}
+} // namespace SimulationIO
 
 #define COORDINATESYSTEM_HPP_DONE
 #endif // #ifndef COORDINATESYSTEM_HPP

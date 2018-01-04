@@ -82,13 +82,13 @@ private:
                                            discretizationblock);
   }
   static shared_ptr<DiscreteFieldBlock>
-  create(const H5::CommonFG &loc, const string &entry,
+  create(const H5::H5Location &loc, const string &entry,
          const shared_ptr<DiscreteField> &discretefield) {
     auto discretefieldblock = make_shared<DiscreteFieldBlock>(hidden());
     discretefieldblock->read(loc, entry, discretefield);
     return discretefieldblock;
   }
-  void read(const H5::CommonFG &loc, const string &entry,
+  void read(const H5::H5Location &loc, const string &entry,
             const shared_ptr<DiscreteField> &discretefield);
 
 public:
@@ -101,15 +101,16 @@ public:
                              const DiscreteFieldBlock &discretefieldblock) {
     return discretefieldblock.output(os);
   }
-  virtual void write(const H5::CommonFG &loc,
+  virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
 
   shared_ptr<DiscreteFieldBlockComponent> createDiscreteFieldBlockComponent(
       const string &name, const shared_ptr<TensorComponent> &tensorcomponent);
   shared_ptr<DiscreteFieldBlockComponent>
-  readDiscreteFieldBlockComponent(const H5::CommonFG &loc, const string &entry);
+  readDiscreteFieldBlockComponent(const H5::H5Location &loc,
+                                  const string &entry);
 };
-}
+} // namespace SimulationIO
 
 #define DISCRETEFIELDBLOCK_HPP_DONE
 #endif // #ifndef DISCRETEFIELDBLOCK_HPP

@@ -50,7 +50,7 @@ vector<hsize_t> choose_chunksize(const vector<hsize_t> &size,
       return chunksize;
   }
 }
-}
+} // namespace
 
 // DataBlock
 
@@ -377,4 +377,4 @@ ostream &ExtLink::output(ostream &os) const {
 void ExtLink::write(const H5::Group &group, const string &entry) const {
   H5::createExternalLink(group, entry, filename(), objname());
 }
-}
+} // namespace SimulationIO

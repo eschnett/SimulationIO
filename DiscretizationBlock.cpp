@@ -8,7 +8,7 @@ namespace SimulationIO {
 
 namespace {
 template <int D>
-void read_active(const H5::H5Location &group,
+void read_active(const H5::H5Object &group,
                  const DiscretizationBlock &discretizationblock,
                  region_t &active) {
   if (active.valid())
@@ -36,7 +36,7 @@ void read_active(const H5::H5Location &group,
 }
 
 template <>
-void read_active<0>(const H5::H5Location &group,
+void read_active<0>(const H5::H5Object &group,
                     const DiscretizationBlock &discretizationblock,
                     region_t &active) {
   constexpr int D = 0;
@@ -66,10 +66,10 @@ void read_active<0>(const H5::H5Location &group,
   }
   H5E_END_TRY;
 }
-}
+} // namespace
 
 void DiscretizationBlock::read(
-    const H5::CommonFG &loc, const string &entry,
+    const H5::H5Location &loc, const string &entry,
     const shared_ptr<Discretization> &discretization) {
   m_discretization = discretization;
   auto group = loc.openGroup(entry);
@@ -125,7 +125,7 @@ ostream &DiscretizationBlock::output(ostream &os, int level) const {
 
 namespace {
 template <int D>
-void write_active(const H5::H5Location &group,
+void write_active(const H5::H5Object &group,
                   const DiscretizationBlock &discretizationblock,
                   const region_t &active) {
   if (active.rank() != D)
@@ -144,7 +144,7 @@ void write_active(const H5::H5Location &group,
 }
 
 template <>
-void write_active<0>(const H5::H5Location &group,
+void write_active<0>(const H5::H5Object &group,
                      const DiscretizationBlock &discretizationblock,
                      const region_t &active) {
   constexpr int D = 0;
@@ -165,9 +165,9 @@ void write_active<0>(const H5::H5Location &group,
   // H5::createAttribute(group, "active", iboxes, boxtype);
   H5::createAttribute(group, "active", iboxes);
 }
-}
+} // namespace
 
-void DiscretizationBlock::write(const H5::CommonFG &loc,
+void DiscretizationBlock::write(const H5::H5Location &loc,
                                 const H5::H5Location &parent) const {
   assert(invariant());
   auto group = loc.createGroup(name());
@@ -195,4 +195,4 @@ void DiscretizationBlock::write(const H5::CommonFG &loc,
     write_active<4>(group, *this, active());
   }
 }
-}
+} // namespace SimulationIO

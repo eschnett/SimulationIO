@@ -18,4 +18,4 @@ shared_ptr<dconcatenation_t> dconcatenation_t::make(int dim) {
     assert(0);
   }
 }
-}
+} // namespace SimulationIO

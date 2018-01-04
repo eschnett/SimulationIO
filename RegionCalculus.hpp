@@ -31,9 +31,9 @@ using SimulationIO::make_unique1;
 using std::abs;
 using std::array;
 using std::is_sorted;
-using std::min;
 using std::map;
 using std::max;
+using std::min;
 using std::numeric_limits;
 using std::ostream;
 using std::size_t;
@@ -56,7 +56,7 @@ template <typename T> struct error {
   T &operator()(T &, const T &) const { std::abort(); }
   T &operator()(T &, const T &, const T &) const { std::abort(); }
 };
-}
+} // namespace detail
 
 // Call function object F if T is integral; otherwise, abort
 template <typename T, typename F> struct call_if_integral {
@@ -89,7 +89,7 @@ template <typename T>
 typename std::enable_if<std::is_unsigned<T>::value, T>::type abs_wrapper(T x) {
   return x;
 }
-}
+} // namespace detail
 
 ////////////////////////////////////////////////////////////////////////////////
 // Reduction
@@ -158,7 +158,7 @@ template <> struct largeint<unsigned short> {
 };
 template <> struct largeint<unsigned int> { typedef unsigned long long type; };
 template <> struct largeint<unsigned long> { typedef unsigned long long type; };
-}
+} // namespace detail
 
 template <typename T, int D> struct point {
   typedef T value_type;
@@ -540,7 +540,7 @@ template <typename T, int D> struct bit_xor<point<T, D>> {
     return p ^ q;
   }
 };
-}
+} // namespace RegionCalculus
 
 namespace std {
 template <typename T, int D> struct equal_to<RegionCalculus::point<T, D>> {
@@ -555,7 +555,7 @@ template <typename T, int D> struct less<RegionCalculus::point<T, D>> {
     return p.less(q);
   }
 };
-}
+} // namespace std
 
 ////////////////////////////////////////////////////////////////////////////////
 // Box
@@ -892,7 +892,7 @@ public:
   }
   friend ostream &operator<<(ostream &os, const box &b) { return b.output(os); }
 };
-}
+} // namespace RegionCalculus
 
 namespace std {
 template <typename T, int D> struct less<RegionCalculus::box<T, D>> {
@@ -901,7 +901,7 @@ template <typename T, int D> struct less<RegionCalculus::box<T, D>> {
     return p.less(q);
   }
 };
-}
+} // namespace std
 
 ////////////////////////////////////////////////////////////////////////////////
 // Region
@@ -1146,7 +1146,7 @@ public:
     return r.output(os);
   }
 };
-}
+} // namespace RegionCalculus
 
 namespace std {
 template <typename T, int D> struct less<RegionCalculus::region<T, D>> {
@@ -1155,7 +1155,7 @@ template <typename T, int D> struct less<RegionCalculus::region<T, D>> {
     return p.less(q);
   }
 };
-}
+} // namespace std
 
 #else // #if REGIONCALCULUS_TREE
 
@@ -1640,7 +1640,7 @@ public:
     return r.output(os);
   }
 };
-}
+} // namespace RegionCalculus
 
 #endif // #if REGIONCALCULUS_TREE
 
@@ -2752,7 +2752,7 @@ template <typename T> T sum(const dpoint<T> &p) { return p.sum(); }
 template <typename T> typename dpoint<T>::prod_t prod(const dpoint<T> &p) {
   return p.prod();
 }
-}
+} // namespace RegionCalculus
 
 namespace std {
 template <typename T> struct equal_to<RegionCalculus::dpoint<T>> {
@@ -2768,7 +2768,7 @@ template <typename T> struct less<RegionCalculus::dpoint<T>> {
     return p.less(q);
   }
 };
-}
+} // namespace std
 
 namespace RegionCalculus {
 template <typename T> struct dbox {
@@ -2886,7 +2886,7 @@ template <typename T> struct dbox {
     return b.output(os);
   }
 };
-}
+} // namespace RegionCalculus
 
 namespace std {
 template <typename T> struct less<RegionCalculus::dbox<T>> {
@@ -2895,7 +2895,7 @@ template <typename T> struct less<RegionCalculus::dbox<T>> {
     return p.less(q);
   }
 };
-}
+} // namespace std
 
 namespace RegionCalculus {
 template <typename T> struct dregion {
@@ -3039,7 +3039,7 @@ template <typename T> struct dregion {
     return r.output(os);
   }
 };
-}
+} // namespace RegionCalculus
 
 namespace std {
 template <typename T> struct less<RegionCalculus::dregion<T>> {
@@ -3048,12 +3048,12 @@ template <typename T> struct less<RegionCalculus::dregion<T>> {
     return p.less(q);
   }
 };
-}
+} // namespace std
 
 namespace RegionCalculus {
 typedef RegionCalculus::dpoint<long long> point_t;
 typedef RegionCalculus::dbox<long long> box_t;
 typedef RegionCalculus::dregion<long long> region_t;
-}
+} // namespace RegionCalculus
 
 #endif // REGIONCALCULUS_HPP

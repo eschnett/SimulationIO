@@ -19,13 +19,18 @@
 #include <utility>
 #include <vector>
 
+#if !H5_VERSION_GE(1, 10, 1)
+#error                                                                         \
+    "The HDF5 C++ API changed significantly between versions 1.10.0-patch1 and 1.10.1. This code requires at least version 1.10.1 of HDF5."
+#endif
+
 namespace H5 {
 
 namespace detail {
 template <typename T> struct is_vector : std::false_type {};
 template <typename T, typename Allocator>
 struct is_vector<std::vector<T, Allocator>> : std::true_type {};
-}
+} // namespace detail
 
 // Wrapper for hid_t that ensures correct HDF5 reference counting
 class hid {
@@ -68,40 +73,6 @@ public:
 // TOOD: phase out this function
 inline hid take_hid(hid_t id) { return hid(std::move(id)); }
 
-// Convert CommonFG to H5Location
-namespace detail {
-struct H5LocationDeleter {
-  void operator()(H5Location *loc) const {
-    auto objtype = H5Iget_type(loc->getId());
-    switch (objtype) {
-    case H5I_FILE:
-      delete static_cast<H5File *>(loc);
-      break;
-    case H5I_GROUP:
-      delete static_cast<Group *>(loc);
-      break;
-    default:
-      assert(0);
-    }
-  }
-};
-}
-inline std::unique_ptr<H5Location, detail::H5LocationDeleter>
-getLocation(const CommonFG &fg) {
-  auto locid = fg.getLocId();
-  assert(locid >= 0);
-  auto objtype = H5Iget_type(locid);
-  switch (objtype) {
-  case H5I_FILE: {
-    return {new H5File(locid), detail::H5LocationDeleter()};
-  }
-  case H5I_GROUP:
-    return {new Group(locid), detail::H5LocationDeleter()};
-  default:
-    assert(0);
-  }
-}
-
 // H5Literate
 namespace detail {
 template <typename Op> struct H5L_iterator {
@@ -117,7 +88,7 @@ template <typename Op> struct H5L_iterator {
     return iret;
   }
 };
-}
+} // namespace detail
 
 template <typename Op>
 herr_t iterateElems(const H5Location &loc, H5_index_t index_type,
@@ -261,31 +232,31 @@ template <typename T> ArrayType getType(const std::complex<T> &) {
 // Create attribute
 
 template <typename T>
-Attribute createAttribute(const H5Location &loc, const std::string &name,
+Attribute createAttribute(const H5Object &obj, const std::string &name,
                           const T &value, const H5::DataType &type) {
   static_assert(!std::is_same<T, std::string>::value, "");
   static_assert(!detail::is_vector<T>::value, "");
   assert(type.getSize() == sizeof value);
-  auto attr = loc.createAttribute(name, type, DataSpace());
+  auto attr = obj.createAttribute(name, type, DataSpace());
   attr.write(type, &value);
   return attr;
 }
 
 template <typename T>
-Attribute createAttribute(const H5Location &loc, const std::string &name,
+Attribute createAttribute(const H5Object &obj, const std::string &name,
                           const T &value) {
-  return createAttribute(loc, name, value, getType(value));
+  return createAttribute(obj, name, value, getType(value));
 }
 
 template <typename T>
-Attribute createAttribute(const H5Location &loc, const std::string &name,
+Attribute createAttribute(const H5Object &obj, const std::string &name,
                           const std::vector<T> &values,
                           const H5::DataType &type) {
   static_assert(!std::is_same<T, std::string>::value, "");
   static_assert(!detail::is_vector<T>::value, "");
   assert(type.getSize() == sizeof values[0]);
   const hsize_t dims = values.size();
-  auto attr = loc.createAttribute(name, type, DataSpace(1, &dims));
+  auto attr = obj.createAttribute(name, type, DataSpace(1, &dims));
   // HDF5 is overly cautious
   if (!values.empty())
     attr.write(type, values.data());
@@ -293,30 +264,30 @@ Attribute createAttribute(const H5Location &loc, const std::string &name,
 }
 
 template <typename T>
-Attribute createAttribute(const H5Location &loc, const std::string &name,
+Attribute createAttribute(const H5Object &obj, const std::string &name,
                           const std::vector<T> &values) {
-  return createAttribute(loc, name, values, getType(values[0]));
+  return createAttribute(obj, name, values, getType(values[0]));
 }
 
-inline Attribute createAttribute(const H5Location &loc, const std::string &name,
+inline Attribute createAttribute(const H5Object &obj, const std::string &name,
                                  const std::string &value) {
   // auto type = StrType(PredType::C_S1, H5T_VARIABLE);
   auto type = StrType(PredType::C_S1, value.size() + 1);
-  auto attr = loc.createAttribute(name, type, DataSpace());
+  auto attr = obj.createAttribute(name, type, DataSpace());
   attr.write(type, H5std_string(value));
   return attr;
 }
 
-inline Attribute createAttribute(const H5Location &loc, const std::string &name,
+inline Attribute createAttribute(const H5Object &obj, const std::string &name,
                                  const char *value) {
-  return createAttribute(loc, name, std::string(value));
+  return createAttribute(obj, name, std::string(value));
 }
 
-inline Attribute createAttribute(const H5Location &loc, const std::string &name,
+inline Attribute createAttribute(const H5Object &obj, const std::string &name,
                                  const H5Location &obj_loc,
                                  const std::string &obj_name) {
   auto type = DataType(PredType::STD_REF_OBJ);
-  auto attr = loc.createAttribute(name, type, DataSpace());
+  auto attr = obj.createAttribute(name, type, DataSpace());
   hobj_ref_t reference;
   auto herr =
       H5Rcreate(&reference, obj_loc.getId(), obj_name.c_str(), H5R_OBJECT, -1);
@@ -325,10 +296,10 @@ inline Attribute createAttribute(const H5Location &loc, const std::string &name,
   return attr;
 }
 
-inline Attribute createAttribute(const H5Location &loc, const std::string &name,
+inline Attribute createAttribute(const H5Object &obj, const std::string &name,
                                  const H5::EnumType &type,
                                  const std::string &valuename) {
-  auto attr = loc.createAttribute(name, type, DataSpace());
+  auto attr = obj.createAttribute(name, type, DataSpace());
   int value;
   assert(type.getSize() == sizeof value);
   type.valueOf(valuename, &value);
@@ -339,12 +310,12 @@ inline Attribute createAttribute(const H5Location &loc, const std::string &name,
 // Read attribute
 
 template <typename T>
-Attribute readAttribute(const H5Location &loc, const std::string &name,
-                        T &value, const H5::DataType &type) {
+Attribute readAttribute(const H5Object &obj, const std::string &name, T &value,
+                        const H5::DataType &type) {
   static_assert(!std::is_same<T, std::string>::value, "");
   static_assert(!detail::is_vector<T>::value, "");
   assert(type.getSize() == sizeof value);
-  auto attr = loc.openAttribute(name);
+  auto attr = obj.openAttribute(name);
   auto space = attr.getSpace();
   assert(space.getSimpleExtentType() == H5S_SCALAR);
   attr.read(type, &value);
@@ -352,18 +323,18 @@ Attribute readAttribute(const H5Location &loc, const std::string &name,
 }
 
 template <typename T>
-Attribute readAttribute(const H5Location &loc, const std::string &name,
+Attribute readAttribute(const H5Object &obj, const std::string &name,
                         T &value) {
-  return readAttribute(loc, name, value, getType(value));
+  return readAttribute(obj, name, value, getType(value));
 }
 
 template <typename T>
-Attribute readAttribute(const H5Location &loc, const std::string &name,
+Attribute readAttribute(const H5Object &obj, const std::string &name,
                         std::vector<T> &values, const H5::DataType &type) {
   static_assert(!std::is_same<T, std::string>::value, "");
   static_assert(!detail::is_vector<T>::value, "");
   assert(type.getSize() == sizeof(T));
-  auto attr = loc.openAttribute(name);
+  auto attr = obj.openAttribute(name);
   auto space = attr.getSpace();
   auto npoints = space.getSimpleExtentNpoints();
   values.resize(npoints);
@@ -377,14 +348,14 @@ Attribute readAttribute(const H5Location &loc, const std::string &name,
 }
 
 template <typename T>
-Attribute readAttribute(const H5Location &loc, const std::string &name,
+Attribute readAttribute(const H5Object &obj, const std::string &name,
                         std::vector<T> &values) {
-  return readAttribute(loc, name, values, getType(values[0]));
+  return readAttribute(obj, name, values, getType(values[0]));
 }
 
-inline Attribute readAttribute(const H5Location &loc, const std::string &name,
+inline Attribute readAttribute(const H5Object &obj, const std::string &name,
                                std::string &value) {
-  auto attr = loc.openAttribute(name);
+  auto attr = obj.openAttribute(name);
   auto space = attr.getSpace();
   assert(space.getSimpleExtentType() == H5S_SCALAR);
   auto type = attr.getStrType();
@@ -395,32 +366,28 @@ inline Attribute readAttribute(const H5Location &loc, const std::string &name,
   return attr;
 }
 
-inline Attribute readAttribute(const H5Location &loc, const std::string &name,
-                               /*H5Location &ob*/ Group &obj) {
-  auto attr = loc.openAttribute(name);
+inline Attribute readAttribute(const H5Object &obj, const std::string &name,
+                               /*H5Location &group */ Group &group) {
+  auto attr = obj.openAttribute(name);
   auto space = attr.getSpace();
   assert(space.getSimpleExtentType() == H5S_SCALAR);
   auto type = DataType(PredType::STD_REF_OBJ);
   hobj_ref_t reference;
   attr.read(type, &reference);
-#if H5_VERSION_GE(1, 10, 0)
-  auto hid = H5Rdereference1(loc.getId(), H5R_OBJECT, &reference);
-#else
-  auto hid = H5Rdereference(loc.getId(), H5R_OBJECT, &reference);
-#endif
+  auto hid = H5Rdereference1(obj.getId(), H5R_OBJECT, &reference);
   assert(hid >= 0);
   H5O_type_t obj_type;
-  auto herr = H5Rget_obj_type(loc.getId(), H5R_OBJECT, &reference, &obj_type);
+  auto herr = H5Rget_obj_type(obj.getId(), H5R_OBJECT, &reference, &obj_type);
   assert(!herr);
   switch (obj_type) {
   case H5O_TYPE_GROUP:
-    obj = Group(hid);
+    group = Group(hid);
     break;
   // case H5O_TYPE_DATASET:
-  //   obj = DataSet(hid);
+  //   group = DataSet(hid);
   //   break;
   // case H5O_TYPE_NAMED_DATATYPE:
-  //   obj = DataType(hid);
+  //   group = DataType(hid);
   //   break;
   default:
     assert(0);
@@ -428,10 +395,10 @@ inline Attribute readAttribute(const H5Location &loc, const std::string &name,
   return attr;
 }
 
-inline Attribute readAttribute(const H5Location &loc, const std::string &name,
+inline Attribute readAttribute(const H5Object &obj, const std::string &name,
                                std::string &valuename,
                                const H5::EnumType &type) {
-  auto attr = loc.openAttribute(name);
+  auto attr = obj.openAttribute(name);
   auto space = attr.getSpace();
   assert(space.getSimpleExtentType() == H5S_SCALAR);
   int value;
@@ -443,80 +410,80 @@ inline Attribute readAttribute(const H5Location &loc, const std::string &name,
 
 template <typename T>
 typename std::enable_if<!detail::is_vector<T>::value, T>::type
-readAttribute(const H5Location &loc, const std::string &name,
+readAttribute(const H5Object &obj, const std::string &name,
               const H5::DataType &type) {
   static_assert(!std::is_same<T, std::string>::value, "");
   static_assert(!detail::is_vector<T>::value, "");
   T value;
-  readAttribute(loc, name, value, type);
+  readAttribute(obj, name, value, type);
   return value;
 }
 
 template <typename T>
 typename std::enable_if<!detail::is_vector<T>::value, T>::type
-readAttribute(const H5Location &loc, const std::string &name,
+readAttribute(const H5Object &obj, const std::string &name,
               const H5::EnumType &type) {
   static_assert(std::is_same<T, std::string>::value, "");
   static_assert(!detail::is_vector<T>::value, "");
   T value;
-  readAttribute(loc, name, value, type);
+  readAttribute(obj, name, value, type);
   return value;
 }
 
 template <typename T>
 typename std::enable_if<!detail::is_vector<T>::value, T>::type
-readAttribute(const H5Location &loc, const std::string &name) {
+readAttribute(const H5Object &obj, const std::string &name) {
   // static_assert(!std::is_same<T, std::string>::value, "");
   static_assert(!detail::is_vector<T>::value, "");
   T value;
-  readAttribute(loc, name, value);
+  readAttribute(obj, name, value);
   return value;
 }
 
 template <typename T>
 typename std::enable_if<detail::is_vector<T>::value, T>::type
-readAttribute(const H5Location &loc, const std::string &name,
+readAttribute(const H5Object &obj, const std::string &name,
               const H5::DataType &type) {
-  auto attr = loc.openAttribute(name);
+  auto attr = obj.openAttribute(name);
   auto space = attr.getSpace();
   auto size = space.getSimpleExtentNpoints();
   T values(size);
   assert(type.getSize() == sizeof values[0]);
-  readAttribute(loc, name, values, type);
+  readAttribute(obj, name, values, type);
   return values;
 }
 
 template <typename T>
 typename std::enable_if<detail::is_vector<T>::value, T>::type
-readAttribute(const H5Location &loc, const std::string &name) {
+readAttribute(const H5Object &obj, const std::string &name) {
   static_assert(!std::is_same<T, std::string>::value, "");
   static_assert(detail::is_vector<T>::value, "");
   T values;
-  readAttribute(loc, name, values);
+  readAttribute(obj, name, values);
   return values;
 }
 
 template <typename T>
-T readGroupAttribute(const CommonFG &loc, const std::string &groupname,
+T readGroupAttribute(const H5Location &loc, const std::string &groupname,
                      const std::string &attrname) {
   auto group = loc.openGroup(groupname);
   return readAttribute<T>(group, attrname);
 }
 
 template <typename T>
-T getAttribute(const H5Location &loc, const std::string &name,
+T getAttribute(const H5Object &obj, const std::string &name,
                const H5::DataType &type) {
   T value;
-  readAttribute(loc, name, value, type);
+  readAttribute(obj, name, value, type);
   return value;
 }
 
 template <typename T>
-T getAttribute(const H5Location &loc, const std::string &name) {
-  return getAttribute<T>(loc, name, getType(T{}));
+T getAttribute(const H5Object &obj, const std::string &name) {
+  return getAttribute<T>(obj, name, getType(T{}));
 }
 
-inline DataSet createDataSet(const CommonFG &loc, const std::string &name,
+inline DataSet createDataSet(const H5Location &loc, const std::string &name,
                              const std::string &value) {
   auto type = StrType(PredType::C_S1, value.size() + 1);
   auto dataset = loc.createDataSet(name, type, DataSpace());
@@ -524,12 +491,12 @@ inline DataSet createDataSet(const CommonFG &loc, const std::string &name,
   return dataset;
 }
 
-inline DataSet createDataSet(const CommonFG &loc, const std::string &name,
+inline DataSet createDataSet(const H5Location &loc, const std::string &name,
                              const char *value) {
   return createDataSet(loc, name, std::string(value));
 }
 
-inline DataSet readDataSet(const CommonFG &loc, const std::string &name,
+inline DataSet readDataSet(const H5Location &loc, const std::string &name,
                            std::string &value) {
   auto dataset = loc.openDataSet(name.c_str());
   auto space = dataset.getSpace();
@@ -559,7 +526,7 @@ inline herr_t createHardLink(const CommonFG &link_loc,
   return herr;
 }
 
-inline herr_t createHardLink(const CommonFG &link_loc,
+inline herr_t createHardLink(const H5Location &link_loc,
                              const std::string &link_path,
                              const std::string &link_name,
                              const H5Location &obj_loc,
@@ -583,7 +550,7 @@ inline herr_t createSoftLink(const CommonFG &link_loc,
   return herr;
 }
 
-inline herr_t createSoftLink(const CommonFG &link_loc,
+inline herr_t createSoftLink(const H5Location &link_loc,
                              const std::string &link_path,
                              const std::string &link_name,
                              const std::string &obj_path) {
@@ -640,12 +607,12 @@ inline void readExternalLink(const CommonFG &link_loc,
 
 // Write a map (ignoring the keys)
 template <typename K, typename T>
-Group createGroup(const CommonFG &loc, const std::string &name,
+Group createGroup(const H5Location &loc, const std::string &name,
                   const std::map<K, T> &m) {
   // We assume that T is a subtype of Common
   auto group = loc.createGroup(name);
   for (const auto &p : m)
-    p.second->write(group, *getLocation(loc));
+    p.second->write(group, loc);
   return group;
 }
 
@@ -666,7 +633,7 @@ Group createHardLinkGroup(const CommonFG &loc, const std::string &name,
 
 // Read a map
 template <typename R>
-Group readGroup(const CommonFG &loc, const std::string &name, R read_object) {
+Group readGroup(const H5Location &loc, const std::string &name, R read_object) {
   auto group = loc.openGroup(name);
   hsize_t idx = 0;
   iterateElems(
@@ -692,6 +659,6 @@ bool checkGroupNames(const CommonFG &loc, const std::string &name,
                       return s1 == sf2.first;
                     });
 }
-}
+} // namespace H5
 
 #endif // #ifndef HDF5HELPERS_HPP

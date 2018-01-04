@@ -30,13 +30,13 @@ shared_ptr<Project> createProject(const string &name) {
   assert(project->invariant());
   return project;
 }
-shared_ptr<Project> readProject(const H5::CommonFG &loc) {
+shared_ptr<Project> readProject(const H5::H5Location &loc) {
   auto project = Project::create(loc);
   assert(project->invariant());
   return project;
 }
 
-void Project::read(const H5::CommonFG &loc) {
+void Project::read(const H5::H5Location &loc) {
   auto group = loc.openGroup(".");
   createTypes(); // TODO: read from file instead to ensure integer constants are
                  // consistent
@@ -324,9 +324,9 @@ string itos(int d) {
   buf << d;
   return buf.str();
 }
-}
+} // namespace
 
-void Project::write(const H5::CommonFG &loc,
+void Project::write(const H5::H5Location &loc,
                     const H5::H5Location &parent) const {
   assert(invariant());
   // auto group = loc.createGroup(name());
@@ -370,7 +370,7 @@ shared_ptr<Parameter> Project::getParameter(const string &name) {
   return createParameter(name);
 }
 
-shared_ptr<Parameter> Project::readParameter(const H5::CommonFG &loc,
+shared_ptr<Parameter> Project::readParameter(const H5::H5Location &loc,
                                              const string &entry) {
   auto parameter = Parameter::create(loc, entry, shared_from_this());
   checked_emplace(m_parameters, parameter->name(), parameter, "Project",
@@ -387,7 +387,7 @@ shared_ptr<Configuration> Project::createConfiguration(const string &name) {
   return configuration;
 }
 
-shared_ptr<Configuration> Project::readConfiguration(const H5::CommonFG &loc,
+shared_ptr<Configuration> Project::readConfiguration(const H5::H5Location &loc,
                                                      const string &entry) {
   auto configuration = Configuration::create(loc, entry, shared_from_this());
   checked_emplace(m_configurations, configuration->name(), configuration,
@@ -406,7 +406,7 @@ shared_ptr<TensorType> Project::createTensorType(const string &name,
   return tensortype;
 }
 
-shared_ptr<TensorType> Project::readTensorType(const H5::CommonFG &loc,
+shared_ptr<TensorType> Project::readTensorType(const H5::H5Location &loc,
                                                const string &entry) {
   auto tensortype = TensorType::create(loc, entry, shared_from_this());
   checked_emplace(m_tensortypes, tensortype->name(), tensortype, "Project",
@@ -428,7 +428,7 @@ Project::createManifold(const string &name,
   return manifold;
 }
 
-shared_ptr<Manifold> Project::readManifold(const H5::CommonFG &loc,
+shared_ptr<Manifold> Project::readManifold(const H5::H5Location &loc,
                                            const string &entry) {
   auto manifold = Manifold::create(loc, entry, shared_from_this());
   checked_emplace(m_manifolds, manifold->name(), manifold, "Project",
@@ -450,7 +450,7 @@ Project::createTangentSpace(const string &name,
   return tangentspace;
 }
 
-shared_ptr<TangentSpace> Project::readTangentSpace(const H5::CommonFG &loc,
+shared_ptr<TangentSpace> Project::readTangentSpace(const H5::H5Location &loc,
                                                    const string &entry) {
   auto tangentspace = TangentSpace::create(loc, entry, shared_from_this());
   checked_emplace(m_tangentspaces, tangentspace->name(), tangentspace,
@@ -476,7 +476,7 @@ Project::createField(const string &name,
   return field;
 }
 
-shared_ptr<Field> Project::readField(const H5::CommonFG &loc,
+shared_ptr<Field> Project::readField(const H5::H5Location &loc,
                                      const string &entry) {
   auto field = Field::create(loc, entry, shared_from_this());
   checked_emplace(m_fields, field->name(), field, "Project", "fields");
@@ -497,7 +497,7 @@ Project::createCoordinateSystem(const string &name,
 }
 
 shared_ptr<CoordinateSystem>
-Project::readCoordinateSystem(const H5::CommonFG &loc, const string &entry) {
+Project::readCoordinateSystem(const H5::H5Location &loc, const string &entry) {
   auto coordinatesystem =
       CoordinateSystem::create(loc, entry, shared_from_this());
   checked_emplace(m_coordinatesystems, coordinatesystem->name(),
@@ -505,4 +505,4 @@ Project::readCoordinateSystem(const H5::CommonFG &loc, const string &entry) {
   assert(coordinatesystem->invariant());
   return coordinatesystem;
 }
-}
+} // namespace SimulationIO

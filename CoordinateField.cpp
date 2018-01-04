@@ -8,7 +8,7 @@
 namespace SimulationIO {
 
 void CoordinateField::read(
-    const H5::CommonFG &loc, const string &entry,
+    const H5::H5Location &loc, const string &entry,
     const shared_ptr<CoordinateSystem> &coordinatesystem) {
   m_coordinatesystem = coordinatesystem;
   auto group = loc.openGroup(entry);
@@ -41,7 +41,7 @@ ostream &CoordinateField::output(ostream &os, int level) const {
   return os;
 }
 
-void CoordinateField::write(const H5::CommonFG &loc,
+void CoordinateField::write(const H5::H5Location &loc,
                             const H5::H5Location &parent) const {
   assert(invariant());
   auto group = loc.createGroup(name());
@@ -57,4 +57,4 @@ void CoordinateField::write(const H5::CommonFG &loc,
   //                    "project/fields/" + field->name);
   H5::createSoftLink(group, "field", "../project/fields/" + field()->name());
 }
-}
+} // namespace SimulationIO

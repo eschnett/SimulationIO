@@ -81,13 +81,13 @@ private:
     return basis;
   }
   static shared_ptr<Basis>
-  create(const H5::CommonFG &loc, const string &entry,
+  create(const H5::H5Location &loc, const string &entry,
          const shared_ptr<TangentSpace> &tangentspace) {
     auto basis = make_shared<Basis>(hidden());
     basis->read(loc, entry, tangentspace);
     return basis;
   }
-  void read(const H5::CommonFG &loc, const string &entry,
+  void read(const H5::H5Location &loc, const string &entry,
             const shared_ptr<TangentSpace> &tangentspace);
 
 public:
@@ -99,18 +99,18 @@ public:
   friend ostream &operator<<(ostream &os, const Basis &basis) {
     return basis.output(os);
   }
-  virtual void write(const H5::CommonFG &loc,
+  virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
 
   shared_ptr<BasisVector> createBasisVector(const string &name, int direction);
-  shared_ptr<BasisVector> readBasisVector(const H5::CommonFG &loc,
+  shared_ptr<BasisVector> readBasisVector(const H5::H5Location &loc,
                                           const string &entry);
 
 private:
   friend class DiscreteField;
   void noinsert(const shared_ptr<DiscreteField> &discretefield) {}
 };
-}
+} // namespace SimulationIO
 
 #define BASIS_HPP_DONE
 #endif // #ifndef BASIS_HPP

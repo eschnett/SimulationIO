@@ -66,13 +66,13 @@ private:
     return make_shared<ParameterValue>(hidden(), name, parameter);
   }
   static shared_ptr<ParameterValue>
-  create(const H5::CommonFG &loc, const string &entry,
+  create(const H5::H5Location &loc, const string &entry,
          const shared_ptr<Parameter> &parameter) {
     auto parametervalue = make_shared<ParameterValue>(hidden());
     parametervalue->read(loc, entry, parameter);
     return parametervalue;
   }
-  void read(const H5::CommonFG &loc, const string &entry,
+  void read(const H5::H5Location &loc, const string &entry,
             const shared_ptr<Parameter> &parameter);
 
 public:
@@ -92,14 +92,14 @@ public:
                              const ParameterValue &parametervalue) {
     return parametervalue.output(os);
   }
-  virtual void write(const H5::CommonFG &loc,
+  virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
 
 private:
   friend class Configuration;
   void insert(const shared_ptr<Configuration> &configuration);
 };
-}
+} // namespace SimulationIO
 
 #define PARAMETERVALUE_HPP_DONE
 #endif // #ifndef PARAMETERVALUE_HPP

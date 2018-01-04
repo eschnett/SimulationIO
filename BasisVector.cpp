@@ -4,7 +4,7 @@
 
 namespace SimulationIO {
 
-void BasisVector::read(const H5::CommonFG &loc, const string &entry,
+void BasisVector::read(const H5::H5Location &loc, const string &entry,
                        const shared_ptr<Basis> &basis) {
   m_basis = basis;
   auto group = loc.openGroup(entry);
@@ -28,7 +28,7 @@ ostream &BasisVector::output(ostream &os, int level) const {
   return os;
 }
 
-void BasisVector::write(const H5::CommonFG &loc,
+void BasisVector::write(const H5::H5Location &loc,
                         const H5::H5Location &parent) const {
   assert(invariant());
   auto group = loc.createGroup(name());
@@ -41,4 +41,4 @@ void BasisVector::write(const H5::CommonFG &loc,
   H5::createSoftLink(group, "basis", "..");
   H5::createAttribute(group, "direction", direction());
 }
-}
+} // namespace SimulationIO
