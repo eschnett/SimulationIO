@@ -78,7 +78,7 @@ install:
       brew install hdf5
       brew install lcov
       brew install open-mpi
-      brew install python
+      # brew install python
       brew install swig
       export HDF5_DIR="/usr/local"
       # export HDF5_DIR="$HOME/hdf5-1.10.1"
@@ -96,8 +96,8 @@ install:
       #     make -j2 install
       #   )
       # fi
-      export PYTHON_DIR="/usr/local/Cellar/python/2.7.14_1/Frameworks/Python.framework/Versions/2.7"
-      export PYTHON_BINDIR="/usr/local/Cellar/python/2.7.14_1/bin"
+      export PYTHON_DIR="/usr/local/Cellar/python/2.7.14/Frameworks/Python.framework/Versions/2.7"
+      export PYTHON_BINDIR="/usr/local/Cellar/python/2.7.14/bin"
     fi
   - export PATH="$HDF5_DIR/bin:$PYTHON_BINDIR:$PATH" && hash -r
   - which mpirun
