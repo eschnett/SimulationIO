@@ -1,8 +1,10 @@
 #include "DataBlock.hpp"
 
 #include <algorithm>
+#include <cstring>
 
 namespace SimulationIO {
+using namespace std;
 
 namespace {
 vector<hsize_t> choose_chunksize(const vector<hsize_t> &size,
@@ -178,6 +180,11 @@ void DataSet::write(const H5::Group &group, const string &entry) const {
   m_location_name = entry;
   m_have_location = true;
   create_dataset();
+  if (m_have_attached_data) {
+    writeData(&m_attached_data.front(), m_memtype, m_memshape, m_membox);
+    m_attached_data.clear();
+    m_have_attached_data = false;
+  }
 }
 
 void DataSet::create_dataset() const {
@@ -193,15 +200,10 @@ void DataSet::create_dataset() const {
     // Zero-dimensional (scalar) datasets cannot be chunked
     auto chunksize = choose_chunksize(size, datatype().getSize());
     proplist.setChunk(dim, chunksize.data());
-// Temporarily disable this for benchmarks; to do: add a run-time configuration
-// mechanism for this
-// TODO: re-enable compression
-#if 0
     proplist.setFletcher32();
     proplist.setShuffle(); // Shuffling improves compression
     const int level = 1;   // Level 1 is fast, but still offers good compression
     proplist.setDeflate(level);
-#endif
   }
   assert(m_have_location);
   m_dataset = m_location_group.createDataSet(m_location_name, datatype(),
@@ -215,6 +217,25 @@ void DataSet::writeData(const void *data, const H5::DataType &datatype,
   H5::DataSpace memspace, filespace;
   construct_spaces(datashape, databox, m_dataspace, memspace, filespace);
   m_dataset.write(data, datatype, memspace, filespace);
+}
+
+void DataSet::attachData(const void *data, const H5::DataType &datatype,
+                         const box_t &datashape, const box_t &databox) const {
+  assert(not m_have_dataset);
+  assert(not m_have_location);
+  assert(not m_have_attached_data);
+  assert(data);
+
+  m_memtype = datatype;
+  m_memshape = datashape;
+  m_membox = databox;
+  auto count = m_membox.size();
+  auto typesize = m_memtype.getSize();
+
+  assert(m_attached_data.empty());
+  m_attached_data.resize(count * typesize);
+  memcpy(&m_attached_data.front(), data, m_attached_data.size());
+  m_have_attached_data = true;
 }
 
 // DataBuffer
