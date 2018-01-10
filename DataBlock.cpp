@@ -178,6 +178,11 @@ void DataSet::write(const H5::Group &group, const string &entry) const {
   m_location_name = entry;
   m_have_location = true;
   create_dataset();
+  if (m_have_data) {
+    writeData(&m_data.front(), m_memtype, m_memshape, m_membox);
+    m_data.clear();
+    m_have_data = false;
+  }
 }
 
 void DataSet::create_dataset() const {
@@ -210,6 +215,25 @@ void DataSet::writeData(const void *data, const H5::DataType &datatype,
   H5::DataSpace memspace, filespace;
   construct_spaces(datashape, databox, m_dataspace, memspace, filespace);
   m_dataset.write(data, datatype, memspace, filespace);
+}
+
+void DataSet::attachData(const void *data, const H5::DataType &datatype,
+                         const box_t &datashape, const box_t &databox) const {
+  assert(not m_have_dataset);
+  assert(not m_have_location);
+  assert(not m_have_data);
+  assert(data);
+
+  m_memtype = datatype;
+  m_memshape = datashape;
+  m_membox = databox;
+  auto count = m_membox.size();
+  auto typesize = m_memtype.getSize();
+
+  assert(m_data.empty());
+  m_data.resize(count * typesize);
+  memcpy(&m_data.front(), data, m_data.size());
+  m_have_data = true;
 }
 
 // DataBuffer

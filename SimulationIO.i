@@ -309,6 +309,14 @@ struct DataSet: DataBlock {
     void writeData_double(const std::vector<double>& data) const {
       self->writeData(data);
     }
+    void attachData_int(const std::vector<int>& data,
+                        const box_t& databox) const {
+      self->attachData(data, databox);
+    }
+    void attachData_double(const std::vector<double>& data,
+                           const box_t& databox) const {
+      self->attachData(data, databox);
+    }
   }
 };
 

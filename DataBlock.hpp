@@ -228,6 +228,12 @@ class DataSet : public DataBlock {
   mutable bool m_have_dataset;
   mutable H5::DataSet m_dataset;
 
+  mutable bool m_have_data;
+  mutable vector<char> m_data;
+  mutable H5::DataType m_memtype;
+  mutable box_t m_memshape;
+  mutable box_t m_membox;
+
 public:
   H5::DataSpace dataspace() const { return m_dataspace; }
   H5::DataType datatype() const { return m_datatype; }
@@ -248,7 +254,8 @@ public:
   DataSet(const box_t &box, const H5::DataType &datatype)
       : DataBlock(box), m_dataspace(H5::DataSpace(
                             rank(), reversed(vector<hsize_t>(shape())).data())),
-        m_datatype(datatype), m_have_location(false), m_have_dataset(false) {
+        m_datatype(datatype), m_have_location(false), m_have_dataset(false),
+        m_have_data(false) {
     assert(invariant());
   }
   template <typename T>
@@ -257,7 +264,7 @@ public:
                             rank(), reversed(vector<hsize_t>(shape())).data())),
         // m_datatype(H5::DataType(H5::getType(T{}))), m_have_location(false),
         m_datatype(H5::getType(T{})), m_have_location(false),
-        m_have_dataset(false) {
+        m_have_dataset(false), m_have_data(false) {
     assert(invariant());
   }
 
@@ -283,7 +290,6 @@ public:
   void writeData(const T *data, const box_t &databox) const {
     writeData(data, databox, databox);
   }
-
   template <typename T>
   void writeData(const vector<T> &data, const box_t &datashape,
                  const box_t &databox) const {
@@ -310,6 +316,28 @@ public:
     H5::createAttribute(m_dataset, "maximum", norm.max());
     H5::createAttribute(m_dataset, "sum_abs", norm.sum_abs());
     H5::createAttribute(m_dataset, "sum_abs_squared", norm.sum_abs_squared());
+  }
+
+  void attachData(const void *data, const H5::DataType &datatype,
+                  const box_t &datashape, const box_t &databox) const;
+  template <typename T>
+  void attachData(const T *data, const box_t &datashape,
+                  const box_t &databox) const {
+    attachData(data, H5::getType(T{}), datashape, databox);
+  }
+  template <typename T>
+  void attachData(const T *data, const box_t &databox) const {
+    attachData(data, databox, databox);
+  }
+  template <typename T>
+  void attachData(const vector<T> &data, const box_t &datashape,
+                  const box_t &databox) const {
+    assert(ptrdiff_t(data.size()) == datashape.size());
+    attachData(data.data(), datashape, databox);
+  }
+  template <typename T>
+  void attachData(const vector<T> &data, const box_t &databox) const {
+    attachData(data.data(), databox, databox);
   }
 };
 
