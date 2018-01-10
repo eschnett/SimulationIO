@@ -150,11 +150,12 @@ int main(int argc, char **argv) {
     for (int pj = 0; pj < npj; ++pj)
       for (int pi = 0; pi < npi; ++pi) {
         const int p = pi + npi * (pj + npj * pk);
-        const auto lo = point_t(nli * pi, nlj * pj, nlk * pk);
-        const auto hi = lo + point_t(nli, nlj, nlk);
-        const auto box = box_t(lo, hi) vector<double> coordx(npoints),
-                   coordy(npoints), coordz(npoints), datarho(npoints),
-                   datavelx(npoints), datavely(npoints), datavelz(npoints);
+        // const auto lo = point_t(nli * pi, nlj * pj, nlk * pk);
+        // const auto hi = lo + point_t(nli, nlj, nlk);
+        // const auto box = box_t(lo, hi);
+        vector<double> coordx(npoints), coordy(npoints), coordz(npoints),
+            datarho(npoints), datavelx(npoints), datavely(npoints),
+            datavelz(npoints);
         for (int lk = 0; lk < nlk; ++lk)
           for (int lj = 0; lj < nlj; ++lj)
             for (int li = 0; li < nli; ++li) {
