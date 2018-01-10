@@ -1,8 +1,10 @@
 #include "DataBlock.hpp"
 
 #include <algorithm>
+#include <cstring>
 
 namespace SimulationIO {
+using namespace std;
 
 namespace {
 vector<hsize_t> choose_chunksize(const vector<hsize_t> &size,
