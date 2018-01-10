@@ -193,15 +193,10 @@ void DataSet::create_dataset() const {
     // Zero-dimensional (scalar) datasets cannot be chunked
     auto chunksize = choose_chunksize(size, datatype().getSize());
     proplist.setChunk(dim, chunksize.data());
-// Temporarily disable this for benchmarks; to do: add a run-time configuration
-// mechanism for this
-// TODO: re-enable compression
-#if 0
     proplist.setFletcher32();
     proplist.setShuffle(); // Shuffling improves compression
     const int level = 1;   // Level 1 is fast, but still offers good compression
     proplist.setDeflate(level);
-#endif
   }
   assert(m_have_location);
   m_dataset = m_location_group.createDataSet(m_location_name, datatype(),
