@@ -126,6 +126,7 @@ set(EXES
   sio-convert-carpet-output
   sio-copy
   sio-example
+  sio-example-attach
   sio-list
   sio-merge
   )
@@ -141,6 +142,9 @@ target_link_libraries(sio-copy SimulationIO)
 
 add_executable(sio-example example.cpp)
 target_link_libraries(sio-example SimulationIO)
+
+add_executable(sio-example-attach example-attach.cpp)
+target_link_libraries(sio-example-attach SimulationIO)
 
 add_executable(sio-list list.cpp)
 target_link_libraries(sio-list SimulationIO)
@@ -164,6 +168,8 @@ add_test(NAME test_RegionCalculus COMMAND ./test_RegionCalculus)
 add_test(NAME test_SimulationIO COMMAND ./test_SimulationIO)
 add_test(NAME example COMMAND ./sio-example)
 add_test(NAME list COMMAND ./sio-list example.s5)
+add_test(NAME example-attach COMMAND ./sio-example-attach)
+add_test(NAME list-attach COMMAND ./sio-list example-attach.s5)
 add_test(NAME copy COMMAND ./sio-copy example.s5 example2.s5)
 add_test(NAME list2 COMMAND ./sio-list example2.s5)
 if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND AND H5PY_FOUND AND NUMPY_FOUND AND SWIG_FOUND)
