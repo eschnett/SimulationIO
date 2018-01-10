@@ -119,6 +119,9 @@ for pk in range(npk):
             datavelx = np.empty((nli,nlj,nlk), order='F')
             datavely = np.empty((nli,nlj,nlk), order='F')
             datavelz = np.empty((nli,nlj,nlk), order='F')
+            lo = RC.point_t([nli * pi, nlj * pj, nlk * pk])
+            hi = lo + RC.point_t([nli, nlj, nlk])
+            box = RC.box_t(lo, hi)
             for lk in range(nlk):
                 for lj in range(nlj):
                     for li in range(nli):
@@ -142,7 +145,7 @@ for pk in range(npk):
                     "%s-%s" % (discretefield.name(), blocks[p].name())]
                 component = block.discretefieldblockcomponents()["scalar"]
                 component.dataset().attachData_double(
-                    np.reshape([coordx, coordy, coordz][d], npoints))
+                    np.reshape([coordx, coordy, coordz][d], npoints), box)
             # Write rho
             for d in range(1):
                 field = rho
@@ -151,7 +154,7 @@ for pk in range(npk):
                     "%s-%s" % (discretefield.name(), blocks[p].name())]
                 component = block.discretefieldblockcomponents()["scalar"]
                 component.dataset().attachData_double(
-                    np.reshape(datarho, npoints))
+                    np.reshape(datarho, npoints), box)
             # Write velocity
             for d in range(dim):
                 field = vel
@@ -160,7 +163,7 @@ for pk in range(npk):
                     "%s-%s" % (discretefield.name(), blocks[p].name())]
                 component = block.discretefieldblockcomponents()[dirnames[d]]
                 component.dataset().attachData_double(
-                    np.reshape([datavelx, datavely, datavelz][d], npoints))
+                    np.reshape([datavelx, datavely, datavelz][d], npoints), box)
 
 # Write file
 filename = "python-example-attach.s5"
