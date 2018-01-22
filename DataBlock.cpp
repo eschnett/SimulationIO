@@ -181,7 +181,7 @@ void DataSet::write(const H5::Group &group, const string &entry) const {
   m_have_location = true;
   create_dataset();
   if (m_have_attached_data) {
-    writeData(&m_attached_data.front(), m_memtype, m_memshape, m_membox);
+    writeData(m_attached_data.data(), m_memtype, m_memshape, m_membox);
     m_attached_data.clear();
     m_have_attached_data = false;
   }
@@ -234,7 +234,7 @@ void DataSet::attachData(const void *data, const H5::DataType &datatype,
 
   assert(m_attached_data.empty());
   m_attached_data.resize(count * typesize);
-  memcpy(&m_attached_data.front(), data, m_attached_data.size());
+  memcpy(m_attached_data.data(), data, m_attached_data.size());
   m_have_attached_data = true;
 }
 
