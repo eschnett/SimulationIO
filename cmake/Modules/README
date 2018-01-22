@@ -1,2 +1,3 @@
-FindNumPy.cmake was taken from Boost
 FindH5Py.cmake was closely modelled after FindNumPy.cmake
+FindHighFive.cmake was taken from an example in the CMake documentation
+FindNumPy.cmake was taken from Boost

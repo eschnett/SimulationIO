@@ -22,6 +22,9 @@ endif()
 include_directories(${HDF5_INCLUDE_DIRS})
 set(LIBS ${LIBS} ${HDF5_LIBRARIES})
 
+find_package(HighFive)
+include_directories(${HIGHFIVE_INCLUDE_DIRS})
+
 # Note: We only look for MPI since HDF5 might require MPI
 find_package(MPI REQUIRED)
 # It seems that MPI_INCLUDE_DIRS and MPI_LIBRARIES are old names, and

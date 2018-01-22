@@ -5,6 +5,8 @@
 
 #include "Helpers.hpp"
 
+#include <highfive/H5Attribute.hpp>
+
 #include <H5Cpp.h>
 
 #include <algorithm>
