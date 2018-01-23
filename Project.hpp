@@ -4,6 +4,7 @@
 #include <H5Cpp.h>
 
 #include "Common.hpp"
+#include "Config.hpp"
 
 #include "RegionCalculus.hpp"
 
@@ -88,8 +89,11 @@ public:
 
   friend shared_ptr<Project> createProject(const string &name);
   friend shared_ptr<Project> readProject(const H5::H5Location &loc);
-  Project(hidden, const string &name) : Common(name) { createTypes(); }
-  Project(hidden) : Common(hidden()) {}
+  Project(hidden, const string &name) : Common(name) {
+    SIMULATIONIO_CHECK_VERSION;
+    createTypes();
+  }
+  Project(hidden) : Common(hidden()) { SIMULATIONIO_CHECK_VERSION; }
 
 private:
   static shared_ptr<Project> create(const string &name) {
