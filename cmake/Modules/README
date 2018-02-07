@@ -1,2 +1,2 @@
-FindNumPy.cmake was taken from Boost
+FindNumPy.cmake was taken from <https://github.com/BVLC>
 FindH5Py.cmake was closely modelled after FindNumPy.cmake
