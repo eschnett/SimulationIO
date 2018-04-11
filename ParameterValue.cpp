@@ -126,6 +126,22 @@ void ParameterValue::setValue(const string &s) {
   value_type = type_string;
 }
 
+ParameterValue::value_type_t ParameterValue::getValueType() const {
+  return value_type;
+}
+long long ParameterValue::getValueInt() const {
+  assert(value_type == type_int);
+  return value_int;
+}
+double ParameterValue::getValueDouble() const {
+  assert(value_type == type_double);
+  return value_double;
+}
+string ParameterValue::getValueString() const {
+  assert(value_type == type_string);
+  return value_string;
+}
+
 ostream &ParameterValue::output(ostream &os, int level) const {
   os << indent(level) << "ParameterValue " << quote(name()) << ": Parameter "
      << quote(parameter()->name()) << "\n"
