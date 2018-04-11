@@ -561,6 +561,7 @@ struct ParameterValue {
     type_string,
   } value_type;
   bool invariant() const;
+  // TODO: Use new API for this
   %extend {
     int getValue_int() const
     {

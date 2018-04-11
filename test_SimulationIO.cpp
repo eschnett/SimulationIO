@@ -233,6 +233,16 @@ TEST(ParameterValue, create) {
   EXPECT_EQ(val3, par2->parametervalues().at("val3"));
   EXPECT_EQ(val4, par3->parametervalues().at("val4"));
   EXPECT_EQ(val5, par3->parametervalues().at("val5"));
+  EXPECT_EQ(ParameterValue::type_int, val1->getValueType());
+  EXPECT_EQ(ParameterValue::type_double, val2->getValueType());
+  EXPECT_EQ(ParameterValue::type_double, val3->getValueType());
+  EXPECT_EQ(ParameterValue::type_string, val4->getValueType());
+  EXPECT_EQ(ParameterValue::type_string, val5->getValueType());
+  EXPECT_EQ(1, val1->getValueInt());
+  EXPECT_EQ(2.0, val2->getValueDouble());
+  EXPECT_EQ(3.0, val3->getValueDouble());
+  EXPECT_EQ("four", val4->getValueString());
+  EXPECT_EQ(x5, val5->getValueString());
 }
 
 TEST(ParameterValue, HDF5) {

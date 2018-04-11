@@ -87,6 +87,11 @@ public:
   void setValue(double d);
   void setValue(const string &s);
 
+  value_type_t getValueType() const;
+  long long getValueInt() const;
+  double getValueDouble() const;
+  string getValueString() const;
+
   virtual ostream &output(ostream &os, int level = 0) const;
   friend ostream &operator<<(ostream &os,
                              const ParameterValue &parametervalue) {
