@@ -4,12 +4,16 @@
 
 #include <cstdlib>
 #include <functional>
+#include <random>
 #include <sstream>
 
 using std::equal_to;
 using std::ostringstream;
 
-int irand(int imax) { return arc4random_uniform(imax + 1); }
+int irand(int imax) {
+  static std::mt19937 rng;
+  return std::uniform_int_distribution<>(0, imax+1)(rng);
+}
 
 using namespace RegionCalculus;
 
