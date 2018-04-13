@@ -1653,6 +1653,8 @@ namespace RegionCalculus {
 // Virtual classes
 
 template <typename T> struct vpoint {
+  virtual ~vpoint(){}
+
   virtual unique_ptr<vpoint> copy() const = 0;
 
   static unique_ptr<vpoint> make(int d);
@@ -1741,6 +1743,8 @@ template <typename T> struct vpoint {
 };
 
 template <typename T> struct vbox {
+  virtual ~vbox(){}
+
   virtual unique_ptr<vbox> copy() const = 0;
 
   static unique_ptr<vbox> make(int d);
@@ -1795,6 +1799,8 @@ template <typename T> struct vbox {
 };
 
 template <typename T> struct vregion {
+  virtual ~vregion() {}
+
   virtual unique_ptr<vregion> copy() const = 0;
 
   static unique_ptr<vregion> make(int d);
