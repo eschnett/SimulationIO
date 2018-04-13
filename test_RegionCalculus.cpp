@@ -9,7 +9,7 @@
 using std::equal_to;
 using std::ostringstream;
 
-int irand(int imax) { return rand() / (RAND_MAX / imax); }
+int irand(int imax) { return arc4random_uniform(imax + 1); }
 
 using namespace RegionCalculus;
 
