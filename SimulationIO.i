@@ -561,8 +561,28 @@ struct ParameterValue {
     type_string,
   } value_type;
   bool invariant() const;
-  // TODO: Use new API for this
+  value_type_t getValueType() const;
+  int getValueInt() const;
+  double getValueDouble() const;
+  string getValueString() const;
   %extend {
+    void setValue_empty()
+    {
+      self->setValue();
+    }
+    void setValue_int(int i)
+    {
+      self->setValue(i);
+    }
+    void setValue_double(double d)
+    {
+      self->setValue(d);
+    }
+    void setValue_string(string s)
+    {
+      self->setValue(s);
+    }
+    // These are deprecated
     int getValue_int() const
     {
       assert(self->value_type == ParameterValue::type_int);
