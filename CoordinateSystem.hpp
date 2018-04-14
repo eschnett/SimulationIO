@@ -106,6 +106,9 @@ public:
   shared_ptr<CoordinateField>
   createCoordinateField(const string &name, int direction,
                         const shared_ptr<Field> &field);
+  shared_ptr<CoordinateField>
+  getCoordinateField(const string &name, int direction,
+                     const shared_ptr<Field> &field);
   shared_ptr<CoordinateField> readCoordinateField(const H5::H5Location &loc,
                                                   const string &entry);
 };

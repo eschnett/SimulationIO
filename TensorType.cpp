@@ -67,16 +67,29 @@ void TensorType::write(const H5::H5Location &loc,
 }
 
 shared_ptr<TensorComponent>
-TensorType::createTensorComponent(const string &name, int stored_component,
+TensorType::createTensorComponent(const string &name, int storage_index,
                                   const vector<int> &indexvalues) {
   auto tensorcomponent = TensorComponent::create(name, shared_from_this(),
-                                                 stored_component, indexvalues);
+                                                 storage_index, indexvalues);
   checked_emplace(m_tensorcomponents, tensorcomponent->name(), tensorcomponent,
                   "TensorType", "tensorcomponents");
   checked_emplace(m_storage_indices, tensorcomponent->storage_index(),
                   tensorcomponent, "TensorType", "storage_indices");
   assert(tensorcomponent->invariant());
   return tensorcomponent;
+}
+
+shared_ptr<TensorComponent>
+TensorType::getTensorComponent(const string &name, int storage_index,
+                               const vector<int> &indexvalues) {
+  auto loc = m_tensorcomponents.find(name);
+  if (loc != m_tensorcomponents.end()) {
+    const auto &tensorcomponent = loc->second;
+    assert(tensorcomponent->storage_index() == storage_index);
+    assert(tensorcomponent->indexvalues() == indexvalues);
+    return tensorcomponent;
+  }
+  return createTensorComponent(name, storage_index, indexvalues);
 }
 
 shared_ptr<TensorComponent>

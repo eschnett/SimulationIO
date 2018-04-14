@@ -123,6 +123,18 @@ Manifold::createDiscretization(const string &name,
 }
 
 shared_ptr<Discretization>
+Manifold::getDiscretization(const string &name,
+                            const shared_ptr<Configuration> &configuration) {
+  auto loc = m_discretizations.find(name);
+  if (loc != m_discretizations.end()) {
+    const auto &discretization = loc->second;
+    assert(discretization->configuration() == configuration);
+    return discretization;
+  }
+  return createDiscretization(name, configuration);
+}
+
+shared_ptr<Discretization>
 Manifold::readDiscretization(const H5::H5Location &loc, const string &entry) {
   auto discretization = Discretization::create(loc, entry, shared_from_this());
   checked_emplace(m_discretizations, discretization->name(), discretization,

@@ -84,6 +84,16 @@ Discretization::createDiscretizationBlock(const string &name) {
 }
 
 shared_ptr<DiscretizationBlock>
+Discretization::getDiscretizationBlock(const string &name) {
+  auto loc = m_discretizationblocks.find(name);
+  if (loc != m_discretizationblocks.end()) {
+    const auto &discretizationblock = loc->second;
+    return discretizationblock;
+  }
+  return createDiscretizationBlock(name);
+}
+
+shared_ptr<DiscretizationBlock>
 Discretization::readDiscretizationBlock(const H5::H5Location &loc,
                                         const string &entry) {
   auto discretizationblock =

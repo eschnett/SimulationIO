@@ -112,6 +112,18 @@ DiscreteFieldBlock::createDiscreteFieldBlockComponent(
 }
 
 shared_ptr<DiscreteFieldBlockComponent>
+DiscreteFieldBlock::getDiscreteFieldBlockComponent(
+    const string &name, const shared_ptr<TensorComponent> &tensorcomponent) {
+  auto loc = m_discretefieldblockcomponents.find(name);
+  if (loc != m_discretefieldblockcomponents.end()) {
+    const auto &discretefieldblockcomponent = loc->second;
+    assert(discretefieldblockcomponent->tensorcomponent() == tensorcomponent);
+    return discretefieldblockcomponent;
+  }
+  return createDiscreteFieldBlockComponent(name, tensorcomponent);
+}
+
+shared_ptr<DiscreteFieldBlockComponent>
 DiscreteFieldBlock::readDiscreteFieldBlockComponent(const H5::H5Location &loc,
                                                     const string &entry) {
   auto discretefieldblockcomponent =

@@ -110,6 +110,7 @@ public:
                      const H5::H5Location &parent) const;
 
   shared_ptr<DiscretizationBlock> createDiscretizationBlock(const string &name);
+  shared_ptr<DiscretizationBlock> getDiscretizationBlock(const string &name);
   shared_ptr<DiscretizationBlock>
   readDiscretizationBlock(const H5::H5Location &loc, const string &entry);
 

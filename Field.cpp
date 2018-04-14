@@ -123,6 +123,23 @@ Field::createDiscreteField(const string &name,
   assert(discretefield->invariant());
   return discretefield;
 }
+
+shared_ptr<DiscreteField>
+Field::getDiscreteField(const string &name,
+                        const shared_ptr<Configuration> &configuration,
+                        const shared_ptr<Discretization> &discretization,
+                        const shared_ptr<Basis> &basis) {
+  auto loc = m_discretefields.find(name);
+  if (loc != m_discretefields.end()) {
+    const auto &discretefield = loc->second;
+    assert(discretefield->configuration() == configuration);
+    assert(discretefield->discretization() == discretization);
+    assert(discretefield->basis() == basis);
+    return discretefield;
+  }
+  return createDiscreteField(name, configuration, discretization, basis);
+}
+
 shared_ptr<DiscreteField> Field::readDiscreteField(const H5::H5Location &loc,
                                                    const string &entry) {
   auto discretefield = DiscreteField::create(loc, entry, shared_from_this());
