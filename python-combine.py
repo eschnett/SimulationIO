@@ -85,7 +85,15 @@ for parameter in project.parameters().values():
         message("ParameterValue \"%s\"" % parametervalue.name())
         parametervalue2 = \
             parameter2.createParameterValue(parametervalue.name())
-        # TODO: Set actual parameter value
+        valuetype = parametervalue.getValueType()
+        if valuetype == type_empty:
+            parametervalue2.setValue_empty()
+        elif valuetype == type_int:
+            parametervalue2.setValue_int(parametervalue.getValueInt())
+        elif valuetype == type_double:
+            parametervalue2.setValue_double(parametervalue.getValueDouble())
+        elif valuetype == type_string:
+            parametervalue2.setValue_string(parametervalue.getValueString())
     outdent()
 outdent()
 

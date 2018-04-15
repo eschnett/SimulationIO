@@ -365,8 +365,10 @@ shared_ptr<Parameter> Project::createParameter(const string &name) {
 
 shared_ptr<Parameter> Project::getParameter(const string &name) {
   auto loc = m_parameters.find(name);
-  if (loc != m_parameters.end())
-    return loc->second;
+  if (loc != m_parameters.end()) {
+    const auto &parameter = loc->second;
+    return parameter;
+  }
   return createParameter(name);
 }
 
@@ -387,6 +389,15 @@ shared_ptr<Configuration> Project::createConfiguration(const string &name) {
   return configuration;
 }
 
+shared_ptr<Configuration> Project::getConfiguration(const string &name) {
+  auto loc = m_configurations.find(name);
+  if (loc != m_configurations.end()) {
+    const auto &configuration = loc->second;
+    return configuration;
+  }
+  return createConfiguration(name);
+}
+
 shared_ptr<Configuration> Project::readConfiguration(const H5::H5Location &loc,
                                                      const string &entry) {
   auto configuration = Configuration::create(loc, entry, shared_from_this());
@@ -404,6 +415,18 @@ shared_ptr<TensorType> Project::createTensorType(const string &name,
                   "tensortypes");
   assert(tensortype->invariant());
   return tensortype;
+}
+
+shared_ptr<TensorType> Project::getTensorType(const string &name, int dimension,
+                                              int rank) {
+  auto loc = m_tensortypes.find(name);
+  if (loc != m_tensortypes.end()) {
+    const auto &tensortype = loc->second;
+    assert(tensortype->dimension() == dimension);
+    assert(tensortype->rank() == rank);
+    return tensortype;
+  }
+  return createTensorType(name, dimension, rank);
 }
 
 shared_ptr<TensorType> Project::readTensorType(const H5::H5Location &loc,
@@ -428,6 +451,20 @@ Project::createManifold(const string &name,
   return manifold;
 }
 
+shared_ptr<Manifold>
+Project::getManifold(const string &name,
+                     const shared_ptr<Configuration> &configuration,
+                     int dimension) {
+  auto loc = m_manifolds.find(name);
+  if (loc != m_manifolds.end()) {
+    const auto &manifold = loc->second;
+    assert(manifold->configuration() == configuration);
+    assert(manifold->dimension() == dimension);
+    return manifold;
+  }
+  return createManifold(name, configuration, dimension);
+}
+
 shared_ptr<Manifold> Project::readManifold(const H5::H5Location &loc,
                                            const string &entry) {
   auto manifold = Manifold::create(loc, entry, shared_from_this());
@@ -448,6 +485,20 @@ Project::createTangentSpace(const string &name,
                   "Project", "tangentspaces");
   assert(tangentspace->invariant());
   return tangentspace;
+}
+
+shared_ptr<TangentSpace>
+Project::getTangentSpace(const string &name,
+                         const shared_ptr<Configuration> &configuration,
+                         int dimension) {
+  auto loc = m_tangentspaces.find(name);
+  if (loc != m_tangentspaces.end()) {
+    const auto &tangentspace = loc->second;
+    assert(tangentspace->configuration() == configuration);
+    assert(tangentspace->dimension() == dimension);
+    return tangentspace;
+  }
+  return createTangentSpace(name, configuration, dimension);
 }
 
 shared_ptr<TangentSpace> Project::readTangentSpace(const H5::H5Location &loc,
@@ -476,6 +527,24 @@ Project::createField(const string &name,
   return field;
 }
 
+shared_ptr<Field>
+Project::getField(const string &name,
+                  const shared_ptr<Configuration> &configuration,
+                  const shared_ptr<Manifold> &manifold,
+                  const shared_ptr<TangentSpace> &tangentspace,
+                  const shared_ptr<TensorType> &tensortype) {
+  auto loc = m_fields.find(name);
+  if (loc != m_fields.end()) {
+    const auto &field = loc->second;
+    assert(field->configuration() == configuration);
+    assert(field->manifold() == manifold);
+    assert(field->tangentspace() == tangentspace);
+    assert(field->tensortype() == tensortype);
+    return field;
+  }
+  return createField(name, configuration, manifold, tangentspace, tensortype);
+}
+
 shared_ptr<Field> Project::readField(const H5::H5Location &loc,
                                      const string &entry) {
   auto field = Field::create(loc, entry, shared_from_this());
@@ -494,6 +563,20 @@ Project::createCoordinateSystem(const string &name,
                   coordinatesystem, "Project", "coordinatesystems");
   assert(coordinatesystem->invariant());
   return coordinatesystem;
+}
+
+shared_ptr<CoordinateSystem>
+Project::getCoordinateSystem(const string &name,
+                             const shared_ptr<Configuration> &configuration,
+                             const shared_ptr<Manifold> &manifold) {
+  auto loc = m_coordinatesystems.find(name);
+  if (loc != m_coordinatesystems.end()) {
+    const auto &coordinatesystem = loc->second;
+    assert(coordinatesystem->configuration() == configuration);
+    assert(coordinatesystem->manifold() == manifold);
+    return coordinatesystem;
+  }
+  return createCoordinateSystem(name, configuration, manifold);
 }
 
 shared_ptr<CoordinateSystem>

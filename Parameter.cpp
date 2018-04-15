@@ -58,6 +58,15 @@ shared_ptr<ParameterValue> Parameter::createParameterValue(const string &name) {
   return parametervalue;
 }
 
+shared_ptr<ParameterValue> Parameter::getParameterValue(const string &name) {
+  auto loc = m_parametervalues.find(name);
+  if (loc != m_parametervalues.end()) {
+    const auto &parametervalue = loc->second;
+    return parametervalue;
+  }
+  return createParameterValue(name);
+}
+
 shared_ptr<ParameterValue>
 Parameter::readParameterValue(const H5::H5Location &loc, const string &entry) {
   auto parametervalue = ParameterValue::create(loc, entry, shared_from_this());

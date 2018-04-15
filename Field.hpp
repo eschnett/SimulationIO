@@ -130,6 +130,11 @@ public:
                       const shared_ptr<Configuration> &configuration,
                       const shared_ptr<Discretization> &discretization,
                       const shared_ptr<Basis> &basis);
+  shared_ptr<DiscreteField>
+  getDiscreteField(const string &name,
+                   const shared_ptr<Configuration> &configuration,
+                   const shared_ptr<Discretization> &discretization,
+                   const shared_ptr<Basis> &basis);
   shared_ptr<DiscreteField> readDiscreteField(const H5::H5Location &loc,
                                               const string &entry);
 

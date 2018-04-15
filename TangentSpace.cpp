@@ -86,6 +86,18 @@ TangentSpace::createBasis(const string &name,
   return basis;
 }
 
+shared_ptr<Basis>
+TangentSpace::getBasis(const string &name,
+                       const shared_ptr<Configuration> &configuration) {
+  auto loc = m_bases.find(name);
+  if (loc != m_bases.end()) {
+    const auto &basis = loc->second;
+    assert(basis->configuration() == configuration);
+    return basis;
+  }
+  return createBasis(name, configuration);
+}
+
 shared_ptr<Basis> TangentSpace::readBasis(const H5::H5Location &loc,
                                           const string &entry) {
   auto basis = Basis::create(loc, entry, shared_from_this());

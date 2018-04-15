@@ -313,6 +313,10 @@ public:
     H5::createAttribute(m_dataset, "sum_abs_squared", norm.sum_abs_squared());
   }
 
+  void attachData(const vector<char> &data, const H5::DataType &datatype,
+                  const box_t &datashape, const box_t &databox) const;
+  void attachData(vector<char> &&data, const H5::DataType &datatype,
+                  const box_t &datashape, const box_t &databox) const;
   void attachData(const void *data, const H5::DataType &datatype,
                   const box_t &datashape, const box_t &databox) const;
   template <typename T>

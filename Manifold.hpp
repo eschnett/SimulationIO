@@ -113,6 +113,9 @@ public:
   shared_ptr<Discretization>
   createDiscretization(const string &name,
                        const shared_ptr<Configuration> &configuration);
+  shared_ptr<Discretization>
+  getDiscretization(const string &name,
+                    const shared_ptr<Configuration> &configuration);
   shared_ptr<Discretization> readDiscretization(const H5::H5Location &loc,
                                                 const string &entry);
   shared_ptr<SubDiscretization> createSubDiscretization(

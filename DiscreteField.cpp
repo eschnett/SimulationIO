@@ -106,6 +106,18 @@ shared_ptr<DiscreteFieldBlock> DiscreteField::createDiscreteFieldBlock(
   return discretefieldblock;
 }
 
+shared_ptr<DiscreteFieldBlock> DiscreteField::getDiscreteFieldBlock(
+    const string &name,
+    const shared_ptr<DiscretizationBlock> &discretizationblock) {
+  auto loc = m_discretefieldblocks.find(name);
+  if (loc != m_discretefieldblocks.end()) {
+    const auto &discretefieldblock = loc->second;
+    assert(discretefieldblock->discretizationblock() == discretizationblock);
+    return discretefieldblock;
+  }
+  return createDiscreteFieldBlock(name, discretizationblock);
+}
+
 shared_ptr<DiscreteFieldBlock>
 DiscreteField::readDiscreteFieldBlock(const H5::H5Location &loc,
                                       const string &entry) {

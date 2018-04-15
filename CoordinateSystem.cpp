@@ -101,6 +101,19 @@ CoordinateSystem::createCoordinateField(const string &name, int direction,
 }
 
 shared_ptr<CoordinateField>
+CoordinateSystem::getCoordinateField(const string &name, int direction,
+                                     const shared_ptr<Field> &field) {
+  auto loc = m_coordinatefields.find(name);
+  if (loc != m_coordinatefields.end()) {
+    const auto &coordinatefield = loc->second;
+    assert(coordinatefield->direction() == direction);
+    assert(coordinatefield->field() == field);
+    return coordinatefield;
+  }
+  return createCoordinateField(name, direction, field);
+}
+
+shared_ptr<CoordinateField>
 CoordinateSystem::readCoordinateField(const H5::H5Location &loc,
                                       const string &entry) {
   auto coordinatefield =
