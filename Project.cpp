@@ -6,6 +6,7 @@
 #include "Field.hpp"
 #include "Manifold.hpp"
 #include "Parameter.hpp"
+#include "ParameterValue.hpp"
 #include "TangentSpace.hpp"
 #include "TensorType.hpp"
 
@@ -372,6 +373,20 @@ shared_ptr<Parameter> Project::getParameter(const string &name) {
   return createParameter(name);
 }
 
+shared_ptr<Parameter>
+Project::copyParameter(const shared_ptr<Parameter> &parameter,
+                       bool copy_children) {
+  auto parameter2 = getParameter(parameter->name());
+  if (copy_children) {
+    for (const auto &parametervalue_kv : parameter->parametervalues()) {
+      const auto &parametervalue = parametervalue_kv.second;
+      auto parametervalue2 =
+          parameter2->copyParameterValue(parametervalue, copy_children);
+    }
+  }
+  return parameter2;
+}
+
 shared_ptr<Parameter> Project::readParameter(const H5::H5Location &loc,
                                              const string &entry) {
   auto parameter = Parameter::create(loc, entry, shared_from_this());
@@ -396,6 +411,20 @@ shared_ptr<Configuration> Project::getConfiguration(const string &name) {
     return configuration;
   }
   return createConfiguration(name);
+}
+
+shared_ptr<Configuration>
+Project::copyConfiguration(const shared_ptr<Configuration> &configuration,
+                           bool copy_children) {
+  auto configuration2 = getConfiguration(configuration->name());
+  for (const auto &parametervalue_kv : configuration->parametervalues()) {
+    const auto &parametervalue = parametervalue_kv.second;
+    auto parameter2 = copyParameter(parametervalue->parameter());
+    auto parametervalue2 = parameter2->copyParameterValue(parametervalue);
+    if (!configuration2->parametervalues().count(parametervalue2->name()))
+      configuration2->insertParameterValue(parametervalue2);
+  }
+  return configuration2;
 }
 
 shared_ptr<Configuration> Project::readConfiguration(const H5::H5Location &loc,
@@ -427,6 +456,21 @@ shared_ptr<TensorType> Project::getTensorType(const string &name, int dimension,
     return tensortype;
   }
   return createTensorType(name, dimension, rank);
+}
+
+shared_ptr<TensorType>
+Project::copyTensorType(const shared_ptr<TensorType> &tensortype,
+                        bool copy_children) {
+  auto tensortype2 = getTensorType(tensortype->name(), tensortype->dimension(),
+                                   tensortype->rank());
+  if (copy_children) {
+    for (const auto &tensorcomponent_kv : tensortype->tensorcomponents()) {
+      const auto &tensorcomponent = tensorcomponent_kv.second;
+      auto tensorcomponent2 =
+          tensortype2->copyTensorComponent(tensorcomponent, copy_children);
+    }
+  }
+  return tensortype2;
 }
 
 shared_ptr<TensorType> Project::readTensorType(const H5::H5Location &loc,
@@ -465,6 +509,21 @@ Project::getManifold(const string &name,
   return createManifold(name, configuration, dimension);
 }
 
+shared_ptr<Manifold> Project::copyManifold(const shared_ptr<Manifold> &manifold,
+                                           bool copy_children) {
+  auto configuration2 = copyConfiguration(manifold->configuration());
+  auto manifold2 =
+      getManifold(manifold->name(), configuration2, manifold->dimension());
+  if (copy_children) {
+    for (const auto &discretization_kv : manifold->discretizations()) {
+      const auto &discretization = discretization_kv.second;
+      auto discretization2 =
+          manifold2->copyDiscretization(discretization, copy_children);
+    }
+  }
+  return manifold2;
+}
+
 shared_ptr<Manifold> Project::readManifold(const H5::H5Location &loc,
                                            const string &entry) {
   auto manifold = Manifold::create(loc, entry, shared_from_this());
@@ -499,6 +558,21 @@ Project::getTangentSpace(const string &name,
     return tangentspace;
   }
   return createTangentSpace(name, configuration, dimension);
+}
+
+shared_ptr<TangentSpace>
+Project::copyTangentSpace(const shared_ptr<TangentSpace> &tangentspace,
+                          bool copy_children) {
+  auto configuration2 = copyConfiguration(tangentspace->configuration());
+  auto tangentspace2 = getTangentSpace(tangentspace->name(), configuration2,
+                                       tangentspace->dimension());
+  if (copy_children) {
+    for (const auto &basis_kv : tangentspace->bases()) {
+      const auto &basis = basis_kv.second;
+      auto basis2 = tangentspace2->copyBasis(basis, copy_children);
+    }
+  }
+  return tangentspace2;
 }
 
 shared_ptr<TangentSpace> Project::readTangentSpace(const H5::H5Location &loc,
@@ -545,6 +619,24 @@ Project::getField(const string &name,
   return createField(name, configuration, manifold, tangentspace, tensortype);
 }
 
+shared_ptr<Field> Project::copyField(const shared_ptr<Field> &field,
+                                     bool copy_children) {
+  auto configuration2 = copyConfiguration(field->configuration());
+  auto manifold2 = copyManifold(field->manifold());
+  auto tangentspace2 = copyTangentSpace(field->tangentspace());
+  auto tensortype2 = copyTensorType(field->tensortype());
+  auto field2 = getField(field->name(), configuration2, manifold2,
+                         tangentspace2, tensortype2);
+  if (copy_children) {
+    for (const auto &discretefield_kv : field->discretefields()) {
+      const auto &discretefield = discretefield_kv.second;
+      auto discretefield2 =
+          field2->copyDiscreteField(discretefield, copy_children);
+    }
+  }
+  return field2;
+}
+
 shared_ptr<Field> Project::readField(const H5::H5Location &loc,
                                      const string &entry) {
   auto field = Field::create(loc, entry, shared_from_this());
@@ -577,6 +669,23 @@ Project::getCoordinateSystem(const string &name,
     return coordinatesystem;
   }
   return createCoordinateSystem(name, configuration, manifold);
+}
+
+shared_ptr<CoordinateSystem> Project::copyCoordinateSystem(
+    const shared_ptr<CoordinateSystem> &coordinatesystem, bool copy_children) {
+  auto configuration2 = copyConfiguration(coordinatesystem->configuration());
+  auto manifold2 = copyManifold(coordinatesystem->manifold());
+  auto coordinatesystem2 =
+      getCoordinateSystem(coordinatesystem->name(), configuration2, manifold2);
+  if (copy_children) {
+    for (const auto &coordinatefield_kv :
+         coordinatesystem->coordinatefields()) {
+      const auto &coordinatefield = coordinatefield_kv.second;
+      auto coordinatefield2 = coordinatesystem2->copyCoordinateField(
+          coordinatefield, copy_children);
+    }
+  }
+  return coordinatesystem2;
 }
 
 shared_ptr<CoordinateSystem>

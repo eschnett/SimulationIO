@@ -109,6 +109,10 @@ public:
   shared_ptr<DiscreteFieldBlockComponent> getDiscreteFieldBlockComponent(
       const string &name, const shared_ptr<TensorComponent> &tensorcomponent);
   shared_ptr<DiscreteFieldBlockComponent>
+  copyDiscreteFieldBlockComponent(const shared_ptr<DiscreteFieldBlockComponent>
+                                      &discretefieldblockcomponent,
+                                  bool copy_children = false);
+  shared_ptr<DiscreteFieldBlockComponent>
   readDiscreteFieldBlockComponent(const H5::H5Location &loc,
                                   const string &entry);
 };

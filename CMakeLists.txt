@@ -6,7 +6,7 @@ cmake_policy(SET CMP0048 NEW)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 
-project(SimulationIO VERSION 2.5.0 LANGUAGES C CXX)
+project(SimulationIO VERSION 2.6.0 LANGUAGES C CXX)
 set(PROJECT_DESCRIPTION "SimulationIO: Efficient and convenient I/O for large PDE simulations")
 set(PROJECT_URL "https://github.com/eschnett/SimulationIO")
 
@@ -129,6 +129,7 @@ set(EXES
   sio-example-attach
   sio-list
   sio-merge
+  sio-filter
   )
 
 add_executable(sio-benchmark benchmark.cpp)
@@ -151,6 +152,9 @@ target_link_libraries(sio-list SimulationIO)
 
 add_executable(sio-merge merge.cpp)
 target_link_libraries(sio-merge SimulationIO)
+
+add_executable(sio-filter filter.cpp)
+target_link_libraries(sio-filter SimulationIO)
 
 # Tests
 

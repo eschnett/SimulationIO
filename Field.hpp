@@ -135,6 +135,9 @@ public:
                    const shared_ptr<Configuration> &configuration,
                    const shared_ptr<Discretization> &discretization,
                    const shared_ptr<Basis> &basis);
+  shared_ptr<DiscreteField>
+  copyDiscreteField(const shared_ptr<DiscreteField> &discretefield,
+                    bool copy_children = false);
   shared_ptr<DiscreteField> readDiscreteField(const H5::H5Location &loc,
                                               const string &entry);
 

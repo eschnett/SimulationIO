@@ -110,6 +110,9 @@ public:
   shared_ptr<DiscreteFieldBlock> getDiscreteFieldBlock(
       const string &name,
       const shared_ptr<DiscretizationBlock> &discretizationblock);
+  shared_ptr<DiscreteFieldBlock> copyDiscreteFieldBlock(
+      const shared_ptr<DiscreteFieldBlock> &discretefieldblock,
+      bool copy_children = false);
   shared_ptr<DiscreteFieldBlock>
   readDiscreteFieldBlock(const H5::H5Location &loc, const string &entry);
 };

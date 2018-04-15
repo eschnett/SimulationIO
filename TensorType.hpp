@@ -104,6 +104,9 @@ public:
   shared_ptr<TensorComponent>
   getTensorComponent(const string &name, int storage_index,
                      const vector<int> &indexvalues);
+  shared_ptr<TensorComponent>
+  copyTensorComponent(const shared_ptr<TensorComponent> &tensorcomponent,
+                      bool copy_children = false);
   shared_ptr<TensorComponent> readTensorComponent(const H5::H5Location &loc,
                                                   const string &entry);
 

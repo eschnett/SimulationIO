@@ -113,6 +113,14 @@ CoordinateSystem::getCoordinateField(const string &name, int direction,
   return createCoordinateField(name, direction, field);
 }
 
+shared_ptr<CoordinateField> CoordinateSystem::copyCoordinateField(
+    const shared_ptr<CoordinateField> &coordinatefield, bool copy_children) {
+  auto field2 = project()->copyField(coordinatefield->field(), copy_children);
+  auto coordinatefield2 = getCoordinateField(
+      coordinatefield->name(), coordinatefield->direction(), field2);
+  return coordinatefield2;
+}
+
 shared_ptr<CoordinateField>
 CoordinateSystem::readCoordinateField(const H5::H5Location &loc,
                                       const string &entry) {

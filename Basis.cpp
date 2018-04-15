@@ -81,6 +81,25 @@ shared_ptr<BasisVector> Basis::createBasisVector(const string &name,
   return basisvector;
 }
 
+shared_ptr<BasisVector> Basis::getBasisVector(const string &name,
+                                              int direction) {
+  auto loc = m_basisvectors.find(name);
+  if (loc != m_basisvectors.end()) {
+    const auto &basisvector = loc->second;
+    assert(basisvector->direction() == direction);
+    return basisvector;
+  }
+  return createBasisVector(name, direction);
+}
+
+shared_ptr<BasisVector>
+Basis::copyBasisVector(const shared_ptr<BasisVector> &basisvector,
+                       bool copy_children) {
+  auto basisvector2 =
+      getBasisVector(basisvector->name(), basisvector->direction());
+  return basisvector2;
+}
+
 shared_ptr<BasisVector> Basis::readBasisVector(const H5::H5Location &loc,
                                                const string &entry) {
   auto basisvector = BasisVector::create(loc, entry, shared_from_this());

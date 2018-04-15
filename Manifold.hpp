@@ -116,6 +116,9 @@ public:
   shared_ptr<Discretization>
   getDiscretization(const string &name,
                     const shared_ptr<Configuration> &configuration);
+  shared_ptr<Discretization>
+  copyDiscretization(const shared_ptr<Discretization> &discretization,
+                     bool copy_children = false);
   shared_ptr<Discretization> readDiscretization(const H5::H5Location &loc,
                                                 const string &entry);
   shared_ptr<SubDiscretization> createSubDiscretization(
@@ -123,6 +126,15 @@ public:
       const shared_ptr<Discretization> &parent_discretization,
       const shared_ptr<Discretization> &child_discretization,
       const vector<double> &factor, const vector<double> &offset);
+  shared_ptr<SubDiscretization>
+  getSubDiscretization(const string &name,
+                       const shared_ptr<Discretization> &parent_discretization,
+                       const shared_ptr<Discretization> &child_discretization,
+                       const vector<double> &factor,
+                       const vector<double> &offset);
+  shared_ptr<SubDiscretization>
+  copySubDiscretization(const shared_ptr<SubDiscretization> &subdiscretization,
+                        bool copy_children = false);
   shared_ptr<SubDiscretization> readSubDiscretization(const H5::H5Location &loc,
                                                       const string &entry);
 

@@ -103,6 +103,10 @@ public:
                      const H5::H5Location &parent) const;
 
   shared_ptr<BasisVector> createBasisVector(const string &name, int direction);
+  shared_ptr<BasisVector> getBasisVector(const string &name, int direction);
+  shared_ptr<BasisVector>
+  copyBasisVector(const shared_ptr<BasisVector> &basisvector,
+                  bool copy_children = false);
   shared_ptr<BasisVector> readBasisVector(const H5::H5Location &loc,
                                           const string &entry);
 

@@ -101,6 +101,8 @@ public:
                                 const shared_ptr<Configuration> &configuration);
   shared_ptr<Basis> getBasis(const string &name,
                              const shared_ptr<Configuration> &configuration);
+  shared_ptr<Basis> copyBasis(const shared_ptr<Basis> &basis,
+                              bool copy_children = false);
   shared_ptr<Basis> readBasis(const H5::H5Location &loc, const string &entry);
 
 private:

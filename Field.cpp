@@ -140,6 +140,27 @@ Field::getDiscreteField(const string &name,
   return createDiscreteField(name, configuration, discretization, basis);
 }
 
+shared_ptr<DiscreteField>
+Field::copyDiscreteField(const shared_ptr<DiscreteField> &discretefield,
+                         bool copy_children) {
+  auto configuration2 =
+      project()->copyConfiguration(discretefield->configuration());
+  auto discretization2 =
+      manifold()->copyDiscretization(discretefield->discretization());
+  auto basis2 = tangentspace()->copyBasis(discretefield->basis());
+  auto discretefield2 = getDiscreteField(discretefield->name(), configuration2,
+                                         discretization2, basis2);
+  if (copy_children) {
+    for (const auto &discretefieldblock_kv :
+         discretefield->discretefieldblocks()) {
+      const auto &discretefieldblock = discretefieldblock_kv.second;
+      auto discretefieldblock2 = discretefield2->copyDiscreteFieldBlock(
+          discretefieldblock, copy_children);
+    }
+  }
+  return discretefield2;
+}
+
 shared_ptr<DiscreteField> Field::readDiscreteField(const H5::H5Location &loc,
                                                    const string &entry) {
   auto discretefield = DiscreteField::create(loc, entry, shared_from_this());
