@@ -80,6 +80,9 @@ public:
 
   shared_ptr<ParameterValue> createParameterValue(const string &name);
   shared_ptr<ParameterValue> getParameterValue(const string &name);
+  shared_ptr<ParameterValue>
+  copyParameterValue(const shared_ptr<ParameterValue> &parametervalue,
+                     bool copy_children = false);
   shared_ptr<ParameterValue> readParameterValue(const H5::H5Location &loc,
                                                 const string &entry);
 };

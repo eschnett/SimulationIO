@@ -132,16 +132,24 @@ public:
 
   shared_ptr<Parameter> createParameter(const string &name);
   shared_ptr<Parameter> getParameter(const string &name);
+  shared_ptr<Parameter> copyParameter(const shared_ptr<Parameter> &parameter,
+                                      bool copy_children = false);
   shared_ptr<Parameter> readParameter(const H5::H5Location &loc,
                                       const string &entry);
   shared_ptr<Configuration> createConfiguration(const string &name);
   shared_ptr<Configuration> getConfiguration(const string &name);
+  shared_ptr<Configuration>
+  copyConfiguration(const shared_ptr<Configuration> &configuration,
+                    bool copy_children = false);
   shared_ptr<Configuration> readConfiguration(const H5::H5Location &loc,
                                               const string &entry);
   shared_ptr<TensorType> createTensorType(const string &name, int dimension,
                                           int rank);
   shared_ptr<TensorType> getTensorType(const string &name, int dimension,
                                        int rank);
+  shared_ptr<TensorType>
+  copyTensorType(const shared_ptr<TensorType> &tensortype,
+                 bool copy_children = false);
   shared_ptr<TensorType> readTensorType(const H5::H5Location &loc,
                                         const string &entry);
   shared_ptr<Manifold>
@@ -150,6 +158,8 @@ public:
   shared_ptr<Manifold>
   getManifold(const string &name,
               const shared_ptr<Configuration> &configuration, int dimension);
+  shared_ptr<Manifold> copyManifold(const shared_ptr<Manifold> &manifold,
+                                    bool copy_children = false);
   shared_ptr<Manifold> readManifold(const H5::H5Location &loc,
                                     const string &entry);
   shared_ptr<TangentSpace>
@@ -160,6 +170,9 @@ public:
   getTangentSpace(const string &name,
                   const shared_ptr<Configuration> &configuration,
                   int dimension);
+  shared_ptr<TangentSpace>
+  copyTangentSpace(const shared_ptr<TangentSpace> &tangentspace,
+                   bool copy_children = false);
   shared_ptr<TangentSpace> readTangentSpace(const H5::H5Location &loc,
                                             const string &entry);
   shared_ptr<Field> createField(const string &name,
@@ -172,6 +185,8 @@ public:
                              const shared_ptr<Manifold> &manifold,
                              const shared_ptr<TangentSpace> &tangentspace,
                              const shared_ptr<TensorType> &tensortype);
+  shared_ptr<Field> copyField(const shared_ptr<Field> &field,
+                              bool copy_children = false);
   shared_ptr<Field> readField(const H5::H5Location &loc, const string &entry);
   shared_ptr<CoordinateSystem>
   createCoordinateSystem(const string &name,
@@ -181,6 +196,9 @@ public:
   getCoordinateSystem(const string &name,
                       const shared_ptr<Configuration> &configuration,
                       const shared_ptr<Manifold> &manifold);
+  shared_ptr<CoordinateSystem>
+  copyCoordinateSystem(const shared_ptr<CoordinateSystem> &coordinatesystem,
+                       bool copy_children = false);
   shared_ptr<CoordinateSystem> readCoordinateSystem(const H5::H5Location &loc,
                                                     const string &entry);
 };

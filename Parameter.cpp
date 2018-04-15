@@ -68,6 +68,35 @@ shared_ptr<ParameterValue> Parameter::getParameterValue(const string &name) {
 }
 
 shared_ptr<ParameterValue>
+Parameter::copyParameterValue(const shared_ptr<ParameterValue> &parametervalue,
+                              bool copy_children) {
+  auto parametervalue2 = getParameterValue(parametervalue->name());
+  switch (parametervalue->getValueType()) {
+  case ParameterValue::type_empty:
+    parametervalue2->setValue();
+    break;
+  case ParameterValue::type_int: {
+    auto value = parametervalue->getValueInt();
+    parametervalue2->setValue(value);
+    break;
+  }
+  case ParameterValue::type_double: {
+    auto value = parametervalue->getValueDouble();
+    parametervalue2->setValue(value);
+    break;
+  }
+  case ParameterValue::type_string: {
+    auto value = parametervalue->getValueString();
+    parametervalue2->setValue(value);
+    break;
+  }
+  default:
+    assert(0);
+  }
+  return parametervalue2;
+}
+
+shared_ptr<ParameterValue>
 Parameter::readParameterValue(const H5::H5Location &loc, const string &entry) {
   auto parametervalue = ParameterValue::create(loc, entry, shared_from_this());
   checked_emplace(m_parametervalues, parametervalue->name(), parametervalue,

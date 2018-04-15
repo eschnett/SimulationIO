@@ -98,6 +98,19 @@ TangentSpace::getBasis(const string &name,
   return createBasis(name, configuration);
 }
 
+shared_ptr<Basis> TangentSpace::copyBasis(const shared_ptr<Basis> &basis,
+                                          bool copy_children) {
+  auto configuration2 = project()->copyConfiguration(basis->configuration());
+  auto basis2 = getBasis(basis->name(), configuration2);
+  if (copy_children) {
+    for (const auto &basisvector_kv : basis->basisvectors()) {
+      const auto &basisvector = basisvector_kv.second;
+      auto basisvector2 = basis2->copyBasisVector(basisvector, copy_children);
+    }
+  }
+  return basis2;
+}
+
 shared_ptr<Basis> TangentSpace::readBasis(const H5::H5Location &loc,
                                           const string &entry) {
   auto basis = Basis::create(loc, entry, shared_from_this());

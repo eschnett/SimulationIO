@@ -92,6 +92,14 @@ TensorType::getTensorComponent(const string &name, int storage_index,
   return createTensorComponent(name, storage_index, indexvalues);
 }
 
+shared_ptr<TensorComponent> TensorType::copyTensorComponent(
+    const shared_ptr<TensorComponent> &tensorcomponent, bool copy_children) {
+  auto tensorcomponent2 = getTensorComponent(tensorcomponent->name(),
+                                             tensorcomponent->storage_index(),
+                                             tensorcomponent->indexvalues());
+  return tensorcomponent2;
+}
+
 shared_ptr<TensorComponent>
 TensorType::readTensorComponent(const H5::H5Location &loc,
                                 const string &entry) {

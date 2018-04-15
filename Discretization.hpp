@@ -111,6 +111,9 @@ public:
 
   shared_ptr<DiscretizationBlock> createDiscretizationBlock(const string &name);
   shared_ptr<DiscretizationBlock> getDiscretizationBlock(const string &name);
+  shared_ptr<DiscretizationBlock> copyDiscretizationBlock(
+      const shared_ptr<DiscretizationBlock> &discretizationblock,
+      bool copy_children = false);
   shared_ptr<DiscretizationBlock>
   readDiscretizationBlock(const H5::H5Location &loc, const string &entry);
 

@@ -118,6 +118,26 @@ shared_ptr<DiscreteFieldBlock> DiscreteField::getDiscreteFieldBlock(
   return createDiscreteFieldBlock(name, discretizationblock);
 }
 
+shared_ptr<DiscreteFieldBlock> DiscreteField::copyDiscreteFieldBlock(
+    const shared_ptr<DiscreteFieldBlock> &discretefieldblock,
+    bool copy_children) {
+  auto discretizationblock2 = discretization()->copyDiscretizationBlock(
+      discretefieldblock->discretizationblock());
+  auto discretefieldblock2 =
+      getDiscreteFieldBlock(discretefieldblock->name(), discretizationblock2);
+  if (copy_children) {
+    for (const auto &discretefieldblockcomponent_kv :
+         discretefieldblock->discretefieldblockcomponents()) {
+      const auto &discretefieldblockcomponent =
+          discretefieldblockcomponent_kv.second;
+      auto discretefieldblockcomponent2 =
+          discretefieldblock2->copyDiscreteFieldBlockComponent(
+              discretefieldblockcomponent, copy_children);
+    }
+  }
+  return discretefieldblock2;
+}
+
 shared_ptr<DiscreteFieldBlock>
 DiscreteField::readDiscreteFieldBlock(const H5::H5Location &loc,
                                       const string &entry) {

@@ -124,6 +124,32 @@ DiscreteFieldBlock::getDiscreteFieldBlockComponent(
 }
 
 shared_ptr<DiscreteFieldBlockComponent>
+DiscreteFieldBlock::copyDiscreteFieldBlockComponent(
+    const shared_ptr<DiscreteFieldBlockComponent> &discretefieldblockcomponent,
+    bool copy_children) {
+  auto tensorcomponent2 =
+      discretefield()->field()->tensortype()->copyTensorComponent(
+          discretefieldblockcomponent->tensorcomponent());
+  auto discretefieldblockcomponent2 = getDiscreteFieldBlockComponent(
+      discretefieldblockcomponent->name(), tensorcomponent2);
+  if (copy_children) {
+    auto datablock = discretefieldblockcomponent->datablock();
+    if (datablock) {
+      auto copyobj = discretefieldblockcomponent->copyobj();
+      auto datarange = discretefieldblockcomponent->datarange();
+      if (copyobj) {
+        auto copyobj2 = discretefieldblockcomponent2->createCopyObj(
+            copyobj->group(), copyobj->name());
+      } else if (datarange) {
+        auto datarange2 = discretefieldblockcomponent2->createDataRange(
+            datarange->origin(), datarange->delta());
+      }
+    }
+  }
+  return discretefieldblockcomponent2;
+}
+
+shared_ptr<DiscreteFieldBlockComponent>
 DiscreteFieldBlock::readDiscreteFieldBlockComponent(const H5::H5Location &loc,
                                                     const string &entry) {
   auto discretefieldblockcomponent =

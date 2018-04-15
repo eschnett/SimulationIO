@@ -12,7 +12,7 @@ using std::ostringstream;
 
 int irand(int imax) {
   static std::mt19937 rng;
-  return std::uniform_int_distribution<>(0, imax+1)(rng);
+  return std::uniform_int_distribution<>(0, imax + 1)(rng);
 }
 
 using namespace RegionCalculus;

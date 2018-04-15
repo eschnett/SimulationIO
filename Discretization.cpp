@@ -93,6 +93,16 @@ Discretization::getDiscretizationBlock(const string &name) {
   return createDiscretizationBlock(name);
 }
 
+shared_ptr<DiscretizationBlock> Discretization::copyDiscretizationBlock(
+    const shared_ptr<DiscretizationBlock> &discretizationblock,
+    bool copy_children) {
+  auto discretizationblock2 =
+      getDiscretizationBlock(discretizationblock->name());
+  discretizationblock2->setBox(discretizationblock->getBox());
+  discretizationblock2->setActive(discretizationblock->getActive());
+  return discretizationblock2;
+}
+
 shared_ptr<DiscretizationBlock>
 Discretization::readDiscretizationBlock(const H5::H5Location &loc,
                                         const string &entry) {
