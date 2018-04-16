@@ -138,11 +138,17 @@ DiscreteFieldBlock::copyDiscreteFieldBlockComponent(
       auto copyobj = discretefieldblockcomponent->copyobj();
       auto datarange = discretefieldblockcomponent->datarange();
       if (copyobj) {
-        auto copyobj2 = discretefieldblockcomponent2->createCopyObj(
-            copyobj->group(), copyobj->name());
+        // Copy object only if it does not already exist
+        auto copyobj2 = discretefieldblockcomponent2->copyobj();
+        if (!copyobj2)
+          copyobj2 = discretefieldblockcomponent2->createCopyObj(
+              copyobj->group(), copyobj->name());
       } else if (datarange) {
-        auto datarange2 = discretefieldblockcomponent2->createDataRange(
-            datarange->origin(), datarange->delta());
+        // Copy data range only if it does not already exist
+        auto datarange2 = discretefieldblockcomponent2->datarange();
+        if (!datarange2)
+          datarange2 = discretefieldblockcomponent2->createDataRange(
+              datarange->origin(), datarange->delta());
       }
     }
   }

@@ -98,8 +98,16 @@ shared_ptr<DiscretizationBlock> Discretization::copyDiscretizationBlock(
     bool copy_children) {
   auto discretizationblock2 =
       getDiscretizationBlock(discretizationblock->name());
-  discretizationblock2->setBox(discretizationblock->getBox());
-  discretizationblock2->setActive(discretizationblock->getActive());
+  auto box = discretizationblock->getBox();
+  if (!box.valid())
+    discretizationblock2->setBox();
+  else
+    discretizationblock2->setBox(box);
+  auto active = discretizationblock->getActive();
+  if (!active.valid())
+    discretizationblock2->setActive();
+  else
+    discretizationblock2->setActive(active);
   return discretizationblock2;
 }
 

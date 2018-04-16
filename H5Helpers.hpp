@@ -338,12 +338,9 @@ Attribute readAttribute(const H5Object &obj, const std::string &name,
   auto space = attr.getSpace();
   auto npoints = space.getSimpleExtentNpoints();
   values.resize(npoints);
-  // auto ftype = attr.getDataType();
-  // if (!(ftype == type))
-  //   throw H5::DataTypeIException("H5::readAttribute", "datatype mismatch");
-  // HDF5 is overly cautious
-  if (!values.empty())
-    attr.read(type, values.data());
+  // HDF5 cannote read zero-length attributes into null-pointer buffers
+  T dummy;
+  attr.read(type, values.empty() ? &dummy : values.data());
   return attr;
 }
 

@@ -8,63 +8,64 @@ namespace SimulationIO {
 
 namespace {
 template <int D>
-void read_active(const H5::H5Object &group,
-                 const DiscretizationBlock &discretizationblock,
-                 region_t &active) {
-  if (active.valid())
-    return;
-  // Read the attribute if it exists, and if it has the right type
-  H5E_BEGIN_TRY {
-    try {
-      typedef RegionCalculus::box<long long, D> box_t;
-      vector<box_t> boxes;
-      auto boxtype = discretizationblock.discretization()
-                         ->manifold()
-                         ->project()
-                         ->boxtypes.at(D);
-      static_assert(D > 0, "");
-      assert(sizeof(box_t) == boxtype.getSize());
-      H5::readAttribute(group, "active", boxes, boxtype);
-      active = region_t(
-          RegionCalculus::make_unique1<RegionCalculus::wregion<long long, D>>(
-              RegionCalculus::region<long long, D>(std::move(boxes))));
-    } catch (const H5::AttributeIException &ex) {
-      // do nothing
-    }
+void try_read_active(const H5::H5Object &group,
+                     const DiscretizationBlock &discretizationblock,
+                     region_t &active) {
+  typedef RegionCalculus::box<long long, D> box_t;
+  auto boxtype =
+      discretizationblock.discretization()->manifold()->project()->boxtypes.at(
+          D);
+  static_assert(D > 0, "");
+  assert(sizeof(box_t) == boxtype.getSize());
+  auto attr = group.openAttribute("active");
+  auto ftype = attr.getDataType();
+  if (ftype == boxtype) {
+    assert(!active.valid());
+    vector<box_t> boxes;
+    H5::readAttribute(group, "active", boxes, boxtype);
+    active = region_t(
+        RegionCalculus::make_unique1<RegionCalculus::wregion<long long, D>>(
+            RegionCalculus::region<long long, D>(std::move(boxes))));
   }
-  H5E_END_TRY;
 }
 
 template <>
-void read_active<0>(const H5::H5Object &group,
-                    const DiscretizationBlock &discretizationblock,
-                    region_t &active) {
+void try_read_active<0>(const H5::H5Object &group,
+                        const DiscretizationBlock &discretizationblock,
+                        region_t &active) {
   constexpr int D = 0;
-  if (active.valid())
-    return;
-  // Read the attribute if it exists, and if it has the right type
-  H5E_BEGIN_TRY {
-    try {
-      auto boxtype = discretizationblock.discretization()
-                         ->manifold()
-                         ->project()
-                         ->boxtypes.at(D);
-      vector<int> iboxes;
-      assert(sizeof(int) == boxtype.getSize());
-      // H5::readAttribute(group, "active", iboxes, boxtype);
-      H5::readAttribute(group, "active", iboxes);
-      typedef RegionCalculus::box<long long, D> box_t;
-      vector<box_t> boxes;
-      for (const auto &ibox : iboxes)
-        boxes.push_back(box_t(bool(ibox)));
-      active = region_t(
-          RegionCalculus::make_unique1<RegionCalculus::wregion<long long, D>>(
-              RegionCalculus::region<long long, D>(std::move(boxes))));
-    } catch (const H5::AttributeIException &ex) {
-      // do nothing
-    }
+  auto boxtype =
+      discretizationblock.discretization()->manifold()->project()->boxtypes.at(
+          D);
+  static_assert(D == 0, "");
+  assert(sizeof(int) == boxtype.getSize());
+  auto attr = group.openAttribute("active");
+  auto ftype = attr.getDataType();
+  auto fclass = ftype.getClass();
+  if (ftype == boxtype) {
+    assert(!active.valid());
+    vector<int> iboxes;
+    H5::readAttribute(group, "active", iboxes, boxtype);
+    typedef RegionCalculus::box<long long, D> box_t;
+    vector<box_t> boxes;
+    for (const auto &ibox : iboxes)
+      boxes.push_back(box_t(bool(ibox)));
+    active = region_t(
+        RegionCalculus::make_unique1<RegionCalculus::wregion<long long, D>>(
+            RegionCalculus::region<long long, D>(std::move(boxes))));
+  } else if (fclass == H5T_INTEGER) {
+    // For backward compatibility
+    assert(!active.valid());
+    vector<int> iboxes;
+    H5::readAttribute(group, "active", iboxes);
+    typedef RegionCalculus::box<long long, D> box_t;
+    vector<box_t> boxes;
+    for (const auto &ibox : iboxes)
+      boxes.push_back(box_t(bool(ibox)));
+    active = region_t(
+        RegionCalculus::make_unique1<RegionCalculus::wregion<long long, D>>(
+            RegionCalculus::region<long long, D>(std::move(boxes))));
   }
-  H5E_END_TRY;
 }
 } // namespace
 
@@ -90,11 +91,11 @@ void DiscretizationBlock::read(
       assert(!m_box.empty()); // for consistency with writing
   }
   if (group.attrExists("active")) {
-    read_active<0>(group, *this, m_active);
-    read_active<1>(group, *this, m_active);
-    read_active<2>(group, *this, m_active);
-    read_active<3>(group, *this, m_active);
-    read_active<4>(group, *this, m_active);
+    try_read_active<0>(group, *this, m_active);
+    try_read_active<1>(group, *this, m_active);
+    try_read_active<2>(group, *this, m_active);
+    try_read_active<3>(group, *this, m_active);
+    try_read_active<4>(group, *this, m_active);
   }
 }
 
@@ -125,9 +126,9 @@ ostream &DiscretizationBlock::output(ostream &os, int level) const {
 
 namespace {
 template <int D>
-void write_active(const H5::H5Object &group,
-                  const DiscretizationBlock &discretizationblock,
-                  const region_t &active) {
+void try_write_active(const H5::H5Object &group,
+                      const DiscretizationBlock &discretizationblock,
+                      const region_t &active) {
   if (active.rank() != D)
     return;
   typedef RegionCalculus::box<long long, D> box_t;
@@ -144,9 +145,9 @@ void write_active(const H5::H5Object &group,
 }
 
 template <>
-void write_active<0>(const H5::H5Object &group,
-                     const DiscretizationBlock &discretizationblock,
-                     const region_t &active) {
+void try_write_active<0>(const H5::H5Object &group,
+                         const DiscretizationBlock &discretizationblock,
+                         const region_t &active) {
   constexpr int D = 0;
   if (active.rank() != D)
     return;
@@ -162,8 +163,7 @@ void write_active<0>(const H5::H5Object &group,
       discretizationblock.discretization()->manifold()->project()->boxtypes.at(
           D);
   assert(sizeof(int) == boxtype.getSize());
-  // H5::createAttribute(group, "active", iboxes, boxtype);
-  H5::createAttribute(group, "active", iboxes);
+  H5::createAttribute(group, "active", iboxes, boxtype);
 }
 } // namespace
 
@@ -188,11 +188,11 @@ void DiscretizationBlock::write(const H5::H5Location &loc,
                         vector<long long>(box().shape().reversed()));
   }
   if (active().valid()) {
-    write_active<0>(group, *this, active());
-    write_active<1>(group, *this, active());
-    write_active<2>(group, *this, active());
-    write_active<3>(group, *this, active());
-    write_active<4>(group, *this, active());
+    try_write_active<0>(group, *this, active());
+    try_write_active<1>(group, *this, active());
+    try_write_active<2>(group, *this, active());
+    try_write_active<3>(group, *this, active());
+    try_write_active<4>(group, *this, active());
   }
 }
 } // namespace SimulationIO
