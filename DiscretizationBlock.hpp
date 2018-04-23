@@ -49,16 +49,7 @@ public:
   // connectivity? neighbouring blocks?
   // overlaps?
 
-  virtual bool invariant() const {
-    return Common::invariant() && bool(discretization()) &&
-           discretization()->discretizationblocks().count(name()) &&
-           discretization()->discretizationblocks().at(name()).get() == this &&
-           (!box().valid() ||
-            (box().rank() == discretization()->manifold()->dimension() &&
-             !box().empty())) &&
-           (!active().valid() ||
-            active().rank() == discretization()->manifold()->dimension());
-  }
+  virtual bool invariant() const;
 
   DiscretizationBlock() = delete;
   DiscretizationBlock(const DiscretizationBlock &) = delete;

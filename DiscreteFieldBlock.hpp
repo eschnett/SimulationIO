@@ -49,16 +49,7 @@ public:
     return m_storage_indices;
   }
 
-  virtual bool invariant() const {
-    bool inv =
-        Common::invariant() && bool(discretefield()) &&
-        discretefield()->discretefieldblocks().count(name()) &&
-        discretefield()->discretefieldblocks().at(name()).get() == this &&
-        bool(discretizationblock()) &&
-        discretizationblock()->discretefieldblocks().nobacklink() &&
-        discretefieldblockcomponents().size() == storage_indices().size();
-    return inv;
-  }
+  virtual bool invariant() const;
 
   DiscreteFieldBlock() = delete;
   DiscreteFieldBlock(const DiscreteFieldBlock &) = delete;

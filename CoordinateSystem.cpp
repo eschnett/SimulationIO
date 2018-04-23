@@ -6,6 +6,17 @@
 
 namespace SimulationIO {
 
+bool CoordinateSystem::invariant() const {
+  return Common::invariant() && bool(project()) &&
+         project()->coordinatesystems().count(name()) &&
+         project()->coordinatesystems().at(name()).get() == this &&
+         bool(configuration()) &&
+         configuration()->coordinatesystems().count(name()) &&
+         configuration()->coordinatesystems().at(name()).lock().get() == this &&
+         bool(manifold()) && manifold()->coordinatesystems().count(name()) &&
+         manifold()->coordinatesystems().at(name()).lock().get() == this;
+}
+
 void CoordinateSystem::read(const H5::H5Location &loc, const string &entry,
                             const shared_ptr<Project> &project) {
   m_project = project;

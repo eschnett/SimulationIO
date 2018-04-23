@@ -6,6 +6,15 @@
 
 namespace SimulationIO {
 
+bool Discretization::invariant() const {
+  return Common::invariant() && bool(manifold()) &&
+         manifold()->discretizations().count(name()) &&
+         manifold()->discretizations().at(name()).get() == this &&
+         bool(configuration()) &&
+         configuration()->discretizations().count(name()) &&
+         configuration()->discretizations().at(name()).lock().get() == this;
+}
+
 void Discretization::read(const H5::H5Location &loc, const string &entry,
                           const shared_ptr<Manifold> &manifold) {
   m_manifold = manifold;

@@ -7,6 +7,16 @@
 
 namespace SimulationIO {
 
+bool DiscreteFieldBlock::invariant() const {
+  bool inv = Common::invariant() && bool(discretefield()) &&
+             discretefield()->discretefieldblocks().count(name()) &&
+             discretefield()->discretefieldblocks().at(name()).get() == this &&
+             bool(discretizationblock()) &&
+             discretizationblock()->discretefieldblocks().nobacklink() &&
+             discretefieldblockcomponents().size() == storage_indices().size();
+  return inv;
+}
+
 void DiscreteFieldBlock::read(const H5::H5Location &loc, const string &entry,
                               const shared_ptr<DiscreteField> &discretefield) {
   m_discretefield = discretefield;

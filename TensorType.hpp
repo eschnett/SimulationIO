@@ -46,16 +46,7 @@ public:
   }
   NoBackLink<weak_ptr<Field>> fields() const { return m_fields; }
 
-  virtual bool invariant() const {
-    bool inv = Common::invariant() && bool(project()) &&
-               project()->tensortypes().count(name()) &&
-               project()->tensortypes().at(name()).get() == this &&
-               dimension() >= 0 && rank() >= 0 &&
-               int(tensorcomponents().size()) <= ipow(dimension(), rank());
-    for (const auto &tc : tensorcomponents())
-      inv &= !tc.first.empty() && bool(tc.second);
-    return inv;
-  }
+  virtual bool invariant() const;
 
   TensorType() = delete;
   TensorType(const TensorType &) = delete;

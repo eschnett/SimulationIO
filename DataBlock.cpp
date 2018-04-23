@@ -56,6 +56,8 @@ vector<hsize_t> choose_chunksize(const vector<hsize_t> &size,
 
 // DataBlock
 
+bool DataBlock::invariant() const { return !m_box.empty(); }
+
 const vector<DataBlock::reader_t> DataBlock::readers = {
     DataRange::read, DataSet::read, DataBufferEntry::read,
     CopyObj::read,   ExtLink::read,
@@ -101,6 +103,10 @@ void DataBlock::construct_spaces(const box_t &memshape, const box_t &membox,
 
 // DataRange
 
+bool DataRange::invariant() const {
+  return DataBlock::invariant() && int(m_delta.size()) == rank();
+}
+
 shared_ptr<DataRange> DataRange::read(const H5::Group &group,
                                       const string &entry, const box_t &box) {
   if (group.attrExists(entry + "_origin")) {
@@ -127,6 +133,17 @@ void DataRange::write(const H5::Group &group, const string &entry) const {
 }
 
 // DataSet
+
+bool DataSet::invariant() const {
+  bool inv = DataBlock::invariant();
+  int ndims = m_dataspace.getSimpleExtentNdims();
+  inv &= ndims == rank();
+  vector<hsize_t> dims(rank());
+  m_dataspace.getSimpleExtentDims(dims.data());
+  reverse(dims);
+  inv &= all(point_t(dims) == shape());
+  return inv;
+}
 
 shared_ptr<DataSet> DataSet::read(const H5::Group &group, const string &entry,
                                   const box_t &box) {
@@ -302,6 +319,11 @@ void DataBuffer::write(const H5::Group &group, const string &entry) const {
 
 // DataBufferEntry
 
+bool DataBufferEntry::invariant() const {
+  assert(false);
+  return true;
+}
+
 DataBufferEntry::DataBufferEntry(const box_t &box, const H5::DataType &datatype,
                                  const shared_ptr<DataBuffer> &databuffer)
     : DataBlock(box), m_databuffer(databuffer) {
@@ -336,6 +358,13 @@ void DataBufferEntry::write(const H5::Group &group, const string &entry) const {
 }
 
 // CopyObj
+
+bool CopyObj::invariant() const {
+  return DataBlock::invariant()
+         // && m_group.valid()
+         && !m_name.empty();
+  // TODO: check rank
+}
 
 shared_ptr<CopyObj> CopyObj::read(const H5::Group &group, const string &entry,
                                   const box_t &box) {

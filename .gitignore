@@ -57,3 +57,4 @@ sio-copy
 sio-example
 sio-list
 sio-merge
+compile_commands.json

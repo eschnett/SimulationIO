@@ -37,6 +37,8 @@ shared_ptr<Project> readProject(const H5::H5Location &loc) {
   return project;
 }
 
+bool Project::invariant() const { return Common::invariant(); }
+
 void Project::read(const H5::H5Location &loc) {
   auto group = loc.openGroup(".");
   createTypes(); // TODO: read from file instead to ensure integer constants are

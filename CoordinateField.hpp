@@ -31,19 +31,7 @@ public:
   int direction() const { return m_direction; }
   const shared_ptr<Field> &field() const { return m_field; }
 
-  virtual bool invariant() const {
-    return Common::invariant() && bool(coordinatesystem()) &&
-           coordinatesystem()->coordinatefields().count(name()) &&
-           coordinatesystem()->coordinatefields().at(name()).get() == this &&
-           direction() >= 0 &&
-           direction() < coordinatesystem()->manifold()->dimension() &&
-           coordinatesystem()->directions().count(direction()) &&
-           coordinatesystem()->directions().at(direction()).get() == this &&
-           bool(field()) && field()->coordinatefields().nobacklink();
-    // TODO: Ensure that the field lives on the same manifold
-    // TODO: Ensure that all fields of this coordinate system are distinct
-    // TODO: Ensure the field is a scalar
-  }
+  virtual bool invariant() const;
 
   CoordinateField() = delete;
   CoordinateField(const CoordinateField &) = delete;

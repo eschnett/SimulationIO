@@ -80,7 +80,7 @@ public:
   mutable vector<H5::CompType> linearizationtypes;
   mutable vector<H5::VarLenType> concatenationtypes;
 
-  virtual bool invariant() const { return Common::invariant(); }
+  virtual bool invariant() const;
 
   Project(const Project &) = delete;
   Project(Project &&) = delete;

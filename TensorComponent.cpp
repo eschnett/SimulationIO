@@ -4,6 +4,36 @@
 
 namespace SimulationIO {
 
+bool TensorComponent::invariant() const {
+  bool inv =
+      Common::invariant() && bool(tensortype()) &&
+      tensortype()->tensorcomponents().count(name()) &&
+      tensortype()->tensorcomponents().at(name()).get() == this &&
+      storage_index() >= 0 &&
+      storage_index() < ipow(tensortype()->dimension(), tensortype()->rank()) &&
+      tensortype()->storage_indices().count(storage_index()) &&
+      tensortype()->storage_indices().at(storage_index()).get() == this &&
+      int(indexvalues().size()) == tensortype()->rank();
+  for (int i = 0; i < int(indexvalues().size()); ++i)
+    inv &= indexvalues().at(i) >= 0 &&
+           indexvalues().at(i) < tensortype()->dimension();
+  // Ensure all tensor components are distinct
+  for (const auto &tc : tensortype()->tensorcomponents()) {
+    const auto &other = tc.second;
+    if (other.get() == this)
+      continue;
+    bool samesize = other->indexvalues().size() == indexvalues().size();
+    inv &= samesize;
+    if (samesize) {
+      bool isequal = true;
+      for (int i = 0; i < int(indexvalues().size()); ++i)
+        isequal &= other->indexvalues().at(i) == indexvalues().at(i);
+      inv &= !isequal;
+    }
+  }
+  return inv;
+}
+
 void TensorComponent::read(const H5::H5Location &loc, const string &entry,
                            const shared_ptr<TensorType> &tensortype) {
   m_tensortype = tensortype;

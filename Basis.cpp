@@ -6,6 +6,16 @@
 
 namespace SimulationIO {
 
+bool Basis::invariant() const {
+  return Common::invariant() && bool(tangentspace()) &&
+         tangentspace()->bases().count(name()) &&
+         tangentspace()->bases().at(name()).get() == this &&
+         bool(configuration()) && configuration()->bases().count(name()) &&
+         configuration()->bases().at(name()).lock().get() == this;
+  // int(basisvectors.size()) == tangentspace->dimension
+  // int(directions.size()) == tangentspace->dimension
+}
+
 void Basis::read(const H5::H5Location &loc, const string &entry,
                  const shared_ptr<TangentSpace> &tangentspace) {
   m_tangentspace = tangentspace;

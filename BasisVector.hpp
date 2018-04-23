@@ -27,15 +27,7 @@ public:
   shared_ptr<Basis> basis() const { return m_basis.lock(); }
   int direction() const { return m_direction; }
 
-  virtual bool invariant() const {
-    return Common::invariant() && bool(basis()) &&
-           basis()->basisvectors().count(name()) &&
-           basis()->basisvectors().at(name()).get() == this &&
-           direction() >= 0 &&
-           direction() < basis()->tangentspace()->dimension() &&
-           basis()->directions().count(direction()) &&
-           basis()->directions().at(direction()).get() == this;
-  }
+  virtual bool invariant() const;
 
   BasisVector() = delete;
   BasisVector(const BasisVector &) = delete;

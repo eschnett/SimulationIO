@@ -6,6 +6,12 @@
 
 namespace SimulationIO {
 
+bool Parameter::invariant() const {
+  return Common::invariant() && bool(project()) &&
+         project()->parameters().count(name()) &&
+         project()->parameters().at(name()).get() == this;
+}
+
 void Parameter::read(const H5::H5Location &loc, const string &entry,
                      const shared_ptr<Project> &project) {
   m_project = project;

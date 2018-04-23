@@ -42,19 +42,7 @@ public:
     return m_discretefieldblocks;
   }
 
-  virtual bool invariant() const {
-    return Common::invariant() && bool(field()) &&
-           field()->discretefields().count(name()) &&
-           field()->discretefields().at(name()).get() == this &&
-           bool(configuration()) &&
-           configuration()->discretefields().count(name()) &&
-           configuration()->discretefields().at(name()).lock().get() == this &&
-           bool(discretization()) &&
-           discretization()->discretefields().nobacklink() &&
-           field()->manifold().get() == discretization()->manifold().get() &&
-           bool(basis()) && basis()->discretefields().nobacklink() &&
-           field()->tangentspace().get() == basis()->tangentspace().get();
-  }
+  virtual bool invariant() const;
 
   DiscreteField() = delete;
   DiscreteField(const DiscreteField &) = delete;
