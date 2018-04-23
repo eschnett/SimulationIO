@@ -9,6 +9,28 @@ namespace SimulationIO {
 
 using std::ostringstream;
 
+bool DiscreteFieldBlockComponent::invariant() const {
+  bool inv =
+      Common::invariant() && bool(discretefieldblock()) &&
+      discretefieldblock()->discretefieldblockcomponents().count(name()) &&
+      discretefieldblock()->discretefieldblockcomponents().at(name()).get() ==
+          this &&
+      bool(tensorcomponent()) &&
+      tensorcomponent()->discretefieldblockcomponents().nobacklink() &&
+      discretefieldblock()->discretefield()->field()->tensortype().get() ==
+          tensorcomponent()->tensortype().get();
+  // Ensure all discrete field block data have different tensor components
+  for (const auto &dfbd : discretefieldblock()->discretefieldblockcomponents())
+    if (dfbd.second.get() != this)
+      inv &= dfbd.second->tensorcomponent().get() != tensorcomponent().get();
+  // Ensure mapping from storage_indices is correct
+  inv &= discretefieldblock()
+             ->storage_indices()
+             .at(tensorcomponent()->storage_index())
+             .get() == this;
+  return inv;
+}
+
 void DiscreteFieldBlockComponent::read(
     const H5::H5Location &loc, const string &entry,
     const shared_ptr<DiscreteFieldBlock> &discretefieldblock) {

@@ -41,12 +41,7 @@ public:
   double value_double;
   string value_string;
 
-  virtual bool invariant() const {
-    return Common::invariant() && bool(parameter()) &&
-           parameter()->parametervalues().count(name()) &&
-           parameter()->parametervalues().at(name()).get() == this &&
-           value_type >= type_empty && value_type <= type_string;
-  }
+  virtual bool invariant() const;
 
   ParameterValue() = delete;
   ParameterValue(const ParameterValue &) = delete;

@@ -6,6 +6,17 @@
 
 namespace SimulationIO {
 
+bool TensorType::invariant() const {
+  bool inv = Common::invariant() && bool(project()) &&
+             project()->tensortypes().count(name()) &&
+             project()->tensortypes().at(name()).get() == this &&
+             dimension() >= 0 && rank() >= 0 &&
+             int(tensorcomponents().size()) <= ipow(dimension(), rank());
+  for (const auto &tc : tensorcomponents())
+    inv &= !tc.first.empty() && bool(tc.second);
+  return inv;
+}
+
 void TensorType::read(const H5::H5Location &loc, const string &entry,
                       const shared_ptr<Project> &project) {
   m_project = project;

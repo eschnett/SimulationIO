@@ -6,6 +6,20 @@
 
 namespace SimulationIO {
 
+bool DiscreteField::invariant() const {
+  return Common::invariant() && bool(field()) &&
+         field()->discretefields().count(name()) &&
+         field()->discretefields().at(name()).get() == this &&
+         bool(configuration()) &&
+         configuration()->discretefields().count(name()) &&
+         configuration()->discretefields().at(name()).lock().get() == this &&
+         bool(discretization()) &&
+         discretization()->discretefields().nobacklink() &&
+         field()->manifold().get() == discretization()->manifold().get() &&
+         bool(basis()) && basis()->discretefields().nobacklink() &&
+         field()->tangentspace().get() == basis()->tangentspace().get();
+}
+
 void DiscreteField::read(const H5::H5Location &loc, const string &entry,
                          const shared_ptr<Field> &field) {
   m_field = field;

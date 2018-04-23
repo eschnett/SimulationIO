@@ -17,6 +17,12 @@
 namespace SimulationIO {
 using namespace std;
 
+bool Configuration::invariant() const {
+  return Common::invariant() && bool(project()) &&
+         project()->configurations().count(name()) &&
+         project()->configurations().at(name()).get() == this;
+}
+
 void Configuration::read(const H5::H5Location &loc, const string &entry,
                          const shared_ptr<Project> &project) {
   m_project = project;

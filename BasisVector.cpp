@@ -4,6 +4,15 @@
 
 namespace SimulationIO {
 
+bool BasisVector::invariant() const {
+  return Common::invariant() && bool(basis()) &&
+         basis()->basisvectors().count(name()) &&
+         basis()->basisvectors().at(name()).get() == this && direction() >= 0 &&
+         direction() < basis()->tangentspace()->dimension() &&
+         basis()->directions().count(direction()) &&
+         basis()->directions().at(direction()).get() == this;
+}
+
 void BasisVector::read(const H5::H5Location &loc, const string &entry,
                        const shared_ptr<Basis> &basis) {
   m_basis = basis;

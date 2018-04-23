@@ -7,6 +7,20 @@
 
 namespace SimulationIO {
 
+bool CoordinateField::invariant() const {
+  return Common::invariant() && bool(coordinatesystem()) &&
+         coordinatesystem()->coordinatefields().count(name()) &&
+         coordinatesystem()->coordinatefields().at(name()).get() == this &&
+         direction() >= 0 &&
+         direction() < coordinatesystem()->manifold()->dimension() &&
+         coordinatesystem()->directions().count(direction()) &&
+         coordinatesystem()->directions().at(direction()).get() == this &&
+         bool(field()) && field()->coordinatefields().nobacklink();
+  // TODO: Ensure that the field lives on the same manifold
+  // TODO: Ensure that all fields of this coordinate system are distinct
+  // TODO: Ensure the field is a scalar
+}
+
 void CoordinateField::read(
     const H5::H5Location &loc, const string &entry,
     const shared_ptr<CoordinateSystem> &coordinatesystem) {

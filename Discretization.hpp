@@ -55,14 +55,7 @@ public:
     return m_discretefields;
   }
 
-  virtual bool invariant() const {
-    return Common::invariant() && bool(manifold()) &&
-           manifold()->discretizations().count(name()) &&
-           manifold()->discretizations().at(name()).get() == this &&
-           bool(configuration()) &&
-           configuration()->discretizations().count(name()) &&
-           configuration()->discretizations().at(name()).lock().get() == this;
-  }
+  virtual bool invariant() const;
 
   Discretization() = delete;
   Discretization(const Discretization &) = delete;

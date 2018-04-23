@@ -34,11 +34,7 @@ public:
     return m_parametervalues;
   }
 
-  virtual bool invariant() const {
-    return Common::invariant() && bool(project()) &&
-           project()->parameters().count(name()) &&
-           project()->parameters().at(name()).get() == this;
-  }
+  virtual bool invariant() const;
 
   Parameter() = delete;
   Parameter(const Parameter &) = delete;

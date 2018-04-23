@@ -167,7 +167,7 @@ public:
   static shared_ptr<DataBlock> read(const H5::Group &group, const string &entry,
                                     const box_t &box);
 
-  virtual bool invariant() const { return !m_box.empty(); }
+  virtual bool invariant() const;
 
 protected:
   DataBlock(const box_t &box) : m_box(box) {}
@@ -202,9 +202,7 @@ public:
     assert(invariant());
   }
 
-  virtual bool invariant() const {
-    return DataBlock::invariant() && int(m_delta.size()) == rank();
-  }
+  virtual bool invariant() const;
 
   virtual ~DataRange() {}
 
@@ -236,16 +234,7 @@ public:
   bool have_dataset() const { return m_have_dataset; }
   H5::DataSet dataset() const { return m_dataset; }
 
-  virtual bool invariant() const {
-    bool inv = DataBlock::invariant();
-    int ndims = m_dataspace.getSimpleExtentNdims();
-    inv &= ndims == rank();
-    vector<hsize_t> dims(rank());
-    m_dataspace.getSimpleExtentDims(dims.data());
-    reverse(dims);
-    inv &= all(point_t(dims) == shape());
-    return inv;
-  }
+  virtual bool invariant() const;
 
   DataSet(const box_t &box, const H5::DataType &datatype)
       : DataBlock(box), m_dataspace(H5::DataSpace(
@@ -372,10 +361,8 @@ class DataBufferEntry : public DataBlock {
 public:
   H5::DataType datatype() const { return m_databuffer->datatype(); }
 
-  virtual bool invariant() const {
-    assert(false);
-    return true;
-  }
+  virtual bool invariant() const;
+
   virtual ~DataBufferEntry() {}
 
   DataBufferEntry(const box_t &box, const H5::DataType &datatype,
@@ -396,12 +383,7 @@ public:
   H5::Group group() const { return m_group; }
   string name() const { return m_name; }
 
-  virtual bool invariant() const {
-    return DataBlock::invariant()
-           // && m_group.valid()
-           && !m_name.empty();
-    // TODO: check rank
-  }
+  virtual bool invariant() const;
 
   CopyObj(const box_t &box, const H5::Group &group, const string &name)
       : DataBlock(box), m_group(group), m_name(name) {}

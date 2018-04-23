@@ -11,6 +11,13 @@
 namespace SimulationIO {
 using namespace std;
 
+bool ParameterValue::invariant() const {
+  return Common::invariant() && bool(parameter()) &&
+         parameter()->parametervalues().count(name()) &&
+         parameter()->parametervalues().at(name()).get() == this &&
+         value_type >= type_empty && value_type <= type_string;
+}
+
 void ParameterValue::read(const H5::H5Location &loc, const string &entry,
                           const shared_ptr<Parameter> &parameter) {
   m_parameter = parameter;

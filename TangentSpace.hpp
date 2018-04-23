@@ -39,19 +39,7 @@ public:
   const map<string, shared_ptr<Basis>> &bases() const { return m_bases; }
   const map<string, weak_ptr<Field>> &fields() const { return m_fields; }
 
-  virtual bool invariant() const {
-    bool inv =
-        Common::invariant() && bool(project()) &&
-        project()->tangentspaces().count(name()) &&
-        project()->tangentspaces().at(name()).get() == this &&
-        bool(configuration()) &&
-        configuration()->tangentspaces().count(name()) &&
-        configuration()->tangentspaces().at(name()).lock().get() == this &&
-        dimension() >= 0;
-    for (const auto &b : bases())
-      inv &= !b.first.empty() && bool(b.second);
-    return inv;
-  }
+  virtual bool invariant() const;
 
   TangentSpace() = delete;
   TangentSpace(const TangentSpace &) = delete;

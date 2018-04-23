@@ -7,6 +7,19 @@
 
 namespace SimulationIO {
 
+bool TangentSpace::invariant() const {
+  bool inv = Common::invariant() && bool(project()) &&
+             project()->tangentspaces().count(name()) &&
+             project()->tangentspaces().at(name()).get() == this &&
+             bool(configuration()) &&
+             configuration()->tangentspaces().count(name()) &&
+             configuration()->tangentspaces().at(name()).lock().get() == this &&
+             dimension() >= 0;
+  for (const auto &b : bases())
+    inv &= !b.first.empty() && bool(b.second);
+  return inv;
+}
+
 void TangentSpace::read(const H5::H5Location &loc, const string &entry,
                         const shared_ptr<Project> &project) {
   m_project = project;

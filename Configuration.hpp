@@ -64,11 +64,7 @@ public:
     return m_tangentspaces;
   }
 
-  virtual bool invariant() const {
-    return Common::invariant() && bool(project()) &&
-           project()->configurations().count(name()) &&
-           project()->configurations().at(name()).get() == this;
-  }
+  virtual bool invariant() const;
 
   Configuration() = delete;
   Configuration(const Configuration &) = delete;

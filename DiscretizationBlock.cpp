@@ -6,6 +6,17 @@
 
 namespace SimulationIO {
 
+bool DiscretizationBlock::invariant() const {
+  return Common::invariant() && bool(discretization()) &&
+         discretization()->discretizationblocks().count(name()) &&
+         discretization()->discretizationblocks().at(name()).get() == this &&
+         (!box().valid() ||
+          (box().rank() == discretization()->manifold()->dimension() &&
+           !box().empty())) &&
+         (!active().valid() ||
+          active().rank() == discretization()->manifold()->dimension());
+}
+
 namespace {
 template <int D>
 void try_read_active(const H5::H5Object &group,

@@ -8,6 +8,38 @@
 
 namespace SimulationIO {
 
+bool SubDiscretization::invariant() const {
+  bool inv = Common::invariant() && bool(manifold()) &&
+             manifold()->subdiscretizations().count(name()) &&
+             manifold()->subdiscretizations().at(name()).get() == this &&
+             bool(parent_discretization()) &&
+             parent_discretization()->child_discretizations().count(name()) &&
+             parent_discretization()
+                     ->child_discretizations()
+                     .at(name())
+                     .lock()
+                     .get() == this &&
+             parent_discretization()->manifold().get() == manifold().get() &&
+             bool(child_discretization()) &&
+             child_discretization()->parent_discretizations().count(name()) &&
+             child_discretization()
+                     ->parent_discretizations()
+                     .at(name())
+                     .lock()
+                     .get() == this &&
+             child_discretization().get() != parent_discretization().get() &&
+             child_discretization()->manifold().get() == manifold().get() &&
+             child_discretization()->configuration().get() ==
+                 parent_discretization()->configuration().get() &&
+             int(factor().size()) == manifold()->dimension() &&
+             int(offset().size()) == manifold()->dimension();
+  for (int d = 0; d < int(factor().size()); ++d)
+    inv &= std::isfinite(factor().at(d)) && factor().at(d) != 0.0;
+  for (int d = 0; d < int(offset().size()); ++d)
+    inv &= std::isfinite(offset().at(d));
+  return inv;
+}
+
 void SubDiscretization::read(const H5::H5Location &loc, const string &entry,
                              const shared_ptr<Manifold> &manifold) {
   m_manifold = manifold;

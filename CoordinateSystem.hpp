@@ -42,17 +42,7 @@ public:
     return m_directions;
   }
 
-  virtual bool invariant() const {
-    return Common::invariant() && bool(project()) &&
-           project()->coordinatesystems().count(name()) &&
-           project()->coordinatesystems().at(name()).get() == this &&
-           bool(configuration()) &&
-           configuration()->coordinatesystems().count(name()) &&
-           configuration()->coordinatesystems().at(name()).lock().get() ==
-               this &&
-           bool(manifold()) && manifold()->coordinatesystems().count(name()) &&
-           manifold()->coordinatesystems().at(name()).lock().get() == this;
-  }
+  virtual bool invariant() const;
 
   CoordinateSystem() = delete;
   CoordinateSystem(const CoordinateSystem &) = delete;

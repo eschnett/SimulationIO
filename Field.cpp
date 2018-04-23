@@ -6,6 +6,24 @@
 
 namespace SimulationIO {
 
+bool Field::invariant() const {
+  bool inv = Common::invariant() && bool(project()) &&
+             project()->fields().count(name()) &&
+             project()->fields().at(name()).get() == this &&
+             bool(configuration()) && configuration()->fields().count(name()) &&
+             configuration()->fields().at(name()).lock().get() == this &&
+             bool(manifold()) && manifold()->fields().count(name()) &&
+             manifold()->fields().at(name()).lock().get() == this &&
+             bool(tangentspace()) && tangentspace()->fields().count(name()) &&
+             tangentspace()->fields().at(name()).lock().get() == this &&
+             bool(tensortype()) &&
+             tangentspace()->dimension() == tensortype()->dimension() &&
+             tensortype()->fields().nobacklink();
+  for (const auto &df : discretefields())
+    inv &= !df.first.empty() && bool(df.second);
+  return inv;
+}
+
 void Field::read(const H5::H5Location &loc, const string &entry,
                  const shared_ptr<Project> &project) {
   m_project = project;
