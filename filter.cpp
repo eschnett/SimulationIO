@@ -73,8 +73,13 @@ int main(int argc, char **argv) {
   cout << indent(level) << "Creating project " << quote(projectname) << "\n";
   auto project2 = createProject(projectname);
 
+  const int nfiles = inputfilenames.size();
+  cout << indent(level) << "Reading " << nfiles << " files\n";
+  int ifile = 0;
   for (const auto &inputfilename : inputfilenames) {
-    cout << indent(level) << "Reading file " << quote(inputfilename) << "\n";
+    ++ifile;
+    cout << indent(level) << "Reading file " << quote(inputfilename) << " ("
+         << ifile << "/" << nfiles << ")\n";
     increase_indentation l;
     auto file = [&]() {
       try {
