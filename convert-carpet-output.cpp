@@ -430,21 +430,39 @@ int main(int argc, char **argv) {
                  timelevel);
           assert(H5::readAttribute<int>(dataset, "level") == refinementlevel);
           // local coordinates
-          auto origin = H5::readAttribute<vector<double>>(dataset, "origin");
-          assert(int(origin.size()) == manifold->dimension());
-          auto delta = H5::readAttribute<vector<double>>(dataset, "delta");
-          assert(int(delta.size()) == manifold->dimension());
+          vector<double> origin, delta;
+          bool have_origin_delta = false;
+          H5E_BEGIN_TRY {
+            // scalars do not have origin and delta attributes
+            origin = H5::readAttribute<vector<double>>(dataset, "origin");
+            assert(int(origin.size()) == manifold->dimension());
+            delta = H5::readAttribute<vector<double>>(dataset, "delta");
+            assert(int(delta.size()) == manifold->dimension());
+            have_origin_delta = true;
+          }
+          H5E_END_TRY;
+          if (!have_origin_delta)
+            assert(manifold->dimension() == 0);
           // subdiscretizations
           vector<double> idelta(manifold->dimension());
           for (int d = 0; d < int(idelta.size()); ++d)
             idelta.at(d) = double(delta.at(d));
           vector<double> ioffset(manifold->dimension());
-          auto ioffsetnum =
-              H5::readAttribute<vector<hssize_t>>(dataset, "ioffset");
-          auto ioffsetdenom =
-              H5::readAttribute<vector<hssize_t>>(dataset, "ioffsetdenom");
-          assert(int(ioffsetnum.size()) == manifold->dimension());
-          assert(int(ioffsetdenom.size()) == manifold->dimension());
+          vector<hssize_t> ioffsetnum, ioffsetdenom;
+          bool have_ioffsetnum_ioffsetdenom = false;
+          H5E_BEGIN_TRY {
+            // scalars do not have ioffsetnum and ioffsetdenom attributes
+            auto ioffsetnum =
+                H5::readAttribute<vector<hssize_t>>(dataset, "ioffset");
+            assert(int(ioffsetnum.size()) == manifold->dimension());
+            auto ioffsetdenom =
+                H5::readAttribute<vector<hssize_t>>(dataset, "ioffsetdenom");
+            assert(int(ioffsetdenom.size()) == manifold->dimension());
+            have_ioffsetnum_ioffsetdenom = true;
+          }
+          H5E_END_TRY;
+          if (!have_ioffsetnum_ioffsetdenom)
+            assert(manifold->dimension() == 0);
           for (int d = 0; d < int(ioffset.size()); ++d)
             ioffset.at(d) =
                 double(ioffsetnum.at(d)) / double(ioffsetdenom.at(d));
