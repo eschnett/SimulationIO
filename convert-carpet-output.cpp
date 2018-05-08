@@ -362,18 +362,32 @@ int main(int argc, char **argv) {
                   --pos;
                 }
               } else if (fieldname[pos] >= '1' && fieldname[pos] <= '9') {
+                int oldpos = pos;
                 while (pos >= 0 && fieldname[pos] >= '1' &&
                        fieldname[pos] <= '9') {
                   int ti = fieldname[pos] - '1';
+                  if (!(ti >= 0 && ti < dim)) {
+                    // It's not a tensor after all
+                    pos = oldpos;
+                    tensorindices.clear();
+                    goto done;
+                  }
                   assert(ti >= 0 && ti < dim);
                   tensorindices.push_back(ti);
                   --pos;
                 }
               } else if (fieldname[pos] == ']') {
+                int oldpos = pos;
                 --pos;
                 assert(pos >= 0);
                 assert(fieldname[pos] >= '0' && fieldname[pos] <= '9');
                 int ti = fieldname[pos] - '0';
+                if (!(ti >= 0 && ti < dim)) {
+                  // It's not a tensor after all
+                  pos = oldpos;
+                  tensorindices.clear();
+                  goto done;
+                }
                 assert(ti >= 0 && ti < dim);
                 tensorindices.push_back(ti);
                 --pos;
@@ -381,6 +395,7 @@ int main(int argc, char **argv) {
                 assert(fieldname[pos] == '[');
                 --pos;
               }
+            done:;
             }
             while (pos >= 0 && fieldname[pos] == ':')
               --pos;
@@ -426,46 +441,50 @@ int main(int argc, char **argv) {
           }
 
           // metadata
+          auto space = dataset.getSpace();
+          int dimension = space.getSimpleExtentNdims();
+          if (dimension == 1) {
+            hssize_t npoints = space.getSimpleExtentNpoints();
+            if (npoints == 1) {
+              // HDF5 cannot handle zero-dimensional datasets, so we need to
+              // reconstruct the actual dataset dimension
+              dimension = 0;
+            }
+          }
           assert(H5::readAttribute<int>(dataset, "group_timelevel") ==
                  timelevel);
           assert(H5::readAttribute<int>(dataset, "level") == refinementlevel);
           // local coordinates
           vector<double> origin, delta;
-          bool have_origin_delta = false;
-          H5E_BEGIN_TRY {
-            // scalars do not have origin and delta attributes
+          if (dataset.attrExists("origin")) {
             origin = H5::readAttribute<vector<double>>(dataset, "origin");
             assert(int(origin.size()) == manifold->dimension());
             delta = H5::readAttribute<vector<double>>(dataset, "delta");
             assert(int(delta.size()) == manifold->dimension());
-            have_origin_delta = true;
+          } else {
+            // Only grid functions have origin and delta attributes
+            // assert(dimension == 0);
           }
-          H5E_END_TRY;
-          if (!have_origin_delta)
-            assert(manifold->dimension() == 0);
           // subdiscretizations
           vector<double> idelta(manifold->dimension());
-          for (int d = 0; d < int(idelta.size()); ++d)
-            idelta.at(d) = double(delta.at(d));
           vector<double> ioffset(manifold->dimension());
           vector<hssize_t> ioffsetnum, ioffsetdenom;
-          bool have_ioffsetnum_ioffsetdenom = false;
-          H5E_BEGIN_TRY {
-            // scalars do not have ioffsetnum and ioffsetdenom attributes
-            auto ioffsetnum =
+          if (dataset.attrExists("ioffset")) {
+            ioffsetnum =
                 H5::readAttribute<vector<hssize_t>>(dataset, "ioffset");
             assert(int(ioffsetnum.size()) == manifold->dimension());
-            auto ioffsetdenom =
+            ioffsetdenom =
                 H5::readAttribute<vector<hssize_t>>(dataset, "ioffsetdenom");
             assert(int(ioffsetdenom.size()) == manifold->dimension());
-            have_ioffsetnum_ioffsetdenom = true;
+            for (int d = 0; d < int(idelta.size()); ++d)
+              idelta.at(d) = double(delta.at(d));
+            for (int d = 0; d < int(ioffset.size()); ++d)
+              ioffset.at(d) =
+                  double(ioffsetnum.at(d)) / double(ioffsetdenom.at(d));
+          } else {
+            // Only grid functions have origin and delta attributes
+            // assert(dimension == 0);
           }
-          H5E_END_TRY;
-          if (!have_ioffsetnum_ioffsetdenom)
-            assert(manifold->dimension() == 0);
-          for (int d = 0; d < int(ioffset.size()); ++d)
-            ioffset.at(d) =
-                double(ioffsetnum.at(d)) / double(ioffsetdenom.at(d));
           // active region
           region_t active;
           if (dataset.attrExists("active")) {
@@ -497,10 +516,17 @@ int main(int argc, char **argv) {
                << "    tensor type: " << tensortypename << "\n"
                << "    tensor indices: " << tensorindices << "\n"
                << "    iteration: " << iteration << "\n"
+               << "    dimension: " << dimension << "\n"
                << "    time level: " << timelevel << "\n"
                << "    map: " << mapindex << "\n"
                << "    refinement level: " << refinementlevel << "\n"
                << "    component: " << component << "\n";
+
+          if (dimension != manifold->dimension()) {
+            cout << "      skipping dataset because it does not fit the " << dim
+                 << "D manifold\n";
+            return 0;
+          }
 
           // Get configuration
           string value_iteration_name = [&] {
