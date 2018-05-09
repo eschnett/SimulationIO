@@ -441,6 +441,8 @@ int main(int argc, char **argv) {
           }
 
           // metadata
+          // Only grid functions have an "ioffset" attribute
+          const bool is_gf = dataset.attrExists("ioffset");
           auto space = dataset.getSpace();
           int dimension = space.getSimpleExtentNdims();
           if (dimension == 1) {
@@ -451,25 +453,28 @@ int main(int argc, char **argv) {
               dimension = 0;
             }
           }
+          if (is_gf)
+            assert(dimension == manifold->dimension());
           assert(H5::readAttribute<int>(dataset, "group_timelevel") ==
                  timelevel);
           assert(H5::readAttribute<int>(dataset, "level") == refinementlevel);
           // local coordinates
           vector<double> origin, delta;
-          if (dataset.attrExists("origin")) {
+          const bool has_coordinates = dataset.attrExists("origin");
+          if (has_coordinates) {
+            // Only grid variables with coordinate systems have origin and delta
+            // attributes
             origin = H5::readAttribute<vector<double>>(dataset, "origin");
             assert(int(origin.size()) == manifold->dimension());
             delta = H5::readAttribute<vector<double>>(dataset, "delta");
             assert(int(delta.size()) == manifold->dimension());
-          } else {
-            // Only grid functions have origin and delta attributes
-            // assert(dimension == 0);
           }
           // subdiscretizations
           vector<double> idelta(manifold->dimension());
           vector<double> ioffset(manifold->dimension());
           vector<hssize_t> ioffsetnum, ioffsetdenom;
-          if (dataset.attrExists("ioffset")) {
+          if (is_gf) {
+            // Only grid functions have origin and delta attributes
             ioffsetnum =
                 H5::readAttribute<vector<hssize_t>>(dataset, "ioffset");
             assert(int(ioffsetnum.size()) == manifold->dimension());
@@ -481,9 +486,6 @@ int main(int argc, char **argv) {
             for (int d = 0; d < int(ioffset.size()); ++d)
               ioffset.at(d) =
                   double(ioffsetnum.at(d)) / double(ioffsetdenom.at(d));
-          } else {
-            // Only grid functions have origin and delta attributes
-            // assert(dimension == 0);
           }
           // active region
           region_t active;
@@ -516,15 +518,16 @@ int main(int argc, char **argv) {
                << "    tensor type: " << tensortypename << "\n"
                << "    tensor indices: " << tensorindices << "\n"
                << "    iteration: " << iteration << "\n"
+               << "    grid function: " << (is_gf ? "yes" : "no") << "\n"
                << "    dimension: " << dimension << "\n"
                << "    time level: " << timelevel << "\n"
                << "    map: " << mapindex << "\n"
                << "    refinement level: " << refinementlevel << "\n"
                << "    component: " << component << "\n";
 
-          if (dimension != manifold->dimension()) {
-            cout << "      skipping dataset because it does not fit the " << dim
-                 << "D manifold\n";
+          if (!is_gf) {
+            cout
+                << "      skipping dataset because it is not a grid function\n";
             return 0;
           }
 
