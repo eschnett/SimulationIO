@@ -2510,6 +2510,7 @@ unique_ptr<vregion<T>> vregion<T>::make(const vbox<T> &b) {
 template <typename T>
 unique_ptr<vregion<T>> vregion<T>::make(const vector<unique_ptr<vbox<T>>> &bs) {
   if (bs.empty())
+    // Cannot determine rank
     return nullptr;
   switch (bs[0]->rank()) {
   case 0: {

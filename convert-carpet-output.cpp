@@ -169,9 +169,10 @@ template <typename T, int D> struct bboxset {
   }
 };
 
-typedef vect<hssize_t, 3> ivect;
-typedef bbox<hssize_t, 3> ibbox;
-typedef bboxset<hssize_t, 3> ibboxset;
+constexpr int dim = 3;
+typedef vect<hssize_t, dim> ivect;
+typedef bbox<hssize_t, dim> ibbox;
+typedef bboxset<hssize_t, dim> ibboxset;
 
 namespace std {
 // TODO: Move this to Helpers.hpp?
@@ -256,7 +257,6 @@ int main(int argc, char **argv) {
   // TensorTypes
   project->createStandardTensorTypes();
   // Manifold and TangentSpace, both 3D
-  const int dim = 3;
   auto manifold = project->createManifold("domain", global_configuration, dim);
   auto tangentspace =
       project->createTangentSpace("tangentspace", global_configuration, dim);
@@ -509,7 +509,10 @@ int main(int argc, char **argv) {
               const box_t db(lo / str, hi / str);
               dbs.push_back(db);
             }
-            active = region_t(dbs);
+            if (dbs.empty())
+              active = region_t(dim);
+            else
+              active = region_t(dbs);
           }
 
           // Output information
@@ -634,6 +637,7 @@ int main(int argc, char **argv) {
             if (active.valid()) {
               discretizationblock->setActive(active);
             } else {
+              cout << "      missing active region\n";
               need_active_regions = true;
               // Record location of outer boundary (of this level)
               vector<hssize_t> bbox;
@@ -847,8 +851,22 @@ int main(int argc, char **argv) {
         for (size_t reflevel = 0; reflevel < i1.second.size(); ++reflevel) {
           const auto &discretization = i1.second.at(reflevel);
           cout << "  discretization: " << discretization->name() << "\n";
+          if (grid_buffers.size() <= mapindex ||
+              grid_buffers.at(mapindex).size() <= reflevel) {
+            cout << "    skipping -- no domain information\n";
+            continue;
+          }
           const auto &buffers = grid_buffers.at(mapindex).at(reflevel);
+          if (grid_domain.size() <= mapindex ||
+              grid_domain.at(mapindex).size() <= reflevel) {
+            cout << "    skipping -- no domain information\n";
+            continue;
+          }
           const auto &domain = grid_domain.at(mapindex).at(reflevel);
+          if (domain.empty()) {
+            cout << "    skipping -- no domain information\n";
+            continue;
+          }
           auto region = RegionCalculus::reduce(
               [](const pair<string, shared_ptr<DiscretizationBlock>> &s_db) {
                 return region_t(s_db.second->box());
@@ -863,6 +881,7 @@ int main(int argc, char **argv) {
           auto region_box = region.bounding_box();
           vector<hssize_t> region_lower = region_box.lower();
           vector<hssize_t> region_upper = region_box.upper();
+          assert(domain.size() == 2);
           vector<hssize_t> domain_lower = domain.at(0);
           vector<hssize_t> domain_upper = domain.at(1);
           for (int d = 0; d < dim; ++d) {
