@@ -14,6 +14,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/Modules"
 
 # External dependencies
 
+find_package(asdf-cxx 1.0.0 REQUIRED)
+
 find_package(HDF5 1.10.1 COMPONENTS C CXX REQUIRED)
 if(HDF5_VERSION VERSION_LESS 1.10.1)
   message(HDF5_VERSION)
