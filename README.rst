@@ -72,7 +72,7 @@ Sub-Manifolds
 
 .. |Build Status| image:: https://travis-ci.org/eschnett/SimulationIO.svg?branch=master
    :target: https://travis-ci.org/eschnett/SimulationIO
-.. |Coverage Status| image:: https://coveralls.io/repos/eschnett/SimulationIO/badge.svg?branch=master&service=github
+.. |Coverage Status| image:: https://coveralls.io/repos/eschnett/SimulationIO/badge.svg?branch=master
    :target: https://coveralls.io/github/eschnett/SimulationIO?branch=master
 .. |codecov.io| image:: https://codecov.io/github/eschnett/SimulationIO/coverage.svg?branch=master
    :target: https://codecov.io/github/eschnett/SimulationIO?branch=master
