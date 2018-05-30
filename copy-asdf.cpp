@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
   map<string, function<void(ASDF::writer & w)>> funs{
       {"SimulationIO", [&](ASDF::writer &w) { w << *project; }}};
   const auto &doc2 = ASDF::asdf(move(tags), move(funs));
-  auto os = ofstream(outputfilename, ios::binary | ios::trunc | ios::out);
+  ofstream os(outputfilename, ios::binary | ios::trunc | ios::out);
   doc2.write(os);
   os.close();
 

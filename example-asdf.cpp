@@ -177,7 +177,7 @@ int main(int argc, char **argv) {
       {"SimulationIO", [&](ASDF::writer &w) { w << *project; }}};
   const auto &doc = ASDF::asdf(move(tags), move(funs));
   auto filename = "example.asdf";
-  auto file = ofstream(filename, ios::binary | ios::trunc | ios::out);
+  ofstream file(filename, ios::binary | ios::trunc | ios::out);
   doc.write(file);
   file.close();
 

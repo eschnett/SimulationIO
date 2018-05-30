@@ -15,7 +15,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/Modules"
 
 # External dependencies
 
-find_package(asdf-cxx 2.0.0 REQUIRED)
+find_package(asdf-cxx 2.0.2 REQUIRED)
 include_directories(${ASDF_CXX_INCLUDE_DIR})
 set(LIBS ${LIBS} ${ASDF_CXX_LIBRARY})
 
