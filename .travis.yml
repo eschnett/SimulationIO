@@ -73,7 +73,9 @@ install:
           mkdir -p external
           cd external
           wget https://github.com/eschnett/asdf-cxx/archive/version/2.0.1.tar.gz
-          tar xzf 2.0.1.tar.bz
+
+https://github.com/eschnett/asdf-cxx/archive/version/2.0.1.tar.gz
+          tar xzf 2.0.1.tar.gz
           mkdir asdf-cxx-2.0.1-build
           cd asdf-cxx-2.0.1-build
           cmake -DCMAKE_PREFIX_PATH="$YAML_CPP_DIR" -DCMAKE_INSTALL_PREFIX="$ASDF_CXX_DIR" ../asdf-cxx-version-2.0.1
@@ -114,7 +116,7 @@ install:
           mkdir -p external
           cd external
           wget https://github.com/eschnett/asdf-cxx/archive/version/2.0.1.tar.gz
-          tar xzf 2.0.1.tar.bz
+          tar xzf 2.0.1.tar.gz
           mkdir asdf-cxx-2.0.1-build
           cd asdf-cxx-2.0.1-build
           cmake -DCMAKE_PREFIX_PATH="$YAML_CPP_DIR" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX="$ASDF_CXX_DIR" ../asdf-cxx-version-2.0.1
