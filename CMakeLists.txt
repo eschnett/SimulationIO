@@ -15,10 +15,14 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/Modules"
 
 # External dependencies
 
-find_package(asdf-cxx 2.0.2 REQUIRED)
-include_directories(${ASDF_CXX_INCLUDE_DIR})
-set(LIBS ${LIBS} ${ASDF_CXX_LIBRARY})
-
+find_package(asdf-cxx 2.0.2)
+if(ASDF_CXX_LIBRARY = ASDF_CXX_LIBRARY-NOTFOUND)
+  include_directories(${ASDF_CXX_INCLUDE_DIR})
+  set(LIBS ${LIBS} ${ASDF_CXX_LIBRARY})
+  set(HAVE_ASDF_CXX 1)
+else()
+  set(HAVE_ASDF_CXX 0)
+endif()
 # TODO: Add cmake config file to asdf-cxx so that its dependencies are
 # automatically required
 
