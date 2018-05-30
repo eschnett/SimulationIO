@@ -97,6 +97,7 @@ install:
       export HDF5_DIR="/usr/local"
       # Build yaml-cpp
       export YAML_CPP_DIR="$HOME/yaml-cpp-0.6.2"
+      export DYLD_LIBRARY_PATH="$YAML_CPP_DIR/lib:$DYLD_LIBRARY_PATH"
       # Check cache
       if [ ! -e "$YAML_CPP_DIR/include/yaml-cpp/yaml.h" ]; then
         (
