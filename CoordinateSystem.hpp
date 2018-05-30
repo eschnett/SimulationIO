@@ -2,10 +2,13 @@
 #define COORDINATESYSTEM_HPP
 
 #include "Common.hpp"
+#include "Config.hpp"
 #include "Configuration.hpp"
 #include "Manifold.hpp"
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 #include <asdf.hpp>
+#endif
 
 #include <H5Cpp.h>
 
@@ -81,6 +84,9 @@ private:
     coordinatesystem->read(loc, entry, project);
     return coordinatesystem;
   }
+  void read(const H5::H5Location &loc, const string &entry,
+            const shared_ptr<Project> &project);
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   static shared_ptr<CoordinateSystem>
   create(const ASDF::reader_state &rs, const YAML::Node &node,
          const shared_ptr<Project> &project) {
@@ -88,10 +94,9 @@ private:
     coordinatesystem->read(rs, node, project);
     return coordinatesystem;
   }
-  void read(const H5::H5Location &loc, const string &entry,
-            const shared_ptr<Project> &project);
   void read(const ASDF::reader_state &rs, const YAML::Node &node,
             const shared_ptr<Project> &project);
+#endif
 
 public:
   virtual ~CoordinateSystem() {}
@@ -105,12 +110,14 @@ public:
   }
   virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   virtual string yaml_alias() const;
   ASDF::writer &write(ASDF::writer &w) const;
   friend ASDF::writer &operator<<(ASDF::writer &w,
                                   const CoordinateSystem &coordinatesystem) {
     return coordinatesystem.write(w);
   }
+#endif
 
   shared_ptr<CoordinateField>
   createCoordinateField(const string &name, int direction,
@@ -123,8 +130,10 @@ public:
                       bool copy_children = false);
   shared_ptr<CoordinateField> readCoordinateField(const H5::H5Location &loc,
                                                   const string &entry);
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   shared_ptr<CoordinateField> readCoordinateField(const ASDF::reader_state &rs,
                                                   const YAML::Node &node);
+#endif
 };
 
 } // namespace SimulationIO

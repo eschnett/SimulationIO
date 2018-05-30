@@ -40,6 +40,7 @@ void DiscreteFieldBlock::read(const H5::H5Location &loc, const string &entry,
   // TODO: check storage_indices
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 void DiscreteFieldBlock::read(const ASDF::reader_state &rs,
                               const YAML::Node &node,
                               const shared_ptr<DiscreteField> &discretefield) {
@@ -57,6 +58,7 @@ void DiscreteFieldBlock::read(const ASDF::reader_state &rs,
   m_discretizationblock->noinsert(shared_from_this());
   // TODO: check storage_indices
 }
+#endif
 
 void DiscreteFieldBlock::merge(
     const shared_ptr<DiscreteFieldBlock> &discretefieldblock) {
@@ -120,6 +122,7 @@ void DiscreteFieldBlock::write(const H5::H5Location &loc,
   // TODO: write storage_indices
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 string DiscreteFieldBlock::yaml_alias() const {
   return discretefield()->yaml_alias() + "/" + type() + "/" + name();
 }
@@ -131,6 +134,7 @@ ASDF::writer &DiscreteFieldBlock::write(ASDF::writer &w) const {
   aw.alias_group("storage_indices", storage_indices());
   return w;
 }
+#endif
 
 shared_ptr<DiscreteFieldBlockComponent>
 DiscreteFieldBlock::createDiscreteFieldBlockComponent(
@@ -212,6 +216,7 @@ DiscreteFieldBlock::readDiscreteFieldBlockComponent(const H5::H5Location &loc,
   return discretefieldblockcomponent;
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<DiscreteFieldBlockComponent>
 DiscreteFieldBlock::readDiscreteFieldBlockComponent(
     const ASDF::reader_state &rs, const YAML::Node &node) {
@@ -228,5 +233,6 @@ DiscreteFieldBlock::readDiscreteFieldBlockComponent(
   assert(discretefieldblockcomponent->invariant());
   return discretefieldblockcomponent;
 }
+#endif
 
 } // namespace SimulationIO

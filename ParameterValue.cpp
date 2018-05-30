@@ -68,6 +68,7 @@ void ParameterValue::read(const H5::H5Location &loc, const string &entry,
   // assert(H5::checkGroupNames(group, "configurations", configurations));
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 void ParameterValue::read(const ASDF::reader_state &rs, const YAML::Node &node,
                           const shared_ptr<Parameter> &parameter) {
   assert(node.Tag() ==
@@ -95,6 +96,7 @@ void ParameterValue::read(const ASDF::reader_state &rs, const YAML::Node &node,
     value_type = type_empty;
   }
 }
+#endif
 
 void ParameterValue::merge(const shared_ptr<ParameterValue> &parametervalue) {
   assert(parameter()->name() == parametervalue->parameter()->name());
@@ -237,6 +239,7 @@ void ParameterValue::write(const H5::H5Location &loc,
   group.createGroup("configurations");
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 string ParameterValue::yaml_alias() const {
   return parameter()->yaml_alias() + "/" + type() + "/" + name();
 }
@@ -264,6 +267,7 @@ ASDF::writer &ParameterValue::write(ASDF::writer &w) const {
   }
   return w;
 }
+#endif
 
 void ParameterValue::insert(const shared_ptr<Configuration> &configuration) {
   assert(parameter()->project().get() == configuration->project().get());

@@ -3,8 +3,11 @@
 
 #include "Basis.hpp"
 #include "Common.hpp"
+#include "Config.hpp"
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 #include <asdf.hpp>
+#endif
 
 #include <H5Cpp.h>
 
@@ -57,6 +60,9 @@ private:
     basisvector->read(loc, entry, basis);
     return basisvector;
   }
+  void read(const H5::H5Location &loc, const string &entry,
+            const shared_ptr<Basis> &basis);
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   static shared_ptr<BasisVector> create(const ASDF::reader_state &rs,
                                         const YAML::Node &node,
                                         const shared_ptr<Basis> &basis) {
@@ -64,10 +70,9 @@ private:
     basisvector->read(rs, node, basis);
     return basisvector;
   }
-  void read(const H5::H5Location &loc, const string &entry,
-            const shared_ptr<Basis> &basis);
   void read(const ASDF::reader_state &rs, const YAML::Node &node,
             const shared_ptr<Basis> &basis);
+#endif
 
 public:
   virtual ~BasisVector() {}
@@ -80,12 +85,14 @@ public:
   }
   virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   virtual string yaml_alias() const;
   ASDF::writer &write(ASDF::writer &w) const;
   friend ASDF::writer &operator<<(ASDF::writer &w,
                                   const BasisVector &basisvector) {
     return basisvector.write(w);
   }
+#endif
 };
 
 } // namespace SimulationIO

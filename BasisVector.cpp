@@ -26,6 +26,7 @@ void BasisVector::read(const H5::H5Location &loc, const string &entry,
   H5::readAttribute(group, "direction", m_direction);
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 void BasisVector::read(const ASDF::reader_state &rs, const YAML::Node &node,
                        const shared_ptr<Basis> &basis) {
   assert(node.Tag() ==
@@ -34,6 +35,7 @@ void BasisVector::read(const ASDF::reader_state &rs, const YAML::Node &node,
   m_basis = basis;
   m_direction = node["direction"].as<int>();
 }
+#endif
 
 void BasisVector::merge(const shared_ptr<BasisVector> &basisvector) {
   assert(basis()->name() == basisvector->basis()->name());
@@ -60,6 +62,7 @@ void BasisVector::write(const H5::H5Location &loc,
   H5::createAttribute(group, "direction", direction());
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 string BasisVector::yaml_alias() const {
   return basis()->yaml_alias() + "/" + type() + "/" + name();
 }
@@ -69,5 +72,6 @@ ASDF::writer &BasisVector::write(ASDF::writer &w) const {
   aw.value("direction", direction());
   return w;
 }
+#endif
 
 } // namespace SimulationIO

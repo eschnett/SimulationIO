@@ -2,10 +2,13 @@
 #define SUBDISCRETIZATION_HPP
 
 #include "Common.hpp"
+#include "Config.hpp"
 #include "Discretization.hpp"
 #include "Manifold.hpp"
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 #include <asdf.hpp>
+#endif
 
 #include <H5Cpp.h>
 
@@ -106,6 +109,9 @@ private:
     subdiscretization->read(loc, entry, manifold);
     return subdiscretization;
   }
+  void read(const H5::H5Location &loc, const string &entry,
+            const shared_ptr<Manifold> &manifold);
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   static shared_ptr<SubDiscretization>
   create(const ASDF::reader_state &rs, const YAML::Node &node,
          const shared_ptr<Manifold> &manifold) {
@@ -113,10 +119,9 @@ private:
     subdiscretization->read(rs, node, manifold);
     return subdiscretization;
   }
-  void read(const H5::H5Location &loc, const string &entry,
-            const shared_ptr<Manifold> &manifold);
   void read(const ASDF::reader_state &rs, const YAML::Node &node,
             const shared_ptr<Manifold> &manifold);
+#endif
 
 public:
   virtual ~SubDiscretization() {}
@@ -130,12 +135,14 @@ public:
   }
   virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   virtual string yaml_alias() const;
   ASDF::writer &write(ASDF::writer &w) const;
   friend ASDF::writer &operator<<(ASDF::writer &w,
                                   const SubDiscretization &subdiscretization) {
     return subdiscretization.write(w);
   }
+#endif
 };
 
 } // namespace SimulationIO

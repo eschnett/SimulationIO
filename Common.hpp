@@ -1,7 +1,11 @@
 #ifndef COMMON_HPP
 #define COMMON_HPP
 
+#include "Config.hpp"
+
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 #include <asdf.hpp>
+#endif
 
 #include <H5Cpp.h>
 
@@ -185,7 +189,9 @@ template <typename T> struct NoBackLink {
 
 // Common to all file elements
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 class asdf_writer_;
+#endif
 
 class Common {
 protected:
@@ -203,14 +209,18 @@ protected:
   Common(const string &name) : m_name(name) {}
   Common(hidden) {}
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   const asdf_writer_ asdf_writer(ASDF::writer &w) const;
+#endif
 
 public:
   virtual ~Common() {}
   virtual ostream &output(ostream &os, int level = 0) const = 0;
   virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const = 0;
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   virtual string yaml_alias() const = 0;
+#endif
 
   // The association between names and integer values below MUST NOT BE
   // MODIFIED, except that new integer values may be added.
@@ -237,6 +247,7 @@ public:
   };
 };
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 string quote_alias(const string &alias);
 
 class asdf_writer_ {
@@ -282,6 +293,7 @@ public:
     m_writer << YAML::Key << name << YAML::Value << YAML::Flow << values;
   }
 };
+#endif
 
 } // namespace SimulationIO
 

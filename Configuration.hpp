@@ -2,10 +2,13 @@
 #define CONFIGURATION_HPP
 
 #include "Common.hpp"
+#include "Config.hpp"
 #include "Helpers.hpp"
 #include "Project.hpp"
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 #include <asdf.hpp>
+#endif
 
 #include <H5Cpp.h>
 
@@ -93,6 +96,9 @@ private:
     configuration->read(loc, entry, project);
     return configuration;
   }
+  void read(const H5::H5Location &loc, const string &entry,
+            const shared_ptr<Project> &project);
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   static shared_ptr<Configuration> create(const ASDF::reader_state &rs,
                                           const YAML::Node &node,
                                           const shared_ptr<Project> &project) {
@@ -100,10 +106,9 @@ private:
     configuration->read(rs, node, project);
     return configuration;
   }
-  void read(const H5::H5Location &loc, const string &entry,
-            const shared_ptr<Project> &project);
   void read(const ASDF::reader_state &rs, const YAML::Node &node,
             const shared_ptr<Project> &project);
+#endif
 
 public:
   virtual ~Configuration() {}
@@ -116,12 +121,14 @@ public:
   }
   virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   virtual string yaml_alias() const;
   ASDF::writer &write(ASDF::writer &w) const;
   friend ASDF::writer &operator<<(ASDF::writer &w,
                                   const Configuration &configuration) {
     return configuration.write(w);
   }
+#endif
 
   void insertParameterValue(const shared_ptr<ParameterValue> &parametervalue);
 

@@ -2,11 +2,14 @@
 #define MANIFOLD_HPP
 
 #include "Common.hpp"
+#include "Config.hpp"
 #include "Configuration.hpp"
 #include "Helpers.hpp"
 #include "Project.hpp"
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 #include <asdf.hpp>
+#endif
 
 #include <H5Cpp.h>
 
@@ -88,6 +91,9 @@ private:
     manifold->read(loc, entry, project);
     return manifold;
   }
+  void read(const H5::H5Location &loc, const string &entry,
+            const shared_ptr<Project> &project);
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   static shared_ptr<Manifold> create(const ASDF::reader_state &rs,
                                      const YAML::Node &node,
                                      const shared_ptr<Project> &project) {
@@ -95,10 +101,9 @@ private:
     manifold->read(rs, node, project);
     return manifold;
   }
-  void read(const H5::H5Location &loc, const string &entry,
-            const shared_ptr<Project> &project);
   void read(const ASDF::reader_state &rs, const YAML::Node &node,
             const shared_ptr<Project> &project);
+#endif
 
 public:
   virtual ~Manifold() {}
@@ -111,11 +116,13 @@ public:
   }
   virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   virtual string yaml_alias() const;
   ASDF::writer &write(ASDF::writer &w) const;
   friend ASDF::writer &operator<<(ASDF::writer &w, const Manifold &manifold) {
     return manifold.write(w);
   }
+#endif
 
   shared_ptr<Discretization>
   createDiscretization(const string &name,
@@ -128,8 +135,10 @@ public:
                      bool copy_children = false);
   shared_ptr<Discretization> readDiscretization(const H5::H5Location &loc,
                                                 const string &entry);
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   shared_ptr<Discretization> readDiscretization(const ASDF::reader_state &rs,
                                                 const YAML::Node &node);
+#endif
   shared_ptr<SubDiscretization> createSubDiscretization(
       const string &name,
       const shared_ptr<Discretization> &parent_discretization,
@@ -146,8 +155,10 @@ public:
                         bool copy_children = false);
   shared_ptr<SubDiscretization> readSubDiscretization(const H5::H5Location &loc,
                                                       const string &entry);
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   shared_ptr<SubDiscretization>
   readSubDiscretization(const ASDF::reader_state &rs, const YAML::Node &nodex);
+#endif
 
 private:
   friend class CoordinateSystem;

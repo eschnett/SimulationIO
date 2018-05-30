@@ -1,9 +1,12 @@
 #ifndef REGIONCALCULUS_HPP
 #define REGIONCALCULUS_HPP
 
+#include "Config.hpp"
 #include "Helpers.hpp"
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 #include <yaml-cpp/yaml.h>
+#endif
 
 #include <algorithm>
 #include <array>
@@ -439,12 +442,14 @@ template <typename T, int D> struct point {
 
   // I/O
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   explicit point(const YAML::Node &node) {
     assert(node.Tag() ==
            "tag:github.com/eschnett/SimulationIO/asdf-cxx/point-1.0.0");
     *this = point(node.as<vector<T>>());
   }
   friend void operator>>(const YAML::Node &node, point &p) { p = point(node); }
+#endif
 
   ostream &output(ostream &os) const {
     os << "[";
@@ -460,6 +465,7 @@ template <typename T, int D> struct point {
     return p.output(os);
   }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   YAML::Emitter &output(YAML::Emitter &w) const {
     w << YAML::LocalTag("sio", "point-1.0.0");
     w << YAML::Flow << YAML::BeginSeq;
@@ -471,6 +477,7 @@ template <typename T, int D> struct point {
   friend YAML::Emitter &operator<<(YAML::Emitter &w, const point &p) {
     return p.output(w);
   }
+#endif
 };
 
 // Unary functions
@@ -669,16 +676,19 @@ template <typename T> struct box<T, 0> {
 
   // I/O
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   explicit box(const YAML::Node &node) {
     assert(node.Tag() ==
            "tag:github.com/eschnett/SimulationIO/asdf-cxx/box-1.0.0");
     m_full = node["full"].as<bool>();
   }
   friend void operator>>(const YAML::Node &node, box &b) { b = box(node); }
+#endif
 
   ostream &output(ostream &os) const { return os << "(" << m_full << ")"; }
   friend ostream &operator<<(ostream &os, const box &b) { return b.output(os); }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   YAML::Emitter &output(YAML::Emitter &w) const {
     w << YAML::LocalTag("sio", "box-1.0.0");
     w << YAML::Flow << YAML::BeginMap;
@@ -689,6 +699,7 @@ template <typename T> struct box<T, 0> {
   friend YAML::Emitter &operator<<(YAML::Emitter &w, const box &b) {
     return b.output(w);
   }
+#endif
 };
 
 template <typename T, int D> struct box {
@@ -929,6 +940,7 @@ public:
 
   // I/O
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   explicit box(const YAML::Node &node) {
     assert(node.Tag() ==
            "tag:github.com/eschnett/SimulationIO/asdf-cxx/box-1.0.0");
@@ -936,12 +948,14 @@ public:
     hi = point<T, D>(node["high"]);
   }
   friend void operator>>(const YAML::Node &node, box &b) { b = box(node); }
+#endif
 
   ostream &output(ostream &os) const {
     return os << "(" << lo << ":" << hi << ")";
   }
   friend ostream &operator<<(ostream &os, const box &b) { return b.output(os); }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   YAML::Emitter &output(YAML::Emitter &w) const {
     w << YAML::LocalTag("sio", "box-1.0.0");
     w << YAML::Flow << YAML::BeginMap;
@@ -953,6 +967,7 @@ public:
   friend YAML::Emitter &operator<<(YAML::Emitter &w, const box &b) {
     return b.output(w);
   }
+#endif
 };
 } // namespace RegionCalculus
 
@@ -1195,6 +1210,7 @@ public:
 
   // I/O
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   explicit region(const YAML::Node &node) {
     assert(node.Tag() ==
            "tag:github.com/eschnett/SimulationIO/asdf-cxx/region-1.0.0");
@@ -1202,6 +1218,7 @@ public:
     assert(dim == D);
     boxes = node["boxes"].as<vector<box<T, D>>>();
   }
+#endif
 
   ostream &output(ostream &os) const {
     os << "{";
@@ -1217,6 +1234,7 @@ public:
     return r.output(os);
   }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   YAML::Emitter &output(YAML::Emitter &w) const {
     w << YAML::LocalTag("sio", "region-1.0.0");
     w << YAML::Flow << YAML::BeginMap;
@@ -1228,6 +1246,7 @@ public:
   friend YAML::Emitter &operator<<(YAML::Emitter &w, const region &r) {
     return r.output(w);
   }
+#endif
 };
 } // namespace RegionCalculus
 
@@ -1346,6 +1365,7 @@ template <typename T> struct region<T, 0> {
 
   // I/O
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   explicit region(const YAML::Node &node) {
     assert(node.Tag() ==
            "tag:github.com/eschnett/SimulationIO/asdf-cxx/region-1.0.0");
@@ -1353,12 +1373,14 @@ template <typename T> struct region<T, 0> {
     assert(dim == 0);
     m_full = node["full"].as<bool>();
   }
+#endif
 
   ostream &output(ostream &os) const { return os << "{}"; }
   friend ostream &operator<<(ostream &os, const region &r) {
     return r.output(os);
   }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   YAML::Emitter &output(YAML::Emitter &w) const {
     w << YAML::LocalTag("sio", "region-1.0.0");
     w << YAML::Flow << YAML::BeginMap;
@@ -1370,6 +1392,7 @@ template <typename T> struct region<T, 0> {
   friend YAML::Emitter &operator<<(YAML::Emitter &w, const region &r) {
     return r.output(w);
   }
+#endif
 };
 
 template <typename T, int D> struct region {
@@ -1726,6 +1749,7 @@ public:
 
   // I/O
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   explicit region(const YAML::Node &node) {
     assert(node.Tag() ==
            "tag:github.com/eschnett/SimulationIO/asdf-cxx/region-1.0.0");
@@ -1740,6 +1764,7 @@ public:
   friend void operator>>(const YAML::Node &node, region &r) {
     r = region(node);
   }
+#endif
 
   ostream &output(ostream &os) const {
     // os << "{";
@@ -1760,6 +1785,7 @@ public:
     return r.output(os);
   }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   YAML::Emitter &output(YAML::Emitter &w) const {
     w << YAML::LocalTag("sio", "region-1.0.0");
     w << YAML::Flow << YAML::BeginMap;
@@ -1771,6 +1797,7 @@ public:
   friend YAML::Emitter &operator<<(YAML::Emitter &w, const region &r) {
     return r.output(w);
   }
+#endif
 };
 } // namespace RegionCalculus
 
@@ -1868,15 +1895,19 @@ template <typename T> struct vpoint {
   virtual prod_t prod() const = 0;
 
   // I/O
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   static unique_ptr<vpoint> make(const YAML::Node &node);
+#endif
   virtual ostream &output(ostream &os) const = 0;
   friend ostream &operator<<(ostream &os, const vpoint &p) {
     return p.output(os);
   }
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   virtual YAML::Emitter &output(YAML::Emitter &w) const = 0;
   friend YAML::Emitter &operator<<(YAML::Emitter &w, const vpoint &p) {
     return p.output(w);
   }
+#endif
 };
 
 template <typename T> struct vbox {
@@ -1929,15 +1960,19 @@ template <typename T> struct vbox {
   // virtual unique_ptr<vbox> operator^(const vbox &b) const = 0;
 
   // I/O
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   static unique_ptr<vbox> make(const YAML::Node &node);
+#endif
   virtual ostream &output(ostream &os) const = 0;
   friend ostream &operator<<(ostream &os, const vbox &b) {
     return b.output(os);
   }
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   virtual YAML::Emitter &output(YAML::Emitter &w) const = 0;
   friend YAML::Emitter &operator<<(YAML::Emitter &w, const vbox &b) {
     return b.output(w);
   }
+#endif
 };
 
 template <typename T> struct vregion {
@@ -1998,15 +2033,19 @@ template <typename T> struct vregion {
   virtual bool less(const vregion &r) const = 0;
 
   // I/O
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   static unique_ptr<vregion> make(const YAML::Node &node);
+#endif
   virtual ostream &output(ostream &os) const = 0;
   friend ostream &operator<<(ostream &os, const vregion &r) {
     return r.output(os);
   }
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   virtual YAML::Emitter &output(YAML::Emitter &w) const = 0;
   friend YAML::Emitter &operator<<(YAML::Emitter &w, const vregion &r) {
     return r.output(w);
   }
+#endif
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2201,15 +2240,19 @@ template <typename T, int D> struct wpoint : vpoint<T> {
   prod_t prod() const { return val.prod(); }
 
   // I/O
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   explicit wpoint(const YAML::Node &node) : val(node) {}
+#endif
   ostream &output(ostream &os) const { return val.output(os); }
   // friend ostream &operator<<(ostream &os, const wpoint &p) {
   //   return p.output(os);
   // }
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   YAML::Emitter &output(YAML::Emitter &w) const { return val.output(w); }
   // friend YAML::Emitter &operator<<(YAML::Emitter &w, const wpoint &p) {
   //   return p.output(w);
   // }
+#endif
 };
 
 template <typename T, int D> struct wbox : vbox<T> {
@@ -2320,15 +2363,19 @@ template <typename T, int D> struct wbox : vbox<T> {
   // }
 
   // I/O
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   explicit wbox(const YAML::Node &node) : val(node) {}
+#endif
   ostream &output(ostream &os) const { return val.output(os); }
   // friend ostream &operator<<(ostream &os, const wbox &b) {
   //   return b.output(os);
   // }
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   YAML::Emitter &output(YAML::Emitter &w) const { return val.output(w); }
   // friend YAML::Emitter &operator<<(YAML::Emitter &w, const wbox &b) {
   //   return b.output(w);
   // }
+#endif
 };
 
 template <typename T, int D> struct wregion : vregion<T> {
@@ -2470,15 +2517,19 @@ template <typename T, int D> struct wregion : vregion<T> {
   }
 
   // I/O
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   explicit wregion(const YAML::Node &node) : val(node) {}
+#endif
   ostream &output(ostream &os) const { return val.output(os); }
   // friend ostream &operator<<(ostream &os, const wregion &r) {
   //   return r.output(os);
   // }
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   YAML::Emitter &output(YAML::Emitter &w) const { return val.output(w); }
   // friend YAML::Emitter &operator<<(YAML::Emitter &w, const wregion &r) {
   //   return r.output(w);
   // }
+#endif
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2575,6 +2626,7 @@ unique_ptr<vpoint<T>> vpoint<T>::make(const vpoint<U> &p) {
   }
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 template <typename T>
 unique_ptr<vpoint<T>> vpoint<T>::make(const YAML::Node &node) {
   const auto &v = node.as<vector<T>>();
@@ -2593,6 +2645,7 @@ unique_ptr<vpoint<T>> vpoint<T>::make(const YAML::Node &node) {
     assert(0);
   }
 }
+#endif
 
 template <typename T> unique_ptr<vbox<T>> vbox<T>::make(int d) {
   switch (d) {
@@ -2653,6 +2706,7 @@ unique_ptr<vbox<T>> vbox<T>::make(const vbox<U> &b) {
   }
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 template <typename T>
 unique_ptr<vbox<T>> vbox<T>::make(const YAML::Node &node) {
   const auto &full = node["full"];
@@ -2663,6 +2717,7 @@ unique_ptr<vbox<T>> vbox<T>::make(const YAML::Node &node) {
   const auto &hi = vpoint<T>::make(node["high"]);
   return vbox<T>::make(*lo, *hi);
 }
+#endif
 
 template <typename T> unique_ptr<vregion<T>> vregion<T>::make(int d) {
   switch (d) {
@@ -2759,6 +2814,7 @@ unique_ptr<vregion<T>> vregion<T>::make(const vregion<U> &r) {
   }
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 template <typename T>
 unique_ptr<vregion<T>> vregion<T>::make(const YAML::Node &node) {
   auto dim = node["dimension"].as<int>();
@@ -2777,6 +2833,7 @@ unique_ptr<vregion<T>> vregion<T>::make(const YAML::Node &node) {
     assert(0);
   }
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2940,7 +2997,10 @@ template <typename T> struct dpoint {
   prod_t prod() const { return val->prod(); }
 
   // I/O
+
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   explicit dpoint(const YAML::Node &node) : val(vpoint<T>::make(node)) {}
+#endif
 
   ostream &output(ostream &os) const {
     if (!val)
@@ -2951,6 +3011,7 @@ template <typename T> struct dpoint {
     return p.output(os);
   }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   YAML::Emitter &output(YAML::Emitter &w) const {
     if (!val)
       return w << YAML::LocalTag("sio", "point-1.0.0");
@@ -2959,6 +3020,7 @@ template <typename T> struct dpoint {
   friend YAML::Emitter &operator<<(YAML::Emitter &w, const dpoint &p) {
     return p.output(w);
   }
+#endif
 };
 
 // Unary functions
@@ -3106,7 +3168,10 @@ template <typename T> struct dbox {
   // dbox symmetric_difference(const dbox &b) const { return *this ^ b; }
 
   // I/O
+
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   explicit dbox(const YAML::Node &node) : val(vbox<T>::make(node)) {}
+#endif
 
   ostream &output(ostream &os) const {
     if (!val)
@@ -3117,6 +3182,7 @@ template <typename T> struct dbox {
     return b.output(os);
   }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   YAML::Emitter &output(YAML::Emitter &w) const {
     if (!val)
       return w << YAML::LocalTag("sio", "box-1.0.0");
@@ -3125,6 +3191,7 @@ template <typename T> struct dbox {
   friend YAML::Emitter &operator<<(YAML::Emitter &w, const dbox &b) {
     return b.output(w);
   }
+#endif
 };
 } // namespace RegionCalculus
 
@@ -3271,7 +3338,9 @@ template <typename T> struct dregion {
 
   // I/O
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   explicit dregion(const YAML::Node &node) : val(vregion<T>::make(node)) {}
+#endif
 
   ostream &output(ostream &os) const {
     if (!val)
@@ -3282,6 +3351,7 @@ template <typename T> struct dregion {
     return r.output(os);
   }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   YAML::Emitter &output(YAML::Emitter &w) const {
     if (!val)
       return w << YAML::LocalTag("sio", "region-1.0.0");
@@ -3290,6 +3360,7 @@ template <typename T> struct dregion {
   friend YAML::Emitter &operator<<(YAML::Emitter &w, const dregion &r) {
     return r.output(w);
   }
+#endif
 };
 
 } // namespace RegionCalculus

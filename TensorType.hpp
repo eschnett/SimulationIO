@@ -2,10 +2,13 @@
 #define TENSORTYPE_HPP
 
 #include "Common.hpp"
+#include "Config.hpp"
 #include "Helpers.hpp"
 #include "Project.hpp"
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 #include <asdf.hpp>
+#endif
 
 #include <H5Cpp.h>
 
@@ -78,6 +81,9 @@ private:
     tensortype->read(loc, entry, project);
     return tensortype;
   }
+  void read(const H5::H5Location &loc, const string &entry,
+            const shared_ptr<Project> &project);
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   static shared_ptr<TensorType> create(const ASDF::reader_state &rs,
                                        const YAML::Node &node,
                                        const shared_ptr<Project> &project) {
@@ -85,10 +91,9 @@ private:
     tensortype->read(rs, node, project);
     return tensortype;
   }
-  void read(const H5::H5Location &loc, const string &entry,
-            const shared_ptr<Project> &project);
   void read(const ASDF::reader_state &rs, const YAML::Node &node,
             const shared_ptr<Project> &project);
+#endif
 
 public:
   virtual ~TensorType() {}
@@ -101,12 +106,14 @@ public:
   }
   virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   virtual string yaml_alias() const;
   ASDF::writer &write(ASDF::writer &w) const;
   friend ASDF::writer &operator<<(ASDF::writer &w,
                                   const TensorType &tensortype) {
     return tensortype.write(w);
   }
+#endif
 
   shared_ptr<TensorComponent>
   createTensorComponent(const string &name, int storage_index,
@@ -119,8 +126,10 @@ public:
                       bool copy_children = false);
   shared_ptr<TensorComponent> readTensorComponent(const H5::H5Location &loc,
                                                   const string &entry);
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   shared_ptr<TensorComponent> readTensorComponent(const ASDF::reader_state &rs,
                                                   const YAML::Node &node);
+#endif
 
 private:
   friend class Field;

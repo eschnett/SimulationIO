@@ -38,12 +38,14 @@ shared_ptr<Project> readProject(const H5::H5Location &loc) {
   assert(project->invariant());
   return project;
 }
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<Project> readProject(const ASDF::reader_state &rs,
                                 const YAML::Node &node) {
   auto project = Project::create(rs, node);
   assert(project->invariant());
   return project;
 }
+#endif
 
 bool Project::invariant() const { return Common::invariant(); }
 
@@ -83,6 +85,7 @@ void Project::read(const H5::H5Location &loc) {
                 });
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 void Project::read(const ASDF::reader_state &rs, const YAML::Node &node) {
   createTypes(); // TODO: read from file instead to ensure integer constants are
                  // consistent
@@ -104,6 +107,7 @@ void Project::read(const ASDF::reader_state &rs, const YAML::Node &node) {
   for (const auto &kv : node["coordinatesystems"])
     readCoordinateSystem(rs, kv.second);
 }
+#endif
 
 void Project::merge(const shared_ptr<Project> &project) {
   // TODO: combine types
@@ -388,6 +392,7 @@ void Project::write(const H5::H5Location &loc,
   H5::createGroup(group, "coordinatesystems", coordinatesystems());
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 string Project::yaml_alias() const { return "/"; }
 
 ASDF::writer &Project::write(ASDF::writer &w) const {
@@ -401,6 +406,7 @@ ASDF::writer &Project::write(ASDF::writer &w) const {
   aw.group("coordinatesystems", coordinatesystems());
   return w;
 }
+#endif
 
 shared_ptr<Parameter> Project::createParameter(const string &name) {
   auto parameter = Parameter::create(name, shared_from_this());
@@ -442,6 +448,7 @@ shared_ptr<Parameter> Project::readParameter(const H5::H5Location &loc,
   return parameter;
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<Parameter> Project::readParameter(const ASDF::reader_state &rs,
                                              const YAML::Node &node) {
   auto parameter = Parameter::create(rs, node, shared_from_this());
@@ -450,6 +457,7 @@ shared_ptr<Parameter> Project::readParameter(const ASDF::reader_state &rs,
   assert(parameter->invariant());
   return parameter;
 }
+#endif
 
 shared_ptr<Configuration> Project::createConfiguration(const string &name) {
   auto configuration = Configuration::create(name, shared_from_this());
@@ -491,6 +499,7 @@ shared_ptr<Configuration> Project::readConfiguration(const H5::H5Location &loc,
   return configuration;
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<Configuration>
 Project::readConfiguration(const ASDF::reader_state &rs,
                            const YAML::Node &node) {
@@ -500,6 +509,7 @@ Project::readConfiguration(const ASDF::reader_state &rs,
   assert(configuration->invariant());
   return configuration;
 }
+#endif
 
 shared_ptr<TensorType> Project::createTensorType(const string &name,
                                                  int dimension, int rank) {
@@ -547,6 +557,7 @@ shared_ptr<TensorType> Project::readTensorType(const H5::H5Location &loc,
   return tensortype;
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<TensorType> Project::readTensorType(const ASDF::reader_state &rs,
                                                const YAML::Node &node) {
   auto tensortype = TensorType::create(rs, node, shared_from_this());
@@ -555,6 +566,7 @@ shared_ptr<TensorType> Project::readTensorType(const ASDF::reader_state &rs,
   assert(tensortype->invariant());
   return tensortype;
 }
+#endif
 
 shared_ptr<Manifold>
 Project::createManifold(const string &name,
@@ -607,6 +619,7 @@ shared_ptr<Manifold> Project::readManifold(const H5::H5Location &loc,
   return manifold;
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<Manifold> Project::readManifold(const ASDF::reader_state &rs,
                                            const YAML::Node &node) {
   auto manifold = Manifold::create(rs, node, shared_from_this());
@@ -615,6 +628,7 @@ shared_ptr<Manifold> Project::readManifold(const ASDF::reader_state &rs,
   assert(manifold->invariant());
   return manifold;
 }
+#endif
 
 shared_ptr<TangentSpace>
 Project::createTangentSpace(const string &name,
@@ -667,6 +681,7 @@ shared_ptr<TangentSpace> Project::readTangentSpace(const H5::H5Location &loc,
   return tangentspace;
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<TangentSpace> Project::readTangentSpace(const ASDF::reader_state &rs,
                                                    const YAML::Node &node) {
   auto tangentspace = TangentSpace::create(rs, node, shared_from_this());
@@ -675,6 +690,7 @@ shared_ptr<TangentSpace> Project::readTangentSpace(const ASDF::reader_state &rs,
   assert(tangentspace->invariant());
   return tangentspace;
 }
+#endif
 
 shared_ptr<Field>
 Project::createField(const string &name,
@@ -737,6 +753,7 @@ shared_ptr<Field> Project::readField(const H5::H5Location &loc,
   return field;
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<Field> Project::readField(const ASDF::reader_state &rs,
                                      const YAML::Node &node) {
   auto field = Field::create(rs, node, shared_from_this());
@@ -744,6 +761,7 @@ shared_ptr<Field> Project::readField(const ASDF::reader_state &rs,
   assert(field->invariant());
   return field;
 }
+#endif
 
 shared_ptr<CoordinateSystem>
 Project::createCoordinateSystem(const string &name,
@@ -798,6 +816,7 @@ Project::readCoordinateSystem(const H5::H5Location &loc, const string &entry) {
   return coordinatesystem;
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<CoordinateSystem>
 Project::readCoordinateSystem(const ASDF::reader_state &rs,
                               const YAML::Node &node) {
@@ -808,5 +827,6 @@ Project::readCoordinateSystem(const ASDF::reader_state &rs,
   assert(coordinatesystem->invariant());
   return coordinatesystem;
 }
+#endif
 
 } // namespace SimulationIO

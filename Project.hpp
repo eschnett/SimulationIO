@@ -1,14 +1,16 @@
 #ifndef PROJECT_HPP
 #define PROJECT_HPP
 
-#include <asdf.hpp>
-
-#include <H5Cpp.h>
-
 #include "Common.hpp"
 #include "Config.hpp"
 
 #include "RegionCalculus.hpp"
+
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+#include <asdf.hpp>
+#endif
+
+#include <H5Cpp.h>
 
 #include <iostream>
 #include <limits>
@@ -31,8 +33,10 @@ class Project;
 
 shared_ptr<Project> createProject(const string &name);
 shared_ptr<Project> readProject(const H5::H5Location &loc);
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<Project> readProject(const ASDF::reader_state &rs,
                                 const YAML::Node &node);
+#endif
 
 class Parameter;
 class Configuration;
@@ -95,8 +99,10 @@ public:
 
   friend shared_ptr<Project> createProject(const string &name);
   friend shared_ptr<Project> readProject(const H5::H5Location &loc);
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   friend shared_ptr<Project> readProject(const ASDF::reader_state &rs,
                                          const YAML::Node &node);
+#endif
   Project(hidden, const string &name) : Common(name) {
     SIMULATIONIO_CHECK_VERSION;
     createTypes();
@@ -114,14 +120,16 @@ private:
     project->read(loc);
     return project;
   }
+  void read(const H5::H5Location &loc);
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   static shared_ptr<Project> create(const ASDF::reader_state &rs,
                                     const YAML::Node &node) {
     auto project = make_shared<Project>(hidden());
     project->read(rs, node);
     return project;
   }
-  void read(const H5::H5Location &loc);
   void read(const ASDF::reader_state &rs, const YAML::Node &node);
+#endif
 
 public:
   virtual ~Project() {}
@@ -144,12 +152,14 @@ public:
   virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
   void write(const H5::H5Location &loc) const { write(loc, H5::H5File()); }
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   virtual string yaml_alias() const;
   ASDF::writer &write(ASDF::writer &writer) const;
   friend ASDF::writer &operator<<(ASDF::writer &writer,
                                   const Project &project) {
     return project.write(writer);
   }
+#endif
 
   shared_ptr<Parameter> createParameter(const string &name);
   shared_ptr<Parameter> getParameter(const string &name);
@@ -157,8 +167,10 @@ public:
                                       bool copy_children = false);
   shared_ptr<Parameter> readParameter(const H5::H5Location &loc,
                                       const string &entry);
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   shared_ptr<Parameter> readParameter(const ASDF::reader_state &rs,
                                       const YAML::Node &node);
+#endif
   shared_ptr<Configuration> createConfiguration(const string &name);
   shared_ptr<Configuration> getConfiguration(const string &name);
   shared_ptr<Configuration>
@@ -166,8 +178,10 @@ public:
                     bool copy_children = false);
   shared_ptr<Configuration> readConfiguration(const H5::H5Location &loc,
                                               const string &entry);
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   shared_ptr<Configuration> readConfiguration(const ASDF::reader_state &rs,
                                               const YAML::Node &node);
+#endif
   shared_ptr<TensorType> createTensorType(const string &name, int dimension,
                                           int rank);
   shared_ptr<TensorType> getTensorType(const string &name, int dimension,
@@ -177,8 +191,10 @@ public:
                  bool copy_children = false);
   shared_ptr<TensorType> readTensorType(const H5::H5Location &loc,
                                         const string &entry);
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   shared_ptr<TensorType> readTensorType(const ASDF::reader_state &rs,
                                         const YAML::Node &node);
+#endif
   shared_ptr<Manifold>
   createManifold(const string &name,
                  const shared_ptr<Configuration> &configuration, int dimension);
@@ -189,8 +205,10 @@ public:
                                     bool copy_children = false);
   shared_ptr<Manifold> readManifold(const H5::H5Location &loc,
                                     const string &entry);
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   shared_ptr<Manifold> readManifold(const ASDF::reader_state &rs,
                                     const YAML::Node &node);
+#endif
   shared_ptr<TangentSpace>
   createTangentSpace(const string &name,
                      const shared_ptr<Configuration> &configuration,
@@ -204,8 +222,10 @@ public:
                    bool copy_children = false);
   shared_ptr<TangentSpace> readTangentSpace(const H5::H5Location &loc,
                                             const string &entry);
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   shared_ptr<TangentSpace> readTangentSpace(const ASDF::reader_state &rs,
                                             const YAML::Node &node);
+#endif
   shared_ptr<Field> createField(const string &name,
                                 const shared_ptr<Configuration> &configuration,
                                 const shared_ptr<Manifold> &manifold,
@@ -219,8 +239,10 @@ public:
   shared_ptr<Field> copyField(const shared_ptr<Field> &field,
                               bool copy_children = false);
   shared_ptr<Field> readField(const H5::H5Location &loc, const string &entry);
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   shared_ptr<Field> readField(const ASDF::reader_state &rs,
                               const YAML::Node &node);
+#endif
   shared_ptr<CoordinateSystem>
   createCoordinateSystem(const string &name,
                          const shared_ptr<Configuration> &configuration,
@@ -234,8 +256,10 @@ public:
                        bool copy_children = false);
   shared_ptr<CoordinateSystem> readCoordinateSystem(const H5::H5Location &loc,
                                                     const string &entry);
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   shared_ptr<CoordinateSystem>
   readCoordinateSystem(const ASDF::reader_state &rs, const YAML::Node &node);
+#endif
 };
 
 } // namespace SimulationIO

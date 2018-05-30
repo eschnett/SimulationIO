@@ -35,6 +35,7 @@ void TensorType::read(const H5::H5Location &loc, const string &entry,
   // TODO: check storage_indices
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 void TensorType::read(const ASDF::reader_state &rs, const YAML::Node &node,
                       const shared_ptr<Project> &project) {
   assert(node.Tag() ==
@@ -47,6 +48,7 @@ void TensorType::read(const ASDF::reader_state &rs, const YAML::Node &node,
     readTensorComponent(rs, kv.second);
   // TODO: check storage_indices
 }
+#endif
 
 void TensorType::merge(const shared_ptr<TensorType> &tensortype) {
   assert(project()->name() == tensortype->project()->name());
@@ -90,6 +92,7 @@ void TensorType::write(const H5::H5Location &loc,
   // TODO: write storage_indices
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 string TensorType::yaml_alias() const { return type() + "/" + name(); }
 
 ASDF::writer &TensorType::write(ASDF::writer &w) const {
@@ -100,6 +103,7 @@ ASDF::writer &TensorType::write(ASDF::writer &w) const {
   aw.alias_group("storage_indices", storage_indices());
   return w;
 }
+#endif
 
 shared_ptr<TensorComponent>
 TensorType::createTensorComponent(const string &name, int storage_index,
@@ -148,6 +152,7 @@ TensorType::readTensorComponent(const H5::H5Location &loc,
   return tensorcomponent;
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<TensorComponent>
 TensorType::readTensorComponent(const ASDF::reader_state &rs,
                                 const YAML::Node &node) {
@@ -159,5 +164,6 @@ TensorType::readTensorComponent(const ASDF::reader_state &rs,
   assert(tensorcomponent->invariant());
   return tensorcomponent;
 }
+#endif
 
 } // namespace SimulationIO

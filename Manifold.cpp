@@ -57,6 +57,7 @@ void Manifold::read(const H5::H5Location &loc, const string &entry,
   m_configuration->insert(name(), shared_from_this());
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 void Manifold::read(const ASDF::reader_state &rs, const YAML::Node &node,
                     const shared_ptr<Project> &project) {
   assert(node.Tag() ==
@@ -72,6 +73,7 @@ void Manifold::read(const ASDF::reader_state &rs, const YAML::Node &node,
     readSubDiscretization(rs, kv.second);
   m_configuration->insert(name(), shared_from_this());
 }
+#endif
 
 void Manifold::merge(const shared_ptr<Manifold> &manifold) {
   assert(project()->name() == manifold->project()->name());
@@ -139,6 +141,7 @@ void Manifold::write(const H5::H5Location &loc,
   group.createGroup("coordinatesystems");
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 string Manifold::yaml_alias() const { return type() + "/" + name(); }
 
 ASDF::writer &Manifold::write(ASDF::writer &w) const {
@@ -149,6 +152,7 @@ ASDF::writer &Manifold::write(ASDF::writer &w) const {
   aw.group("subdiscretizations", subdiscretizations());
   return w;
 }
+#endif
 
 shared_ptr<Discretization>
 Manifold::createDiscretization(const string &name,
@@ -201,6 +205,7 @@ Manifold::readDiscretization(const H5::H5Location &loc, const string &entry) {
   return discretization;
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<Discretization>
 Manifold::readDiscretization(const ASDF::reader_state &rs,
                              const YAML::Node &node) {
@@ -210,6 +215,7 @@ Manifold::readDiscretization(const ASDF::reader_state &rs,
   assert(discretization->invariant());
   return discretization;
 }
+#endif
 
 shared_ptr<SubDiscretization> Manifold::createSubDiscretization(
     const string &name, const shared_ptr<Discretization> &parent_discretization,
@@ -267,6 +273,7 @@ Manifold::readSubDiscretization(const H5::H5Location &loc,
   return subdiscretization;
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<SubDiscretization>
 Manifold::readSubDiscretization(const ASDF::reader_state &rs,
                                 const YAML::Node &node) {
@@ -277,5 +284,6 @@ Manifold::readSubDiscretization(const ASDF::reader_state &rs,
   assert(subdiscretization->invariant());
   return subdiscretization;
 }
+#endif
 
 } // namespace SimulationIO

@@ -2,9 +2,12 @@
 #define TENSORCOMPONENT_HPP
 
 #include "Common.hpp"
+#include "Config.hpp"
 #include "TensorType.hpp"
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 #include <asdf.hpp>
+#endif
 
 #include <H5Cpp.h>
 
@@ -72,6 +75,9 @@ private:
     tensorcomponent->read(loc, entry, tensortype);
     return tensorcomponent;
   }
+  void read(const H5::H5Location &loc, const string &entry,
+            const shared_ptr<TensorType> &tensortype);
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   static shared_ptr<TensorComponent>
   create(const ASDF::reader_state &rs, const YAML::Node &node,
          const shared_ptr<TensorType> &tensortype) {
@@ -79,10 +85,9 @@ private:
     tensorcomponent->read(rs, node, tensortype);
     return tensorcomponent;
   }
-  void read(const H5::H5Location &loc, const string &entry,
-            const shared_ptr<TensorType> &tensortype);
   void read(const ASDF::reader_state &rs, const YAML::Node &node,
             const shared_ptr<TensorType> &tensortype);
+#endif
 
 public:
   virtual ~TensorComponent() {}
@@ -96,12 +101,14 @@ public:
   }
   virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   virtual string yaml_alias() const;
   ASDF::writer &write(ASDF::writer &w) const;
   friend ASDF::writer &operator<<(ASDF::writer &w,
                                   const TensorComponent &tensorcomponent) {
     return tensorcomponent.write(w);
   }
+#endif
 
 private:
   friend class DiscreteFieldBlockComponent;

@@ -110,6 +110,7 @@ void DiscretizationBlock::read(
   }
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 void DiscretizationBlock::read(
     const ASDF::reader_state &rs, const YAML::Node &node,
     const shared_ptr<Discretization> &discretization) {
@@ -124,6 +125,7 @@ void DiscretizationBlock::read(
   if (active.IsDefined())
     m_active = region_t(active);
 }
+#endif
 
 void DiscretizationBlock::merge(
     const shared_ptr<DiscretizationBlock> &discretizationblock) {
@@ -222,6 +224,7 @@ void DiscretizationBlock::write(const H5::H5Location &loc,
   }
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 string DiscretizationBlock::yaml_alias() const {
   return discretization()->yaml_alias() + "/" + type() + "/" + name();
 }
@@ -234,5 +237,6 @@ ASDF::writer &DiscretizationBlock::write(ASDF::writer &w) const {
     aw.value("active", active());
   return w;
 }
+#endif
 
 } // namespace SimulationIO

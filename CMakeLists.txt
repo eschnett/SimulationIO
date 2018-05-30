@@ -15,8 +15,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/Modules"
 
 # External dependencies
 
-find_package(asdf-cxx 2.0.2)
-if(ASDF_CXX_LIBRARY = ASDF_CXX_LIBRARY-NOTFOUND)
+find_package(asdf-cxx 2.0.3)
+if(NOT (ASDF_CXX_LIBRARY STREQUAL ASDF_CXX_LIBRARY-NOTFOUND))
   include_directories(${ASDF_CXX_INCLUDE_DIR})
   set(LIBS ${LIBS} ${ASDF_CXX_LIBRARY})
   set(HAVE_ASDF_CXX 1)
@@ -164,14 +164,18 @@ set(EXES
   sio-benchmark
   sio-convert-carpet-output
   sio-copy
-  sio-copy-asdf
   sio-example
-  sio-example-asdf
   sio-example-attach
   sio-list
   sio-merge
   sio-filter
   )
+if(HAVE_ASDF_CXX EQUAL 1)
+  list(APPEND EXES 
+    sio-copy-asdf
+    sio-example-asdf
+    )
+endif()
 
 add_executable(sio-benchmark benchmark.cpp)
 target_link_libraries(sio-benchmark SimulationIO)
@@ -182,14 +186,8 @@ target_link_libraries(sio-convert-carpet-output SimulationIO)
 add_executable(sio-copy copy.cpp)
 target_link_libraries(sio-copy SimulationIO)
 
-add_executable(sio-copy-asdf copy-asdf.cpp)
-target_link_libraries(sio-copy-asdf SimulationIO)
-
 add_executable(sio-example example.cpp)
 target_link_libraries(sio-example SimulationIO)
-
-add_executable(sio-example-asdf example-asdf.cpp)
-target_link_libraries(sio-example-asdf SimulationIO)
 
 add_executable(sio-example-attach example-attach.cpp)
 target_link_libraries(sio-example-attach SimulationIO)
@@ -202,6 +200,14 @@ target_link_libraries(sio-merge SimulationIO)
 
 add_executable(sio-filter filter.cpp)
 target_link_libraries(sio-filter SimulationIO)
+
+if(HAVE_ASDF_CXX EQUAL 1)
+add_executable(sio-copy-asdf copy-asdf.cpp)
+target_link_libraries(sio-copy-asdf SimulationIO)
+
+add_executable(sio-example-asdf example-asdf.cpp)
+target_link_libraries(sio-example-asdf SimulationIO)
+endif()
 
 # Tests
 
@@ -225,11 +231,13 @@ add_test(NAME example-attach COMMAND ./sio-example-attach)
 add_test(NAME list-attach COMMAND ./sio-list example-attach.s5)
 add_test(NAME copy COMMAND ./sio-copy example.s5 example2.s5)
 add_test(NAME list2 COMMAND ./sio-list example2.s5)
+if(HAVE_ASDF_CXX EQUAL 1)
 add_test(NAME example-asdf COMMAND ./sio-example-asdf)
 add_test(NAME list-asdf COMMAND asdf-ls example.asdf)
 add_test(NAME copy-asdf COMMAND ./sio-copy-asdf example.asdf example2.asdf)
 add_test(NAME list-asdf2 COMMAND asdf-ls example2.asdf)
-add_test(NAME compare-asdf COMMAND ../diff-commands.sh "asdf-ls example.asdf" "asdf-ls example2.asdf")
+add_test(NAME compare-asdf COMMAND ${CMAKE_SOURCE_DIR}/diff-commands.sh "asdf-ls example.asdf" "asdf-ls example2.asdf")
+endif()
 if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND AND H5PY_FOUND AND NUMPY_FOUND AND SWIG_FOUND)
   add_test(NAME python-example
     COMMAND

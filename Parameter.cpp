@@ -27,6 +27,7 @@ void Parameter::read(const H5::H5Location &loc, const string &entry,
                 });
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 void Parameter::read(const ASDF::reader_state &rs, const YAML::Node &node,
                      const shared_ptr<Project> &project) {
   assert(node.Tag() ==
@@ -36,6 +37,7 @@ void Parameter::read(const ASDF::reader_state &rs, const YAML::Node &node,
   for (const auto &kv : node["parametervalues"])
     readParameterValue(rs, kv.second);
 }
+#endif
 
 void Parameter::merge(const shared_ptr<Parameter> &parameter) {
   assert(project()->name() == parameter->project()->name());
@@ -66,6 +68,7 @@ void Parameter::write(const H5::H5Location &loc,
   H5::createGroup(group, "parametervalues", parametervalues());
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 string Parameter::yaml_alias() const { return type() + "/" + name(); }
 
 ASDF::writer &Parameter::write(ASDF::writer &w) const {
@@ -73,6 +76,7 @@ ASDF::writer &Parameter::write(ASDF::writer &w) const {
   aw.group("parametervalues", parametervalues());
   return w;
 }
+#endif
 
 shared_ptr<ParameterValue> Parameter::createParameterValue(const string &name) {
   auto parametervalue = ParameterValue::create(name, shared_from_this());
@@ -129,6 +133,7 @@ Parameter::readParameterValue(const H5::H5Location &loc, const string &entry) {
   return parametervalue;
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<ParameterValue>
 Parameter::readParameterValue(const ASDF::reader_state &rs,
                               const YAML::Node &node) {
@@ -138,5 +143,6 @@ Parameter::readParameterValue(const ASDF::reader_state &rs,
   assert(parametervalue->invariant());
   return parametervalue;
 }
+#endif
 
 } // namespace SimulationIO

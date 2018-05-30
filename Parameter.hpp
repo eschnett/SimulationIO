@@ -2,10 +2,13 @@
 #define PARAMETER_HPP
 
 #include "Common.hpp"
+#include "Config.hpp"
 #include "Helpers.hpp"
 #include "Project.hpp"
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 #include <asdf.hpp>
+#endif
 
 #include <H5Cpp.h>
 
@@ -63,6 +66,9 @@ private:
     parameter->read(loc, entry, project);
     return parameter;
   }
+  void read(const H5::H5Location &loc, const string &entry,
+            const shared_ptr<Project> &project);
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   static shared_ptr<Parameter> create(const ASDF::reader_state &rs,
                                       const YAML::Node &node,
                                       const shared_ptr<Project> &project) {
@@ -70,10 +76,9 @@ private:
     parameter->read(rs, node, project);
     return parameter;
   }
-  void read(const H5::H5Location &loc, const string &entry,
-            const shared_ptr<Project> &project);
   void read(const ASDF::reader_state &rs, const YAML::Node &node,
             const shared_ptr<Project> &project);
+#endif
 
 public:
   virtual ~Parameter() {}
@@ -86,11 +91,13 @@ public:
   }
   virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   virtual string yaml_alias() const;
   ASDF::writer &write(ASDF::writer &w) const;
   friend ASDF::writer &operator<<(ASDF::writer &w, const Parameter &parameter) {
     return parameter.write(w);
   }
+#endif
 
   shared_ptr<ParameterValue> createParameterValue(const string &name);
   shared_ptr<ParameterValue> getParameterValue(const string &name);
@@ -99,8 +106,10 @@ public:
                      bool copy_children = false);
   shared_ptr<ParameterValue> readParameterValue(const H5::H5Location &loc,
                                                 const string &entry);
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   shared_ptr<ParameterValue> readParameterValue(const ASDF::reader_state &rs,
                                                 const YAML::Node &node);
+#endif
 };
 
 } // namespace SimulationIO

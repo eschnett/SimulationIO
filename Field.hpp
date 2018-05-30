@@ -2,13 +2,16 @@
 #define FIELD_HPP
 
 #include "Common.hpp"
+#include "Config.hpp"
 #include "Configuration.hpp"
 #include "Manifold.hpp"
 #include "Project.hpp"
 #include "TangentSpace.hpp"
 #include "TensorType.hpp"
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 #include <asdf.hpp>
+#endif
 
 #include <H5Cpp.h>
 
@@ -97,6 +100,9 @@ private:
     field->read(loc, entry, project);
     return field;
   }
+  void read(const H5::H5Location &loc, const string &entry,
+            const shared_ptr<Project> &project);
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   static shared_ptr<Field> create(const ASDF::reader_state &rs,
                                   const YAML::Node &node,
                                   const shared_ptr<Project> &project) {
@@ -104,10 +110,9 @@ private:
     field->read(rs, node, project);
     return field;
   }
-  void read(const H5::H5Location &loc, const string &entry,
-            const shared_ptr<Project> &project);
   void read(const ASDF::reader_state &rs, const YAML::Node &node,
             const shared_ptr<Project> &project);
+#endif
 
 public:
   virtual ~Field() {}
@@ -120,11 +125,13 @@ public:
   }
   virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   virtual string yaml_alias() const;
   ASDF::writer &write(ASDF::writer &w) const;
   friend ASDF::writer &operator<<(ASDF::writer &w, const Field &field) {
     return field.write(w);
   }
+#endif
 
   shared_ptr<DiscreteField>
   createDiscreteField(const string &name,
@@ -141,8 +148,10 @@ public:
                     bool copy_children = false);
   shared_ptr<DiscreteField> readDiscreteField(const H5::H5Location &loc,
                                               const string &entry);
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   shared_ptr<DiscreteField> readDiscreteField(const ASDF::reader_state &rs,
                                               const YAML::Node &node);
+#endif
 
 private:
   friend class CoordinateField;

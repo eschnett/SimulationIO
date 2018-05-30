@@ -41,6 +41,7 @@ void CoordinateSystem::read(const H5::H5Location &loc, const string &entry,
   m_manifold->insert(name(), shared_from_this());
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 void CoordinateSystem::read(const ASDF::reader_state &rs,
                             const YAML::Node &node,
                             const shared_ptr<Project> &project) {
@@ -58,6 +59,7 @@ void CoordinateSystem::read(const ASDF::reader_state &rs,
   m_configuration->insert(name(), shared_from_this());
   m_manifold->insert(name(), shared_from_this());
 }
+#endif
 
 void CoordinateSystem::merge(
     const shared_ptr<CoordinateSystem> &coordinatesystem) {
@@ -115,6 +117,7 @@ void CoordinateSystem::write(const H5::H5Location &loc,
   // TODO: output directions
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 string CoordinateSystem::yaml_alias() const { return type() + "/" + name(); }
 
 ASDF::writer &CoordinateSystem::write(ASDF::writer &w) const {
@@ -125,6 +128,7 @@ ASDF::writer &CoordinateSystem::write(ASDF::writer &w) const {
   aw.alias_group("directions", directions());
   return w;
 }
+#endif
 
 shared_ptr<CoordinateField>
 CoordinateSystem::createCoordinateField(const string &name, int direction,
@@ -174,6 +178,7 @@ CoordinateSystem::readCoordinateField(const H5::H5Location &loc,
   return coordinatefield;
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<CoordinateField>
 CoordinateSystem::readCoordinateField(const ASDF::reader_state &rs,
                                       const YAML::Node &node) {
@@ -185,5 +190,6 @@ CoordinateSystem::readCoordinateField(const ASDF::reader_state &rs,
   assert(coordinatefield->invariant());
   return coordinatefield;
 }
+#endif
 
 } // namespace SimulationIO

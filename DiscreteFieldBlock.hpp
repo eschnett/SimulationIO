@@ -2,8 +2,13 @@
 #define DISCRETEFIELDBLOCK_HPP
 
 #include "Common.hpp"
+#include "Config.hpp"
 #include "DiscreteField.hpp"
 #include "DiscretizationBlock.hpp"
+
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+#include <asdf.hpp>
+#endif
 
 #include <H5Cpp.h>
 
@@ -81,6 +86,9 @@ private:
     discretefieldblock->read(loc, entry, discretefield);
     return discretefieldblock;
   }
+  void read(const H5::H5Location &loc, const string &entry,
+            const shared_ptr<DiscreteField> &discretefield);
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   static shared_ptr<DiscreteFieldBlock>
   create(const ASDF::reader_state &rs, const YAML::Node &node,
          const shared_ptr<DiscreteField> &discretefield) {
@@ -88,10 +96,9 @@ private:
     discretefieldblock->read(rs, node, discretefield);
     return discretefieldblock;
   }
-  void read(const H5::H5Location &loc, const string &entry,
-            const shared_ptr<DiscreteField> &discretefield);
   void read(const ASDF::reader_state &rs, const YAML::Node &node,
             const shared_ptr<DiscreteField> &discretefield);
+#endif
 
 public:
   virtual ~DiscreteFieldBlock() {}
@@ -105,12 +112,14 @@ public:
   }
   virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   virtual string yaml_alias() const;
   ASDF::writer &write(ASDF::writer &w) const;
   friend ASDF::writer &
   operator<<(ASDF::writer &w, const DiscreteFieldBlock &discretefieldblock) {
     return discretefieldblock.write(w);
   }
+#endif
 
   shared_ptr<DiscreteFieldBlockComponent> createDiscreteFieldBlockComponent(
       const string &name, const shared_ptr<TensorComponent> &tensorcomponent);
@@ -123,9 +132,11 @@ public:
   shared_ptr<DiscreteFieldBlockComponent>
   readDiscreteFieldBlockComponent(const H5::H5Location &loc,
                                   const string &entry);
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   shared_ptr<DiscreteFieldBlockComponent>
   readDiscreteFieldBlockComponent(const ASDF::reader_state &rs,
                                   const YAML::Node &node);
+#endif
 };
 
 } // namespace SimulationIO

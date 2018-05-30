@@ -2,10 +2,13 @@
 #define DISCRETIZATIONBLOCK_HPP
 
 #include "Common.hpp"
+#include "Config.hpp"
 #include "Discretization.hpp"
 #include "RegionCalculus.hpp"
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 #include <asdf.hpp>
+#endif
 
 #include <H5Cpp.h>
 
@@ -79,6 +82,9 @@ private:
     discretizationblock->read(loc, entry, discretization);
     return discretizationblock;
   }
+  void read(const H5::H5Location &loc, const string &entry,
+            const shared_ptr<Discretization> &discretization);
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   static shared_ptr<DiscretizationBlock>
   create(const ASDF::reader_state &rs, const YAML::Node &node,
          const shared_ptr<Discretization> &discretization) {
@@ -86,10 +92,9 @@ private:
     discretizationblock->read(rs, node, discretization);
     return discretizationblock;
   }
-  void read(const H5::H5Location &loc, const string &entry,
-            const shared_ptr<Discretization> &discretization);
   void read(const ASDF::reader_state &rs, const YAML::Node &node,
             const shared_ptr<Discretization> &discretization);
+#endif
 
 public:
   virtual ~DiscretizationBlock() {}
@@ -120,12 +125,14 @@ public:
   }
   virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   virtual string yaml_alias() const;
   ASDF::writer &write(ASDF::writer &w) const;
   friend ASDF::writer &
   operator<<(ASDF::writer &w, const DiscretizationBlock &discretizationblock) {
     return discretizationblock.write(w);
   }
+#endif
 
 private:
   friend class DiscreteFieldBlock;

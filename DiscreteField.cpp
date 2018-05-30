@@ -49,6 +49,7 @@ void DiscreteField::read(const H5::H5Location &loc, const string &entry,
   m_basis->noinsert(shared_from_this());
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 void DiscreteField::read(const ASDF::reader_state &rs, const YAML::Node &node,
                          const shared_ptr<Field> &field) {
   assert(node.Tag() ==
@@ -66,6 +67,7 @@ void DiscreteField::read(const ASDF::reader_state &rs, const YAML::Node &node,
   m_discretization->noinsert(shared_from_this());
   m_basis->noinsert(shared_from_this());
 }
+#endif
 
 void DiscreteField::merge(const shared_ptr<DiscreteField> &discretefield) {
   assert(field()->name() == discretefield->field()->name());
@@ -125,6 +127,7 @@ void DiscreteField::write(const H5::H5Location &loc,
   createGroup(group, "discretefieldblocks", discretefieldblocks());
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 string DiscreteField::yaml_alias() const {
   return field()->yaml_alias() + "/" + type() + "/" + name();
 }
@@ -137,6 +140,7 @@ ASDF::writer &DiscreteField::write(ASDF::writer &w) const {
   aw.group("discretefieldblocks", discretefieldblocks());
   return w;
 }
+#endif
 
 shared_ptr<DiscreteFieldBlock> DiscreteField::createDiscreteFieldBlock(
     const string &name,
@@ -194,6 +198,7 @@ DiscreteField::readDiscreteFieldBlock(const H5::H5Location &loc,
   return discretefieldblock;
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<DiscreteFieldBlock>
 DiscreteField::readDiscreteFieldBlock(const ASDF::reader_state &rs,
                                       const YAML::Node &node) {
@@ -204,5 +209,6 @@ DiscreteField::readDiscreteFieldBlock(const ASDF::reader_state &rs,
   assert(discretefieldblock->invariant());
   return discretefieldblock;
 }
+#endif
 
 } // namespace SimulationIO

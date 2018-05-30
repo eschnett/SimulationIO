@@ -56,6 +56,7 @@ void Configuration::read(const H5::H5Location &loc, const string &entry,
   // assert(H5::checkGroupNames(group, "tangentspaces", manifolds));
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 void Configuration::read(const ASDF::reader_state &rs, const YAML::Node &node,
                          const shared_ptr<Project> &project) {
   assert(node.Tag() ==
@@ -69,6 +70,7 @@ void Configuration::read(const ASDF::reader_state &rs, const YAML::Node &node,
         parameter->parametervalues().at(kv.second["name"].Scalar()));
   }
 }
+#endif
 
 void Configuration::merge(const shared_ptr<Configuration> &configuration) {
   assert(project()->name() == configuration->project()->name());
@@ -143,6 +145,7 @@ void Configuration::write(const H5::H5Location &loc,
   group.createGroup("tangentspaces");
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 string Configuration::yaml_alias() const { return type() + "/" + name(); }
 
 ASDF::writer &Configuration::write(ASDF::writer &w) const {
@@ -150,6 +153,7 @@ ASDF::writer &Configuration::write(ASDF::writer &w) const {
   aw.alias_group("parametervalues", parametervalues());
   return w;
 }
+#endif
 
 void Configuration::insertParameterValue(
     const shared_ptr<ParameterValue> &parametervalue) {

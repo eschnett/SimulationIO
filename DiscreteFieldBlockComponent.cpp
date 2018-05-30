@@ -57,6 +57,7 @@ void DiscreteFieldBlockComponent::read(
   m_tensorcomponent->noinsert(shared_from_this());
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 void DiscreteFieldBlockComponent::read(
     const ASDF::reader_state &rs, const YAML::Node &node,
     const shared_ptr<DiscreteFieldBlock> &discretefieldblock) {
@@ -74,6 +75,7 @@ void DiscreteFieldBlockComponent::read(
         rs, node["data"], discretefieldblock->discretizationblock()->box());
   m_tensorcomponent->noinsert(shared_from_this());
 }
+#endif
 
 void DiscreteFieldBlockComponent::merge(
     const shared_ptr<DiscreteFieldBlockComponent>
@@ -124,6 +126,7 @@ void DiscreteFieldBlockComponent::write(const H5::H5Location &loc,
     datablock()->write(group, dataname());
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 string DiscreteFieldBlockComponent::yaml_alias() const {
   return discretefieldblock()->yaml_alias() + "/" + type() + "/" + name();
 }
@@ -135,6 +138,7 @@ ASDF::writer &DiscreteFieldBlockComponent::write(ASDF::writer &w) const {
     datablock()->write(w, "data");
   return w;
 }
+#endif
 
 void DiscreteFieldBlockComponent::unsetDataBlock() { m_datablock = nullptr; }
 
@@ -193,6 +197,7 @@ DiscreteFieldBlockComponent::createExtLink(const string &filename,
   return res;
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<ASDFData> DiscreteFieldBlockComponent::createASDFData(
     const shared_ptr<ASDF::generic_blob_t> &blob,
     const shared_ptr<ASDF::datatype_t> &datatype) {
@@ -202,6 +207,7 @@ shared_ptr<ASDFData> DiscreteFieldBlockComponent::createASDFData(
   m_datablock = res;
   return res;
 }
+#endif
 
 string DiscreteFieldBlockComponent::getPath() const {
   auto discretefield = discretefieldblock()->discretefield();

@@ -12,6 +12,7 @@ using std::ostringstream;
 using std::setfill;
 using std::setw;
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 // Python's YAML library only accepts alphanumerical characters and "-_" in
 // anchors
 string quote_alias(const string &alias) {
@@ -40,5 +41,6 @@ asdf_writer_::asdf_writer_(const Common &common, ASDF::writer &w)
 }
 
 asdf_writer_::~asdf_writer_() { m_writer << YAML::EndMap; }
+#endif
 
 } // namespace SimulationIO

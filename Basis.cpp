@@ -37,6 +37,7 @@ void Basis::read(const H5::H5Location &loc, const string &entry,
   m_configuration->insert(name(), shared_from_this());
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 void Basis::read(const ASDF::reader_state &rs, const YAML::Node &node,
                  const shared_ptr<TangentSpace> &tangentspace) {
   assert(node.Tag() ==
@@ -50,6 +51,7 @@ void Basis::read(const ASDF::reader_state &rs, const YAML::Node &node,
   // TODO: check group directions
   m_configuration->insert(name(), shared_from_this());
 }
+#endif
 
 void Basis::merge(const shared_ptr<Basis> &basis) {
   assert(tangentspace()->name() == basis->tangentspace()->name());
@@ -94,6 +96,7 @@ void Basis::write(const H5::H5Location &loc,
   // TODO: output directions
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 string Basis::yaml_alias() const {
   return tangentspace()->yaml_alias() + "/" + type() + "/" + name();
 }
@@ -105,6 +108,7 @@ ASDF::writer &Basis::write(ASDF::writer &w) const {
   aw.alias_group("directions", directions());
   return w;
 }
+#endif
 
 shared_ptr<BasisVector> Basis::createBasisVector(const string &name,
                                                  int direction) {
@@ -147,6 +151,7 @@ shared_ptr<BasisVector> Basis::readBasisVector(const H5::H5Location &loc,
   return basisvector;
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<BasisVector> Basis::readBasisVector(const ASDF::reader_state &rs,
                                                const YAML::Node &node) {
   auto basisvector = BasisVector::create(rs, node, shared_from_this());
@@ -157,5 +162,6 @@ shared_ptr<BasisVector> Basis::readBasisVector(const ASDF::reader_state &rs,
   assert(basisvector->invariant());
   return basisvector;
 }
+#endif
 
 } // namespace SimulationIO

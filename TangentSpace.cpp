@@ -43,6 +43,7 @@ void TangentSpace::read(const H5::H5Location &loc, const string &entry,
   m_configuration->insert(name(), shared_from_this());
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 void TangentSpace::read(const ASDF::reader_state &rs, const YAML::Node &node,
                         const shared_ptr<Project> &project) {
   assert(node.Tag() ==
@@ -56,6 +57,7 @@ void TangentSpace::read(const ASDF::reader_state &rs, const YAML::Node &node,
     readBasis(rs, kv.second);
   m_configuration->insert(name(), shared_from_this());
 }
+#endif
 
 void TangentSpace::merge(const shared_ptr<TangentSpace> &tangentspace) {
   assert(project()->name() == tangentspace->project()->name());
@@ -103,6 +105,7 @@ void TangentSpace::write(const H5::H5Location &loc,
   group.createGroup("fields");
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 string TangentSpace::yaml_alias() const { return type() + "/" + name(); }
 
 ASDF::writer &TangentSpace::write(ASDF::writer &w) const {
@@ -112,6 +115,7 @@ ASDF::writer &TangentSpace::write(ASDF::writer &w) const {
   aw.group("bases", bases());
   return w;
 }
+#endif
 
 shared_ptr<Basis>
 TangentSpace::createBasis(const string &name,
@@ -156,6 +160,7 @@ shared_ptr<Basis> TangentSpace::readBasis(const H5::H5Location &loc,
   return basis;
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<Basis> TangentSpace::readBasis(const ASDF::reader_state &rs,
                                           const YAML::Node &node) {
   auto basis = Basis::create(rs, node, shared_from_this());
@@ -163,5 +168,6 @@ shared_ptr<Basis> TangentSpace::readBasis(const ASDF::reader_state &rs,
   assert(basis->invariant());
   return basis;
 }
+#endif
 
 } // namespace SimulationIO

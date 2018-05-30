@@ -62,6 +62,7 @@ void SubDiscretization::read(const H5::H5Location &loc, const string &entry,
              "name") == name());
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 void SubDiscretization::read(const ASDF::reader_state &rs,
                              const YAML::Node &node,
                              const shared_ptr<Manifold> &manifold) {
@@ -75,6 +76,7 @@ void SubDiscretization::read(const ASDF::reader_state &rs,
   m_parent_discretization->insertChild(name(), shared_from_this());
   m_child_discretization->insertParent(name(), shared_from_this());
 }
+#endif
 
 void SubDiscretization::merge(
     const shared_ptr<SubDiscretization> &subdiscretization) {
@@ -135,6 +137,7 @@ void SubDiscretization::write(const H5::H5Location &loc,
   H5::createAttribute(group, "offset", tmp_offset);
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 string SubDiscretization::yaml_alias() const {
   return manifold()->yaml_alias() + "/" + type() + "/" + name();
 }
@@ -147,5 +150,6 @@ ASDF::writer &SubDiscretization::write(ASDF::writer &w) const {
   aw.value("offset", offset());
   return w;
 }
+#endif
 
 } // namespace SimulationIO
