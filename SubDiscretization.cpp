@@ -60,10 +60,18 @@ void SubDiscretization::read(const H5::H5Location &loc, const string &entry,
   assert(H5::readGroupAttribute<string>(
              group, "child_discretization/parent_discretizations/" + name(),
              "name") == name());
-  H5::readAttribute(group, "factor", m_factor);
-  std::reverse(m_factor.begin(), m_factor.end());
-  H5::readAttribute(group, "offset", m_offset);
-  std::reverse(m_offset.begin(), m_offset.end());
+}
+
+void SubDiscretization::read(const ASDF::reader_state &rs,
+                             const YAML::Node &node,
+                             const shared_ptr<Manifold> &manifold) {
+  assert(
+      node.Tag() ==
+      "tag:github.com/eschnett/SimulationIO/asdf-cxx/SubDiscretization-1.0.0");
+  m_name = node["name"].Scalar();
+  m_manifold = manifold;
+  m_factor = node["factor"].as<vector<double>>();
+  m_factor = node["offset"].as<vector<double>>();
   m_parent_discretization->insertChild(name(), shared_from_this());
   m_child_discretization->insertParent(name(), shared_from_this());
 }
@@ -126,4 +134,18 @@ void SubDiscretization::write(const H5::H5Location &loc,
   std::reverse(tmp_offset.begin(), tmp_offset.end());
   H5::createAttribute(group, "offset", tmp_offset);
 }
+
+string SubDiscretization::yaml_alias() const {
+  return manifold()->yaml_alias() + "/" + type() + "/" + name();
+}
+
+ASDF::writer &SubDiscretization::write(ASDF::writer &w) const {
+  auto aw = asdf_writer(w);
+  aw.alias("parent_discretization", *parent_discretization());
+  aw.alias("child_discretization", *child_discretization());
+  aw.value("factor", factor());
+  aw.value("offset", offset());
+  return w;
+}
+
 } // namespace SimulationIO

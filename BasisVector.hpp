@@ -4,6 +4,8 @@
 #include "Basis.hpp"
 #include "Common.hpp"
 
+#include <asdf.hpp>
+
 #include <H5Cpp.h>
 
 #include <iostream>
@@ -24,6 +26,8 @@ class BasisVector : public Common,
   int m_direction;
 
 public:
+  virtual string type() const { return "BasisVector"; }
+
   shared_ptr<Basis> basis() const { return m_basis.lock(); }
   int direction() const { return m_direction; }
 
@@ -53,7 +57,16 @@ private:
     basisvector->read(loc, entry, basis);
     return basisvector;
   }
+  static shared_ptr<BasisVector> create(const ASDF::reader_state &rs,
+                                        const YAML::Node &node,
+                                        const shared_ptr<Basis> &basis) {
+    auto basisvector = make_shared<BasisVector>(hidden());
+    basisvector->read(rs, node, basis);
+    return basisvector;
+  }
   void read(const H5::H5Location &loc, const string &entry,
+            const shared_ptr<Basis> &basis);
+  void read(const ASDF::reader_state &rs, const YAML::Node &node,
             const shared_ptr<Basis> &basis);
 
 public:
@@ -67,7 +80,14 @@ public:
   }
   virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
+  virtual string yaml_alias() const;
+  ASDF::writer &write(ASDF::writer &w) const;
+  friend ASDF::writer &operator<<(ASDF::writer &w,
+                                  const BasisVector &basisvector) {
+    return basisvector.write(w);
+  }
 };
+
 } // namespace SimulationIO
 
 #define BASISVECTOR_HPP_DONE

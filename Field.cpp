@@ -59,6 +59,26 @@ void Field::read(const H5::H5Location &loc, const string &entry,
   m_tensortype->noinsert(shared_from_this());
 }
 
+void Field::read(const ASDF::reader_state &rs, const YAML::Node &node,
+                 const shared_ptr<Project> &project) {
+  assert(node.Tag() ==
+         "tag:github.com/eschnett/SimulationIO/asdf-cxx/Field-1.0.0");
+  m_name = node["name"].Scalar();
+  m_project = project;
+  m_configuration =
+      project->configurations().at(node["configuration"]["name"].Scalar());
+  m_manifold = project->manifolds().at(node["manifold"]["name"].Scalar());
+  m_tangentspace =
+      project->tangentspaces().at(node["tangentspace"]["name"].Scalar());
+  m_tensortype = project->tensortypes().at(node["tensortype"]["name"].Scalar());
+  for (const auto &kv : node["discretefields"])
+    readDiscreteField(rs, kv.second);
+  m_configuration->insert(name(), shared_from_this());
+  m_manifold->insert(name(), shared_from_this());
+  m_tangentspace->insert(name(), shared_from_this());
+  m_tensortype->noinsert(shared_from_this());
+}
+
 void Field::merge(const shared_ptr<Field> &field) {
   assert(project()->name() == field->project()->name());
   assert(m_configuration->name() == field->configuration()->name());
@@ -126,6 +146,18 @@ void Field::write(const H5::H5Location &loc,
   H5::createGroup(group, "discretefields", discretefields());
 }
 
+string Field::yaml_alias() const { return type() + "/" + name(); }
+
+ASDF::writer &Field::write(ASDF::writer &w) const {
+  auto aw = asdf_writer(w);
+  aw.alias("configuration", *configuration());
+  aw.alias("manifold", *manifold());
+  aw.alias("tangentspace", *tangentspace());
+  aw.alias("tensortype", *tensortype());
+  aw.group("discretefields", discretefields());
+  return w;
+}
+
 shared_ptr<DiscreteField>
 Field::createDiscreteField(const string &name,
                            const shared_ptr<Configuration> &configuration,
@@ -187,4 +219,14 @@ shared_ptr<DiscreteField> Field::readDiscreteField(const H5::H5Location &loc,
   assert(discretefield->invariant());
   return discretefield;
 }
+
+shared_ptr<DiscreteField> Field::readDiscreteField(const ASDF::reader_state &rs,
+                                                   const YAML::Node &node) {
+  auto discretefield = DiscreteField::create(rs, node, shared_from_this());
+  checked_emplace(m_discretefields, discretefield->name(), discretefield,
+                  "Field", "discretefields");
+  assert(discretefield->invariant());
+  return discretefield;
+}
+
 } // namespace SimulationIO

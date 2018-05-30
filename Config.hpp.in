@@ -23,6 +23,7 @@ void checkVersion(const char *header_version);
 
 #define SIMULATIONIO_CHECK_VERSION                                             \
   (::SimulationIO::checkVersion(SIMULATIONIO_VERSION))
+
 }
 
 #define CONFIG_HPP_DONE

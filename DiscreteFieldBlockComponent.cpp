@@ -57,6 +57,24 @@ void DiscreteFieldBlockComponent::read(
   m_tensorcomponent->noinsert(shared_from_this());
 }
 
+void DiscreteFieldBlockComponent::read(
+    const ASDF::reader_state &rs, const YAML::Node &node,
+    const shared_ptr<DiscreteFieldBlock> &discretefieldblock) {
+  assert(node.Tag() == "tag:github.com/eschnett/SimulationIO/asdf-cxx/"
+                       "DiscreteFieldBlockComponent-1.0.0");
+  m_name = node["name"].Scalar();
+  m_discretefieldblock = discretefieldblock;
+  m_tensorcomponent = discretefieldblock->discretefield()
+                          ->field()
+                          ->tensortype()
+                          ->tensorcomponents()
+                          .at(node["tensorcomponent"]["name"].Scalar());
+  if (node["data"].IsDefined())
+    m_datablock = DataBlock::read_asdf(
+        rs, node["data"], discretefieldblock->discretizationblock()->box());
+  m_tensorcomponent->noinsert(shared_from_this());
+}
+
 void DiscreteFieldBlockComponent::merge(
     const shared_ptr<DiscreteFieldBlockComponent>
         &discretefieldblockcomponent) {
@@ -104,6 +122,18 @@ void DiscreteFieldBlockComponent::write(const H5::H5Location &loc,
                          tensorcomponent()->name());
   if (bool(datablock()))
     datablock()->write(group, dataname());
+}
+
+string DiscreteFieldBlockComponent::yaml_alias() const {
+  return discretefieldblock()->yaml_alias() + "/" + type() + "/" + name();
+}
+
+ASDF::writer &DiscreteFieldBlockComponent::write(ASDF::writer &w) const {
+  auto aw = asdf_writer(w);
+  aw.alias("tensorcomponent", *tensorcomponent());
+  if (bool(datablock()))
+    datablock()->write(w, "data");
+  return w;
 }
 
 void DiscreteFieldBlockComponent::unsetDataBlock() { m_datablock = nullptr; }
@@ -163,6 +193,16 @@ DiscreteFieldBlockComponent::createExtLink(const string &filename,
   return res;
 }
 
+shared_ptr<ASDFData> DiscreteFieldBlockComponent::createASDFData(
+    const shared_ptr<ASDF::generic_blob_t> &blob,
+    const shared_ptr<ASDF::datatype_t> &datatype) {
+  assert(!m_datablock);
+  auto res = make_shared<ASDFData>(
+      discretefieldblock()->discretizationblock()->box(), blob, datatype);
+  m_datablock = res;
+  return res;
+}
+
 string DiscreteFieldBlockComponent::getPath() const {
   auto discretefield = discretefieldblock()->discretefield();
   auto field = discretefield->field();
@@ -174,4 +214,5 @@ string DiscreteFieldBlockComponent::getPath() const {
   return buf.str();
 }
 string DiscreteFieldBlockComponent::getName() const { return dataname(); }
+
 } // namespace SimulationIO

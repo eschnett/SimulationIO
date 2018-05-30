@@ -8,6 +8,8 @@
 #include "TangentSpace.hpp"
 #include "TensorType.hpp"
 
+#include <asdf.hpp>
+
 #include <H5Cpp.h>
 
 #include <iostream>
@@ -40,6 +42,8 @@ class Field : public Common, public std::enable_shared_from_this<Field> {
   NoBackLink<CoordinateField> m_coordinatefields;
 
 public:
+  virtual string type() const { return "Field"; }
+
   shared_ptr<Project> project() const { return m_project.lock(); }
   shared_ptr<Configuration> configuration() const { return m_configuration; }
   shared_ptr<Manifold> manifold() const { return m_manifold; }
@@ -93,7 +97,16 @@ private:
     field->read(loc, entry, project);
     return field;
   }
+  static shared_ptr<Field> create(const ASDF::reader_state &rs,
+                                  const YAML::Node &node,
+                                  const shared_ptr<Project> &project) {
+    auto field = make_shared<Field>(hidden());
+    field->read(rs, node, project);
+    return field;
+  }
   void read(const H5::H5Location &loc, const string &entry,
+            const shared_ptr<Project> &project);
+  void read(const ASDF::reader_state &rs, const YAML::Node &node,
             const shared_ptr<Project> &project);
 
 public:
@@ -107,6 +120,11 @@ public:
   }
   virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
+  virtual string yaml_alias() const;
+  ASDF::writer &write(ASDF::writer &w) const;
+  friend ASDF::writer &operator<<(ASDF::writer &w, const Field &field) {
+    return field.write(w);
+  }
 
   shared_ptr<DiscreteField>
   createDiscreteField(const string &name,
@@ -123,11 +141,14 @@ public:
                     bool copy_children = false);
   shared_ptr<DiscreteField> readDiscreteField(const H5::H5Location &loc,
                                               const string &entry);
+  shared_ptr<DiscreteField> readDiscreteField(const ASDF::reader_state &rs,
+                                              const YAML::Node &node);
 
 private:
   friend class CoordinateField;
   void noinsert(const shared_ptr<CoordinateField> &coordinatefield) {}
 };
+
 } // namespace SimulationIO
 
 #define FIELD_HPP_DONE

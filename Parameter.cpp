@@ -27,6 +27,16 @@ void Parameter::read(const H5::H5Location &loc, const string &entry,
                 });
 }
 
+void Parameter::read(const ASDF::reader_state &rs, const YAML::Node &node,
+                     const shared_ptr<Project> &project) {
+  assert(node.Tag() ==
+         "tag:github.com/eschnett/SimulationIO/asdf-cxx/Parameter-1.0.0");
+  m_name = node["name"].Scalar();
+  m_project = project;
+  for (const auto &kv : node["parametervalues"])
+    readParameterValue(rs, kv.second);
+}
+
 void Parameter::merge(const shared_ptr<Parameter> &parameter) {
   assert(project()->name() == parameter->project()->name());
   for (const auto &iter : parameter->parametervalues()) {
@@ -54,6 +64,14 @@ void Parameter::write(const H5::H5Location &loc,
   H5::createHardLink(group, "..", parent, ".");
   H5::createSoftLink(group, "project", "..");
   H5::createGroup(group, "parametervalues", parametervalues());
+}
+
+string Parameter::yaml_alias() const { return type() + "/" + name(); }
+
+ASDF::writer &Parameter::write(ASDF::writer &w) const {
+  auto aw = asdf_writer(w);
+  aw.group("parametervalues", parametervalues());
+  return w;
 }
 
 shared_ptr<ParameterValue> Parameter::createParameterValue(const string &name) {
@@ -110,4 +128,15 @@ Parameter::readParameterValue(const H5::H5Location &loc, const string &entry) {
   assert(parametervalue->invariant());
   return parametervalue;
 }
+
+shared_ptr<ParameterValue>
+Parameter::readParameterValue(const ASDF::reader_state &rs,
+                              const YAML::Node &node) {
+  auto parametervalue = ParameterValue::create(rs, node, shared_from_this());
+  checked_emplace(m_parametervalues, parametervalue->name(), parametervalue,
+                  "Parameter", "parametervalues");
+  assert(parametervalue->invariant());
+  return parametervalue;
+}
+
 } // namespace SimulationIO

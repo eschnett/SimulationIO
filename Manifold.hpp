@@ -6,6 +6,8 @@
 #include "Helpers.hpp"
 #include "Project.hpp"
 
+#include <asdf.hpp>
+
 #include <H5Cpp.h>
 
 #include <iostream>
@@ -39,6 +41,8 @@ class Manifold : public Common, public std::enable_shared_from_this<Manifold> {
   map<string, weak_ptr<Field>> m_fields;                           // backlinks
   map<string, weak_ptr<CoordinateSystem>> m_coordinatesystems;     // backlinks
 public:
+  virtual string type() const { return "Manifold"; }
+
   shared_ptr<Project> project() const { return m_project.lock(); }
   shared_ptr<Configuration> configuration() const { return m_configuration; }
   int dimension() const { return m_dimension; }
@@ -84,7 +88,16 @@ private:
     manifold->read(loc, entry, project);
     return manifold;
   }
+  static shared_ptr<Manifold> create(const ASDF::reader_state &rs,
+                                     const YAML::Node &node,
+                                     const shared_ptr<Project> &project) {
+    auto manifold = make_shared<Manifold>(hidden());
+    manifold->read(rs, node, project);
+    return manifold;
+  }
   void read(const H5::H5Location &loc, const string &entry,
+            const shared_ptr<Project> &project);
+  void read(const ASDF::reader_state &rs, const YAML::Node &node,
             const shared_ptr<Project> &project);
 
 public:
@@ -98,6 +111,11 @@ public:
   }
   virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
+  virtual string yaml_alias() const;
+  ASDF::writer &write(ASDF::writer &w) const;
+  friend ASDF::writer &operator<<(ASDF::writer &w, const Manifold &manifold) {
+    return manifold.write(w);
+  }
 
   shared_ptr<Discretization>
   createDiscretization(const string &name,
@@ -110,6 +128,8 @@ public:
                      bool copy_children = false);
   shared_ptr<Discretization> readDiscretization(const H5::H5Location &loc,
                                                 const string &entry);
+  shared_ptr<Discretization> readDiscretization(const ASDF::reader_state &rs,
+                                                const YAML::Node &node);
   shared_ptr<SubDiscretization> createSubDiscretization(
       const string &name,
       const shared_ptr<Discretization> &parent_discretization,
@@ -126,6 +146,8 @@ public:
                         bool copy_children = false);
   shared_ptr<SubDiscretization> readSubDiscretization(const H5::H5Location &loc,
                                                       const string &entry);
+  shared_ptr<SubDiscretization>
+  readSubDiscretization(const ASDF::reader_state &rs, const YAML::Node &nodex);
 
 private:
   friend class CoordinateSystem;
@@ -139,6 +161,7 @@ private:
     checked_emplace(m_fields, name, field, "Manifold", "fields");
   }
 };
+
 } // namespace SimulationIO
 
 #define MANIFOLD_HPP_DONE

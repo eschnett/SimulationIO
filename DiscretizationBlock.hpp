@@ -5,6 +5,8 @@
 #include "Discretization.hpp"
 #include "RegionCalculus.hpp"
 
+#include <asdf.hpp>
+
 #include <H5Cpp.h>
 
 #include <cassert>
@@ -36,6 +38,8 @@ class DiscretizationBlock
   NoBackLink<weak_ptr<DiscreteFieldBlock>> m_discretefieldblocks;
 
 public:
+  virtual string type() const { return "DiscretizationBlock"; }
+
   shared_ptr<Discretization> discretization() const {
     return m_discretization.lock();
   }
@@ -75,7 +79,16 @@ private:
     discretizationblock->read(loc, entry, discretization);
     return discretizationblock;
   }
+  static shared_ptr<DiscretizationBlock>
+  create(const ASDF::reader_state &rs, const YAML::Node &node,
+         const shared_ptr<Discretization> &discretization) {
+    auto discretizationblock = make_shared<DiscretizationBlock>(hidden());
+    discretizationblock->read(rs, node, discretization);
+    return discretizationblock;
+  }
   void read(const H5::H5Location &loc, const string &entry,
+            const shared_ptr<Discretization> &discretization);
+  void read(const ASDF::reader_state &rs, const YAML::Node &node,
             const shared_ptr<Discretization> &discretization);
 
 public:
@@ -107,11 +120,18 @@ public:
   }
   virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
+  virtual string yaml_alias() const;
+  ASDF::writer &write(ASDF::writer &w) const;
+  friend ASDF::writer &
+  operator<<(ASDF::writer &w, const DiscretizationBlock &discretizationblock) {
+    return discretizationblock.write(w);
+  }
 
 private:
   friend class DiscreteFieldBlock;
   void noinsert(const shared_ptr<DiscreteFieldBlock> &discretefieldblock) {}
 };
+
 } // namespace SimulationIO
 
 #define DISCRETIZATIONBLOCK_HPP_DONE

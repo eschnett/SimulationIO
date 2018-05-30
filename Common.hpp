@@ -1,19 +1,27 @@
 #ifndef COMMON_HPP
 #define COMMON_HPP
 
+#include <asdf.hpp>
+
 #include <H5Cpp.h>
 
+#include <functional>
 #include <iostream>
-#include <string>
-
 #include <map>
 #include <memory>
+#include <string>
 #include <utility>
+#include <vector>
 
 namespace SimulationIO {
 
+using std::function;
+using std::map;
 using std::ostream;
+using std::shared_ptr;
 using std::string;
+using std::unique_ptr;
+using std::vector;
 
 // C++ make_shared requires constructors to be public; we add a field of type
 // `hidden` to ensure they are not called accidentally.
@@ -177,6 +185,8 @@ template <typename T> struct NoBackLink {
 
 // Common to all file elements
 
+class asdf_writer_;
+
 class Common {
 protected:
   // TODO: Make m_name private, provide an HDF5 read routine, handle the type
@@ -185,6 +195,7 @@ protected:
 
 public:
   string name() const { return m_name; }
+  virtual string type() const = 0;
 
   virtual bool invariant() const { return !name().empty(); }
 
@@ -192,11 +203,14 @@ protected:
   Common(const string &name) : m_name(name) {}
   Common(hidden) {}
 
+  const asdf_writer_ asdf_writer(ASDF::writer &w) const;
+
 public:
   virtual ~Common() {}
   virtual ostream &output(ostream &os, int level = 0) const = 0;
   virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const = 0;
+  virtual string yaml_alias() const = 0;
 
   // The association between names and integer values below MUST NOT BE
   // MODIFIED, except that new integer values may be added.
@@ -222,6 +236,51 @@ public:
     type_SubDiscretization = 19,
   };
 };
+
+class asdf_writer_ {
+  const Common &m_common;
+  ASDF::writer &m_writer;
+
+public:
+  asdf_writer_() = delete;
+  asdf_writer_(const Common &common, ASDF::writer &w);
+
+  ~asdf_writer_();
+
+  template <typename T> void value(const string &name, const T &value) {
+    m_writer << YAML::Key << name << YAML::Value << value;
+  }
+
+  template <typename T> void alias(const string &name, const T &value) {
+    m_writer << YAML::Key << name << YAML::Value
+             << YAML::Alias(value.yaml_alias());
+  }
+
+  template <typename K, typename T>
+  void group(const string &name, const map<K, shared_ptr<T>> &values) {
+    m_writer << YAML::Key << name << YAML::Value;
+    m_writer << YAML::BeginMap;
+    for (const auto &kv : values)
+      m_writer << YAML::Key << kv.first << YAML::Value << *kv.second;
+    m_writer << YAML::EndMap;
+  }
+
+  template <typename K, typename T>
+  void alias_group(const string &name, const map<K, shared_ptr<T>> &values) {
+    m_writer << YAML::Key << name << YAML::Value;
+    m_writer << YAML::BeginMap;
+    for (const auto &kv : values)
+      m_writer << YAML::Key << kv.first << YAML::Value
+               << YAML::Alias(kv.second->yaml_alias());
+    m_writer << YAML::EndMap;
+  }
+
+  template <typename T>
+  void short_sequence(const string &name, const vector<T> &values) {
+    m_writer << YAML::Key << name << YAML::Value << YAML::Flow << values;
+  }
+};
+
 } // namespace SimulationIO
 
 #endif // #ifndef COMMON_HPP

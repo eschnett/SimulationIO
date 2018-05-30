@@ -67,13 +67,8 @@ int main(int argc, char **argv) {
         ostringstream name;
         name << "grid." << p;
         auto block = discretization->createDiscretizationBlock(name.str());
-        vector<long long> offset(dim), shape(dim);
-        offset.at(0) = nli * pi;
-        offset.at(1) = nlj * pj;
-        offset.at(2) = nlk * pk;
-        shape.at(0) = nli;
-        shape.at(1) = nlj;
-        shape.at(2) = nlk;
+        vector<long long> offset{nli * pi, nlj * pj, nlk * pk};
+        vector<long long> shape{nli, nlj, nlk};
         block->setBox(box_t(offset, point_t(offset) + shape));
         block->setActive(region_t(box_t(offset, point_t(offset) + shape)));
         blocks.push_back(block);
@@ -143,7 +138,7 @@ int main(int argc, char **argv) {
   }
 
   // output
-  cout << *project;
+  // cout << *project;
 
   // Write file
   auto filename = "example.s5";

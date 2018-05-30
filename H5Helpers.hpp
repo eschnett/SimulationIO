@@ -412,6 +412,7 @@ bool checkGroupNames(const CommonFG &loc, const std::string &name,
                       return s1 == sf2.first;
                     });
 }
+
 } // namespace H5
 
 #endif // #ifndef H5HELPERS_HPP

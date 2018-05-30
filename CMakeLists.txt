@@ -6,15 +6,43 @@ cmake_policy(SET CMP0048 NEW)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 
-project(SimulationIO VERSION 2.10.0 LANGUAGES C CXX)
-set(PROJECT_DESCRIPTION "SimulationIO: Efficient and convenient I/O for large PDE simulations")
+project(SimulationIO VERSION 2.11.0 LANGUAGES C CXX)
+set(PROJECT_DESCRIPTION
+  "SimulationIO: Efficient and convenient I/O for large PDE simulations")
 set(PROJECT_URL "https://github.com/eschnett/SimulationIO")
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/Modules")
 
 # External dependencies
 
-find_package(asdf-cxx 1.0.0 REQUIRED)
+find_package(asdf-cxx 2.0.0 REQUIRED)
+include_directories(${ASDF_CXX_INCLUDE_DIR})
+set(LIBS ${LIBS} ${ASDF_CXX_LIBRARY})
+
+# TODO: Add cmake config file to asdf-cxx so that its dependencies are
+# automatically required
+
+find_package(BZip2)
+if(BZIP2_FOUND)
+  include_directories(${BZIP2_INCLUDE_DIR})
+  set(LIBS ${LIBS} ${BZIP2_LIBRARIES})
+endif()
+
+find_package(OpenSSL)
+if(OPENSSL_FOUND)
+  include_directories(${OPENSSL_INCLUDE_DIR})
+  set(LIBS ${LIBS} ${OPENSSL_CRYPTO_LIBRARY})
+endif()
+
+find_package(yaml-cpp REQUIRED)
+include_directories(${YAML_CPP_INCLUDE_DIR})
+set(LIBS ${LIBS} ${YAML_CPP_LIBRARIES})
+
+find_package(ZLIB)
+if(ZLIB_FOUND)
+  include_directories(${ZLIB_INCLUDE_DIRS})
+  set(LIBS ${LIBS} ${ZLIB_LIBRARIES})
+endif()
 
 find_package(HDF5 1.10.1 COMPONENTS C CXX REQUIRED)
 if(HDF5_VERSION VERSION_LESS 1.10.1)
@@ -68,12 +96,15 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include_directories("${PROJECT_SOURCE_DIR}" "${PROJECT_BINARY_DIR}")
 
-string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+string(REPLACE
+  "-DNDEBUG" ""
+  CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
 
 set(SIO_SRCS
   Basis.cpp
   BasisVector.cpp
   Buffer.cpp
+  Common.cpp
   Config.cpp
   Configuration.cpp
   CoordinateField.cpp
@@ -102,7 +133,8 @@ set_property(TARGET SimulationIO PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 
 # SWIG bindings
 
-if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND AND H5PY_FOUND AND NUMPY_FOUND AND SWIG_FOUND)
+if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND AND
+    H5PY_FOUND AND NUMPY_FOUND AND SWIG_FOUND)
   set_source_files_properties(H5.i PROPERTIES CPLUSPLUS ON)
   swig_add_module(H5 python H5.i)
   # set_property(TARGET ${SWIG_MODULE_H5_REAL_NAME} PROPERTY CXX_STANDARD 11
@@ -128,7 +160,9 @@ set(EXES
   sio-benchmark
   sio-convert-carpet-output
   sio-copy
+  sio-copy-asdf
   sio-example
+  sio-example-asdf
   sio-example-attach
   sio-list
   sio-merge
@@ -144,8 +178,14 @@ target_link_libraries(sio-convert-carpet-output SimulationIO)
 add_executable(sio-copy copy.cpp)
 target_link_libraries(sio-copy SimulationIO)
 
+add_executable(sio-copy-asdf copy-asdf.cpp)
+target_link_libraries(sio-copy-asdf SimulationIO)
+
 add_executable(sio-example example.cpp)
 target_link_libraries(sio-example SimulationIO)
+
+add_executable(sio-example-asdf example-asdf.cpp)
+target_link_libraries(sio-example-asdf SimulationIO)
 
 add_executable(sio-example-attach example-attach.cpp)
 target_link_libraries(sio-example-attach SimulationIO)
@@ -164,27 +204,43 @@ target_link_libraries(sio-filter SimulationIO)
 set(GOOGLETEST_DIR "googletest-release-1.8.0/googletest")
 include_directories("${GOOGLETEST_DIR}/include" "${GOOGLETEST_DIR}")
 
-add_executable(test_RegionCalculus test_RegionCalculus.cpp "${GOOGLETEST_DIR}/src/gtest-all.cc")
+add_executable(test_RegionCalculus
+  test_RegionCalculus.cpp "${GOOGLETEST_DIR}/src/gtest-all.cc")
 target_link_libraries(test_RegionCalculus SimulationIO Threads::Threads)
 
-add_executable(test_SimulationIO test_SimulationIO.cpp "${GOOGLETEST_DIR}/src/gtest-all.cc")
+add_executable(test_SimulationIO
+  test_SimulationIO.cpp "${GOOGLETEST_DIR}/src/gtest-all.cc")
 target_link_libraries(test_SimulationIO SimulationIO Threads::Threads)
 
 enable_testing()
 add_test(NAME test_RegionCalculus COMMAND ./test_RegionCalculus)
 add_test(NAME test_SimulationIO COMMAND ./test_SimulationIO)
 add_test(NAME example COMMAND ./sio-example)
+add_test(NAME example-asdf COMMAND ./sio-example-asdf)
 add_test(NAME list COMMAND ./sio-list example.s5)
 add_test(NAME example-attach COMMAND ./sio-example-attach)
 add_test(NAME list-attach COMMAND ./sio-list example-attach.s5)
 add_test(NAME copy COMMAND ./sio-copy example.s5 example2.s5)
 add_test(NAME list2 COMMAND ./sio-list example2.s5)
 if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND AND H5PY_FOUND AND NUMPY_FOUND AND SWIG_FOUND)
-  add_test(NAME python-example COMMAND env "PYTHONPATH=${PROJECT_BINARY_DIR}:$ENV{PYTHONPATH}" ${PYTHON_EXECUTABLE} "${PROJECT_SOURCE_DIR}/python-example.py")
-  add_test(NAME python-example-attach COMMAND env "PYTHONPATH=${PROJECT_BINARY_DIR}:$ENV{PYTHONPATH}" ${PYTHON_EXECUTABLE} "${PROJECT_SOURCE_DIR}/python-example-attach.py")
-  add_test(NAME python-read COMMAND env "PYTHONPATH=${PROJECT_BINARY_DIR}:$ENV{PYTHONPATH}" ${PYTHON_EXECUTABLE} "${PROJECT_SOURCE_DIR}/python-read.py")
-  add_test(NAME h5format_convert COMMAND h5format_convert python-example.s5)
-  add_test(NAME python-read-direct COMMAND env "PYTHONPATH=${PROJECT_BINARY_DIR}:$ENV{PYTHONPATH}" ${PYTHON_EXECUTABLE} "${PROJECT_SOURCE_DIR}/python-read-direct.py")
+  add_test(NAME python-example
+    COMMAND
+    env "PYTHONPATH=${PROJECT_BINARY_DIR}:$ENV{PYTHONPATH}"
+    ${PYTHON_EXECUTABLE} "${PROJECT_SOURCE_DIR}/python-example.py")
+  add_test(NAME python-example-attach
+    COMMAND
+    env "PYTHONPATH=${PROJECT_BINARY_DIR}:$ENV{PYTHONPATH}"
+    ${PYTHON_EXECUTABLE} "${PROJECT_SOURCE_DIR}/python-example-attach.py")
+  add_test(NAME python-read
+    COMMAND
+    env "PYTHONPATH=${PROJECT_BINARY_DIR}:$ENV{PYTHONPATH}"
+    ${PYTHON_EXECUTABLE} "${PROJECT_SOURCE_DIR}/python-read.py")
+  add_test(NAME h5format_convert
+    COMMAND h5format_convert python-example.s5)
+  add_test(NAME python-read-direct
+    COMMAND
+    env "PYTHONPATH=${PROJECT_BINARY_DIR}:$ENV{PYTHONPATH}"
+    ${PYTHON_EXECUTABLE} "${PROJECT_SOURCE_DIR}/python-read-direct.py")
 endif()
 
 # Install
@@ -219,11 +275,13 @@ set(HEADERS
   )
 
 install(FILES ${HEADERS} DESTINATION include/SimulationIO)
-install(FILES "${PROJECT_BINARY_DIR}/Config.hpp" DESTINATION include/SimulationIO)
+install(FILES "${PROJECT_BINARY_DIR}/Config.hpp"
+  DESTINATION include/SimulationIO)
 install(TARGETS SimulationIO DESTINATION lib)
 install(TARGETS ${EXES} DESTINATION bin)
 
-if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND AND H5PY_FOUND AND NUMPY_FOUND AND SWIG_FOUND)
+if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND AND
+    H5PY_FOUND AND NUMPY_FOUND AND SWIG_FOUND)
   install(TARGETS ${SWIG_MODULE_H5_REAL_NAME} DESTINATION lib)
   install(TARGETS ${SWIG_MODULE_RegionCalculus_REAL_NAME} DESTINATION lib)
   install(TARGETS ${SWIG_MODULE_SimulationIO_REAL_NAME} DESTINATION lib)
@@ -240,4 +298,5 @@ configure_file(
   "${PROJECT_BINARY_DIR}/${PROJECT_NAME}.pc"
 )
 
-install(FILES "${CMAKE_BINARY_DIR}/${PROJECT_NAME}.pc" DESTINATION lib/pkgconfig)
+install(FILES "${CMAKE_BINARY_DIR}/${PROJECT_NAME}.pc"
+  DESTINATION lib/pkgconfig)

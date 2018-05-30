@@ -6,6 +6,8 @@
 #include "Helpers.hpp"
 #include "RegionCalculus.hpp"
 
+#include <asdf.hpp>
+
 #include <algorithm>
 #include <cmath>
 #include <complex>
@@ -154,7 +156,11 @@ class DataBlock {
   typedef function<shared_ptr<DataBlock>(const H5::Group &group,
                                          const string &entry, const box_t &box)>
       reader_t;
+  typedef function<shared_ptr<DataBlock>(
+      const ASDF::reader_state &rs, const YAML::Node &node, const box_t &box)>
+      asdf_reader_t;
   static const vector<reader_t> readers;
+  static const vector<asdf_reader_t> asdf_readers;
 
   box_t m_box;
 
@@ -166,6 +172,9 @@ public:
 
   static shared_ptr<DataBlock> read(const H5::Group &group, const string &entry,
                                     const box_t &box);
+  static shared_ptr<DataBlock> read_asdf(const ASDF::reader_state &rs,
+                                         const YAML::Node &node,
+                                         const box_t &box);
 
   virtual bool invariant() const;
 
@@ -186,6 +195,7 @@ public:
     return datablock.output(os);
   }
   virtual void write(const H5::Group &group, const string &entry) const = 0;
+  virtual void write(ASDF::writer &w, const string &entry) const = 0;
 };
 
 // A multi-linear range
@@ -208,8 +218,12 @@ public:
 
   static shared_ptr<DataRange> read(const H5::Group &group, const string &entry,
                                     const box_t &box);
+  static shared_ptr<DataRange> read_asdf(const ASDF::reader_state &rs,
+                                         const YAML::Node &node,
+                                         const box_t &box);
   virtual ostream &output(ostream &os) const;
   virtual void write(const H5::Group &group, const string &entry) const;
+  virtual void write(ASDF::writer &w, const string &entry) const;
 };
 
 // An HDF5 dataset
@@ -256,8 +270,12 @@ public:
 
   static shared_ptr<DataSet> read(const H5::Group &group, const string &entry,
                                   const box_t &box);
+  static shared_ptr<DataSet> read_asdf(const ASDF::reader_state &rs,
+                                       const YAML::Node &node,
+                                       const box_t &box);
   virtual ostream &output(ostream &os) const;
   virtual void write(const H5::Group &group, const string &entry) const;
+  virtual void write(ASDF::writer &w, const string &entry) const;
 
 private:
   void create_dataset() const;
@@ -351,6 +369,7 @@ public:
   DataBuffer(int dim, const H5::DataType &datatype);
 
   void write(const H5::Group &group, const string &entry) const;
+  virtual void write(ASDF::writer &w, const string &entry) const;
 };
 
 // A pointer into a DataBuffer
@@ -370,8 +389,12 @@ public:
 
   static shared_ptr<DataBufferEntry>
   read(const H5::Group &group, const string &entry, const box_t &box);
+  static shared_ptr<DataBufferEntry> read_asdf(const ASDF::reader_state &rs,
+                                               const YAML::Node &node,
+                                               const box_t &box);
   virtual ostream &output(ostream &os) const;
   virtual void write(const H5::Group &group, const string &entry) const;
+  virtual void write(ASDF::writer &w, const string &entry) const;
 };
 
 // A copy of an existing HDF5 dataset
@@ -394,8 +417,12 @@ public:
 
   static shared_ptr<CopyObj> read(const H5::Group &group, const string &entry,
                                   const box_t &box);
+  static shared_ptr<CopyObj> read_asdf(const ASDF::reader_state &rs,
+                                       const YAML::Node &node,
+                                       const box_t &box);
   virtual ostream &output(ostream &os) const;
   virtual void write(const H5::Group &group, const string &entry) const;
+  virtual void write(ASDF::writer &w, const string &entry) const;
 
   void readData(void *data, const H5::DataType &datatype,
                 const box_t &datashape, const box_t &databox) const;
@@ -413,7 +440,7 @@ public:
   }
 };
 
-// An external linke to an HDF5 dataset
+// An external link to an HDF5 dataset
 class ExtLink : public DataBlock {
   string m_filename;
   string m_objname;
@@ -433,11 +460,68 @@ public:
 
   static shared_ptr<ExtLink> read(const H5::Group &group, const string &entry,
                                   const box_t &box);
+  static shared_ptr<ExtLink> read_asdf(const ASDF::reader_state &rs,
+                                       const YAML::Node &node,
+                                       const box_t &box);
   virtual ostream &output(ostream &os) const;
   virtual void write(const H5::Group &group, const string &entry) const;
+  virtual void write(ASDF::writer &w, const string &entry) const;
 
   // TODO: implement readData
 };
+
+// A pointer to data for ASDF
+class ASDFData : public DataBlock {
+  shared_ptr<ASDF::generic_blob_t> m_blob;
+  shared_ptr<ASDF::datatype_t> m_datatype;
+
+public:
+  virtual bool invariant() const {
+    return DataBlock::invariant() && bool(m_blob) && bool(m_datatype);
+  }
+
+  ASDFData(const box_t &box, shared_ptr<ASDF::generic_blob_t> blob,
+           shared_ptr<ASDF::datatype_t> datatype)
+      : DataBlock(box), m_blob(blob), m_datatype(datatype) {
+    assert(blob->nbytes() == box.size() * datatype->type_size());
+  }
+
+  virtual ~ASDFData() {}
+
+  static shared_ptr<ASDFData> read(const H5::Group &group, const string &entry,
+                                   const box_t &box);
+  static shared_ptr<ASDFData> read_asdf(const ASDF::reader_state &rs,
+                                        const YAML::Node &node,
+                                        const box_t &box);
+  virtual ostream &output(ostream &os) const;
+  virtual void write(const H5::Group &group, const string &entry) const;
+  virtual void write(ASDF::writer &w, const string &entry) const;
+};
+
+// An ASDF ndarray
+class ASDFArray : public DataBlock {
+  shared_ptr<ASDF::ndarray> m_ndarray;
+
+public:
+  virtual bool invariant() const {
+    return DataBlock::invariant() && bool(m_ndarray);
+  }
+
+  ASDFArray(const box_t &box, shared_ptr<ASDF::ndarray> arr)
+      : DataBlock(box), m_ndarray(arr) {}
+
+  virtual ~ASDFArray() {}
+
+  static shared_ptr<ASDFArray> read(const H5::Group &group, const string &entry,
+                                    const box_t &box);
+  static shared_ptr<ASDFArray> read_asdf(const ASDF::reader_state &rs,
+                                         const YAML::Node &node,
+                                         const box_t &box);
+  virtual ostream &output(ostream &os) const;
+  virtual void write(const H5::Group &group, const string &entry) const;
+  virtual void write(ASDF::writer &w, const string &entry) const;
+};
+
 } // namespace SimulationIO
 
 #define DATABLOCK_HPP_DONE

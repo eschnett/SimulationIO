@@ -5,6 +5,8 @@
 #include "Helpers.hpp"
 #include "Project.hpp"
 
+#include <asdf.hpp>
+
 #include <H5Cpp.h>
 
 #include <iostream>
@@ -42,6 +44,8 @@ class Configuration : public Common,
   map<string, weak_ptr<Manifold>> m_manifolds;                 // backlinks
   map<string, weak_ptr<TangentSpace>> m_tangentspaces;         // backlinks
 public:
+  virtual string type() const { return "Configuration"; }
+
   shared_ptr<Project> project() const { return m_project.lock(); }
   const map<string, shared_ptr<ParameterValue>> &parametervalues() const {
     return m_parametervalues;
@@ -89,7 +93,16 @@ private:
     configuration->read(loc, entry, project);
     return configuration;
   }
+  static shared_ptr<Configuration> create(const ASDF::reader_state &rs,
+                                          const YAML::Node &node,
+                                          const shared_ptr<Project> &project) {
+    auto configuration = make_shared<Configuration>(hidden());
+    configuration->read(rs, node, project);
+    return configuration;
+  }
   void read(const H5::H5Location &loc, const string &entry,
+            const shared_ptr<Project> &project);
+  void read(const ASDF::reader_state &rs, const YAML::Node &node,
             const shared_ptr<Project> &project);
 
 public:
@@ -103,6 +116,12 @@ public:
   }
   virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
+  virtual string yaml_alias() const;
+  ASDF::writer &write(ASDF::writer &w) const;
+  friend ASDF::writer &operator<<(ASDF::writer &w,
+                                  const Configuration &configuration) {
+    return configuration.write(w);
+  }
 
   void insertParameterValue(const shared_ptr<ParameterValue> &parametervalue);
 
@@ -144,6 +163,7 @@ private:
                     "tangentspaces");
   }
 };
+
 } // namespace SimulationIO
 
 #define CONFIGURATION_HPP_DONE

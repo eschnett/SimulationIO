@@ -5,6 +5,8 @@
 #include "Helpers.hpp"
 #include "Project.hpp"
 
+#include <asdf.hpp>
+
 #include <H5Cpp.h>
 
 #include <iostream>
@@ -29,6 +31,8 @@ class Parameter : public Common,
   map<string, shared_ptr<ParameterValue>> m_parametervalues; // children
   // type, range?, description?
 public:
+  virtual string type() const { return "Parameter"; }
+
   shared_ptr<Project> project() const { return m_project.lock(); }
   const map<string, shared_ptr<ParameterValue>> &parametervalues() const {
     return m_parametervalues;
@@ -59,7 +63,16 @@ private:
     parameter->read(loc, entry, project);
     return parameter;
   }
+  static shared_ptr<Parameter> create(const ASDF::reader_state &rs,
+                                      const YAML::Node &node,
+                                      const shared_ptr<Project> &project) {
+    auto parameter = make_shared<Parameter>(hidden());
+    parameter->read(rs, node, project);
+    return parameter;
+  }
   void read(const H5::H5Location &loc, const string &entry,
+            const shared_ptr<Project> &project);
+  void read(const ASDF::reader_state &rs, const YAML::Node &node,
             const shared_ptr<Project> &project);
 
 public:
@@ -73,6 +86,11 @@ public:
   }
   virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
+  virtual string yaml_alias() const;
+  ASDF::writer &write(ASDF::writer &w) const;
+  friend ASDF::writer &operator<<(ASDF::writer &w, const Parameter &parameter) {
+    return parameter.write(w);
+  }
 
   shared_ptr<ParameterValue> createParameterValue(const string &name);
   shared_ptr<ParameterValue> getParameterValue(const string &name);
@@ -81,7 +99,10 @@ public:
                      bool copy_children = false);
   shared_ptr<ParameterValue> readParameterValue(const H5::H5Location &loc,
                                                 const string &entry);
+  shared_ptr<ParameterValue> readParameterValue(const ASDF::reader_state &rs,
+                                                const YAML::Node &node);
 };
+
 } // namespace SimulationIO
 
 #define PARAMETER_HPP_DONE

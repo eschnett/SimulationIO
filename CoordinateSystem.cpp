@@ -41,6 +41,24 @@ void CoordinateSystem::read(const H5::H5Location &loc, const string &entry,
   m_manifold->insert(name(), shared_from_this());
 }
 
+void CoordinateSystem::read(const ASDF::reader_state &rs,
+                            const YAML::Node &node,
+                            const shared_ptr<Project> &project) {
+  assert(
+      node.Tag() ==
+      "tag:github.com/eschnett/SimulationIO/asdf-cxx/CoordinateSystem-1.0.0");
+  m_name = node["name"].Scalar();
+  m_project = project;
+  m_configuration =
+      project->configurations().at(node["configuration"]["name"].Scalar());
+  m_manifold = project->manifolds().at(node["manifold"]["name"].Scalar());
+  for (const auto &kv : node["coordinatefields"])
+    readCoordinateField(rs, kv.second);
+  // TODO: check group directions
+  m_configuration->insert(name(), shared_from_this());
+  m_manifold->insert(name(), shared_from_this());
+}
+
 void CoordinateSystem::merge(
     const shared_ptr<CoordinateSystem> &coordinatesystem) {
   assert(project()->name() == coordinatesystem->project()->name());
@@ -97,6 +115,17 @@ void CoordinateSystem::write(const H5::H5Location &loc,
   // TODO: output directions
 }
 
+string CoordinateSystem::yaml_alias() const { return type() + "/" + name(); }
+
+ASDF::writer &CoordinateSystem::write(ASDF::writer &w) const {
+  auto aw = asdf_writer(w);
+  aw.alias("configuration", *configuration());
+  aw.alias("manifold", *manifold());
+  aw.group("coordinatefields", coordinatefields());
+  aw.alias_group("directions", directions());
+  return w;
+}
+
 shared_ptr<CoordinateField>
 CoordinateSystem::createCoordinateField(const string &name, int direction,
                                         const shared_ptr<Field> &field) {
@@ -144,4 +173,17 @@ CoordinateSystem::readCoordinateField(const H5::H5Location &loc,
   assert(coordinatefield->invariant());
   return coordinatefield;
 }
+
+shared_ptr<CoordinateField>
+CoordinateSystem::readCoordinateField(const ASDF::reader_state &rs,
+                                      const YAML::Node &node) {
+  auto coordinatefield = CoordinateField::create(rs, node, shared_from_this());
+  checked_emplace(m_coordinatefields, coordinatefield->name(), coordinatefield,
+                  "CoordinateSystem", "coordinatefields");
+  checked_emplace(m_directions, coordinatefield->direction(), coordinatefield,
+                  "CoordinateSystem", "directions");
+  assert(coordinatefield->invariant());
+  return coordinatefield;
+}
+
 } // namespace SimulationIO

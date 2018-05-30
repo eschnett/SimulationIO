@@ -43,6 +43,20 @@ void TangentSpace::read(const H5::H5Location &loc, const string &entry,
   m_configuration->insert(name(), shared_from_this());
 }
 
+void TangentSpace::read(const ASDF::reader_state &rs, const YAML::Node &node,
+                        const shared_ptr<Project> &project) {
+  assert(node.Tag() ==
+         "tag:github.com/eschnett/SimulationIO/asdf-cxx/TangentSpace-1.0.0");
+  m_name = node["name"].Scalar();
+  m_project = project;
+  m_configuration =
+      project->configurations().at(node["configuration"]["name"].Scalar());
+  m_dimension = node["dimension"].as<int>();
+  for (const auto &kv : node["bases"])
+    readBasis(rs, kv.second);
+  m_configuration->insert(name(), shared_from_this());
+}
+
 void TangentSpace::merge(const shared_ptr<TangentSpace> &tangentspace) {
   assert(project()->name() == tangentspace->project()->name());
   assert(m_configuration->name() == tangentspace->configuration()->name());
@@ -89,6 +103,16 @@ void TangentSpace::write(const H5::H5Location &loc,
   group.createGroup("fields");
 }
 
+string TangentSpace::yaml_alias() const { return type() + "/" + name(); }
+
+ASDF::writer &TangentSpace::write(ASDF::writer &w) const {
+  auto aw = asdf_writer(w);
+  aw.alias("configuration", *configuration());
+  aw.value("dimension", dimension());
+  aw.group("bases", bases());
+  return w;
+}
+
 shared_ptr<Basis>
 TangentSpace::createBasis(const string &name,
                           const shared_ptr<Configuration> &configuration) {
@@ -131,4 +155,13 @@ shared_ptr<Basis> TangentSpace::readBasis(const H5::H5Location &loc,
   assert(basis->invariant());
   return basis;
 }
+
+shared_ptr<Basis> TangentSpace::readBasis(const ASDF::reader_state &rs,
+                                          const YAML::Node &node) {
+  auto basis = Basis::create(rs, node, shared_from_this());
+  checked_emplace(m_bases, basis->name(), basis, "TangentSpace", "bases");
+  assert(basis->invariant());
+  return basis;
+}
+
 } // namespace SimulationIO

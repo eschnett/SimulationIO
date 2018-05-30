@@ -68,6 +68,34 @@ void ParameterValue::read(const H5::H5Location &loc, const string &entry,
   // assert(H5::checkGroupNames(group, "configurations", configurations));
 }
 
+void ParameterValue::read(const ASDF::reader_state &rs, const YAML::Node &node,
+                          const shared_ptr<Parameter> &parameter) {
+  assert(node.Tag() ==
+         "tag:github.com/eschnett/SimulationIO/asdf-cxx/ParameterValue-1.0.0");
+  m_name = node["name"].Scalar();
+  m_parameter = parameter;
+  // TODO: Read and interpret objects (shallowly) instead of naively only
+  // looking at their names
+  const auto &data = node["data"];
+  if (data.IsDefined()) {
+    const auto &type = node["type"].Scalar();
+    if (type == "int") {
+      value_type = type_int;
+      value_int = data.as<long long>();
+    } else if (type == "float") {
+      value_type = type_double;
+      value_double = data.as<double>();
+    } else if (type == "string") {
+      value_type = type_string;
+      value_string = data.as<string>();
+    } else {
+      assert(0);
+    }
+  } else {
+    value_type = type_empty;
+  }
+}
+
 void ParameterValue::merge(const shared_ptr<ParameterValue> &parametervalue) {
   assert(parameter()->name() == parametervalue->parameter()->name());
   // Cannot insert "configurations" since configurations have not been merged
@@ -209,9 +237,38 @@ void ParameterValue::write(const H5::H5Location &loc,
   group.createGroup("configurations");
 }
 
+string ParameterValue::yaml_alias() const {
+  return parameter()->yaml_alias() + "/" + type() + "/" + name();
+}
+
+ASDF::writer &ParameterValue::write(ASDF::writer &w) const {
+  auto aw = asdf_writer(w);
+  switch (value_type) {
+  case type_empty:
+    // do nothing
+    break;
+  case type_int:
+    aw.value("type", "int");
+    aw.value("data", value_int);
+    break;
+  case type_double:
+    aw.value("type", "float");
+    aw.value("data", value_double);
+    break;
+  case type_string:
+    aw.value("type", "string");
+    aw.value("data", value_string);
+    break;
+  default:
+    assert(0);
+  }
+  return w;
+}
+
 void ParameterValue::insert(const shared_ptr<Configuration> &configuration) {
   assert(parameter()->project().get() == configuration->project().get());
   checked_emplace(m_configurations, configuration->name(), configuration,
                   "ParameterValue", "configurations");
 }
+
 } // namespace SimulationIO

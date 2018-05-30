@@ -5,6 +5,8 @@
 #include "Helpers.hpp"
 #include "Project.hpp"
 
+#include <asdf.hpp>
+
 #include <H5Cpp.h>
 
 #include <map>
@@ -35,6 +37,8 @@ class TensorType : public Common,
   NoBackLink<weak_ptr<Field>> m_fields;
 
 public:
+  virtual string type() const { return "TensorType"; }
+
   shared_ptr<Project> project() const { return m_project.lock(); }
   int dimension() const { return m_dimension; }
   int rank() const { return m_rank; }
@@ -74,7 +78,16 @@ private:
     tensortype->read(loc, entry, project);
     return tensortype;
   }
+  static shared_ptr<TensorType> create(const ASDF::reader_state &rs,
+                                       const YAML::Node &node,
+                                       const shared_ptr<Project> &project) {
+    auto tensortype = make_shared<TensorType>(hidden());
+    tensortype->read(rs, node, project);
+    return tensortype;
+  }
   void read(const H5::H5Location &loc, const string &entry,
+            const shared_ptr<Project> &project);
+  void read(const ASDF::reader_state &rs, const YAML::Node &node,
             const shared_ptr<Project> &project);
 
 public:
@@ -88,6 +101,12 @@ public:
   }
   virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
+  virtual string yaml_alias() const;
+  ASDF::writer &write(ASDF::writer &w) const;
+  friend ASDF::writer &operator<<(ASDF::writer &w,
+                                  const TensorType &tensortype) {
+    return tensortype.write(w);
+  }
 
   shared_ptr<TensorComponent>
   createTensorComponent(const string &name, int storage_index,
@@ -100,11 +119,14 @@ public:
                       bool copy_children = false);
   shared_ptr<TensorComponent> readTensorComponent(const H5::H5Location &loc,
                                                   const string &entry);
+  shared_ptr<TensorComponent> readTensorComponent(const ASDF::reader_state &rs,
+                                                  const YAML::Node &node);
 
 private:
   friend class Field;
   void noinsert(const shared_ptr<Field> &field) {}
 };
+
 } // namespace SimulationIO
 
 #define TENSORTYPE_HPP_DONE

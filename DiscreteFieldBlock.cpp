@@ -40,6 +40,24 @@ void DiscreteFieldBlock::read(const H5::H5Location &loc, const string &entry,
   // TODO: check storage_indices
 }
 
+void DiscreteFieldBlock::read(const ASDF::reader_state &rs,
+                              const YAML::Node &node,
+                              const shared_ptr<DiscreteField> &discretefield) {
+  assert(
+      node.Tag() ==
+      "tag:github.com/eschnett/SimulationIO/asdf-cxx/DiscreteFieldBlock-1.0.0");
+  m_name = node["name"].Scalar();
+  m_discretefield = discretefield;
+
+  m_discretizationblock =
+      discretefield->discretization()->discretizationblocks().at(
+          node["discretizationblock"]["name"].Scalar());
+  for (const auto &kv : node["discretefieldblockcomponents"])
+    readDiscreteFieldBlockComponent(rs, kv.second);
+  m_discretizationblock->noinsert(shared_from_this());
+  // TODO: check storage_indices
+}
+
 void DiscreteFieldBlock::merge(
     const shared_ptr<DiscreteFieldBlock> &discretefieldblock) {
   assert(discretefield()->name() ==
@@ -100,6 +118,18 @@ void DiscreteFieldBlock::write(const H5::H5Location &loc,
   H5::createGroup(group, "discretefieldblockcomponents",
                   discretefieldblockcomponents());
   // TODO: write storage_indices
+}
+
+string DiscreteFieldBlock::yaml_alias() const {
+  return discretefield()->yaml_alias() + "/" + type() + "/" + name();
+}
+
+ASDF::writer &DiscreteFieldBlock::write(ASDF::writer &w) const {
+  auto aw = asdf_writer(w);
+  aw.alias("discretizationblock", *discretizationblock());
+  aw.group("discretefieldblockcomponents", discretefieldblockcomponents());
+  aw.alias_group("storage_indices", storage_indices());
+  return w;
 }
 
 shared_ptr<DiscreteFieldBlockComponent>
@@ -181,4 +211,22 @@ DiscreteFieldBlock::readDiscreteFieldBlockComponent(const H5::H5Location &loc,
   assert(discretefieldblockcomponent->invariant());
   return discretefieldblockcomponent;
 }
+
+shared_ptr<DiscreteFieldBlockComponent>
+DiscreteFieldBlock::readDiscreteFieldBlockComponent(
+    const ASDF::reader_state &rs, const YAML::Node &node) {
+  auto discretefieldblockcomponent =
+      DiscreteFieldBlockComponent::create(rs, node, shared_from_this());
+  checked_emplace(m_discretefieldblockcomponents,
+                  discretefieldblockcomponent->name(),
+                  discretefieldblockcomponent, "DiscreteFieldBlock",
+                  "discretefieldblockcomponents");
+  checked_emplace(
+      m_storage_indices,
+      discretefieldblockcomponent->tensorcomponent()->storage_index(),
+      discretefieldblockcomponent, "DiscreteFieldBlock", "storage_indices");
+  assert(discretefieldblockcomponent->invariant());
+  return discretefieldblockcomponent;
+}
+
 } // namespace SimulationIO

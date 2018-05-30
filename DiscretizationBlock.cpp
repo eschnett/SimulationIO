@@ -110,6 +110,21 @@ void DiscretizationBlock::read(
   }
 }
 
+void DiscretizationBlock::read(
+    const ASDF::reader_state &rs, const YAML::Node &node,
+    const shared_ptr<Discretization> &discretization) {
+  assert(node.Tag() == "tag:github.com/eschnett/SimulationIO/asdf-cxx/"
+                       "DiscretizationBlock-1.0.0");
+  m_name = node["name"].Scalar();
+  m_discretization = discretization;
+  const auto &box = node["box"];
+  if (box.IsDefined())
+    m_box = box_t(box);
+  const auto &active = node["active"];
+  if (active.IsDefined())
+    m_active = region_t(active);
+}
+
 void DiscretizationBlock::merge(
     const shared_ptr<DiscretizationBlock> &discretizationblock) {
   assert(discretization()->name() ==
@@ -206,4 +221,18 @@ void DiscretizationBlock::write(const H5::H5Location &loc,
     try_write_active<4>(group, *this, active());
   }
 }
+
+string DiscretizationBlock::yaml_alias() const {
+  return discretization()->yaml_alias() + "/" + type() + "/" + name();
+}
+
+ASDF::writer &DiscretizationBlock::write(ASDF::writer &w) const {
+  auto aw = asdf_writer(w);
+  if (box().valid())
+    aw.value("box", box());
+  if (active().valid())
+    aw.value("active", active());
+  return w;
+}
+
 } // namespace SimulationIO

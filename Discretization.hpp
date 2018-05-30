@@ -5,6 +5,8 @@
 #include "Configuration.hpp"
 #include "Manifold.hpp"
 
+#include <asdf.hpp>
+
 #include <H5Cpp.h>
 
 #include <iostream>
@@ -37,6 +39,8 @@ class Discretization : public Common,
   NoBackLink<weak_ptr<DiscreteField>> m_discretefields;
 
 public:
+  virtual string type() const { return "Discretization"; }
+
   shared_ptr<Manifold> manifold() const { return m_manifold.lock(); }
   shared_ptr<Configuration> configuration() const { return m_configuration; }
   const map<string, shared_ptr<DiscretizationBlock>> &
@@ -86,7 +90,16 @@ private:
     discretization->read(loc, entry, manifold);
     return discretization;
   }
+  static shared_ptr<Discretization>
+  create(const ASDF::reader_state &rs, const YAML::Node &node,
+         const shared_ptr<Manifold> &manifold) {
+    auto discretization = make_shared<Discretization>(hidden());
+    discretization->read(rs, node, manifold);
+    return discretization;
+  }
   void read(const H5::H5Location &loc, const string &entry,
+            const shared_ptr<Manifold> &manifold);
+  void read(const ASDF::reader_state &rs, const YAML::Node &node,
             const shared_ptr<Manifold> &manifold);
 
 public:
@@ -101,6 +114,12 @@ public:
   }
   virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
+  virtual string yaml_alias() const;
+  ASDF::writer &write(ASDF::writer &w) const;
+  friend ASDF::writer &operator<<(ASDF::writer &w,
+                                  const Discretization &discretization) {
+    return discretization.write(w);
+  }
 
   shared_ptr<DiscretizationBlock> createDiscretizationBlock(const string &name);
   shared_ptr<DiscretizationBlock> getDiscretizationBlock(const string &name);
@@ -109,6 +128,8 @@ public:
       bool copy_children = false);
   shared_ptr<DiscretizationBlock>
   readDiscretizationBlock(const H5::H5Location &loc, const string &entry);
+  shared_ptr<DiscretizationBlock>
+  readDiscretizationBlock(const ASDF::reader_state &rs, const YAML::Node &node);
 
 private:
   friend class SubDiscretization;
@@ -125,6 +146,7 @@ private:
   friend class DiscreteField;
   void noinsert(const shared_ptr<DiscreteField> &discretefield) {}
 };
+
 } // namespace SimulationIO
 
 #define DISCRETIZATION_HPP_DONE
