@@ -34,9 +34,9 @@ install:
   - $CXX --version
   - |
     if [ "$TRAVIS_OS_NAME" = linux ]; then
+      # Build HDF5
       export HDF5_DIR="$HOME/hdf5-1.10.1"
       export PATH="$HDF5_DIR/bin:$PATH"
-      # Check cache
       if [ ! -e "$HDF5_DIR/bin/h5ls" ]; then
         (
           mkdir -p external
@@ -50,8 +50,8 @@ install:
           make -j2 install
         )
       fi
+      # Build yaml-cpp
       export YAML_CPP_DIR="$HOME/yaml-cpp-0.6.2"
-      # Check cache
       if [ ! -e "$YAML_CPP_DIR/include/yaml-cpp/yaml.h" ]; then
         (
           mkdir -p external
@@ -65,8 +65,10 @@ install:
           make -j2 install
         )
       fi
+      # Build asdf-cxx
       export ASDF_CXX_DIR="$HOME/asdf-cxx-2.0.2"
       export PATH="$ASDF_CXX_DIR/bin:$PATH"
+      export LD_LIBRARY_PATH="$ASDF_CXX_DIR/lib:$LD_LIBRARY_PATH"
       # Check cache
       if [ ! -e "$ASDF_CXX_DIR/bin/asdf-ls" ]; then
         (
@@ -81,16 +83,19 @@ install:
           make -j2 install
         )
       fi
+      # Handle Python
       export PYTHON_DIR="/usr"
     fi
   - |
     if [ "$TRAVIS_OS_NAME" = osx ]; then
+      # Handle HDF5
       brew update
       brew install hdf5
       brew install lcov
       brew install open-mpi
       brew install swig
       export HDF5_DIR="/usr/local"
+      # Build yaml-cpp
       export YAML_CPP_DIR="$HOME/yaml-cpp-0.6.2"
       # Check cache
       if [ ! -e "$YAML_CPP_DIR/include/yaml-cpp/yaml.h" ]; then
@@ -106,6 +111,7 @@ install:
           make -j2 install
         )
       fi
+      # Build asdf-cxx
       export ASDF_CXX_DIR="$HOME/asdf-cxx-2.0.2"
       export PATH="$ASDF_CXX_DIR/bin:$PATH"
       # Check cache
@@ -122,6 +128,7 @@ install:
           make -j2 install
         )
       fi
+      # Handle Python
       export PYTHON_DIR="/usr/local/Cellar/python/2.7.14/Frameworks/Python.framework/Versions/2.7"
       export PATH="/usr/local/Cellar/python/2.7.14/bin:$PATH"
     fi
@@ -140,6 +147,13 @@ install:
   - which lcov
   - lcov --version
 script:
+  # Build without ASDF
+  - mkdir build-noasdf && pushd build-noasdf
+  - cmake -DCMAKE_FIND_ROOT_PATH="$HDF5_DIR;$PYTHON_DIR" -DCMAKE_CXX_COMPILER="$CXX" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX="$HOME/install" ..
+  - make -j2
+  - make -j2 test CTEST_OUTPUT_ON_FAILURE=1
+  - popd
+  # Build with ASDF
   - mkdir build && pushd build
   - cmake -DASDF_CXX_ROOT="$ASDF_CXX_DIR" -DCMAKE_FIND_ROOT_PATH="$HDF5_DIR;$YAML_CPP_DIR;$ASDF_CXX_DIR;$PYTHON_DIR" -DCMAKE_CXX_COMPILER="$CXX" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX="$HOME/install" ..
   - make -j2
