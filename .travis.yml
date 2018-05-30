@@ -52,6 +52,7 @@ install:
       fi
       # Build yaml-cpp
       export YAML_CPP_DIR="$HOME/yaml-cpp-0.6.2"
+      export LD_LIBRARY_PATH="$YAML_CPP_DIR/lib:$LD_LIBRARY_PATH"
       if [ ! -e "$YAML_CPP_DIR/include/yaml-cpp/yaml.h" ]; then
         (
           mkdir -p external
@@ -68,7 +69,6 @@ install:
       # Build asdf-cxx
       export ASDF_CXX_DIR="$HOME/asdf-cxx-2.0.2"
       export PATH="$ASDF_CXX_DIR/bin:$PATH"
-      export LD_LIBRARY_PATH="$ASDF_CXX_DIR/lib:$LD_LIBRARY_PATH"
       # Check cache
       if [ ! -e "$ASDF_CXX_DIR/bin/asdf-ls" ]; then
         (
