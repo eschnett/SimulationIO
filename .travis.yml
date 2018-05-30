@@ -65,18 +65,18 @@ install:
           make -j2 install
         )
       fi
-      export ASDF_CXX_DIR="$HOME/asdf-cxx-2.0.0"
+      export ASDF_CXX_DIR="$HOME/asdf-cxx-2.0.1"
       export PATH="$ASDF_CXX_DIR/bin:$PATH"
       # Check cache
       if [ ! -e "$ASDF_CXX_DIR/bin/asdf-ls" ]; then
         (
           mkdir -p external
           cd external
-          wget https://github.com/eschnett/asdf-cxx/archive/version/2.0.0.tar.gz
-          tar xzf 2.0.0.tar.bz
-          mkdir asdf-cxx-2.0.0-build
-          cd asdf-cxx-2.0.0-build
-          cmake -DCMAKE_PREFIX_PATH="$YAML_CPP_DIR" -DCMAKE_INSTALL_PREFIX="$ASDF_CXX_DIR" ../asdf-cxx-version-2.0.0
+          wget https://github.com/eschnett/asdf-cxx/archive/version/2.0.1.tar.gz
+          tar xzf 2.0.1.tar.bz
+          mkdir asdf-cxx-2.0.1-build
+          cd asdf-cxx-2.0.1-build
+          cmake -DCMAKE_PREFIX_PATH="$YAML_CPP_DIR" -DCMAKE_INSTALL_PREFIX="$ASDF_CXX_DIR" ../asdf-cxx-version-2.0.1
           make -j2
           make -j2 install
         )
@@ -106,18 +106,18 @@ install:
           make -j2 install
         )
       fi
-      export ASDF_CXX_DIR="$HOME/asdf-cxx-2.0.0"
+      export ASDF_CXX_DIR="$HOME/asdf-cxx-2.0.1"
       export PATH="$ASDF_CXX_DIR/bin:$PATH"
       # Check cache
       if [ ! -e "$ASDF_CXX_DIR/bin/asdf-ls" ]; then
         (
           mkdir -p external
           cd external
-          wget https://github.com/eschnett/asdf-cxx/archive/version/2.0.0.tar.gz
-          tar xzf 2.0.0.tar.bz
-          mkdir asdf-cxx-2.0.0-build
-          cd asdf-cxx-2.0.0-build
-          cmake -DCMAKE_PREFIX_PATH="$YAML_CPP_DIR" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX="$ASDF_CXX_DIR" ../asdf-cxx-version-2.0.0
+          wget https://github.com/eschnett/asdf-cxx/archive/version/2.0.1.tar.gz
+          tar xzf 2.0.1.tar.bz
+          mkdir asdf-cxx-2.0.1-build
+          cd asdf-cxx-2.0.1-build
+          cmake -DCMAKE_PREFIX_PATH="$YAML_CPP_DIR" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX="$ASDF_CXX_DIR" ../asdf-cxx-version-2.0.1
           make -j2
           make -j2 install
         )
@@ -130,6 +130,8 @@ install:
   - mpirun --version
   - which h5ls
   - h5ls --version
+  - which asdf-ls
+  - asdf-ls
   - which python
   - python --version
   - pip install --user h5py
@@ -139,7 +141,7 @@ install:
   - lcov --version
 script:
   - mkdir build && pushd build
-  - cmake -DCMAKE_FIND_ROOT_PATH="$HDF5_DIR;$YAML_CPP_DIR;$ASDF_CXX_DIR;$PYTHON_DIR" -DCMAKE_CXX_COMPILER="$CXX" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX="$HOME/install" ..
+  - cmake -DASDF_CXX_ROOT="$ASDF_CXX_DIR" -DCMAKE_FIND_ROOT_PATH="$HDF5_DIR;$YAML_CPP_DIR;$ASDF_CXX_DIR;$PYTHON_DIR" -DCMAKE_CXX_COMPILER="$CXX" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX="$HOME/install" ..
   - make -j2
   - make -j2 test CTEST_OUTPUT_ON_FAILURE=1
   - make -j2 install
@@ -147,7 +149,7 @@ script:
 after_success:
   - mkdir -p "$HOME/bin" && ln -s "$(which $GCOV)" "$HOME/bin/gcov" && ls -l "$HOME/bin" && export PATH="$HOME/bin:$PATH" && hash -r
   - mkdir build-coveralls && pushd build-coveralls
-  - cmake -DCMAKE_FIND_ROOT_PATH="$HDF5_DIR;$YAML_CPP_DIR;$ASDF_CXX_DIR;$PYTHON_DIR" -DCMAKE_CXX_COMPILER="$CXX" -DCMAKE_BUILD_TYPE=Debug -DCOVERALLS=ON ..
+  - cmake -DASDF_CXX_ROOT="$ASDF_CXX_DIR" -DCMAKE_FIND_ROOT_PATH="$HDF5_DIR;$YAML_CPP_DIR;$ASDF_CXX_DIR;$PYTHON_DIR" -DCMAKE_CXX_COMPILER="$CXX" -DCMAKE_BUILD_TYPE=Debug -DCOVERALLS=ON ..
   - make -j2
   - make -j2 coveralls CTEST_OUTPUT_ON_FAILURE=1
   - popd
