@@ -72,7 +72,7 @@ void SubDiscretization::read(const ASDF::reader_state &rs,
   m_name = node["name"].Scalar();
   m_manifold = manifold;
   m_factor = node["factor"].as<vector<double>>();
-  m_factor = node["offset"].as<vector<double>>();
+  m_offset = node["offset"].as<vector<double>>();
   m_parent_discretization->insertChild(name(), shared_from_this());
   m_child_discretization->insertParent(name(), shared_from_this());
 }
