@@ -237,6 +237,8 @@ public:
   };
 };
 
+string quote_alias(const string &alias);
+
 class asdf_writer_ {
   const Common &m_common;
   ASDF::writer &m_writer;
@@ -253,7 +255,7 @@ public:
 
   template <typename T> void alias(const string &name, const T &value) {
     m_writer << YAML::Key << name << YAML::Value
-             << YAML::Alias(value.yaml_alias());
+             << YAML::Alias(quote_alias(value.yaml_alias()));
   }
 
   template <typename K, typename T>
@@ -271,7 +273,7 @@ public:
     m_writer << YAML::BeginMap;
     for (const auto &kv : values)
       m_writer << YAML::Key << kv.first << YAML::Value
-               << YAML::Alias(kv.second->yaml_alias());
+               << YAML::Alias(quote_alias(kv.second->yaml_alias()));
     m_writer << YAML::EndMap;
   }
 
