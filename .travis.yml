@@ -73,8 +73,6 @@ install:
           mkdir -p external
           cd external
           wget https://github.com/eschnett/asdf-cxx/archive/version/2.0.1.tar.gz
-
-https://github.com/eschnett/asdf-cxx/archive/version/2.0.1.tar.gz
           tar xzf 2.0.1.tar.gz
           mkdir asdf-cxx-2.0.1-build
           cd asdf-cxx-2.0.1-build
