@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
   map<string, function<void(const ASDF::reader_state &rs, const string &name,
                             const YAML::Node &node)>>
       readers{{"tag:github.com/eschnett/SimulationIO/asdf-cxx/Project-1.0.0",
-               read_project}};
+               {read_project}}};
   auto doc = ASDF::asdf(is, readers);
   is.close();
   assert(projects.size() > 0);
