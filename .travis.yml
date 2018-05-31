@@ -107,7 +107,7 @@ install:
           tar xzf yaml-cpp-0.6.2.tar.gz
           mkdir yaml-cpp-0.6.2-build
           cd yaml-cpp-0.6.2-build
-          cmake -DCMAKE_CXX_COMPILER="$CXX" -DBUILD_SHARED_LIBS=true -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX="$YAML_CPP_DIR" ../yaml-cpp-yaml-cpp-0.6.2
+          cmake -DCMAKE_CXX_COMPILER="$CXX" -DBUILD_SHARED_LIBS=true -DCMAKE_MACOSX_RPATH=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX="$YAML_CPP_DIR" ../yaml-cpp-yaml-cpp-0.6.2
           make -j2
           make -j2 install
         )
@@ -124,7 +124,7 @@ install:
           tar xzf 2.1.0.tar.gz
           mkdir asdf-cxx-2.1.0-build
           cd asdf-cxx-2.1.0-build
-          cmake -DCMAKE_PREFIX_PATH="$YAML_CPP_DIR" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX="$ASDF_CXX_DIR" ../asdf-cxx-version-2.1.0
+          cmake -DCMAKE_PREFIX_PATH="$YAML_CPP_DIR" -DCMAKE_MACOSX_RPATH=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX="$ASDF_CXX_DIR" ../asdf-cxx-version-2.1.0
           make -j2
           make -j2 install
         )
@@ -150,14 +150,17 @@ install:
 script:
   # Build without ASDF
   - mkdir build-noasdf && pushd build-noasdf
-  - cmake -DCMAKE_FIND_ROOT_PATH="$HDF5_DIR;$PYTHON_DIR" -DCMAKE_CXX_COMPILER="$CXX" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX="$HOME/install" ..
+  - cmake -DCMAKE_PREFIX_PATH="$HDF5_DIR;$PYTHON_DIR" -DCMAKE_CXX_COMPILER="$CXX" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX="$HOME/install-noasdf" ..
   - make -j2
+  - ./sio-example
   - make -j2 test CTEST_OUTPUT_ON_FAILURE=1
+  - make -j2 install
   - popd
   # Build with ASDF
   - mkdir build && pushd build
-  - cmake -DCMAKE_FIND_ROOT_PATH="$HDF5_DIR;$YAML_CPP_DIR;$ASDF_CXX_DIR;$PYTHON_DIR" -DCMAKE_CXX_COMPILER="$CXX" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX="$HOME/install" ..
+  - cmake -DCMAKE_PREFIX_PATH="$HDF5_DIR;$YAML_CPP_DIR;$ASDF_CXX_DIR;$PYTHON_DIR" -DCMAKE_CXX_COMPILER="$CXX" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX="$HOME/install" ..
   - make -j2
+  - ./sio-example
   - ./sio-example-asdf
   - make -j2 test CTEST_OUTPUT_ON_FAILURE=1
   - make -j2 install
@@ -165,8 +168,9 @@ script:
 after_success:
   - mkdir -p "$HOME/bin" && ln -s "$(which $GCOV)" "$HOME/bin/gcov" && ls -l "$HOME/bin" && export PATH="$HOME/bin:$PATH" && hash -r
   - mkdir build-coveralls && pushd build-coveralls
-  - cmake -DCMAKE_FIND_ROOT_PATH="$HDF5_DIR;$YAML_CPP_DIR;$ASDF_CXX_DIR;$PYTHON_DIR" -DCMAKE_CXX_COMPILER="$CXX" -DCMAKE_BUILD_TYPE=Debug -DCOVERALLS=ON ..
+  - cmake -DCMAKE_PREFIX_PATH="$HDF5_DIR;$YAML_CPP_DIR;$ASDF_CXX_DIR;$PYTHON_DIR" -DCMAKE_CXX_COMPILER="$CXX" -DCMAKE_BUILD_TYPE=Debug -DCOVERALLS=ON ..
   - make -j2
+  - ./sio-example
   - ./sio-example-asdf
   - make -j2 coveralls CTEST_OUTPUT_ON_FAILURE=1
   - popd
