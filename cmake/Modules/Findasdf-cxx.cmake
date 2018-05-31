@@ -38,7 +38,7 @@ if(ASDF_CXX_INCLUDE_DIR)
 endif()
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(asdf-cxx
+find_package_handle_standard_args(ASDF_CXX
                                   REQUIRED_VARS ASDF_CXX_LIBRARY ASDF_CXX_INCLUDE_DIR
                                   VERSION_VAR ASDF_CXX_VERSION_STRING)
 
