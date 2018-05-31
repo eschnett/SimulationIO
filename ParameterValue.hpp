@@ -2,7 +2,12 @@
 #define PARAMETERVALUE_HPP
 
 #include "Common.hpp"
+#include "Config.hpp"
 #include "Parameter.hpp"
+
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+#include <asdf.hpp>
+#endif
 
 #include <H5Cpp.h>
 
@@ -27,6 +32,8 @@ class ParameterValue : public Common,
   weak_ptr<Parameter> m_parameter;                       // parent
   map<string, weak_ptr<Configuration>> m_configurations; // backlinks
 public:
+  virtual string type() const { return "ParameterValue"; }
+
   shared_ptr<Parameter> parameter() const { return m_parameter.lock(); }
   const map<string, weak_ptr<Configuration>> &configurations() const {
     return m_configurations;
@@ -69,6 +76,17 @@ private:
   }
   void read(const H5::H5Location &loc, const string &entry,
             const shared_ptr<Parameter> &parameter);
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+  static shared_ptr<ParameterValue>
+  create(const ASDF::reader_state &rs, const YAML::Node &node,
+         const shared_ptr<Parameter> &parameter) {
+    auto parametervalue = make_shared<ParameterValue>(hidden());
+    parametervalue->read(rs, node, parameter);
+    return parametervalue;
+  }
+  void read(const ASDF::reader_state &rs, const YAML::Node &node,
+            const shared_ptr<Parameter> &parameter);
+#endif
 
 public:
   virtual ~ParameterValue() {}
@@ -94,11 +112,20 @@ public:
   }
   virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+  virtual string yaml_alias() const;
+  ASDF::writer &write(ASDF::writer &w) const;
+  friend ASDF::writer &operator<<(ASDF::writer &w,
+                                  const ParameterValue &parametervalue) {
+    return parametervalue.write(w);
+  }
+#endif
 
 private:
   friend class Configuration;
   void insert(const shared_ptr<Configuration> &configuration);
 };
+
 } // namespace SimulationIO
 
 #define PARAMETERVALUE_HPP_DONE

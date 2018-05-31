@@ -56,6 +56,22 @@ void Configuration::read(const H5::H5Location &loc, const string &entry,
   // assert(H5::checkGroupNames(group, "tangentspaces", manifolds));
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+void Configuration::read(const ASDF::reader_state &rs, const YAML::Node &node,
+                         const shared_ptr<Project> &project) {
+  assert(node.Tag() ==
+         "tag:github.com/eschnett/SimulationIO/asdf-cxx/Configuration-1.0.0");
+  m_name = node["name"].Scalar();
+  m_project = project;
+  for (const auto &kv : node["parametervalues"]) {
+    const auto &parameter =
+        project->parameters().at(kv.second["parameter"]["name"].Scalar());
+    insertParameterValue(
+        parameter->parametervalues().at(kv.second["name"].Scalar()));
+  }
+}
+#endif
+
 void Configuration::merge(const shared_ptr<Configuration> &configuration) {
   assert(project()->name() == configuration->project()->name());
   for (const auto &iter : configuration->parametervalues()) {
@@ -129,6 +145,16 @@ void Configuration::write(const H5::H5Location &loc,
   group.createGroup("tangentspaces");
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+string Configuration::yaml_alias() const { return type() + "/" + name(); }
+
+ASDF::writer &Configuration::write(ASDF::writer &w) const {
+  auto aw = asdf_writer(w);
+  aw.alias_group("parametervalues", parametervalues());
+  return w;
+}
+#endif
+
 void Configuration::insertParameterValue(
     const shared_ptr<ParameterValue> &parametervalue) {
   assert(parametervalue->parameter()->project().get() == project().get());
@@ -148,4 +174,5 @@ void Configuration::insertParameterValue(
                   "Configuration", "parametervalues");
   parametervalue->insert(shared_from_this());
 }
+
 } // namespace SimulationIO

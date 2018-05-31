@@ -14,6 +14,8 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <functional>
+#include <map>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -36,6 +38,14 @@ shared_ptr<Project> readProject(const H5::H5Location &loc) {
   assert(project->invariant());
   return project;
 }
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+shared_ptr<Project> readProject(const ASDF::reader_state &rs,
+                                const YAML::Node &node) {
+  auto project = Project::create(rs, node);
+  assert(project->invariant());
+  return project;
+}
+#endif
 
 bool Project::invariant() const { return Common::invariant(); }
 
@@ -74,6 +84,30 @@ void Project::read(const H5::H5Location &loc) {
                   readCoordinateSystem(group, name);
                 });
 }
+
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+void Project::read(const ASDF::reader_state &rs, const YAML::Node &node) {
+  createTypes(); // TODO: read from file instead to ensure integer constants are
+                 // consistent
+  assert(node.Tag() ==
+         "tag:github.com/eschnett/SimulationIO/asdf-cxx/Project-1.0.0");
+  m_name = node["name"].Scalar();
+  for (const auto &kv : node["parameters"])
+    readParameter(rs, kv.second);
+  for (const auto &kv : node["configurations"])
+    readConfiguration(rs, kv.second);
+  for (const auto &kv : node["tensortypes"])
+    readTensorType(rs, kv.second);
+  for (const auto &kv : node["manifolds"])
+    readManifold(rs, kv.second);
+  for (const auto &kv : node["tangentspaces"])
+    readTangentSpace(rs, kv.second);
+  for (const auto &kv : node["fields"])
+    readField(rs, kv.second);
+  for (const auto &kv : node["coordinatesystems"])
+    readCoordinateSystem(rs, kv.second);
+}
+#endif
 
 void Project::merge(const shared_ptr<Project> &project) {
   // TODO: combine types
@@ -358,6 +392,22 @@ void Project::write(const H5::H5Location &loc,
   H5::createGroup(group, "coordinatesystems", coordinatesystems());
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+string Project::yaml_alias() const { return "/"; }
+
+ASDF::writer &Project::write(ASDF::writer &w) const {
+  auto aw = asdf_writer(w);
+  aw.group("parameters", parameters());
+  aw.group("configurations", configurations());
+  aw.group("tensortypes", tensortypes());
+  aw.group("manifolds", manifolds());
+  aw.group("tangentspaces", tangentspaces());
+  aw.group("fields", fields());
+  aw.group("coordinatesystems", coordinatesystems());
+  return w;
+}
+#endif
+
 shared_ptr<Parameter> Project::createParameter(const string &name) {
   auto parameter = Parameter::create(name, shared_from_this());
   checked_emplace(m_parameters, parameter->name(), parameter, "Project",
@@ -398,6 +448,17 @@ shared_ptr<Parameter> Project::readParameter(const H5::H5Location &loc,
   return parameter;
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+shared_ptr<Parameter> Project::readParameter(const ASDF::reader_state &rs,
+                                             const YAML::Node &node) {
+  auto parameter = Parameter::create(rs, node, shared_from_this());
+  checked_emplace(m_parameters, parameter->name(), parameter, "Project",
+                  "parameters");
+  assert(parameter->invariant());
+  return parameter;
+}
+#endif
+
 shared_ptr<Configuration> Project::createConfiguration(const string &name) {
   auto configuration = Configuration::create(name, shared_from_this());
   checked_emplace(m_configurations, configuration->name(), configuration,
@@ -437,6 +498,18 @@ shared_ptr<Configuration> Project::readConfiguration(const H5::H5Location &loc,
   assert(configuration->invariant());
   return configuration;
 }
+
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+shared_ptr<Configuration>
+Project::readConfiguration(const ASDF::reader_state &rs,
+                           const YAML::Node &node) {
+  auto configuration = Configuration::create(rs, node, shared_from_this());
+  checked_emplace(m_configurations, configuration->name(), configuration,
+                  "Project", "configurations");
+  assert(configuration->invariant());
+  return configuration;
+}
+#endif
 
 shared_ptr<TensorType> Project::createTensorType(const string &name,
                                                  int dimension, int rank) {
@@ -483,6 +556,17 @@ shared_ptr<TensorType> Project::readTensorType(const H5::H5Location &loc,
   assert(tensortype->invariant());
   return tensortype;
 }
+
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+shared_ptr<TensorType> Project::readTensorType(const ASDF::reader_state &rs,
+                                               const YAML::Node &node) {
+  auto tensortype = TensorType::create(rs, node, shared_from_this());
+  checked_emplace(m_tensortypes, tensortype->name(), tensortype, "Project",
+                  "tensortypes");
+  assert(tensortype->invariant());
+  return tensortype;
+}
+#endif
 
 shared_ptr<Manifold>
 Project::createManifold(const string &name,
@@ -535,6 +619,17 @@ shared_ptr<Manifold> Project::readManifold(const H5::H5Location &loc,
   return manifold;
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+shared_ptr<Manifold> Project::readManifold(const ASDF::reader_state &rs,
+                                           const YAML::Node &node) {
+  auto manifold = Manifold::create(rs, node, shared_from_this());
+  checked_emplace(m_manifolds, manifold->name(), manifold, "Project",
+                  "manifolds");
+  assert(manifold->invariant());
+  return manifold;
+}
+#endif
+
 shared_ptr<TangentSpace>
 Project::createTangentSpace(const string &name,
                             const shared_ptr<Configuration> &configuration,
@@ -585,6 +680,17 @@ shared_ptr<TangentSpace> Project::readTangentSpace(const H5::H5Location &loc,
   assert(tangentspace->invariant());
   return tangentspace;
 }
+
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+shared_ptr<TangentSpace> Project::readTangentSpace(const ASDF::reader_state &rs,
+                                                   const YAML::Node &node) {
+  auto tangentspace = TangentSpace::create(rs, node, shared_from_this());
+  checked_emplace(m_tangentspaces, tangentspace->name(), tangentspace,
+                  "Project", "tangentspaces");
+  assert(tangentspace->invariant());
+  return tangentspace;
+}
+#endif
 
 shared_ptr<Field>
 Project::createField(const string &name,
@@ -647,6 +753,16 @@ shared_ptr<Field> Project::readField(const H5::H5Location &loc,
   return field;
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+shared_ptr<Field> Project::readField(const ASDF::reader_state &rs,
+                                     const YAML::Node &node) {
+  auto field = Field::create(rs, node, shared_from_this());
+  checked_emplace(m_fields, field->name(), field, "Project", "fields");
+  assert(field->invariant());
+  return field;
+}
+#endif
+
 shared_ptr<CoordinateSystem>
 Project::createCoordinateSystem(const string &name,
                                 const shared_ptr<Configuration> &configuration,
@@ -699,4 +815,18 @@ Project::readCoordinateSystem(const H5::H5Location &loc, const string &entry) {
   assert(coordinatesystem->invariant());
   return coordinatesystem;
 }
+
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+shared_ptr<CoordinateSystem>
+Project::readCoordinateSystem(const ASDF::reader_state &rs,
+                              const YAML::Node &node) {
+  auto coordinatesystem =
+      CoordinateSystem::create(rs, node, shared_from_this());
+  checked_emplace(m_coordinatesystems, coordinatesystem->name(),
+                  coordinatesystem, "Project", "coordinatesystems");
+  assert(coordinatesystem->invariant());
+  return coordinatesystem;
+}
+#endif
+
 } // namespace SimulationIO

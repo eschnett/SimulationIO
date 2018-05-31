@@ -37,6 +37,22 @@ void Basis::read(const H5::H5Location &loc, const string &entry,
   m_configuration->insert(name(), shared_from_this());
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+void Basis::read(const ASDF::reader_state &rs, const YAML::Node &node,
+                 const shared_ptr<TangentSpace> &tangentspace) {
+  assert(node.Tag() ==
+         "tag:github.com/eschnett/SimulationIO/asdf-cxx/Basis-1.0.0");
+  m_name = node["name"].Scalar();
+  m_tangentspace = tangentspace;
+  m_configuration = tangentspace->project()->configurations().at(
+      node["configuration"]["name"].Scalar());
+  for (const auto &kv : node["basisvectors"])
+    readBasisVector(rs, kv.second);
+  // TODO: check group directions
+  m_configuration->insert(name(), shared_from_this());
+}
+#endif
+
 void Basis::merge(const shared_ptr<Basis> &basis) {
   assert(tangentspace()->name() == basis->tangentspace()->name());
   assert(m_configuration->name() == basis->configuration()->name());
@@ -80,6 +96,20 @@ void Basis::write(const H5::H5Location &loc,
   // TODO: output directions
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+string Basis::yaml_alias() const {
+  return tangentspace()->yaml_alias() + "/" + type() + "/" + name();
+}
+
+ASDF::writer &Basis::write(ASDF::writer &w) const {
+  auto aw = asdf_writer(w);
+  aw.alias("configuration", *configuration());
+  aw.group("basisvectors", basisvectors());
+  aw.alias_group("directions", directions());
+  return w;
+}
+#endif
+
 shared_ptr<BasisVector> Basis::createBasisVector(const string &name,
                                                  int direction) {
   auto basisvector = BasisVector::create(name, shared_from_this(), direction);
@@ -120,4 +150,18 @@ shared_ptr<BasisVector> Basis::readBasisVector(const H5::H5Location &loc,
   assert(basisvector->invariant());
   return basisvector;
 }
+
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+shared_ptr<BasisVector> Basis::readBasisVector(const ASDF::reader_state &rs,
+                                               const YAML::Node &node) {
+  auto basisvector = BasisVector::create(rs, node, shared_from_this());
+  checked_emplace(m_basisvectors, basisvector->name(), basisvector, "Basis",
+                  "basisvectors");
+  checked_emplace(m_directions, basisvector->direction(), basisvector, "Basis",
+                  "directions");
+  assert(basisvector->invariant());
+  return basisvector;
+}
+#endif
+
 } // namespace SimulationIO

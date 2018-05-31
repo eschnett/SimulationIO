@@ -24,4 +24,5 @@ void checkVersion(const char *header_version) {
     std::exit(EXIT_FAILURE);
   }
 }
+
 } // namespace SimulationIO

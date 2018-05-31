@@ -2,8 +2,13 @@
 #define BASIS_HPP
 
 #include "Common.hpp"
+#include "Config.hpp"
 #include "Configuration.hpp"
 #include "TangentSpace.hpp"
+
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+#include <asdf.hpp>
+#endif
 
 #include <H5Cpp.h>
 
@@ -30,9 +35,11 @@ class Basis : public Common, public std::enable_shared_from_this<Basis> {
   shared_ptr<Configuration> m_configuration;           // with backlink
   map<string, shared_ptr<BasisVector>> m_basisvectors; // children
   map<int, shared_ptr<BasisVector>> m_directions;
-  NoBackLink<weak_ptr<DiscreteField>> m_discretefields;
+  NoBackLink<weak_ptr<DiscreteField>> m_discretefield;
   // map<string, CoordinateBasis *> m_coordinatebases;
 public:
+  virtual string type() const { return "Basis"; }
+
   shared_ptr<TangentSpace> tangentspace() const {
     return m_tangentspace.lock();
   }
@@ -43,8 +50,8 @@ public:
   const map<int, shared_ptr<BasisVector>> &directions() const {
     return m_directions;
   }
-  NoBackLink<weak_ptr<DiscreteField>> discretefields() const {
-    return m_discretefields;
+  NoBackLink<weak_ptr<DiscreteField>> discretefield() const {
+    return m_discretefield;
   }
 
   virtual bool invariant() const;
@@ -81,6 +88,17 @@ private:
   }
   void read(const H5::H5Location &loc, const string &entry,
             const shared_ptr<TangentSpace> &tangentspace);
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+  static shared_ptr<Basis>
+  create(const ASDF::reader_state &rs, const YAML::Node &node,
+         const shared_ptr<TangentSpace> &tangentspace) {
+    auto basis = make_shared<Basis>(hidden());
+    basis->read(rs, node, tangentspace);
+    return basis;
+  }
+  void read(const ASDF::reader_state &rs, const YAML::Node &node,
+            const shared_ptr<TangentSpace> &tangentspace);
+#endif
 
 public:
   virtual ~Basis() {}
@@ -93,6 +111,13 @@ public:
   }
   virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+  virtual string yaml_alias() const;
+  ASDF::writer &write(ASDF::writer &w) const;
+  friend ASDF::writer &operator<<(ASDF::writer &w, const Basis &basis) {
+    return basis.write(w);
+  }
+#endif
 
   shared_ptr<BasisVector> createBasisVector(const string &name, int direction);
   shared_ptr<BasisVector> getBasisVector(const string &name, int direction);
@@ -101,11 +126,16 @@ public:
                   bool copy_children = false);
   shared_ptr<BasisVector> readBasisVector(const H5::H5Location &loc,
                                           const string &entry);
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+  shared_ptr<BasisVector> readBasisVector(const ASDF::reader_state &rs,
+                                          const YAML::Node &node);
+#endif
 
 private:
   friend class DiscreteField;
   void noinsert(const shared_ptr<DiscreteField> &discretefield) {}
 };
+
 } // namespace SimulationIO
 
 #define BASIS_HPP_DONE

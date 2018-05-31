@@ -16,7 +16,7 @@ bool DiscreteField::invariant() const {
          bool(discretization()) &&
          discretization()->discretefields().nobacklink() &&
          field()->manifold().get() == discretization()->manifold().get() &&
-         bool(basis()) && basis()->discretefields().nobacklink() &&
+         bool(basis()) && basis()->discretefield().nobacklink() &&
          field()->tangentspace().get() == basis()->tangentspace().get();
 }
 
@@ -48,6 +48,26 @@ void DiscreteField::read(const H5::H5Location &loc, const string &entry,
   m_discretization->noinsert(shared_from_this());
   m_basis->noinsert(shared_from_this());
 }
+
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+void DiscreteField::read(const ASDF::reader_state &rs, const YAML::Node &node,
+                         const shared_ptr<Field> &field) {
+  assert(node.Tag() ==
+         "tag:github.com/eschnett/SimulationIO/asdf-cxx/DiscreteField-1.0.0");
+  m_name = node["name"].Scalar();
+  m_field = field;
+  m_configuration = field->project()->configurations().at(
+      node["configuration"]["name"].Scalar());
+  m_discretization = field->manifold()->discretizations().at(
+      node["discretization"]["name"].Scalar());
+  m_basis = field->tangentspace()->bases().at(node["basis"]["name"].Scalar());
+  for (const auto &kv : node["discretefieldblocks"])
+    readDiscreteFieldBlock(rs, kv.second);
+  m_configuration->insert(name(), shared_from_this());
+  m_discretization->noinsert(shared_from_this());
+  m_basis->noinsert(shared_from_this());
+}
+#endif
 
 void DiscreteField::merge(const shared_ptr<DiscreteField> &discretefield) {
   assert(field()->name() == discretefield->field()->name());
@@ -107,6 +127,21 @@ void DiscreteField::write(const H5::H5Location &loc,
   createGroup(group, "discretefieldblocks", discretefieldblocks());
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+string DiscreteField::yaml_alias() const {
+  return field()->yaml_alias() + "/" + type() + "/" + name();
+}
+
+ASDF::writer &DiscreteField::write(ASDF::writer &w) const {
+  auto aw = asdf_writer(w);
+  aw.alias("configuration", *configuration());
+  aw.alias("discretization", *discretization());
+  aw.alias("basis", *basis());
+  aw.group("discretefieldblocks", discretefieldblocks());
+  return w;
+}
+#endif
+
 shared_ptr<DiscreteFieldBlock> DiscreteField::createDiscreteFieldBlock(
     const string &name,
     const shared_ptr<DiscretizationBlock> &discretizationblock) {
@@ -162,4 +197,18 @@ DiscreteField::readDiscreteFieldBlock(const H5::H5Location &loc,
   assert(discretefieldblock->invariant());
   return discretefieldblock;
 }
+
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+shared_ptr<DiscreteFieldBlock>
+DiscreteField::readDiscreteFieldBlock(const ASDF::reader_state &rs,
+                                      const YAML::Node &node) {
+  auto discretefieldblock =
+      DiscreteFieldBlock::create(rs, node, shared_from_this());
+  checked_emplace(m_discretefieldblocks, discretefieldblock->name(),
+                  discretefieldblock, "DiscreteField", "discretefieldblocks");
+  assert(discretefieldblock->invariant());
+  return discretefieldblock;
+}
+#endif
+
 } // namespace SimulationIO

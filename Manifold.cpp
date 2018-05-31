@@ -30,7 +30,7 @@ bool Manifold::invariant() const {
 
 void Manifold::read(const H5::H5Location &loc, const string &entry,
                     const shared_ptr<Project> &project) {
-  this->m_project = project;
+  m_project = project;
   auto group = loc.openGroup(entry);
   assert(H5::readAttribute<string>(group, "type", project->enumtype) ==
          "Manifold");
@@ -56,6 +56,24 @@ void Manifold::read(const H5::H5Location &loc, const string &entry,
   // assert(H5::checkGroupNames(group, "coordinatesystems", fields));
   m_configuration->insert(name(), shared_from_this());
 }
+
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+void Manifold::read(const ASDF::reader_state &rs, const YAML::Node &node,
+                    const shared_ptr<Project> &project) {
+  assert(node.Tag() ==
+         "tag:github.com/eschnett/SimulationIO/asdf-cxx/Manifold-1.0.0");
+  m_name = node["name"].Scalar();
+  m_project = project;
+  m_configuration =
+      project->configurations().at(node["configuration"]["name"].Scalar());
+  m_dimension = node["dimension"].as<int>();
+  for (const auto &kv : node["discretizations"])
+    readDiscretization(rs, kv.second);
+  for (const auto &kv : node["subdiscretizations"])
+    readSubDiscretization(rs, kv.second);
+  m_configuration->insert(name(), shared_from_this());
+}
+#endif
 
 void Manifold::merge(const shared_ptr<Manifold> &manifold) {
   assert(project()->name() == manifold->project()->name());
@@ -123,6 +141,19 @@ void Manifold::write(const H5::H5Location &loc,
   group.createGroup("coordinatesystems");
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+string Manifold::yaml_alias() const { return type() + "/" + name(); }
+
+ASDF::writer &Manifold::write(ASDF::writer &w) const {
+  auto aw = asdf_writer(w);
+  aw.alias("configuration", *configuration());
+  aw.value("dimension", dimension());
+  aw.group("discretizations", discretizations());
+  aw.group("subdiscretizations", subdiscretizations());
+  return w;
+}
+#endif
+
 shared_ptr<Discretization>
 Manifold::createDiscretization(const string &name,
                                const shared_ptr<Configuration> &configuration) {
@@ -173,6 +204,18 @@ Manifold::readDiscretization(const H5::H5Location &loc, const string &entry) {
   assert(discretization->invariant());
   return discretization;
 }
+
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+shared_ptr<Discretization>
+Manifold::readDiscretization(const ASDF::reader_state &rs,
+                             const YAML::Node &node) {
+  auto discretization = Discretization::create(rs, node, shared_from_this());
+  checked_emplace(m_discretizations, discretization->name(), discretization,
+                  "Manifold", "discretizations");
+  assert(discretization->invariant());
+  return discretization;
+}
+#endif
 
 shared_ptr<SubDiscretization> Manifold::createSubDiscretization(
     const string &name, const shared_ptr<Discretization> &parent_discretization,
@@ -229,4 +272,18 @@ Manifold::readSubDiscretization(const H5::H5Location &loc,
   assert(subdiscretization->invariant());
   return subdiscretization;
 }
+
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+shared_ptr<SubDiscretization>
+Manifold::readSubDiscretization(const ASDF::reader_state &rs,
+                                const YAML::Node &node) {
+  auto subdiscretization =
+      SubDiscretization::create(rs, node, shared_from_this());
+  checked_emplace(m_subdiscretizations, subdiscretization->name(),
+                  subdiscretization, "Manifold", "subdiscretizations");
+  assert(subdiscretization->invariant());
+  return subdiscretization;
+}
+#endif
+
 } // namespace SimulationIO

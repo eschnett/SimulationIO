@@ -2,11 +2,17 @@
 #define DISCRETEFIELDBLOCKCOMPONENT_HPP
 
 #include "Common.hpp"
+#include "Config.hpp"
 #include "DataBlock.hpp"
 #include "DiscreteFieldBlock.hpp"
+#include "H5Helpers.hpp"
 #include "TensorComponent.hpp"
 
-#include "H5Helpers.hpp"
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+#include <asdf.hpp>
+#endif
+
+#include <H5Cpp.h>
 
 #include <iostream>
 #include <map>
@@ -35,6 +41,8 @@ class DiscreteFieldBlockComponent
   static string dataname() { return "data"; }
 
 public:
+  virtual string type() const { return "DiscreteFieldBlockComponent"; }
+
   shared_ptr<DiscreteFieldBlock> discretefieldblock() const {
     return m_discretefieldblock.lock();
   }
@@ -94,6 +102,18 @@ private:
   }
   void read(const H5::H5Location &loc, const string &entry,
             const shared_ptr<DiscreteFieldBlock> &discretefieldblock);
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+  static shared_ptr<DiscreteFieldBlockComponent>
+  create(const ASDF::reader_state &rs, const YAML::Node &node,
+         const shared_ptr<DiscreteFieldBlock> &discretefieldblock) {
+    auto discretefieldblockcomponent =
+        make_shared<DiscreteFieldBlockComponent>(hidden());
+    discretefieldblockcomponent->read(rs, node, discretefieldblock);
+    return discretefieldblockcomponent;
+  }
+  void read(const ASDF::reader_state &rs, const YAML::Node &node,
+            const shared_ptr<DiscreteFieldBlock> &discretefieldblock);
+#endif
 
 public:
   virtual ~DiscreteFieldBlockComponent() {}
@@ -109,6 +129,15 @@ public:
   }
   virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+  virtual string yaml_alias() const;
+  ASDF::writer &write(ASDF::writer &w) const;
+  friend ASDF::writer &
+  operator<<(ASDF::writer &w,
+             const DiscreteFieldBlockComponent &discretefieldblockcomponent) {
+    return discretefieldblockcomponent.write(w);
+  }
+#endif
 
   void unsetDataBlock();
   shared_ptr<DataRange> createDataRange(double origin,
@@ -124,10 +153,27 @@ public:
   shared_ptr<CopyObj> createCopyObj(const H5::H5File &file, const string &name);
   shared_ptr<ExtLink> createExtLink(const string &filename,
                                     const string &objname);
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+  shared_ptr<ASDFData>
+  createASDFData(const shared_ptr<ASDF::generic_blob_t> &blob,
+                 const shared_ptr<ASDF::datatype_t> &datatype);
+  template <typename T>
+  shared_ptr<ASDFData>
+  createASDFData(const shared_ptr<ASDF::generic_blob_t> &blob) {
+    return createASDFData(blob, make_shared<ASDF::datatype_t>(
+                                    ASDF::get_scalar_type_id<T>::value));
+  }
+  template <typename T>
+  shared_ptr<ASDFData> createASDFData(const shared_ptr<ASDF::blob_t<T>> &blob) {
+    return createASDFData(blob, make_shared<ASDF::datatype_t>(
+                                    ASDF::get_scalar_type_id<T>::value));
+  }
+#endif
 
   string getPath() const;
   string getName() const;
 };
+
 } // namespace SimulationIO
 
 #define DISCRETEFIELDBLOCKCOMPONENT_HPP_DONE

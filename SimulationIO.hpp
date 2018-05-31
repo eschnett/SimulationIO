@@ -69,6 +69,7 @@ class CoordinateBasisElement {
     return coordinatefield->direction() == basisvector->direction();
   }
 };
+
 } // namespace SimulationIO
 
 #define SIMULATIONIO_HPP_DONE

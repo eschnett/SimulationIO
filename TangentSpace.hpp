@@ -2,9 +2,14 @@
 #define TANGENTSPACE_HPP
 
 #include "Common.hpp"
+#include "Config.hpp"
 #include "Configuration.hpp"
 #include "Helpers.hpp"
 #include "Project.hpp"
+
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+#include <asdf.hpp>
+#endif
 
 #include <H5Cpp.h>
 
@@ -33,6 +38,8 @@ class TangentSpace : public Common,
   map<string, shared_ptr<Basis>> m_bases; // children
   map<string, weak_ptr<Field>> m_fields;  // backlinks
 public:
+  virtual string type() const { return "TangentSpace"; }
+
   shared_ptr<Project> project() const { return m_project.lock(); }
   shared_ptr<Configuration> configuration() const { return m_configuration; }
   int dimension() const { return m_dimension; }
@@ -72,6 +79,17 @@ private:
   }
   void read(const H5::H5Location &loc, const string &entry,
             const shared_ptr<Project> &project);
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+  static shared_ptr<TangentSpace> create(const ASDF::reader_state &rs,
+                                         const YAML::Node &node,
+                                         const shared_ptr<Project> &project) {
+    auto tangentspace = make_shared<TangentSpace>(hidden());
+    tangentspace->read(rs, node, project);
+    return tangentspace;
+  }
+  void read(const ASDF::reader_state &rs, const YAML::Node &node,
+            const shared_ptr<Project> &project);
+#endif
 
 public:
   virtual ~TangentSpace() {}
@@ -84,6 +102,14 @@ public:
   }
   virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+  virtual string yaml_alias() const;
+  ASDF::writer &write(ASDF::writer &w) const;
+  friend ASDF::writer &operator<<(ASDF::writer &w,
+                                  const TangentSpace &tangentspace) {
+    return tangentspace.write(w);
+  }
+#endif
 
   shared_ptr<Basis> createBasis(const string &name,
                                 const shared_ptr<Configuration> &configuration);
@@ -92,6 +118,10 @@ public:
   shared_ptr<Basis> copyBasis(const shared_ptr<Basis> &basis,
                               bool copy_children = false);
   shared_ptr<Basis> readBasis(const H5::H5Location &loc, const string &entry);
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+  shared_ptr<Basis> readBasis(const ASDF::reader_state &rs,
+                              const YAML::Node &node);
+#endif
 
 private:
   friend class Field;
@@ -99,6 +129,7 @@ private:
     checked_emplace(m_fields, name, field, "TangentSpace", "fields");
   }
 };
+
 } // namespace SimulationIO
 
 #define TANGENTSPACE_HPP_DONE

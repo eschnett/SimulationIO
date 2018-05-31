@@ -39,6 +39,21 @@ void CoordinateField::read(
   m_field->noinsert(shared_from_this());
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+void CoordinateField::read(
+    const ASDF::reader_state &rs, const YAML::Node &node,
+    const shared_ptr<CoordinateSystem> &coordinatesystem) {
+  assert(node.Tag() ==
+         "tag:github.com/eschnett/SimulationIO/asdf-cxx/CoordinateField-1.0.0");
+  m_name = node["name"].Scalar();
+  m_coordinatesystem = coordinatesystem;
+  m_direction = node["direction"].as<int>();
+  m_field = coordinatesystem->manifold()->project()->fields().at(
+      node["field"]["name"].Scalar());
+  m_field->noinsert(shared_from_this());
+}
+#endif
+
 void CoordinateField::merge(
     const shared_ptr<CoordinateField> &coordinatefield) {
   assert(coordinatesystem()->name() ==
@@ -71,4 +86,18 @@ void CoordinateField::write(const H5::H5Location &loc,
   //                    "project/fields/" + field->name);
   H5::createSoftLink(group, "field", "../project/fields/" + field()->name());
 }
+
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+string CoordinateField::yaml_alias() const {
+  return coordinatesystem()->yaml_alias() + "/" + type() + "/" + name();
+}
+
+ASDF::writer &CoordinateField::write(ASDF::writer &w) const {
+  auto aw = asdf_writer(w);
+  aw.value("direction", direction());
+  aw.alias("field", *field());
+  return w;
+}
+#endif
+
 } // namespace SimulationIO

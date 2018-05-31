@@ -48,6 +48,18 @@ void TensorComponent::read(const H5::H5Location &loc, const string &entry,
   H5::readAttribute(group, "indexvalues", m_indexvalues);
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+void TensorComponent::read(const ASDF::reader_state &rs, const YAML::Node &node,
+                           const shared_ptr<TensorType> &tensortype) {
+  assert(node.Tag() ==
+         "tag:github.com/eschnett/SimulationIO/asdf-cxx/TensorComponent-1.0.0");
+  m_name = node["name"].Scalar();
+  m_tensortype = tensortype;
+  m_storage_index = node["storage_index"].as<int>();
+  m_indexvalues = node["indexvalues"].as<vector<int>>();
+}
+#endif
+
 void TensorComponent::merge(
     const shared_ptr<TensorComponent> &tensorcomponent) {
   assert(tensortype()->name() == tensorcomponent->tensortype()->name());
@@ -76,4 +88,18 @@ void TensorComponent::write(const H5::H5Location &loc,
   H5::createAttribute(group, "storage_index", storage_index());
   H5::createAttribute(group, "indexvalues", indexvalues());
 }
+
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+string TensorComponent::yaml_alias() const {
+  return tensortype()->yaml_alias() + "/" + type() + "/" + name();
+}
+
+ASDF::writer &TensorComponent::write(ASDF::writer &w) const {
+  auto aw = asdf_writer(w);
+  aw.value("storage_index", storage_index());
+  aw.short_sequence("indexvalues", indexvalues());
+  return w;
+}
+#endif
+
 } // namespace SimulationIO

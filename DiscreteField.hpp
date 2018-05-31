@@ -3,9 +3,14 @@
 
 #include "Basis.hpp"
 #include "Common.hpp"
+#include "Config.hpp"
 #include "Configuration.hpp"
 #include "Discretization.hpp"
 #include "Field.hpp"
+
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+#include <asdf.hpp>
+#endif
 
 #include <H5Cpp.h>
 
@@ -33,6 +38,8 @@ class DiscreteField : public Common,
   shared_ptr<Basis> m_basis;                   // with backlink
   map<string, shared_ptr<DiscreteFieldBlock>> m_discretefieldblocks; // children
 public:
+  virtual string type() const { return "DiscreteField"; }
+
   shared_ptr<Field> field() const { return m_field.lock(); }
   shared_ptr<Configuration> configuration() const { return m_configuration; }
   shared_ptr<Discretization> discretization() const { return m_discretization; }
@@ -79,6 +86,17 @@ private:
   }
   void read(const H5::H5Location &loc, const string &entry,
             const shared_ptr<Field> &field);
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+  static shared_ptr<DiscreteField> create(const ASDF::reader_state &rs,
+                                          const YAML::Node &node,
+                                          const shared_ptr<Field> &field) {
+    auto discretefield = make_shared<DiscreteField>(hidden());
+    discretefield->read(rs, node, field);
+    return discretefield;
+  }
+  void read(const ASDF::reader_state &rs, const YAML::Node &node,
+            const shared_ptr<Field> &field);
+#endif
 
 public:
   virtual ~DiscreteField() {}
@@ -91,6 +109,14 @@ public:
   }
   virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+  virtual string yaml_alias() const;
+  ASDF::writer &write(ASDF::writer &w) const;
+  friend ASDF::writer &operator<<(ASDF::writer &w,
+                                  const DiscreteField &discretefield) {
+    return discretefield.write(w);
+  }
+#endif
 
   shared_ptr<DiscreteFieldBlock> createDiscreteFieldBlock(
       const string &name,
@@ -103,7 +129,12 @@ public:
       bool copy_children = false);
   shared_ptr<DiscreteFieldBlock>
   readDiscreteFieldBlock(const H5::H5Location &loc, const string &entry);
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+  shared_ptr<DiscreteFieldBlock>
+  readDiscreteFieldBlock(const ASDF::reader_state &rs, const YAML::Node &node);
+#endif
 };
+
 } // namespace SimulationIO
 
 #define DISCRETEFIELD_HPP_DONE

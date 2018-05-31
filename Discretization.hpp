@@ -2,8 +2,13 @@
 #define DISCRETIZATION_HPP
 
 #include "Common.hpp"
+#include "Config.hpp"
 #include "Configuration.hpp"
 #include "Manifold.hpp"
+
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+#include <asdf.hpp>
+#endif
 
 #include <H5Cpp.h>
 
@@ -37,6 +42,8 @@ class Discretization : public Common,
   NoBackLink<weak_ptr<DiscreteField>> m_discretefields;
 
 public:
+  virtual string type() const { return "Discretization"; }
+
   shared_ptr<Manifold> manifold() const { return m_manifold.lock(); }
   shared_ptr<Configuration> configuration() const { return m_configuration; }
   const map<string, shared_ptr<DiscretizationBlock>> &
@@ -88,6 +95,17 @@ private:
   }
   void read(const H5::H5Location &loc, const string &entry,
             const shared_ptr<Manifold> &manifold);
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+  static shared_ptr<Discretization>
+  create(const ASDF::reader_state &rs, const YAML::Node &node,
+         const shared_ptr<Manifold> &manifold) {
+    auto discretization = make_shared<Discretization>(hidden());
+    discretization->read(rs, node, manifold);
+    return discretization;
+  }
+  void read(const ASDF::reader_state &rs, const YAML::Node &node,
+            const shared_ptr<Manifold> &manifold);
+#endif
 
 public:
   virtual ~Discretization() {}
@@ -101,6 +119,14 @@ public:
   }
   virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+  virtual string yaml_alias() const;
+  ASDF::writer &write(ASDF::writer &w) const;
+  friend ASDF::writer &operator<<(ASDF::writer &w,
+                                  const Discretization &discretization) {
+    return discretization.write(w);
+  }
+#endif
 
   shared_ptr<DiscretizationBlock> createDiscretizationBlock(const string &name);
   shared_ptr<DiscretizationBlock> getDiscretizationBlock(const string &name);
@@ -109,6 +135,10 @@ public:
       bool copy_children = false);
   shared_ptr<DiscretizationBlock>
   readDiscretizationBlock(const H5::H5Location &loc, const string &entry);
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+  shared_ptr<DiscretizationBlock>
+  readDiscretizationBlock(const ASDF::reader_state &rs, const YAML::Node &node);
+#endif
 
 private:
   friend class SubDiscretization;
@@ -125,6 +155,7 @@ private:
   friend class DiscreteField;
   void noinsert(const shared_ptr<DiscreteField> &discretefield) {}
 };
+
 } // namespace SimulationIO
 
 #define DISCRETIZATION_HPP_DONE

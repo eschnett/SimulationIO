@@ -23,7 +23,14 @@ void checkVersion(const char *header_version);
 
 #define SIMULATIONIO_CHECK_VERSION                                             \
   (::SimulationIO::checkVersion(SIMULATIONIO_VERSION))
+
 }
+
+#if @HAVE_ASDF_CXX@
+#define SIMULATIONIO_HAVE_ASDF_CXX 1
+#else
+#undef SIMULATIONIO_HAVE_ASDF_CXX
+#endif
 
 #define CONFIG_HPP_DONE
 #endif // #ifndef CONFIG_HPP

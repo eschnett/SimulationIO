@@ -58,3 +58,7 @@ sio-example
 sio-list
 sio-merge
 compile_commands.json
+
+cactus
+static_tov
+radhydro2-ustate.xyz.h5

@@ -36,6 +36,21 @@ void Discretization::read(const H5::H5Location &loc, const string &entry,
   m_configuration->insert(name(), shared_from_this());
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+void Discretization::read(const ASDF::reader_state &rs, const YAML::Node &node,
+                          const shared_ptr<Manifold> &manifold) {
+  assert(node.Tag() ==
+         "tag:github.com/eschnett/SimulationIO/asdf-cxx/Discretization-1.0.0");
+  m_name = node["name"].Scalar();
+  m_manifold = manifold;
+  m_configuration = manifold->project()->configurations().at(
+      node["configuration"]["name"].Scalar());
+  for (const auto &kv : node["discretizationblocks"])
+    readDiscretizationBlock(rs, kv.second);
+  m_configuration->insert(name(), shared_from_this());
+}
+#endif
+
 void Discretization::merge(const shared_ptr<Discretization> &discretization) {
   assert(manifold()->name() == discretization->manifold()->name());
   assert(m_configuration->name() == discretization->configuration()->name());
@@ -80,6 +95,19 @@ void Discretization::write(const H5::H5Location &loc,
   group.createGroup("child_discretizations");
   group.createGroup("parent_discretizations");
 }
+
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+string Discretization::yaml_alias() const {
+  return manifold()->yaml_alias() + "/" + type() + "/" + name();
+}
+
+ASDF::writer &Discretization::write(ASDF::writer &w) const {
+  auto aw = asdf_writer(w);
+  aw.alias("configuration", *configuration());
+  aw.group("discretizationblocks", discretizationblocks());
+  return w;
+}
+#endif
 
 shared_ptr<DiscretizationBlock>
 Discretization::createDiscretizationBlock(const string &name) {
@@ -131,4 +159,19 @@ Discretization::readDiscretizationBlock(const H5::H5Location &loc,
   assert(discretizationblock->invariant());
   return discretizationblock;
 }
+
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+shared_ptr<DiscretizationBlock>
+Discretization::readDiscretizationBlock(const ASDF::reader_state &rs,
+                                        const YAML::Node &node) {
+  auto discretizationblock =
+      DiscretizationBlock::create(rs, node, shared_from_this());
+  checked_emplace(m_discretizationblocks, discretizationblock->name(),
+                  discretizationblock, "Discretization",
+                  "discretizationblocks");
+  assert(discretizationblock->invariant());
+  return discretizationblock;
+}
+#endif
+
 } // namespace SimulationIO
