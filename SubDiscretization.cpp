@@ -60,6 +60,12 @@ void SubDiscretization::read(const H5::H5Location &loc, const string &entry,
   assert(H5::readGroupAttribute<string>(
              group, "child_discretization/parent_discretizations/" + name(),
              "name") == name());
+  H5::readAttribute(group, "factor", m_factor);
+  std::reverse(m_factor.begin(), m_factor.end());
+  H5::readAttribute(group, "offset", m_offset);
+  std::reverse(m_offset.begin(), m_offset.end());
+  m_parent_discretization->insertChild(name(), shared_from_this());
+  m_child_discretization->insertParent(name(), shared_from_this());
 }
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
