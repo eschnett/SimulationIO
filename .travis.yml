@@ -26,9 +26,13 @@ addons:
       - openmpi-bin
       - python-numpy
       - swig
+
 cache:
   directories:
     - $HOME/hdf5-1.10.1
+    - $HOME/yaml-cpp-0.6.2
+    - $HOME/asdf-cxx-2.1.0
+
 install:
   - which $CXX
   - $CXX --version
