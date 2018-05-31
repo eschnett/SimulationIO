@@ -16,7 +16,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/Modules"
 # External dependencies
 
 find_package(asdf-cxx 2.1.0)
-if(ASDF_FOUND)
+if(ASDF_CXX_FOUND)
   if(ASDF_CXX_VERSION_STRING VERSION_LESS 2.1.0)
     message(HDF5_VERSION)
     message(SEND_ERROR "asdf-cxx version 2.1.0 or later is required")
@@ -174,7 +174,7 @@ set(EXES
   sio-merge
   sio-filter
   )
-if(HAVE_ASDF_CXX EQUAL 1)
+if(ASDF_CXX_FOUND)
   list(APPEND EXES 
     sio-copy-asdf
     sio-example-asdf
@@ -205,7 +205,7 @@ target_link_libraries(sio-merge SimulationIO)
 add_executable(sio-filter filter.cpp)
 target_link_libraries(sio-filter SimulationIO)
 
-if(HAVE_ASDF_CXX EQUAL 1)
+if(ASDF_CXX_FOUND)
 add_executable(sio-copy-asdf copy-asdf.cpp)
 target_link_libraries(sio-copy-asdf SimulationIO)
 
@@ -235,7 +235,7 @@ add_test(NAME example-attach COMMAND ./sio-example-attach)
 add_test(NAME list-attach COMMAND ./sio-list example-attach.s5)
 add_test(NAME copy COMMAND ./sio-copy example.s5 example2.s5)
 add_test(NAME list2 COMMAND ./sio-list example2.s5)
-if(HAVE_ASDF_CXX EQUAL 1)
+if(ASDF_CXX_FOUND)
 add_test(NAME example-asdf COMMAND ./sio-example-asdf)
 add_test(NAME list-asdf COMMAND asdf-ls example.asdf)
 add_test(NAME copy-asdf COMMAND ./sio-copy-asdf example.asdf example2.asdf)

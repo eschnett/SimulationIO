@@ -158,6 +158,7 @@ script:
   - mkdir build && pushd build
   - cmake -DCMAKE_FIND_ROOT_PATH="$HDF5_DIR;$YAML_CPP_DIR;$ASDF_CXX_DIR;$PYTHON_DIR" -DCMAKE_CXX_COMPILER="$CXX" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX="$HOME/install" ..
   - make -j2
+  - ./sio-example-asdf
   - make -j2 test CTEST_OUTPUT_ON_FAILURE=1
   - make -j2 install
   - popd
@@ -166,5 +167,6 @@ after_success:
   - mkdir build-coveralls && pushd build-coveralls
   - cmake -DCMAKE_FIND_ROOT_PATH="$HDF5_DIR;$YAML_CPP_DIR;$ASDF_CXX_DIR;$PYTHON_DIR" -DCMAKE_CXX_COMPILER="$CXX" -DCMAKE_BUILD_TYPE=Debug -DCOVERALLS=ON ..
   - make -j2
+  - ./sio-example-asdf
   - make -j2 coveralls CTEST_OUTPUT_ON_FAILURE=1
   - popd
