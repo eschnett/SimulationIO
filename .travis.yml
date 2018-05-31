@@ -65,7 +65,8 @@ install:
           tar xzf yaml-cpp-0.6.2.tar.gz
           mkdir yaml-cpp-0.6.2-build
           cd yaml-cpp-0.6.2-build
-          cmake -DCMAKE_CXX_COMPILER="$CXX" -DBUILD_SHARED_LIBS=true -DCMAKE_INSTALL_PREFIX="$YAML_CPP_DIR" ../yaml-cpp-yaml-cpp-0.6.2
+          # -DBUILD_SHARED_LIBS=ON
+          cmake -DCMAKE_CXX_COMPILER="$CXX" -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_INSTALL_PREFIX="$YAML_CPP_DIR" ../yaml-cpp-yaml-cpp-0.6.2
           make -j2
           make -j2 install
         )
@@ -101,7 +102,7 @@ install:
       export HDF5_DIR="/usr/local"
       # Build yaml-cpp
       export YAML_CPP_DIR="$HOME/yaml-cpp-0.6.2"
-      export DYLD_LIBRARY_PATH="$YAML_CPP_DIR/lib:$DYLD_LIBRARY_PATH"
+      # export DYLD_LIBRARY_PATH="$YAML_CPP_DIR/lib:$DYLD_LIBRARY_PATH"
       # Check cache
       if [ ! -e "$YAML_CPP_DIR/include/yaml-cpp/yaml.h" ]; then
         (
@@ -111,9 +112,11 @@ install:
           tar xzf yaml-cpp-0.6.2.tar.gz
           mkdir yaml-cpp-0.6.2-build
           cd yaml-cpp-0.6.2-build
-          cmake -DCMAKE_CXX_COMPILER="$CXX" -DBUILD_SHARED_LIBS=true -DCMAKE_MACOSX_RPATH=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX="$YAML_CPP_DIR" ../yaml-cpp-yaml-cpp-0.6.2
+          # -DBUILD_SHARED_LIBS=ON
+          cmake -DCMAKE_CXX_COMPILER="$CXX" -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_MACOSX_RPATH=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX="$YAML_CPP_DIR" ../yaml-cpp-yaml-cpp-0.6.2
           make -j2
           make -j2 install
+          
         )
       fi
       # Build asdf-cxx
