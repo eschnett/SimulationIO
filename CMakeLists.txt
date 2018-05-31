@@ -11,7 +11,8 @@ set(PROJECT_DESCRIPTION
   "SimulationIO: Efficient and convenient I/O for large PDE simulations")
 set(PROJECT_URL "https://github.com/eschnett/SimulationIO")
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/Modules")
+set(CMAKE_MODULE_PATH
+  ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/Modules")
 
 # External dependencies
 
@@ -240,9 +241,12 @@ add_test(NAME example-asdf COMMAND ./sio-example-asdf)
 add_test(NAME list-asdf COMMAND asdf-ls example.asdf)
 add_test(NAME copy-asdf COMMAND ./sio-copy-asdf example.asdf example2.asdf)
 add_test(NAME list-asdf2 COMMAND asdf-ls example2.asdf)
-add_test(NAME compare-asdf COMMAND ${CMAKE_SOURCE_DIR}/diff-commands.sh "asdf-ls example.asdf" "asdf-ls example2.asdf")
+add_test(NAME compare-asdf
+  COMMAND ${CMAKE_SOURCE_DIR}/diff-commands.sh
+            "asdf-ls example.asdf" "asdf-ls example2.asdf")
 endif()
-if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND AND H5PY_FOUND AND NUMPY_FOUND AND SWIG_FOUND)
+if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND AND H5PY_FOUND AND NUMPY_FOUND AND
+    SWIG_FOUND)
   add_test(NAME python-example
     COMMAND
     env "PYTHONPATH=${PROJECT_BINARY_DIR}:$ENV{PYTHONPATH}"
