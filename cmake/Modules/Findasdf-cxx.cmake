@@ -1,39 +1,48 @@
-# Distributed under the Boost Software License, Version 1.0. (See accompanying
-# file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+# Distributed under the OSI-approved BSD 3-Clause License.  See accompanying
+# file Copyright.txt or https://cmake.org/licensing for details.
 
-find_package(PkgConfig QUIET)
-pkg_check_modules(PC_ASDF_CXX QUIET asdf-cxx)
+#.rst:
+# Findasdf-cxx
+# --------
+#
+# Find asdf-cxx
+#
+# Find the asdf-cxx headers and libraries.
+#
+# ::
+#
+#   ASDF_CXX_INCLUDE_DIRS   - where to find asdf.hpp, etc.
+#   ASDF_CXX_LIBRARIES      - List of libraries when using asdf-cxx.
+#   ASDF_CXX_FOUND          - True if asdf-cxx found.
+#   ASDF_CXX_VERSION_STRING - the version of asdf-cxx found
 
-find_path(ASDF_CXX_INCLUDE_DIR asdf.hpp
-  HINTS
-    ${ASDF_CXX_ROOT} ENV ASDF_CXX_ROOT
-    ${PC_ASDF_CXX_MINIMAL_INCLUDEDIR}
-    ${PC_ASDF_CXX_MINIMAL_INCLUDE_DIRS}
-    ${PC_ASDF_CXX_INCLUDEDIR}
-    ${PC_ASDF_CXX_INCLUDE_DIRS}
-  PATH_SUFFIXES include)
+# Look for the header file.
+find_path(ASDF_CXX_INCLUDE_DIR NAMES asdf.hpp)
+mark_as_advanced(ASDF_CXX_INCLUDE_DIR)
 
-find_library(ASDF_CXX_LIBRARY NAMES asdf-cxx libasdf-cxx
-  HINTS
-    ${ASDF_CXX_ROOT} ENV ASDF_CXX_ROOT
-    ${PC_ASDF_CXX_MINIMAL_LIBDIR}
-    ${PC_ASDF_CXX_MINIMAL_LIBRARY_DIRS}
-    ${PC_ASDF_CXX_LIBDIR}
-    ${PC_ASDF_CXX_LIBRARY_DIRS}
-  PATH_SUFFIXES lib lib64)
+# Look for the library (sorted from most current/relevant entry to least).
+find_library(ASDF_CXX_LIBRARY NAMES
+  asdf-cxx
+)
+mark_as_advanced(ASDF_CXX_LIBRARY)
 
-set(ASDF_CXX_LIBRARIES ${ASDF_CXX_LIBRARY})
-set(ASDF_CXX_INCLUDE_DIRS ${ASDF_CXX_INCLUDE_DIR})
-
-find_package_handle_standard_args(asdf-cxx DEFAULT_MSG
-  ASDF_CXX_LIBRARY ASDF_CXX_INCLUDE_DIR)
-
-get_property(_type CACHE ASDF_CXX_ROOT PROPERTY TYPE)
-if(_type)
-  set_property(CACHE ASDF_CXX_ROOT PROPERTY ADVANCED 1)
-  if("x${_type}" STREQUAL "xUNINITIALIZED")
-    set_property(CACHE ASDF_CXX_ROOT PROPERTY TYPE PATH)
-  endif()
+if(ASDF_CXX_INCLUDE_DIR)
+  foreach(_asdf_cxx_version_header asdf_config.hpp)
+    if(EXISTS "${ASDF_CXX_INCLUDE_DIR}/${_asdf_cxx_version_header}")
+      file(STRINGS "${ASDF_CXX_INCLUDE_DIR}/${_asdf_cxx_version_header}" asdf_cxx_version_str REGEX "^#define[\t ]+ASDF_VERSION[\t ]+\".*\"")
+      string(REGEX REPLACE "^#define[\t ]+ASDF_VERSION[\t ]+\"([^\"]*)\".*" "\\1" ASDF_CXX_VERSION_STRING "${asdf_cxx_version_str}")
+      unset(asdf_cxx_version_str)
+      break()
+    endif()
+  endforeach()
 endif()
 
-mark_as_advanced(ASDF_CXX_ROOT ASDF_CXX_LIBRARY ASDF_CXX_INCLUDE_DIR)
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(asdf-cxx
+                                  REQUIRED_VARS ASDF_CXX_LIBRARY ASDF_CXX_INCLUDE_DIR
+                                  VERSION_VAR ASDF_CXX_VERSION_STRING)
+
+if(ASDF_CXX_FOUND)
+  set(ASDF_CXX_LIBRARIES ${ASDF_CXX_LIBRARY})
+  set(ASDF_CXX_INCLUDE_DIRS ${ASDF_CXX_INCLUDE_DIR})
+endif()

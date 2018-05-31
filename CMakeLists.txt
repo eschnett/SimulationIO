@@ -15,8 +15,12 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/Modules"
 
 # External dependencies
 
-find_package(asdf-cxx 2.0.3)
-if(NOT (ASDF_CXX_LIBRARY STREQUAL ASDF_CXX_LIBRARY-NOTFOUND))
+find_package(asdf-cxx 2.1.0)
+if(ASDF_FOUND)
+  if(ASDF_CXX_VERSION_STRING VERSION_LESS 2.1.0)
+    message(HDF5_VERSION)
+    message(SEND_ERROR "asdf-cxx version 2.1.0 or later is required")
+  endif()
   include_directories(${ASDF_CXX_INCLUDE_DIR})
   set(LIBS ${LIBS} ${ASDF_CXX_LIBRARY})
   set(HAVE_ASDF_CXX 1)
