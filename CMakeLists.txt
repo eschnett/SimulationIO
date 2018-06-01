@@ -247,15 +247,17 @@ add_test(NAME list2 COMMAND ./sio-list example2.s5)
 if(ASDF_CXX_FOUND)
 add_test(NAME example-asdf COMMAND ./sio-example-asdf)
 add_test(NAME list-asdf COMMAND asdf-ls example.asdf)
+add_test(NAME list-asdf2 COMMAND ./sio-list-asdf example.asdf)
 add_test(NAME copy-asdf COMMAND ./sio-copy-asdf example.asdf example2.asdf)
-add_test(NAME list-asdf2 COMMAND asdf-ls example2.asdf)
+add_test(NAME list-asdf3 COMMAND ./sio-list-asdf example2.asdf)
 add_test(NAME compare-asdf
   COMMAND ${CMAKE_SOURCE_DIR}/diff-commands.sh
-            "asdf-ls example.asdf" "asdf-ls example2.asdf")
-add_test(NAME convert-hdf5-asdf COMMAND ./sio-convert-hdf5-to-asdf example.s5 example3.asdf)
+            "./sio-list-asdf example.asdf" "./sio-list-asdf example2.asdf")
+add_test(NAME convert-hdf5-asdf
+  COMMAND ./sio-convert-hdf5-to-asdf example.s5 example3.asdf)
 add_test(NAME compare-hdf5-asdf
   COMMAND ${CMAKE_SOURCE_DIR}/diff-commands.sh
-            "asdf-ls example.asdf" "asdf-ls example3.asdf")
+            "./sio-list-asdf example.asdf" "./sio-list-asdf example3.asdf")
 endif()
 if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND AND H5PY_FOUND AND NUMPY_FOUND AND
     SWIG_FOUND)
