@@ -9,9 +9,7 @@ namespace SimulationIO {
 #define SIMULATIONIO_VERSION_MINOR @SimulationIO_VERSION_MINOR@
 #define SIMULATIONIO_VERSION_PATCH @SimulationIO_VERSION_PATCH@
 
-#define SIMULATIONIO_VERSION                                                   \
-  "@SimulationIO_VERSION_MAJOR@.@SimulationIO_VERSION_MINOR@."                 \
-  "@SimulationIO_VERSION_PATCH@"
+#define SIMULATIONIO_VERSION "@SimulationIO_VERSION_MAJOR@.@SimulationIO_VERSION_MINOR@.@SimulationIO_VERSION_PATCH@"
 
 int versionMajor();
 int versionMinor();

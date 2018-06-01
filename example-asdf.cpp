@@ -2,8 +2,6 @@
 
 #include <asdf.hpp>
 
-#include <H5Cpp.h>
-
 #include <array>
 #include <cmath>
 #include <fstream>
@@ -110,13 +108,19 @@ int main(int argc, char **argv) {
         const int p = pi + npi * (pj + npj * pk);
 
         // Set data
-        array<vector<double>, dim> coord{vector<double>(npoints),
-                                         vector<double>(npoints),
-                                         vector<double>(npoints)};
         vector<double> datarho(npoints);
         array<vector<double>, dim> datavel{vector<double>(npoints),
                                            vector<double>(npoints),
                                            vector<double>(npoints)};
+        array<double, dim> origin;
+        getcoords(0, 0, 0, origin[0], origin[1], origin[2]);
+        array<double, dim> first;
+        getcoords(1, 1, 1, first[0], first[1], first[2]);
+        array<vector<double>, dim> delta;
+        for (int d = 0; d < dim; ++d) {
+          delta[d] = {0, 0, 0};
+          delta[d][d] = first[d] - origin[d];
+        }
         for (int lk = 0; lk < nlk; ++lk)
           for (int lj = 0; lj < nlj; ++lj)
             for (int li = 0; li < nli; ++li) {
@@ -127,9 +131,6 @@ int main(int argc, char **argv) {
               double x, y, z;
               getcoords(i, j, k, x, y, z);
               const double r = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
-              coord[0].at(idx) = x;
-              coord[1].at(idx) = y;
-              coord[2].at(idx) = z;
               datarho.at(idx) = exp(-0.5 * pow(r, 2));
               datavel[0].at(idx) = -y * r * exp(-0.5 * pow(r, 2));
               datavel[1].at(idx) = +x * r * exp(-0.5 * pow(r, 2));
@@ -144,8 +145,7 @@ int main(int argc, char **argv) {
           auto scalar3d_component = scalar3d->storage_indices().at(0);
           auto coordinate_component = block->createDiscreteFieldBlockComponent(
               "scalar", scalar3d_component);
-          coordinate_component->createASDFData(
-              make_shared<ASDF::blob_t<double>>(move(coord[d])));
+          coordinate_component->createDataRange(origin[d], delta[d]);
         }
 
         // Fields

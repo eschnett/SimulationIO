@@ -1,5 +1,7 @@
 #include "SimulationIO.hpp"
 
+#include <H5Cpp.h>
+
 #include <algorithm>
 #include <cmath>
 #include <iostream>
@@ -10,12 +12,7 @@
 #include <vector>
 
 using namespace SimulationIO;
-
-using std::cout;
-using std::ostringstream;
-using std::shared_ptr;
-using std::string;
-using std::vector;
+using namespace std;
 
 const int dim = 3;
 const char *const dirnames[] = {"x", "y", "z"};
@@ -35,6 +32,7 @@ inline void getcoords(int i, int j, int k, double &x, double &y, double &z) {
 }
 
 int main(int argc, char **argv) {
+  cout << "example: Create a simple SimulationIO file\n";
 
   // Project
   auto project = createProject("simulation");
@@ -96,7 +94,17 @@ int main(int argc, char **argv) {
       auto scalar3d_component = scalar3d->storage_indices().at(0);
       auto component = block->createDiscreteFieldBlockComponent(
           "scalar", scalar3d_component);
-      component->createDataSet<double>();
+
+      array<double, dim> origin;
+      getcoords(0, 0, 0, origin[0], origin[1], origin[2]);
+      array<double, dim> first;
+      getcoords(1, 1, 1, first[0], first[1], first[2]);
+      array<vector<double>, dim> delta;
+      for (int d = 0; d < dim; ++d) {
+        delta[d] = {0, 0, 0};
+        delta[d][d] = first[d] - origin[d];
+      }
+      component->createDataRange(origin[d], delta[d]);
     }
     coordinates.push_back(
         coordinatesystem->createCoordinateField(dirnames[d], d, field));
@@ -153,9 +161,12 @@ int main(int argc, char **argv) {
     for (int pj = 0; pj < npj; ++pj)
       for (int pi = 0; pi < npi; ++pi) {
         const int p = pi + npi * (pj + npj * pk);
-        vector<double> coordx(npoints), coordy(npoints), coordz(npoints),
-            datarho(npoints), datavelx(npoints), datavely(npoints),
-            datavelz(npoints);
+
+        // Set data
+        vector<double> datarho(npoints);
+        array<vector<double>, dim> datavel{vector<double>(npoints),
+                                           vector<double>(npoints),
+                                           vector<double>(npoints)};
         for (int lk = 0; lk < nlk; ++lk)
           for (int lj = 0; lj < nlj; ++lj)
             for (int li = 0; li < nli; ++li) {
@@ -166,24 +177,12 @@ int main(int argc, char **argv) {
               double x, y, z;
               getcoords(i, j, k, x, y, z);
               const double r = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
-              coordx.at(idx) = x;
-              coordy.at(idx) = y;
-              coordz.at(idx) = z;
               datarho.at(idx) = exp(-0.5 * pow(r, 2));
-              datavelx.at(idx) = -y * r * exp(-0.5 * pow(r, 2));
-              datavely.at(idx) = +x * r * exp(-0.5 * pow(r, 2));
-              datavelz.at(idx) = 0.0;
+              datavel[0].at(idx) = -y * r * exp(-0.5 * pow(r, 2));
+              datavel[1].at(idx) = +x * r * exp(-0.5 * pow(r, 2));
+              datavel[2].at(idx) = 0.0;
             }
-        // Write coordinates
-        for (int d = 0; d < dim; ++d) {
-          auto field = coordinates[d]->field();
-          auto discretefield = field->discretefields().at(field->name());
-          auto block = discretefield->discretefieldblocks().at(
-              discretefield->name() + "-" + blocks.at(p)->name());
-          auto component = block->discretefieldblockcomponents().at("scalar");
-          component->dataset()->writeData(d == 0 ? coordx
-                                                 : d == 1 ? coordy : coordz);
-        }
+
         // Write rho
         {
           auto field = rho;
@@ -201,8 +200,7 @@ int main(int argc, char **argv) {
               discretefield->name() + "-" + blocks.at(p)->name());
           auto component =
               block->discretefieldblockcomponents().at(dirnames[d]);
-          component->dataset()->writeData(
-              d == 0 ? datavelx : d == 1 ? datavely : datavelz);
+          component->dataset()->writeData(datavel[d]);
         }
       }
 

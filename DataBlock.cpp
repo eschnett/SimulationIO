@@ -164,7 +164,79 @@ void DataRange::write(const H5::Group &group, const string &entry) const {
 }
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-void DataRange::write(ASDF::writer &w, const string &entry) const { assert(0); }
+void DataRange::write(ASDF::writer &w, const string &entry) const {
+  vector<double> coord(size());
+  switch (rank()) {
+  case 0: {
+    const ptrdiff_t np = 1;
+    assert(np == size());
+    const double c0 = origin();
+    ptrdiff_t idx = 0;
+    double c = c0;
+    coord.at(idx) = c;
+    break;
+  }
+  case 1: {
+    const ptrdiff_t ni = shape()[0];
+    constexpr ptrdiff_t di = 1;
+    const ptrdiff_t np = di * ni;
+    assert(np == size());
+    const double c0 = origin();
+    const double dx = delta()[0];
+    for (ptrdiff_t i = 0; i < ni; ++i) {
+      ptrdiff_t idx = i * di;
+      double c = c0 + i * dx;
+      coord.at(idx) = c;
+    }
+    break;
+  }
+  case 2: {
+    const ptrdiff_t ni = shape()[0];
+    const ptrdiff_t nj = shape()[1];
+    constexpr ptrdiff_t di = 1;
+    const ptrdiff_t dj = di * ni;
+    const ptrdiff_t np = dj * nj;
+    assert(np == size());
+    const double c0 = origin();
+    const double dx = delta()[0];
+    const double dy = delta()[1];
+    for (ptrdiff_t j = 0; j < nj; ++j)
+      for (ptrdiff_t i = 0; i < ni; ++i) {
+        ptrdiff_t idx = i * di + j * dj;
+        double c = c0 + i * dx + j * dy;
+        coord.at(idx) = c;
+      }
+    break;
+  }
+  case 3: {
+    const ptrdiff_t ni = shape()[0];
+    const ptrdiff_t nj = shape()[1];
+    const ptrdiff_t nk = shape()[2];
+    constexpr ptrdiff_t di = 1;
+    const ptrdiff_t dj = di * ni;
+    const ptrdiff_t dk = dj * nj;
+    const ptrdiff_t np = dk * nk;
+    assert(np == size());
+    const double c0 = origin();
+    const double dx = delta()[0];
+    const double dy = delta()[1];
+    const double dz = delta()[2];
+    for (ptrdiff_t k = 0; k < nk; ++k)
+      for (ptrdiff_t j = 0; j < nj; ++j)
+        for (ptrdiff_t i = 0; i < ni; ++i) {
+          ptrdiff_t idx = i * di + j * dj + k * dk;
+          double c = c0 + i * dx + j * dy + k * dz;
+          coord.at(idx) = c;
+        }
+    break;
+  }
+  default:
+    assert(0);
+  }
+  ASDF::ndarray arr(move(coord), ASDF::block_format_t::block,
+                    ASDF::compression_t::zlib, {}, vector<int64_t>(shape()));
+  w << YAML::Key << entry << YAML::Value << arr;
+}
 #endif
 
 // DataSet
