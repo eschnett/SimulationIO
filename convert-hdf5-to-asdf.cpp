@@ -1,5 +1,7 @@
 #include "SimulationIO.hpp"
 
+#include "H5Helpers.hpp"
+
 #include "asdf.hpp"
 
 #include <cassert>
@@ -15,22 +17,13 @@ using namespace SimulationIO;
 using namespace std;
 
 shared_ptr<Project> read(const string &filename) {
-  ifstream is(filename, ios::binary | ios::in);
-  map<string, shared_ptr<Project>> projects;
-  function<void(const ASDF::reader_state &rs, const string &name,
-                const YAML::Node &node)>
-      read_project{[&](const ASDF::reader_state &rs, const string &name,
-                       const YAML::Node &node) {
-        projects[name] = readProject(rs, node);
-      }};
-  map<string, function<void(const ASDF::reader_state &rs, const string &name,
-                            const YAML::Node &node)>>
-      readers{{"tag:github.com/eschnett/SimulationIO/asdf-cxx/Project-1.0.0",
-               read_project}};
-  auto doc = ASDF::asdf(is, readers);
-  is.close();
-  assert(projects.size() > 0);
-  return projects.begin()->second;
+  try {
+    auto file = H5::H5File(filename, H5F_ACC_RDONLY);
+    return readProject(file);
+  } catch (const H5::FileIException &error) {
+    cerr << "Could not read file " << quote(filename) << "\n";
+    exit(2);
+  }
 }
 
 void write(const shared_ptr<Project> &project, const string &filename) {
@@ -45,7 +38,8 @@ void write(const shared_ptr<Project> &project, const string &filename) {
 }
 
 int main(int argc, char **argv) {
-  cout << "sio-copy: Copy the content of a SimulationIO file\n";
+  cout << "sio-convert-hdf5-to-asdf: Convert an SimulationIO file from HDF5 to "
+          "ASDF\n";
   if (argc != 3) {
     cerr << "Wrong number of arguments\n"
          << "Syntax: " << argv[0] << " <input file> <output file>\n";

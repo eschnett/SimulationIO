@@ -233,8 +233,18 @@ void DataRange::write(ASDF::writer &w, const string &entry) const {
   default:
     assert(0);
   }
+  int dim = rank();
+  vector<int64_t> strides(dim);
+  int64_t stride = sizeof(double);
+  // SimulationIO uses Fortran array index ordering
+  for (size_t d = 0; d < dim; ++d) {
+    strides.at(d) = stride;
+    stride *= shape()[d];
+  }
+  assert(stride == coord.size() * sizeof(double));
   ASDF::ndarray arr(move(coord), ASDF::block_format_t::block,
-                    ASDF::compression_t::zlib, {}, vector<int64_t>(shape()));
+                    ASDF::compression_t::zlib, {}, vector<int64_t>(shape()), 0,
+                    strides);
   w << YAML::Key << entry << YAML::Value << arr;
 }
 #endif
@@ -561,7 +571,60 @@ void CopyObj::write(const H5::Group &group, const string &entry) const {
 }
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-void CopyObj::write(ASDF::writer &w, const string &entry) const { assert(0); }
+namespace {
+ASDF::scalar_type_id_t asdf_type(const H5::DataType &h5type) {
+  if (h5type == H5::getType(ASDF::bool8_t()))
+    return ASDF::id_bool8;
+  if (h5type == H5::getType(ASDF::int8_t()))
+    return ASDF::id_int8;
+  if (h5type == H5::getType(ASDF::int16_t()))
+    return ASDF::id_int16;
+  if (h5type == H5::getType(ASDF::int32_t()))
+    return ASDF::id_int32;
+  if (h5type == H5::getType(ASDF::int64_t()))
+    return ASDF::id_int64;
+  if (h5type == H5::getType(ASDF::uint8_t()))
+    return ASDF::id_uint8;
+  if (h5type == H5::getType(ASDF::uint16_t()))
+    return ASDF::id_uint16;
+  if (h5type == H5::getType(ASDF::uint32_t()))
+    return ASDF::id_uint32;
+  if (h5type == H5::getType(ASDF::uint64_t()))
+    return ASDF::id_uint64;
+  if (h5type == H5::getType(ASDF::float32_t()))
+    return ASDF::id_float32;
+  if (h5type == H5::getType(ASDF::float64_t()))
+    return ASDF::id_float64;
+  if (h5type == H5::getType(ASDF::complex64_t()))
+    return ASDF::id_complex64;
+  if (h5type == H5::getType(ASDF::complex128_t()))
+    return ASDF::id_complex128;
+  assert(0);
+}
+} // namespace
+
+void CopyObj::write(ASDF::writer &w, const string &entry) const {
+  auto dataset = group().openDataSet(name());
+  auto type = dataset.getDataType();
+  auto type_size = type.getSize();
+  vector<char> data(size() * type_size);
+  readData(data.data(), type, box(), box());
+  int dim = rank();
+  vector<int64_t> strides(dim);
+  int64_t stride = type_size;
+  // SimulationIO uses Fortran array index ordering
+  for (size_t d = 0; d < dim; ++d) {
+    strides.at(d) = stride;
+    stride *= shape()[d];
+  }
+  assert(stride == data.size());
+  ASDF::ndarray arr(make_shared<ASDF::blob_t<char>>(move(data)),
+                    ASDF::block_format_t::block, ASDF::compression_t::zlib, {},
+                    make_shared<ASDF::datatype_t>(asdf_type(type)),
+                    ASDF::host_byteorder(), vector<int64_t>(shape()), 0,
+                    strides);
+  w << YAML::Key << entry << YAML::Value << arr;
+}
 #endif
 
 void CopyObj::readData(void *data, const H5::DataType &datatype,

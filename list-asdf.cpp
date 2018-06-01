@@ -3,7 +3,6 @@
 #include "asdf.hpp"
 
 #include <cassert>
-#include <cstdlib>
 #include <fstream>
 #include <functional>
 #include <iostream>
@@ -33,28 +32,18 @@ shared_ptr<Project> read(const string &filename) {
   return projects.begin()->second;
 }
 
-void write(const shared_ptr<Project> &project, const string &filename) {
-  map<string, string> tags{
-      {"sio", "tag:github.com/eschnett/SimulationIO/asdf-cxx/"}};
-  map<string, function<void(ASDF::writer & w)>> funs{
-      {"SimulationIO", [&](ASDF::writer &w) { w << *project; }}};
-  const auto &doc2 = ASDF::asdf(move(tags), move(funs));
-  ofstream os(filename, ios::binary | ios::trunc | ios::out);
-  doc2.write(os);
-  os.close();
-}
-
 int main(int argc, char **argv) {
-  cout << "sio-copy: Copy the content of a SimulationIO file\n";
-  if (argc != 3) {
-    cerr << "Wrong number of arguments\n"
-         << "Syntax: " << argv[0] << " <input file> <output file>\n";
-    exit(1);
+  cout << "sio-list-asdf: List content of ASDF files\n";
+
+  if (argc < 1) {
+    cerr << "Synopsis:\n" << argv[0] << " <file name>*\n";
+    return 1;
   }
 
-  auto project = read(argv[1]);
-  write(project, argv[2]);
+  for (int argi = 1; argi < argc; ++argi) {
+    auto project = read(argv[argi]);
+    cout << *project;
+  }
 
-  cout << "Done.\n";
   return 0;
 }

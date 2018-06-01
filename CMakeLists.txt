@@ -177,7 +177,9 @@ set(EXES
   )
 if(ASDF_CXX_FOUND)
   list(APPEND EXES 
+    sio-convert-hdf5-to-asdf
     sio-copy-asdf
+    sio-list-asdf
     sio-example-asdf
     )
 endif()
@@ -207,11 +209,17 @@ add_executable(sio-filter filter.cpp)
 target_link_libraries(sio-filter SimulationIO)
 
 if(ASDF_CXX_FOUND)
+add_executable(sio-convert-hdf5-to-asdf convert-hdf5-to-asdf.cpp)
+target_link_libraries(sio-convert-hdf5-to-asdf SimulationIO)
+
 add_executable(sio-copy-asdf copy-asdf.cpp)
 target_link_libraries(sio-copy-asdf SimulationIO)
 
 add_executable(sio-example-asdf example-asdf.cpp)
 target_link_libraries(sio-example-asdf SimulationIO)
+
+add_executable(sio-list-asdf list-asdf.cpp)
+target_link_libraries(sio-list-asdf SimulationIO)
 endif()
 
 # Tests
@@ -244,6 +252,10 @@ add_test(NAME list-asdf2 COMMAND asdf-ls example2.asdf)
 add_test(NAME compare-asdf
   COMMAND ${CMAKE_SOURCE_DIR}/diff-commands.sh
             "asdf-ls example.asdf" "asdf-ls example2.asdf")
+add_test(NAME convert-hdf5-asdf COMMAND ./sio-convert-hdf5-to-asdf example.s5 example3.asdf)
+add_test(NAME compare-hdf5-asdf
+  COMMAND ${CMAKE_SOURCE_DIR}/diff-commands.sh
+            "asdf-ls example.asdf" "asdf-ls example3.asdf")
 endif()
 if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND AND H5PY_FOUND AND NUMPY_FOUND AND
     SWIG_FOUND)
