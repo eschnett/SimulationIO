@@ -6,7 +6,7 @@ cmake_policy(SET CMP0048 NEW)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 
-project(SimulationIO VERSION 2.12.0 LANGUAGES C CXX)
+project(SimulationIO VERSION 2.13.0 LANGUAGES C CXX)
 set(PROJECT_DESCRIPTION
   "SimulationIO: Efficient and convenient I/O for large PDE simulations")
 set(PROJECT_URL "https://github.com/eschnett/SimulationIO")
@@ -16,11 +16,11 @@ set(CMAKE_MODULE_PATH
 
 # External dependencies
 
-find_package(asdf-cxx 2.1.0)
+find_package(asdf-cxx 2.1.1)
 if(ASDF_CXX_FOUND)
-  if(ASDF_CXX_VERSION_STRING VERSION_LESS 2.1.0)
+  if(ASDF_CXX_VERSION_STRING VERSION_LESS 2.1.1)
     message(HDF5_VERSION)
-    message(SEND_ERROR "asdf-cxx version 2.1.0 or later is required")
+    message(SEND_ERROR "asdf-cxx version 2.1.1 or later is required")
   endif()
   include_directories(${ASDF_CXX_INCLUDE_DIR})
   set(LIBS ${LIBS} ${ASDF_CXX_LIBRARY})
@@ -177,7 +177,9 @@ set(EXES
   )
 if(ASDF_CXX_FOUND)
   list(APPEND EXES 
+    sio-convert-hdf5-to-asdf
     sio-copy-asdf
+    sio-list-asdf
     sio-example-asdf
     )
 endif()
@@ -207,11 +209,17 @@ add_executable(sio-filter filter.cpp)
 target_link_libraries(sio-filter SimulationIO)
 
 if(ASDF_CXX_FOUND)
+add_executable(sio-convert-hdf5-to-asdf convert-hdf5-to-asdf.cpp)
+target_link_libraries(sio-convert-hdf5-to-asdf SimulationIO)
+
 add_executable(sio-copy-asdf copy-asdf.cpp)
 target_link_libraries(sio-copy-asdf SimulationIO)
 
 add_executable(sio-example-asdf example-asdf.cpp)
 target_link_libraries(sio-example-asdf SimulationIO)
+
+add_executable(sio-list-asdf list-asdf.cpp)
+target_link_libraries(sio-list-asdf SimulationIO)
 endif()
 
 # Tests
@@ -239,11 +247,17 @@ add_test(NAME list2 COMMAND ./sio-list example2.s5)
 if(ASDF_CXX_FOUND)
 add_test(NAME example-asdf COMMAND ./sio-example-asdf)
 add_test(NAME list-asdf COMMAND asdf-ls example.asdf)
+add_test(NAME list-asdf2 COMMAND ./sio-list-asdf example.asdf)
 add_test(NAME copy-asdf COMMAND ./sio-copy-asdf example.asdf example2.asdf)
-add_test(NAME list-asdf2 COMMAND asdf-ls example2.asdf)
+add_test(NAME list-asdf3 COMMAND ./sio-list-asdf example2.asdf)
 add_test(NAME compare-asdf
   COMMAND ${CMAKE_SOURCE_DIR}/diff-commands.sh
-            "asdf-ls example.asdf" "asdf-ls example2.asdf")
+            "./sio-list-asdf example.asdf" "./sio-list-asdf example2.asdf")
+add_test(NAME convert-hdf5-asdf
+  COMMAND ./sio-convert-hdf5-to-asdf example.s5 example3.asdf)
+add_test(NAME compare-hdf5-asdf
+  COMMAND ${CMAKE_SOURCE_DIR}/diff-commands.sh
+            "./sio-list-asdf example.asdf" "./sio-list-asdf example3.asdf")
 endif()
 if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND AND H5PY_FOUND AND NUMPY_FOUND AND
     SWIG_FOUND)

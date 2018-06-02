@@ -5,8 +5,9 @@
 #include "Config.hpp"
 #include "DataBlock.hpp"
 #include "DiscreteFieldBlock.hpp"
-#include "H5Helpers.hpp"
 #include "TensorComponent.hpp"
+
+#include "H5Helpers.hpp"
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 #include <asdf.hpp>

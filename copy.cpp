@@ -8,12 +8,7 @@
 #include <string>
 
 using namespace SimulationIO;
-
-using std::cerr;
-using std::cout;
-using std::exit;
-using std::shared_ptr;
-using std::string;
+using namespace std;
 
 shared_ptr<Project> read(const string &filename) {
   try {
