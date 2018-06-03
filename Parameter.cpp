@@ -69,7 +69,9 @@ void Parameter::write(const H5::H5Location &loc,
 }
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-string Parameter::yaml_alias() const { return type() + "/" + name(); }
+vector<string> Parameter::yaml_path() const {
+  return concat(project()->yaml_path(), {type(), name()});
+}
 
 ASDF::writer &Parameter::write(ASDF::writer &w) const {
   auto aw = asdf_writer(w);

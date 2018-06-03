@@ -50,9 +50,8 @@ void CoordinateSystem::read(const ASDF::reader_state &rs,
       "tag:github.com/eschnett/SimulationIO/asdf-cxx/CoordinateSystem-1.0.0");
   m_name = node["name"].Scalar();
   m_project = project;
-  m_configuration =
-      project->configurations().at(node["configuration"]["name"].Scalar());
-  m_manifold = project->manifolds().at(node["manifold"]["name"].Scalar());
+  m_configuration = project->getConfiguration(rs, node["configuration"]);
+  m_manifold = project->getManifold(rs, node["manifold"]);
   for (const auto &kv : node["coordinatefields"])
     readCoordinateField(rs, kv.second);
   // TODO: check group directions
@@ -118,7 +117,9 @@ void CoordinateSystem::write(const H5::H5Location &loc,
 }
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-string CoordinateSystem::yaml_alias() const { return type() + "/" + name(); }
+vector<string> CoordinateSystem::yaml_path() const {
+  return concat(project()->yaml_path(), {type(), name()});
+}
 
 ASDF::writer &CoordinateSystem::write(ASDF::writer &w) const {
   auto aw = asdf_writer(w);

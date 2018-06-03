@@ -50,8 +50,7 @@ void TangentSpace::read(const ASDF::reader_state &rs, const YAML::Node &node,
          "tag:github.com/eschnett/SimulationIO/asdf-cxx/TangentSpace-1.0.0");
   m_name = node["name"].Scalar();
   m_project = project;
-  m_configuration =
-      project->configurations().at(node["configuration"]["name"].Scalar());
+  m_configuration = project->getConfiguration(rs, node["configuration"]);
   m_dimension = node["dimension"].as<int>();
   for (const auto &kv : node["bases"])
     readBasis(rs, kv.second);
@@ -106,7 +105,9 @@ void TangentSpace::write(const H5::H5Location &loc,
 }
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-string TangentSpace::yaml_alias() const { return type() + "/" + name(); }
+vector<string> TangentSpace::yaml_path() const {
+  return concat(project()->yaml_path(), {type(), name()});
+}
 
 ASDF::writer &TangentSpace::write(ASDF::writer &w) const {
   auto aw = asdf_writer(w);
@@ -167,6 +168,22 @@ shared_ptr<Basis> TangentSpace::readBasis(const ASDF::reader_state &rs,
   checked_emplace(m_bases, basis->name(), basis, "TangentSpace", "bases");
   assert(basis->invariant());
   return basis;
+}
+
+shared_ptr<Basis> TangentSpace::getBasis(const ASDF::reader_state &rs,
+                                         const YAML::Node &node) {
+  auto ref = ASDF::reference(rs, node);
+  auto doc_path = ref.get_split_target();
+  const auto &doc = doc_path.first;
+  const auto &path = doc_path.second;
+  assert(doc.empty());
+  assert(path.size() == 5);
+  assert(path.at(0) == project()->name());
+  assert(path.at(1) == "TangentSpace");
+  assert(path.at(2) == name());
+  assert(path.at(3) == "Basis");
+  const auto &basis_name = path.at(4);
+  return bases().at(basis_name);
 }
 #endif
 

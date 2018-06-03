@@ -56,11 +56,11 @@ void DiscreteField::read(const ASDF::reader_state &rs, const YAML::Node &node,
          "tag:github.com/eschnett/SimulationIO/asdf-cxx/DiscreteField-1.0.0");
   m_name = node["name"].Scalar();
   m_field = field;
-  m_configuration = field->project()->configurations().at(
-      node["configuration"]["name"].Scalar());
-  m_discretization = field->manifold()->discretizations().at(
-      node["discretization"]["name"].Scalar());
-  m_basis = field->tangentspace()->bases().at(node["basis"]["name"].Scalar());
+  m_configuration =
+      field->project()->getConfiguration(rs, node["configuration"]);
+  m_discretization =
+      field->manifold()->getDiscretization(rs, node["discretization"]);
+  m_basis = field->tangentspace()->getBasis(rs, node["basis"]);
   for (const auto &kv : node["discretefieldblocks"])
     readDiscreteFieldBlock(rs, kv.second);
   m_configuration->insert(name(), shared_from_this());
@@ -128,8 +128,8 @@ void DiscreteField::write(const H5::H5Location &loc,
 }
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-string DiscreteField::yaml_alias() const {
-  return field()->yaml_alias() + "/" + type() + "/" + name();
+vector<string> DiscreteField::yaml_path() const {
+  return concat(field()->yaml_path(), {type(), name()});
 }
 
 ASDF::writer &DiscreteField::write(ASDF::writer &w) const {

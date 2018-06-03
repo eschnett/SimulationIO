@@ -44,8 +44,8 @@ void Basis::read(const ASDF::reader_state &rs, const YAML::Node &node,
          "tag:github.com/eschnett/SimulationIO/asdf-cxx/Basis-1.0.0");
   m_name = node["name"].Scalar();
   m_tangentspace = tangentspace;
-  m_configuration = tangentspace->project()->configurations().at(
-      node["configuration"]["name"].Scalar());
+  m_configuration =
+      tangentspace->project()->getConfiguration(rs, node["configuration"]);
   for (const auto &kv : node["basisvectors"])
     readBasisVector(rs, kv.second);
   // TODO: check group directions
@@ -97,8 +97,8 @@ void Basis::write(const H5::H5Location &loc,
 }
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-string Basis::yaml_alias() const {
-  return tangentspace()->yaml_alias() + "/" + type() + "/" + name();
+vector<string> Basis::yaml_path() const {
+  return concat(tangentspace()->yaml_path(), {type(), name()});
 }
 
 ASDF::writer &Basis::write(ASDF::writer &w) const {

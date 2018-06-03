@@ -64,8 +64,7 @@ void Manifold::read(const ASDF::reader_state &rs, const YAML::Node &node,
          "tag:github.com/eschnett/SimulationIO/asdf-cxx/Manifold-1.0.0");
   m_name = node["name"].Scalar();
   m_project = project;
-  m_configuration =
-      project->configurations().at(node["configuration"]["name"].Scalar());
+  m_configuration = project->getConfiguration(rs, node["configuration"]);
   m_dimension = node["dimension"].as<int>();
   for (const auto &kv : node["discretizations"])
     readDiscretization(rs, kv.second);
@@ -142,7 +141,9 @@ void Manifold::write(const H5::H5Location &loc,
 }
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-string Manifold::yaml_alias() const { return type() + "/" + name(); }
+vector<string> Manifold::yaml_path() const {
+  return concat(project()->yaml_path(), {type(), name()});
+}
 
 ASDF::writer &Manifold::write(ASDF::writer &w) const {
   auto aw = asdf_writer(w);
@@ -214,6 +215,23 @@ Manifold::readDiscretization(const ASDF::reader_state &rs,
                   "Manifold", "discretizations");
   assert(discretization->invariant());
   return discretization;
+}
+
+shared_ptr<Discretization>
+Manifold::getDiscretization(const ASDF::reader_state &rs,
+                            const YAML::Node &node) {
+  auto ref = ASDF::reference(rs, node);
+  auto doc_path = ref.get_split_target();
+  const auto &doc = doc_path.first;
+  const auto &path = doc_path.second;
+  assert(doc.empty());
+  assert(path.size() == 5);
+  assert(path.at(0) == project()->name());
+  assert(path.at(1) == "Manifold");
+  assert(path.at(2) == name());
+  assert(path.at(3) == "Discretization");
+  const auto &discretization_name = path.at(4);
+  return discretizations().at(discretization_name);
 }
 #endif
 

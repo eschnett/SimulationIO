@@ -240,8 +240,8 @@ void ParameterValue::write(const H5::H5Location &loc,
 }
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-string ParameterValue::yaml_alias() const {
-  return parameter()->yaml_alias() + "/" + type() + "/" + name();
+vector<string> ParameterValue::yaml_path() const {
+  return concat(parameter()->yaml_path(), {type(), name()});
 }
 
 ASDF::writer &ParameterValue::write(ASDF::writer &w) const {

@@ -393,7 +393,7 @@ void Project::write(const H5::H5Location &loc,
 }
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-string Project::yaml_alias() const { return "/"; }
+vector<string> Project::yaml_path() const { return {name()}; }
 
 ASDF::writer &Project::write(ASDF::writer &w) const {
   auto aw = asdf_writer(w);
@@ -457,6 +457,20 @@ shared_ptr<Parameter> Project::readParameter(const ASDF::reader_state &rs,
   assert(parameter->invariant());
   return parameter;
 }
+
+shared_ptr<Parameter> Project::getParameter(const ASDF::reader_state &rs,
+                                            const YAML::Node &node) {
+  auto ref = ASDF::reference(rs, node);
+  auto doc_path = ref.get_split_target();
+  const auto &doc = doc_path.first;
+  const auto &path = doc_path.second;
+  assert(doc.empty());
+  assert(path.size() == 3);
+  assert(path.at(0) == name());
+  assert(path.at(1) == "Parameter");
+  const auto &parameter_name = path.at(2);
+  return parameters().at(parameter_name);
+}
 #endif
 
 shared_ptr<Configuration> Project::createConfiguration(const string &name) {
@@ -508,6 +522,21 @@ Project::readConfiguration(const ASDF::reader_state &rs,
                   "Project", "configurations");
   assert(configuration->invariant());
   return configuration;
+}
+
+shared_ptr<Configuration>
+Project::getConfiguration(const ASDF::reader_state &rs,
+                          const YAML::Node &node) {
+  auto ref = ASDF::reference(rs, node);
+  auto doc_path = ref.get_split_target();
+  const auto &doc = doc_path.first;
+  const auto &path = doc_path.second;
+  assert(doc.empty());
+  assert(path.size() == 3);
+  assert(path.at(0) == name());
+  assert(path.at(1) == "Configuration");
+  const auto &configuration_name = path.at(2);
+  return configurations().at(configuration_name);
 }
 #endif
 
@@ -565,6 +594,20 @@ shared_ptr<TensorType> Project::readTensorType(const ASDF::reader_state &rs,
                   "tensortypes");
   assert(tensortype->invariant());
   return tensortype;
+}
+
+shared_ptr<TensorType> Project::getTensorType(const ASDF::reader_state &rs,
+                                              const YAML::Node &node) {
+  auto ref = ASDF::reference(rs, node);
+  auto doc_path = ref.get_split_target();
+  const auto &doc = doc_path.first;
+  const auto &path = doc_path.second;
+  assert(doc.empty());
+  assert(path.size() == 3);
+  assert(path.at(0) == name());
+  assert(path.at(1) == "TensorType");
+  const auto &tensortype_name = path.at(2);
+  return tensortypes().at(tensortype_name);
 }
 #endif
 
@@ -628,6 +671,20 @@ shared_ptr<Manifold> Project::readManifold(const ASDF::reader_state &rs,
   assert(manifold->invariant());
   return manifold;
 }
+
+shared_ptr<Manifold> Project::getManifold(const ASDF::reader_state &rs,
+                                          const YAML::Node &node) {
+  auto ref = ASDF::reference(rs, node);
+  auto doc_path = ref.get_split_target();
+  const auto &doc = doc_path.first;
+  const auto &path = doc_path.second;
+  assert(doc.empty());
+  assert(path.size() == 3);
+  assert(path.at(0) == name());
+  assert(path.at(1) == "Manifold");
+  const auto &manifold_name = path.at(2);
+  return manifolds().at(manifold_name);
+}
 #endif
 
 shared_ptr<TangentSpace>
@@ -689,6 +746,20 @@ shared_ptr<TangentSpace> Project::readTangentSpace(const ASDF::reader_state &rs,
                   "Project", "tangentspaces");
   assert(tangentspace->invariant());
   return tangentspace;
+}
+
+shared_ptr<TangentSpace> Project::getTangentSpace(const ASDF::reader_state &rs,
+                                                  const YAML::Node &node) {
+  auto ref = ASDF::reference(rs, node);
+  auto doc_path = ref.get_split_target();
+  const auto &doc = doc_path.first;
+  const auto &path = doc_path.second;
+  assert(doc.empty());
+  assert(path.size() == 3);
+  assert(path.at(0) == name());
+  assert(path.at(1) == "TangentSpace");
+  const auto &tangentspace_name = path.at(2);
+  return tangentspaces().at(tangentspace_name);
 }
 #endif
 
@@ -760,6 +831,20 @@ shared_ptr<Field> Project::readField(const ASDF::reader_state &rs,
   checked_emplace(m_fields, field->name(), field, "Project", "fields");
   assert(field->invariant());
   return field;
+}
+
+shared_ptr<Field> Project::getField(const ASDF::reader_state &rs,
+                                    const YAML::Node &node) {
+  auto ref = ASDF::reference(rs, node);
+  auto doc_path = ref.get_split_target();
+  const auto &doc = doc_path.first;
+  const auto &path = doc_path.second;
+  assert(doc.empty());
+  assert(path.size() == 3);
+  assert(path.at(0) == name());
+  assert(path.at(1) == "Field");
+  const auto &field_name = path.at(2);
+  return fields().at(field_name);
 }
 #endif
 

@@ -48,8 +48,8 @@ void CoordinateField::read(
   m_name = node["name"].Scalar();
   m_coordinatesystem = coordinatesystem;
   m_direction = node["direction"].as<int>();
-  m_field = coordinatesystem->manifold()->project()->fields().at(
-      node["field"]["name"].Scalar());
+  m_field =
+      coordinatesystem->manifold()->project()->getField(rs, node["field"]);
   m_field->noinsert(shared_from_this());
 }
 #endif
@@ -88,8 +88,8 @@ void CoordinateField::write(const H5::H5Location &loc,
 }
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-string CoordinateField::yaml_alias() const {
-  return coordinatesystem()->yaml_alias() + "/" + type() + "/" + name();
+vector<string> CoordinateField::yaml_path() const {
+  return concat(coordinatesystem()->yaml_path(), {type(), name()});
 }
 
 ASDF::writer &CoordinateField::write(ASDF::writer &w) const {

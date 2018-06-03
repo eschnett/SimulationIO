@@ -66,12 +66,10 @@ void Field::read(const ASDF::reader_state &rs, const YAML::Node &node,
          "tag:github.com/eschnett/SimulationIO/asdf-cxx/Field-1.0.0");
   m_name = node["name"].Scalar();
   m_project = project;
-  m_configuration =
-      project->configurations().at(node["configuration"]["name"].Scalar());
-  m_manifold = project->manifolds().at(node["manifold"]["name"].Scalar());
-  m_tangentspace =
-      project->tangentspaces().at(node["tangentspace"]["name"].Scalar());
-  m_tensortype = project->tensortypes().at(node["tensortype"]["name"].Scalar());
+  m_configuration = project->getConfiguration(rs, node["configuration"]);
+  m_manifold = project->getManifold(rs, node["manifold"]);
+  m_tangentspace = project->getTangentSpace(rs, node["tangentspace"]);
+  m_tensortype = project->getTensorType(rs, node["tensortype"]);
   for (const auto &kv : node["discretefields"])
     readDiscreteField(rs, kv.second);
   m_configuration->insert(name(), shared_from_this());
@@ -149,7 +147,9 @@ void Field::write(const H5::H5Location &loc,
 }
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-string Field::yaml_alias() const { return type() + "/" + name(); }
+vector<string> Field::yaml_path() const {
+  return concat(project()->yaml_path(), {type(), name()});
+}
 
 ASDF::writer &Field::write(ASDF::writer &w) const {
   auto aw = asdf_writer(w);
