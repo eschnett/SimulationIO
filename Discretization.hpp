@@ -120,7 +120,7 @@ public:
   virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-  virtual string yaml_alias() const;
+  virtual vector<string> yaml_path() const;
   ASDF::writer &write(ASDF::writer &w) const;
   friend ASDF::writer &operator<<(ASDF::writer &w,
                                   const Discretization &discretization) {
@@ -138,6 +138,8 @@ public:
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   shared_ptr<DiscretizationBlock>
   readDiscretizationBlock(const ASDF::reader_state &rs, const YAML::Node &node);
+  shared_ptr<DiscretizationBlock>
+  getDiscretizationBlock(const ASDF::reader_state &rs, const YAML::Node &node);
 #endif
 
 private:

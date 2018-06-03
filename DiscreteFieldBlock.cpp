@@ -51,8 +51,8 @@ void DiscreteFieldBlock::read(const ASDF::reader_state &rs,
   m_discretefield = discretefield;
 
   m_discretizationblock =
-      discretefield->discretization()->discretizationblocks().at(
-          node["discretizationblock"]["name"].Scalar());
+      discretefield->discretization()->getDiscretizationBlock(
+          rs, node["discretizationblock"]);
   for (const auto &kv : node["discretefieldblockcomponents"])
     readDiscreteFieldBlockComponent(rs, kv.second);
   m_discretizationblock->noinsert(shared_from_this());
@@ -123,8 +123,8 @@ void DiscreteFieldBlock::write(const H5::H5Location &loc,
 }
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-string DiscreteFieldBlock::yaml_alias() const {
-  return discretefield()->yaml_alias() + "/" + type() + "/" + name();
+vector<string> DiscreteFieldBlock::yaml_path() const {
+  return concat(discretefield()->yaml_path(), {type(), name()});
 }
 
 ASDF::writer &DiscreteFieldBlock::write(ASDF::writer &w) const {

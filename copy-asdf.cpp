@@ -37,7 +37,7 @@ void write(const shared_ptr<Project> &project, const string &filename) {
   map<string, string> tags{
       {"sio", "tag:github.com/eschnett/SimulationIO/asdf-cxx/"}};
   map<string, function<void(ASDF::writer & w)>> funs{
-      {"SimulationIO", [&](ASDF::writer &w) { w << *project; }}};
+      {project->name(), [&](ASDF::writer &w) { w << *project; }}};
   const auto &doc2 = ASDF::asdf(move(tags), move(funs));
   ofstream os(filename, ios::binary | ios::trunc | ios::out);
   doc2.write(os);

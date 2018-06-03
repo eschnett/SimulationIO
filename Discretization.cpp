@@ -43,8 +43,8 @@ void Discretization::read(const ASDF::reader_state &rs, const YAML::Node &node,
          "tag:github.com/eschnett/SimulationIO/asdf-cxx/Discretization-1.0.0");
   m_name = node["name"].Scalar();
   m_manifold = manifold;
-  m_configuration = manifold->project()->configurations().at(
-      node["configuration"]["name"].Scalar());
+  m_configuration =
+      manifold->project()->getConfiguration(rs, node["configuration"]);
   for (const auto &kv : node["discretizationblocks"])
     readDiscretizationBlock(rs, kv.second);
   m_configuration->insert(name(), shared_from_this());
@@ -97,8 +97,8 @@ void Discretization::write(const H5::H5Location &loc,
 }
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-string Discretization::yaml_alias() const {
-  return manifold()->yaml_alias() + "/" + type() + "/" + name();
+vector<string> Discretization::yaml_path() const {
+  return concat(manifold()->yaml_path(), {type(), name()});
 }
 
 ASDF::writer &Discretization::write(ASDF::writer &w) const {
@@ -171,6 +171,25 @@ Discretization::readDiscretizationBlock(const ASDF::reader_state &rs,
                   "discretizationblocks");
   assert(discretizationblock->invariant());
   return discretizationblock;
+}
+
+shared_ptr<DiscretizationBlock>
+Discretization::getDiscretizationBlock(const ASDF::reader_state &rs,
+                                       const YAML::Node &node) {
+  auto ref = ASDF::reference(rs, node);
+  auto doc_path = ref.get_split_target();
+  const auto &doc = doc_path.first;
+  const auto &path = doc_path.second;
+  assert(doc.empty());
+  assert(path.size() == 7);
+  assert(path.at(0) == manifold()->project()->name());
+  assert(path.at(1) == "Manifold");
+  assert(path.at(2) == manifold()->name());
+  assert(path.at(3) == "Discretization");
+  assert(path.at(4) == name());
+  assert(path.at(5) == "DiscretizationBlock");
+  const auto &discretizationblock_name = path.at(6);
+  return discretizationblocks().at(discretizationblock_name);
 }
 #endif
 

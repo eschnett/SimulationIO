@@ -93,7 +93,9 @@ void TensorType::write(const H5::H5Location &loc,
 }
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-string TensorType::yaml_alias() const { return type() + "/" + name(); }
+vector<string> TensorType::yaml_path() const {
+  return concat(project()->yaml_path(), {type(), name()});
+}
 
 ASDF::writer &TensorType::write(ASDF::writer &w) const {
   auto aw = asdf_writer(w);
@@ -163,6 +165,23 @@ TensorType::readTensorComponent(const ASDF::reader_state &rs,
                   tensorcomponent, "TensorType", "storage_indices");
   assert(tensorcomponent->invariant());
   return tensorcomponent;
+}
+
+shared_ptr<TensorComponent>
+TensorType::getTensorComponent(const ASDF::reader_state &rs,
+                               const YAML::Node &node) {
+  auto ref = ASDF::reference(rs, node);
+  auto doc_path = ref.get_split_target();
+  const auto &doc = doc_path.first;
+  const auto &path = doc_path.second;
+  assert(doc.empty());
+  assert(path.size() == 5);
+  assert(path.at(0) == project()->name());
+  assert(path.at(1) == "TensorType");
+  assert(path.at(2) == name());
+  assert(path.at(3) == "TensorComponent");
+  const auto &tensorcomponent_name = path.at(4);
+  return tensorcomponents().at(tensorcomponent_name);
 }
 #endif
 

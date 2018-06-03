@@ -68,8 +68,7 @@ void DiscreteFieldBlockComponent::read(
   m_tensorcomponent = discretefieldblock->discretefield()
                           ->field()
                           ->tensortype()
-                          ->tensorcomponents()
-                          .at(node["tensorcomponent"]["name"].Scalar());
+                          ->getTensorComponent(rs, node["tensorcomponent"]);
   if (node["data"].IsDefined())
     m_datablock = DataBlock::read_asdf(
         rs, node["data"], discretefieldblock->discretizationblock()->box());
@@ -127,8 +126,8 @@ void DiscreteFieldBlockComponent::write(const H5::H5Location &loc,
 }
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-string DiscreteFieldBlockComponent::yaml_alias() const {
-  return discretefieldblock()->yaml_alias() + "/" + type() + "/" + name();
+vector<string> DiscreteFieldBlockComponent::yaml_path() const {
+  return concat(discretefieldblock()->yaml_path(), {type(), name()});
 }
 
 ASDF::writer &DiscreteFieldBlockComponent::write(ASDF::writer &w) const {

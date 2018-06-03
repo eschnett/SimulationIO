@@ -6,7 +6,7 @@ cmake_policy(SET CMP0048 NEW)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 
-project(SimulationIO VERSION 2.13.0 LANGUAGES C CXX)
+project(SimulationIO VERSION 2.15.0 LANGUAGES C CXX)
 set(PROJECT_DESCRIPTION
   "SimulationIO: Efficient and convenient I/O for large PDE simulations")
 set(PROJECT_URL "https://github.com/eschnett/SimulationIO")
@@ -16,11 +16,11 @@ set(CMAKE_MODULE_PATH
 
 # External dependencies
 
-find_package(asdf-cxx 2.1.1)
+find_package(asdf-cxx 2.3.1)
 if(ASDF_CXX_FOUND)
-  if(ASDF_CXX_VERSION_STRING VERSION_LESS 2.1.1)
+  if(ASDF_CXX_VERSION_STRING VERSION_LESS 2.3.1)
     message(HDF5_VERSION)
-    message(SEND_ERROR "asdf-cxx version 2.1.1 or later is required")
+    message(SEND_ERROR "asdf-cxx version 2.3.1 or later is required")
   endif()
   include_directories(${ASDF_CXX_INCLUDE_DIR})
   set(LIBS ${LIBS} ${ASDF_CXX_LIBRARY})

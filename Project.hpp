@@ -153,7 +153,7 @@ public:
                      const H5::H5Location &parent) const;
   void write(const H5::H5Location &loc) const { write(loc, H5::H5File()); }
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-  virtual string yaml_alias() const;
+  virtual vector<string> yaml_path() const;
   ASDF::writer &write(ASDF::writer &writer) const;
   friend ASDF::writer &operator<<(ASDF::writer &writer,
                                   const Project &project) {
@@ -170,6 +170,8 @@ public:
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   shared_ptr<Parameter> readParameter(const ASDF::reader_state &rs,
                                       const YAML::Node &node);
+  shared_ptr<Parameter> getParameter(const ASDF::reader_state &rs,
+                                     const YAML::Node &node);
 #endif
   shared_ptr<Configuration> createConfiguration(const string &name);
   shared_ptr<Configuration> getConfiguration(const string &name);
@@ -181,6 +183,8 @@ public:
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   shared_ptr<Configuration> readConfiguration(const ASDF::reader_state &rs,
                                               const YAML::Node &node);
+  shared_ptr<Configuration> getConfiguration(const ASDF::reader_state &rs,
+                                             const YAML::Node &node);
 #endif
   shared_ptr<TensorType> createTensorType(const string &name, int dimension,
                                           int rank);
@@ -194,6 +198,8 @@ public:
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   shared_ptr<TensorType> readTensorType(const ASDF::reader_state &rs,
                                         const YAML::Node &node);
+  shared_ptr<TensorType> getTensorType(const ASDF::reader_state &rs,
+                                       const YAML::Node &node);
 #endif
   shared_ptr<Manifold>
   createManifold(const string &name,
@@ -208,6 +214,8 @@ public:
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   shared_ptr<Manifold> readManifold(const ASDF::reader_state &rs,
                                     const YAML::Node &node);
+  shared_ptr<Manifold> getManifold(const ASDF::reader_state &rs,
+                                   const YAML::Node &node);
 #endif
   shared_ptr<TangentSpace>
   createTangentSpace(const string &name,
@@ -225,6 +233,8 @@ public:
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   shared_ptr<TangentSpace> readTangentSpace(const ASDF::reader_state &rs,
                                             const YAML::Node &node);
+  shared_ptr<TangentSpace> getTangentSpace(const ASDF::reader_state &rs,
+                                           const YAML::Node &node);
 #endif
   shared_ptr<Field> createField(const string &name,
                                 const shared_ptr<Configuration> &configuration,
@@ -242,6 +252,8 @@ public:
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   shared_ptr<Field> readField(const ASDF::reader_state &rs,
                               const YAML::Node &node);
+  shared_ptr<Field> getField(const ASDF::reader_state &rs,
+                             const YAML::Node &node);
 #endif
   shared_ptr<CoordinateSystem>
   createCoordinateSystem(const string &name,

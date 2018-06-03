@@ -27,6 +27,13 @@ using std::string;
 using std::unique_ptr;
 using std::vector;
 
+// Concatenate two vectors
+template <typename T> vector<T> concat(vector<T> x, const vector<T> &y) {
+  vector<T> r(move(x));
+  r.insert(r.end(), y.begin(), y.end());
+  return r;
+}
+
 // C++ make_shared requires constructors to be public; we add a field of type
 // `hidden` to ensure they are not called accidentally.
 struct hidden {};
@@ -219,7 +226,8 @@ public:
   virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const = 0;
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-  virtual string yaml_alias() const = 0;
+  // virtual string yaml_alias() const = 0;
+  virtual vector<string> yaml_path() const = 0;
 #endif
 
   // The association between names and integer values below MUST NOT BE
@@ -248,7 +256,7 @@ public:
 };
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-string quote_alias(const string &alias);
+// string quote_alias(const string &alias);
 
 class asdf_writer_ {
   const Common &m_common;
@@ -266,7 +274,7 @@ public:
 
   template <typename T> void alias(const string &name, const T &value) {
     m_writer << YAML::Key << name << YAML::Value
-             << YAML::Alias(quote_alias(value.yaml_alias()));
+             << ASDF::reference("", value.yaml_path());
   }
 
   template <typename K, typename T>
@@ -284,7 +292,7 @@ public:
     m_writer << YAML::BeginMap;
     for (const auto &kv : values)
       m_writer << YAML::Key << kv.first << YAML::Value
-               << YAML::Alias(quote_alias(kv.second->yaml_alias()));
+               << ASDF::reference("", kv.second->yaml_path());
     m_writer << YAML::EndMap;
   }
 
