@@ -242,6 +242,29 @@ TEST(Parameter, HDF5) {
   remove(filename);
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+TEST(Parameter, ASDF) {
+  auto filename = "parameter.asdf";
+  {
+    ofstream file(filename, ios::binary | ios::trunc | ios::out);
+    project->writeASDF(file);
+  }
+  {
+    ifstream file(filename, ios::binary | ios::in);
+    auto p1 = readProjectASDF(file);
+    ostringstream buf;
+    buf << *p1->parameters().at("par1");
+    buf << *p1->parameters().at("par2");
+    buf << *p1->parameters().at("par3");
+    EXPECT_EQ("Parameter \"par1\"\n"
+              "Parameter \"par2\"\n"
+              "Parameter \"par3\"\n",
+              buf.str());
+  }
+  remove(filename);
+}
+#endif
+
 TEST(ParameterValue, create) {
   auto par1 = project->parameters().at("par1");
   auto par2 = project->parameters().at("par2");
@@ -313,6 +336,41 @@ TEST(ParameterValue, HDF5) {
   remove(filename);
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+TEST(ParameterValue, ASDF) {
+  auto filename = "parametervalue.asdf";
+  {
+    ofstream file(filename, ios::binary | ios::trunc | ios::out);
+    project->writeASDF(file);
+  }
+  {
+    ifstream file(filename, ios::binary | ios::in);
+    auto p1 = readProjectASDF(file);
+    ostringstream buf;
+    buf << *p1->parameters().at("par1");
+    buf << *p1->parameters().at("par2");
+    buf << *p1->parameters().at("par3");
+    string x5(100000, 'x');
+    string expected = "Parameter \"par1\"\n"
+                      "  ParameterValue \"val1\": Parameter \"par1\"\n"
+                      "    value: int(1)\n"
+                      "Parameter \"par2\"\n"
+                      "  ParameterValue \"val2\": Parameter \"par2\"\n"
+                      "    value: double(2)\n"
+                      "  ParameterValue \"val3\": Parameter \"par2\"\n"
+                      "    value: double(3)\n"
+                      "Parameter \"par3\"\n"
+                      "  ParameterValue \"val4\": Parameter \"par3\"\n"
+                      "    value: string(\"four\")\n"
+                      "  ParameterValue \"val5\": Parameter \"par3\"\n"
+                      "    value: string(\"" +
+                      x5 + "\")\n";
+    EXPECT_EQ(expected, buf.str());
+  }
+  remove(filename);
+}
+#endif
+
 TEST(Configuration, create) {
   EXPECT_TRUE(project->configurations().empty());
   auto conf1 = project->createConfiguration("conf1");
@@ -354,6 +412,29 @@ TEST(Configuration, HDF5) {
   }
   remove(filename);
 }
+
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+TEST(Configuration, ASDF) {
+  auto filename = "configuration.asdf";
+  {
+    ofstream file(filename, ios::binary | ios::trunc | ios::out);
+    project->writeASDF(file);
+  }
+  {
+    ifstream file(filename, ios::binary | ios::in);
+    auto p1 = readProjectASDF(file);
+    ostringstream buf;
+    buf << *p1->configurations().at("conf1");
+    buf << *p1->configurations().at("conf2");
+    EXPECT_EQ("Configuration \"conf1\"\n"
+              "Configuration \"conf2\"\n"
+              "  Parameter \"par1\" ParameterValue \"val1\"\n"
+              "  Parameter \"par2\" ParameterValue \"val2\"\n",
+              buf.str());
+  }
+  remove(filename);
+}
+#endif
 
 TEST(TensorTypes, Scalar3D) {
   auto tt = project->tensortypes().at("Scalar3D");
@@ -518,6 +599,106 @@ TEST(TensorTypes, HDF5) {
   remove(filename);
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+TEST(TensorTypes, ASDF) {
+  auto filename = "tensortypes.asdf";
+  {
+    ofstream file(filename, ios::binary | ios::trunc | ios::out);
+    project->writeASDF(file);
+  }
+  {
+    ifstream file(filename, ios::binary | ios::in);
+    auto p1 = readProjectASDF(file);
+    ostringstream buf;
+    for (const auto &tt : p1->tensortypes())
+      buf << *tt.second;
+    EXPECT_EQ("TensorType \"Scalar0D\": dim=0 rank=0\n"
+              "  TensorComponent \"scalar\": TensorType \"Scalar0D\" "
+              "storage_index=0 indexvalues=[]\n"
+              "TensorType \"Scalar1D\": dim=1 rank=0\n"
+              "  TensorComponent \"scalar\": TensorType \"Scalar1D\" "
+              "storage_index=0 indexvalues=[]\n"
+              "TensorType \"Scalar2D\": dim=2 rank=0\n"
+              "  TensorComponent \"scalar\": TensorType \"Scalar2D\" "
+              "storage_index=0 indexvalues=[]\n"
+              "TensorType \"Scalar3D\": dim=3 rank=0\n"
+              "  TensorComponent \"scalar\": TensorType \"Scalar3D\" "
+              "storage_index=0 indexvalues=[]\n"
+              "TensorType \"Scalar4D\": dim=4 rank=0\n"
+              "  TensorComponent \"scalar\": TensorType \"Scalar4D\" "
+              "storage_index=0 indexvalues=[]\n"
+              "TensorType \"SymmetricTensor2D\": dim=2 rank=2\n"
+              "  TensorComponent \"00\": TensorType \"SymmetricTensor2D\" "
+              "storage_index=0 indexvalues=[0,0]\n"
+              "  TensorComponent \"01\": TensorType \"SymmetricTensor2D\" "
+              "storage_index=1 indexvalues=[0,1]\n"
+              "  TensorComponent \"11\": TensorType \"SymmetricTensor2D\" "
+              "storage_index=2 indexvalues=[1,1]\n"
+              "TensorType \"SymmetricTensor3D\": dim=3 rank=2\n"
+              "  TensorComponent \"00\": TensorType \"SymmetricTensor3D\" "
+              "storage_index=0 indexvalues=[0,0]\n"
+              "  TensorComponent \"01\": TensorType \"SymmetricTensor3D\" "
+              "storage_index=1 indexvalues=[0,1]\n"
+              "  TensorComponent \"02\": TensorType \"SymmetricTensor3D\" "
+              "storage_index=2 indexvalues=[0,2]\n"
+              "  TensorComponent \"11\": TensorType \"SymmetricTensor3D\" "
+              "storage_index=3 indexvalues=[1,1]\n"
+              "  TensorComponent \"12\": TensorType \"SymmetricTensor3D\" "
+              "storage_index=4 indexvalues=[1,2]\n"
+              "  TensorComponent \"22\": TensorType \"SymmetricTensor3D\" "
+              "storage_index=5 indexvalues=[2,2]\n"
+              "TensorType \"SymmetricTensor4D\": dim=4 rank=2\n"
+              "  TensorComponent \"00\": TensorType \"SymmetricTensor4D\" "
+              "storage_index=0 indexvalues=[0,0]\n"
+              "  TensorComponent \"01\": TensorType \"SymmetricTensor4D\" "
+              "storage_index=1 indexvalues=[0,1]\n"
+              "  TensorComponent \"02\": TensorType \"SymmetricTensor4D\" "
+              "storage_index=2 indexvalues=[0,2]\n"
+              "  TensorComponent \"03\": TensorType \"SymmetricTensor4D\" "
+              "storage_index=3 indexvalues=[0,3]\n"
+              "  TensorComponent \"11\": TensorType \"SymmetricTensor4D\" "
+              "storage_index=4 indexvalues=[1,1]\n"
+              "  TensorComponent \"12\": TensorType \"SymmetricTensor4D\" "
+              "storage_index=5 indexvalues=[1,2]\n"
+              "  TensorComponent \"13\": TensorType \"SymmetricTensor4D\" "
+              "storage_index=6 indexvalues=[1,3]\n"
+              "  TensorComponent \"22\": TensorType \"SymmetricTensor4D\" "
+              "storage_index=7 indexvalues=[2,2]\n"
+              "  TensorComponent \"23\": TensorType \"SymmetricTensor4D\" "
+              "storage_index=8 indexvalues=[2,3]\n"
+              "  TensorComponent \"33\": TensorType \"SymmetricTensor4D\" "
+              "storage_index=9 indexvalues=[3,3]\n"
+              "TensorType \"Vector0D\": dim=0 rank=1\n"
+              "TensorType \"Vector1D\": dim=1 rank=1\n"
+              "  TensorComponent \"0\": TensorType \"Vector1D\" "
+              "storage_index=0 indexvalues=[0]\n"
+              "TensorType \"Vector2D\": dim=2 rank=1\n"
+              "  TensorComponent \"0\": TensorType \"Vector2D\" "
+              "storage_index=0 indexvalues=[0]\n"
+              "  TensorComponent \"1\": TensorType \"Vector2D\" "
+              "storage_index=1 indexvalues=[1]\n"
+              "TensorType \"Vector3D\": dim=3 rank=1\n"
+              "  TensorComponent \"0\": TensorType \"Vector3D\" "
+              "storage_index=0 indexvalues=[0]\n"
+              "  TensorComponent \"1\": TensorType \"Vector3D\" "
+              "storage_index=1 indexvalues=[1]\n"
+              "  TensorComponent \"2\": TensorType \"Vector3D\" "
+              "storage_index=2 indexvalues=[2]\n"
+              "TensorType \"Vector4D\": dim=4 rank=1\n"
+              "  TensorComponent \"0\": TensorType \"Vector4D\" "
+              "storage_index=0 indexvalues=[0]\n"
+              "  TensorComponent \"1\": TensorType \"Vector4D\" "
+              "storage_index=1 indexvalues=[1]\n"
+              "  TensorComponent \"2\": TensorType \"Vector4D\" "
+              "storage_index=2 indexvalues=[2]\n"
+              "  TensorComponent \"3\": TensorType \"Vector4D\" "
+              "storage_index=3 indexvalues=[3]\n",
+              buf.str());
+  }
+  remove(filename);
+}
+#endif
+
 TEST(Manifold, create) {
   EXPECT_TRUE(project->manifolds().empty());
   auto conf1 = project->configurations().at("conf1");
@@ -547,6 +728,27 @@ TEST(Manifold, HDF5) {
   }
   remove(filename);
 }
+
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+TEST(Manifold, ASDF) {
+  auto filename = "manifold.asdf";
+  {
+    ofstream file(filename, ios::binary | ios::trunc | ios::out);
+    project->writeASDF(file);
+  }
+  {
+    ifstream file(filename, ios::binary | ios::in);
+    auto p1 = readProjectASDF(file);
+    ostringstream buf;
+    buf << *p1->manifolds().at("m1");
+    EXPECT_EQ("Manifold \"m1\": Configuration \"conf1\" dim=3\n", buf.str());
+    ostringstream buf0;
+    buf0 << *p1->manifolds().at("m0");
+    EXPECT_EQ("Manifold \"m0\": Configuration \"conf1\" dim=0\n", buf0.str());
+  }
+  remove(filename);
+}
+#endif
 
 TEST(TangentSpace, create) {
   EXPECT_TRUE(project->tangentspaces().empty());
@@ -579,6 +781,29 @@ TEST(TangentSpace, HDF5) {
   }
   remove(filename);
 }
+
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+TEST(TangentSpace, ASDF) {
+  auto filename = "tangentspace.asdf";
+  {
+    ofstream file(filename, ios::binary | ios::trunc | ios::out);
+    project->writeASDF(file);
+  }
+  {
+    ifstream file(filename, ios::binary | ios::in);
+    auto p1 = readProjectASDF(file);
+    ostringstream buf;
+    buf << *p1->tangentspaces().at("s1");
+    EXPECT_EQ("TangentSpace \"s1\": Configuration \"conf1\" dim=3\n",
+              buf.str());
+    ostringstream buf0;
+    buf0 << *p1->tangentspaces().at("s0");
+    EXPECT_EQ("TangentSpace \"s0\": Configuration \"conf1\" dim=0\n",
+              buf0.str());
+  }
+  remove(filename);
+}
+#endif
 
 TEST(Field, create) {
   EXPECT_TRUE(project->fields().empty());
@@ -620,6 +845,31 @@ TEST(Field, HDF5) {
   remove(filename);
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+TEST(Field, ASDF) {
+  auto filename = "field.asdf";
+  {
+    ofstream file(filename, ios::binary | ios::trunc | ios::out);
+    project->writeASDF(file);
+  }
+  {
+    ifstream file(filename, ios::binary | ios::in);
+    auto p1 = readProjectASDF(file);
+    ostringstream buf;
+    buf << *p1->fields().at("f1");
+    EXPECT_EQ("Field \"f1\": Configuration \"conf1\" Manifold \"m1\" "
+              "TangentSpace \"s1\" TensorType \"SymmetricTensor3D\"\n",
+              buf.str());
+    ostringstream buf0;
+    buf0 << *p1->fields().at("f0");
+    EXPECT_EQ("Field \"f0\": Configuration \"conf1\" Manifold \"m0\" "
+              "TangentSpace \"s0\" TensorType \"Scalar0D\"\n",
+              buf0.str());
+  }
+  remove(filename);
+}
+#endif
+
 TEST(CoordinateSystem, create) {
   EXPECT_TRUE(project->coordinatesystems().empty());
   auto conf1 = project->configurations().at("conf1");
@@ -646,6 +896,26 @@ TEST(CoordinateSystem, HDF5) {
   }
   remove(filename);
 }
+
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+TEST(CoordinateSystem, ASDF) {
+  auto filename = "coordinatesystem.asdf";
+  {
+    ofstream file(filename, ios::binary | ios::trunc | ios::out);
+    project->writeASDF(file);
+  }
+  {
+    ifstream file(filename, ios::binary | ios::in);
+    auto p1 = readProjectASDF(file);
+    ostringstream buf;
+    buf << *p1->coordinatesystems().at("cs1");
+    EXPECT_EQ(
+        "CoordinateSystem \"cs1\": Configuration \"conf1\" Manifold \"m1\"\n",
+        buf.str());
+  }
+  remove(filename);
+}
+#endif
 
 TEST(Discretization, create) {
   auto m1 = project->manifolds().at("m1");
@@ -688,6 +958,33 @@ TEST(Discretization, HDF5) {
   remove(filename);
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+TEST(Discretization, ASDF) {
+  auto filename = "discretization.asdf";
+  {
+    ofstream file(filename, ios::binary | ios::trunc | ios::out);
+    project->writeASDF(file);
+  }
+  {
+    ifstream file(filename, ios::binary | ios::in);
+    auto p1 = readProjectASDF(file);
+    ostringstream buf;
+    buf << *p1->manifolds().at("m1")->discretizations().at("d1");
+    buf << *p1->manifolds().at("m1")->discretizations().at("d2");
+    EXPECT_EQ(
+        "Discretization \"d1\": Configuration \"conf1\" Manifold \"m1\"\n"
+        "Discretization \"d2\": Configuration \"conf1\" Manifold \"m1\"\n",
+        buf.str());
+    ostringstream buf0;
+    buf0 << *p1->manifolds().at("m0")->discretizations().at("d0");
+    EXPECT_EQ(
+        "Discretization \"d0\": Configuration \"conf1\" Manifold \"m0\"\n",
+        buf0.str());
+  }
+  remove(filename);
+}
+#endif
+
 TEST(SubDiscretization, create) {
   auto m1 = project->manifolds().at("m1");
   auto d1 = m1->discretizations().at("d1");
@@ -717,6 +1014,27 @@ TEST(SubDiscretization, HDF5) {
   }
   remove(filename);
 }
+
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+TEST(SubDiscretization, ASDF) {
+  auto filename = "subdiscretization.asdf";
+  {
+    ofstream file(filename, ios::binary | ios::trunc | ios::out);
+    project->writeASDF(file);
+  }
+  {
+    ifstream file(filename, ios::binary | ios::in);
+    auto p1 = readProjectASDF(file);
+    ostringstream buf;
+    buf << *p1->manifolds().at("m1")->subdiscretizations().at("sd1");
+    EXPECT_EQ("SubDiscretization \"sd1\": Manifold \"m1\" parent "
+              "Discretization \"d1\" child Discretization \"d2\" "
+              "factor=[1,1,1] offset=[0.5,0.5,0.5]\n",
+              buf.str());
+  }
+  remove(filename);
+}
+#endif
 
 TEST(DiscretizationBlock, create) {
   auto m1 = project->manifolds().at("m1");
@@ -763,6 +1081,32 @@ TEST(DiscretizationBlock, HDF5) {
   remove(filename);
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+TEST(DiscretizationBlock, ASDF) {
+  auto filename = "discretizationblock.asdf";
+  {
+    ofstream file(filename, ios::binary | ios::trunc | ios::out);
+    project->writeASDF(file);
+  }
+  {
+    ifstream file(filename, ios::binary | ios::in);
+    auto p1 = readProjectASDF(file);
+    ostringstream buf;
+    buf << *p1->manifolds().at("m1")->discretizations().at("d1");
+    EXPECT_EQ("Discretization \"d1\": Configuration \"conf1\" Manifold \"m1\"\n"
+              "  DiscretizationBlock \"db1\": Discretization \"d1\" "
+              "box=([3,3,3]:[9,10,11])\n",
+              buf.str());
+    ostringstream buf0;
+    buf0 << *p1->manifolds().at("m0")->discretizations().at("d0");
+    EXPECT_EQ("Discretization \"d0\": Configuration \"conf1\" Manifold \"m0\"\n"
+              "  DiscretizationBlock \"db0\": Discretization \"d0\" box=(1)\n",
+              buf0.str());
+  }
+  remove(filename);
+}
+#endif
+
 TEST(Basis, create) {
   auto conf1 = project->configurations().at("conf1");
   auto s1 = project->tangentspaces().at("s1");
@@ -797,6 +1141,29 @@ TEST(Basis, HDF5) {
   }
   remove(filename);
 }
+
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+TEST(Basis, ASDF) {
+  auto filename = "basis.asdf";
+  {
+    ofstream file(filename, ios::binary | ios::trunc | ios::out);
+    project->writeASDF(file);
+  }
+  {
+    ifstream file(filename, ios::binary | ios::in);
+    auto p1 = readProjectASDF(file);
+    ostringstream buf;
+    buf << *p1->tangentspaces().at("s1")->bases().at("b1");
+    EXPECT_EQ("Basis \"b1\": Configuration \"conf1\" TangentSpace \"s1\"\n",
+              buf.str());
+    ostringstream buf0;
+    buf0 << *p1->tangentspaces().at("s0")->bases().at("b0");
+    EXPECT_EQ("Basis \"b0\": Configuration \"conf1\" TangentSpace \"s0\"\n",
+              buf0.str());
+  }
+  remove(filename);
+}
+#endif
 
 TEST(BasisVector, create) {
   auto s1 = project->tangentspaces().at("s1");
@@ -833,6 +1200,28 @@ TEST(BasisVector, HDF5) {
   }
   remove(filename);
 }
+
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+TEST(BasisVector, ASDF) {
+  auto filename = "basisvector.asdf";
+  {
+    ofstream file(filename, ios::binary | ios::trunc | ios::out);
+    project->writeASDF(file);
+  }
+  {
+    ifstream file(filename, ios::binary | ios::in);
+    auto p1 = readProjectASDF(file);
+    ostringstream buf;
+    buf << *p1->tangentspaces().at("s1")->bases().at("b1");
+    EXPECT_EQ("Basis \"b1\": Configuration \"conf1\" TangentSpace \"s1\"\n"
+              "  BasisVector \"x\": Basis \"b1\" direction=0\n"
+              "  BasisVector \"y\": Basis \"b1\" direction=1\n"
+              "  BasisVector \"z\": Basis \"b1\" direction=2\n",
+              buf.str());
+  }
+  remove(filename);
+}
+#endif
 
 TEST(DiscreteField, create) {
   auto f1 = project->fields().at("f1");
@@ -883,6 +1272,35 @@ TEST(DiscreteField, HDF5) {
   remove(filename);
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+TEST(DiscreteField, ASDF) {
+  auto filename = "discretefield.asdf";
+  {
+    ofstream file(filename, ios::binary | ios::trunc | ios::out);
+    project->writeASDF(file);
+  }
+  {
+    ifstream file(filename, ios::binary | ios::in);
+    auto p1 = readProjectASDF(file);
+    ostringstream buf;
+    buf << *p1->fields().at("f1");
+    EXPECT_EQ("Field \"f1\": Configuration \"conf1\" Manifold \"m1\" "
+              "TangentSpace \"s1\" TensorType \"SymmetricTensor3D\"\n"
+              "  DiscreteField \"df1\": Configuration \"conf1\" Field \"f1\" "
+              "Discretization \"d1\" Basis \"b1\"\n",
+              buf.str());
+    ostringstream buf0;
+    buf0 << *p1->fields().at("f0");
+    EXPECT_EQ("Field \"f0\": Configuration \"conf1\" Manifold \"m0\" "
+              "TangentSpace \"s0\" TensorType \"Scalar0D\"\n"
+              "  DiscreteField \"df0\": Configuration \"conf1\" Field \"f0\" "
+              "Discretization \"d0\" Basis \"b0\"\n",
+              buf0.str());
+  }
+  remove(filename);
+}
+#endif
+
 TEST(CoordinateField, create) {
   auto cs1 = project->coordinatesystems().at("cs1");
   auto f1 = project->fields().at("f1");
@@ -911,6 +1329,28 @@ TEST(CoordinateField, HDF5) {
   }
   remove(filename);
 }
+
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+TEST(CoordinateField, ASDF) {
+  auto filename = "coordinatefield.asdf";
+  {
+    ofstream file(filename, ios::binary | ios::trunc | ios::out);
+    project->writeASDF(file);
+  }
+  {
+    ifstream file(filename, ios::binary | ios::in);
+    auto p1 = readProjectASDF(file);
+    ostringstream buf;
+    buf << *p1->coordinatesystems().at("cs1")->coordinatefields().at("csf1");
+    EXPECT_EQ("CoordinateField \"csf1\": CoordinateSystem \"cs1\" "
+              "direction=0 Field "
+              "\"f1\"\n",
+
+              buf.str());
+  }
+  remove(filename);
+}
+#endif
 
 TEST(DiscreteFieldBlock, create) {
   auto f1 = project->fields().at("f1");
@@ -957,6 +1397,35 @@ TEST(DiscreteFieldBlock, HDF5) {
   }
   remove(filename);
 }
+
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+TEST(DiscreteFieldBlock, ASDF) {
+  auto filename = "discretefieldblock.asdf";
+  {
+    ofstream file(filename, ios::binary | ios::trunc | ios::out);
+    project->writeASDF(file);
+  }
+  {
+    ifstream file(filename, ios::binary | ios::in);
+    auto p1 = readProjectASDF(file);
+    ostringstream buf;
+    buf << *p1->fields().at("f1")->discretefields().at("df1");
+    EXPECT_EQ("DiscreteField \"df1\": Configuration \"conf1\" Field \"f1\" "
+              "Discretization \"d1\" Basis \"b1\"\n"
+              "  DiscreteFieldBlock \"dfb1\": DiscreteField \"df1\" "
+              "DiscretizationBlock \"db1\"\n",
+              buf.str());
+    ostringstream buf0;
+    buf0 << *p1->fields().at("f0")->discretefields().at("df0");
+    EXPECT_EQ("DiscreteField \"df0\": Configuration \"conf1\" Field \"f0\" "
+              "Discretization \"d0\" Basis \"b0\"\n"
+              "  DiscreteFieldBlock \"dfb0\": DiscreteField \"df0\" "
+              "DiscretizationBlock \"db0\"\n",
+              buf0.str());
+  }
+  remove(filename);
+}
+#endif
 
 TEST(DiscreteFieldBlockComponent, create) {
   auto f1 = project->fields().at("f1");
@@ -1044,6 +1513,51 @@ TEST(DiscreteFieldBlockComponent, HDF5) {
   }
   remove(filename);
 }
+
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+TEST(DiscreteFieldBlockComponent, ASDF) {
+  auto filename = "discretizationfieldblockcomponent.asdf";
+  {
+    ofstream file(filename, ios::binary | ios::trunc | ios::out);
+    project->writeASDF(file);
+  }
+  {
+    ifstream file(filename, ios::binary | ios::in);
+    auto p1 = readProjectASDF(file);
+    ostringstream buf;
+    buf << *p1->fields()
+                .at("f1")
+                ->discretefields()
+                .at("df1")
+                ->discretefieldblocks()
+                .at("dfb1");
+    EXPECT_EQ("DiscreteFieldBlock \"dfb1\": DiscreteField \"df1\" "
+              "DiscretizationBlock \"db1\"\n"
+              "  DiscreteFieldBlockComponent \"dfbd1\": DiscreteFieldBlock "
+              "\"dfb1\" TensorComponent \"00\"\n"
+              "  DiscreteFieldBlockComponent \"dfbd2\": DiscreteFieldBlock "
+              "\"dfb1\" TensorComponent \"01\"\n"
+              "  DiscreteFieldBlockComponent \"dfbd3\": DiscreteFieldBlock "
+              "\"dfb1\" TensorComponent \"02\"\n"
+              "  DiscreteFieldBlockComponent \"dfbd4\": DiscreteFieldBlock "
+              "\"dfb1\" TensorComponent \"11\"\n",
+              buf.str());
+    ostringstream buf0;
+    buf0 << *p1->fields()
+                 .at("f0")
+                 ->discretefields()
+                 .at("df0")
+                 ->discretefieldblocks()
+                 .at("dfb0");
+    EXPECT_EQ("DiscreteFieldBlock \"dfb0\": DiscreteField \"df0\" "
+              "DiscretizationBlock \"db0\"\n"
+              "  DiscreteFieldBlockComponent \"dfbd0\": DiscreteFieldBlock "
+              "\"dfb0\" TensorComponent \"scalar\"\n",
+              buf0.str());
+  }
+  remove(filename);
+}
+#endif
 
 TEST(DataBlock, create) {
   auto f1 = project->fields().at("f1");
@@ -1214,6 +1728,178 @@ TEST(DataBlock, cleanup) {
   dfbd4->unsetDataBlock();
 }
 
+#warning "TODO"
+#if 0
+TEST(DataBlock, create2) {
+  auto f1 = project->fields().at("f1");
+  auto df1 = f1->discretefields().at("df1");
+  auto dfb1 = df1->discretefieldblocks().at("dfb1");
+  auto tt1 = f1->tensortype();
+  auto bxx1 = tt1->tensorcomponents().at("00");
+  auto bxy1 = tt1->tensorcomponents().at("01");
+  auto bxz1 = tt1->tensorcomponents().at("02");
+  auto byy1 = tt1->tensorcomponents().at("11");
+  auto byz1 = tt1->tensorcomponents().at("12");
+  auto dfbd1 = dfb1->discretefieldblockcomponents().at("dfbd1");
+  auto dfbd2 = dfb1->discretefieldblockcomponents().at("dfbd2");
+  auto dfbd3 = dfb1->discretefieldblockcomponents().at("dfbd3");
+  auto dfbd4 = dfb1->discretefieldblockcomponents().at("dfbd4");
+  EXPECT_FALSE(bool(dfbd1->datablock()));
+  EXPECT_FALSE(bool(dfbd2->datablock()));
+  EXPECT_FALSE(bool(dfbd3->datablock()));
+  EXPECT_FALSE(bool(dfbd4->datablock()));
+  dfbd1->createExtLink("discretizationfieldblockcomponent.s5",
+                       project->name() + "/tensortypes/Scalar3D");
+  dfbd1->unsetDataBlock();
+  dfbd2->createExtLink("discretizationfieldblockcomponent.s5",
+                       project->name() + "/tensortypes/Scalar3D");
+  dfbd3->createDataSet<double>();
+  int rank =
+      dfb1->discretizationblock()->discretization()->manifold()->dimension();
+  auto dims = dfb1->discretizationblock()->box().shape();
+  double origin{-1.0};
+  auto delta = dpoint<double>(rank, 2.0) / dims;
+  dfbd4->createDataRange(origin, delta);
+  EXPECT_FALSE(bool(dfbd1->datablock()));
+  EXPECT_TRUE(bool(dfbd2->extlink()));
+  EXPECT_TRUE(bool(dfbd3->dataset()));
+  EXPECT_TRUE(bool(dfbd4->datarange()));
+
+  auto f0 = project->fields().at("f0");
+  auto df0 = f0->discretefields().at("df0");
+  auto dfb0 = df0->discretefieldblocks().at("dfb0");
+  auto tt0 = f0->tensortype();
+  auto b0 = tt0->tensorcomponents().at("scalar");
+  auto dfbd0 = dfb0->discretefieldblockcomponents().at("dfbd0");
+  EXPECT_FALSE(bool(dfbd0->datablock()));
+  int rank0 =
+      dfb0->discretizationblock()->discretization()->manifold()->dimension();
+  double origin0{-1.0};
+  dpoint<double> delta0(rank0);
+  dfbd0->createDataRange(origin0, delta0);
+  EXPECT_TRUE(bool(dfbd0->datarange()));
+  dfbd0->unsetDataBlock();
+  EXPECT_FALSE(bool(dfbd0->datarange()));
+  dfbd0->createDataSet<int>();
+  EXPECT_TRUE(bool(dfbd0->dataset()));
+}
+
+TEST(DataBlock, ASDF) {
+  auto filename = "datablock.asdf";
+  {
+    ofstream file(filename, ios::binary | ios::trunc | ios::out);
+    project->writeASDF(file);
+    auto f1 = project->fields().at("f1");
+    auto df1 = f1->discretefields().at("df1");
+    auto dfb1 = df1->discretefieldblocks().at("dfb1");
+    auto dfbd3 = dfb1->discretefieldblockcomponents().at("dfbd3");
+    auto ds = dfbd3->dataset();
+    auto shape = box_t(ds->box().lower(), point_t(vector<int>{10, 11, 12}));
+    auto box = ds->box();
+    vector<double> data(shape.size());
+    for (int n = 0; n < shape.size(); ++n)
+      data[n] = 42 + n;
+    ds->writeData(data, shape, box);
+  }
+  {
+    ifstream file(filename, ios::binary | ios::in);
+    auto p1 = readProjectASDF(file);
+    ostringstream buf;
+    buf << *p1->fields()
+                .at("f1")
+                ->discretefields()
+                .at("df1")
+                ->discretefieldblocks()
+                .at("dfb1");
+    EXPECT_EQ("DiscreteFieldBlock \"dfb1\": DiscreteField \"df1\" "
+              "DiscretizationBlock \"db1\"\n"
+              "  DiscreteFieldBlockComponent \"dfbd1\": DiscreteFieldBlock "
+              "\"dfb1\" TensorComponent \"00\"\n"
+              "  DiscreteFieldBlockComponent \"dfbd2\": DiscreteFieldBlock "
+              "\"dfb1\" TensorComponent \"01\"\n"
+              "    CopyObj: ???:\"data\"\n"
+              "  DiscreteFieldBlockComponent \"dfbd3\": DiscreteFieldBlock "
+              "\"dfb1\" TensorComponent \"02\"\n"
+              "    CopyObj: ???:\"data\"\n"
+              "  DiscreteFieldBlockComponent \"dfbd4\": DiscreteFieldBlock "
+              "\"dfb1\" TensorComponent \"11\"\n"
+              "    DataRange: origin=-1 delta=[0.333333,0.285714,0.25]\n",
+              buf.str());
+    ostringstream buf0;
+    buf0 << *p1->fields()
+                 .at("f0")
+                 ->discretefields()
+                 .at("df0")
+                 ->discretefieldblocks()
+                 .at("dfb0");
+    EXPECT_EQ("DiscreteFieldBlock \"dfb0\": DiscreteField \"df0\" "
+              "DiscretizationBlock \"db0\"\n"
+              "  DiscreteFieldBlockComponent \"dfbd0\": DiscreteFieldBlock "
+              "\"dfb0\" TensorComponent \"scalar\"\n"
+              "    CopyObj: ???:\"data\"\n",
+              buf0.str());
+    auto ds = p1->fields()
+                  .at("f1")
+                  ->discretefields()
+                  .at("df1")
+                  ->discretefieldblocks()
+                  .at("dfb1")
+                  ->discretefieldblockcomponents()
+                  .at("dfbd3")
+                  ->copyobj();
+    EXPECT_TRUE(bool(ds));
+    auto data = ds->readData<double>();
+    EXPECT_EQ(6 * 7 * 8, data.size());
+    ostringstream bufds;
+    using namespace Output;
+    bufds << data;
+    EXPECT_EQ("[42,43,44,45,46,47,49,50,51,52,53,54,56,57,58,59,60,61,63,64,65,"
+              "66,67,68,70,71,72,73,74,75,77,78,79,80,81,82,84,85,86,87,88,89,"
+              "98,99,100,101,102,103,105,106,107,108,109,110,112,113,114,115,"
+              "116,117,119,120,121,122,123,124,126,127,128,129,130,131,133,134,"
+              "135,136,137,138,140,141,142,143,144,145,154,155,156,157,158,159,"
+              "161,162,163,164,165,166,168,169,170,171,172,173,175,176,177,178,"
+              "179,180,182,183,184,185,186,187,189,190,191,192,193,194,196,197,"
+              "198,199,200,201,210,211,212,213,214,215,217,218,219,220,221,222,"
+              "224,225,226,227,228,229,231,232,233,234,235,236,238,239,240,241,"
+              "242,243,245,246,247,248,249,250,252,253,254,255,256,257,266,267,"
+              "268,269,270,271,273,274,275,276,277,278,280,281,282,283,284,285,"
+              "287,288,289,290,291,292,294,295,296,297,298,299,301,302,303,304,"
+              "305,306,308,309,310,311,312,313,322,323,324,325,326,327,329,330,"
+              "331,332,333,334,336,337,338,339,340,341,343,344,345,346,347,348,"
+              "350,351,352,353,354,355,357,358,359,360,361,362,364,365,366,367,"
+              "368,369,378,379,380,381,382,383,385,386,387,388,389,390,392,393,"
+              "394,395,396,397,399,400,401,402,403,404,406,407,408,409,410,411,"
+              "413,414,415,416,417,418,420,421,422,423,424,425,434,435,436,437,"
+              "438,439,441,442,443,444,445,446,448,449,450,451,452,453,455,456,"
+              "457,458,459,460,462,463,464,465,466,467,469,470,471,472,473,474,"
+              "476,477,478,479,480,481]",
+              bufds.str());
+  }
+  remove(filename);
+}
+
+TEST(DataBlock, cleanup2) {
+  // Remove data blocks again
+  auto f0 = project->fields().at("f0");
+  auto df0 = f0->discretefields().at("df0");
+  auto dfb0 = df0->discretefieldblocks().at("dfb0");
+  auto dfbd0 = dfb0->discretefieldblockcomponents().at("dfbd0");
+  dfbd0->unsetDataBlock();
+  auto f1 = project->fields().at("f1");
+  auto df1 = f1->discretefields().at("df1");
+  auto dfb1 = df1->discretefieldblocks().at("dfb1");
+  auto dfbd1 = dfb1->discretefieldblockcomponents().at("dfbd1");
+  dfbd1->unsetDataBlock();
+  auto dfbd2 = dfb1->discretefieldblockcomponents().at("dfbd2");
+  dfbd2->unsetDataBlock();
+  auto dfbd3 = dfb1->discretefieldblockcomponents().at("dfbd3");
+  dfbd3->unsetDataBlock();
+  auto dfbd4 = dfb1->discretefieldblockcomponents().at("dfbd4");
+  dfbd4->unsetDataBlock();
+}
+#endif
+
 TEST(ProjectMerge, merge) {
   auto filename = "project.s5";
   string orig = [&] {
@@ -1229,8 +1915,6 @@ TEST(ProjectMerge, merge) {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);
     return readProject(file);
   }();
-  // project2->parameters().at("par3")->parametervalues().at("val4")->setValue(
-  //     "valA");
   project2->merge(project);
   string curr = [&] {
     ostringstream buf;
