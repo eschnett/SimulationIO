@@ -45,6 +45,28 @@ shared_ptr<Project> readProject(const ASDF::reader_state &rs,
   assert(project->invariant());
   return project;
 }
+map<string, shared_ptr<Project>> readProjectsASDF(istream &is) {
+  map<string, shared_ptr<Project>> projects;
+  function<void(const ASDF::reader_state &rs, const string &name,
+                const YAML::Node &node)>
+      read_project{[&](const ASDF::reader_state &rs, const string &name,
+                       const YAML::Node &node) {
+        projects[name] = readProject(rs, node);
+      }};
+  map<string, function<void(const ASDF::reader_state &rs, const string &name,
+                            const YAML::Node &node)>>
+      readers{{"tag:github.com/eschnett/SimulationIO/asdf-cxx/Project-1.0.0",
+               read_project}};
+  auto doc = ASDF::asdf(is, readers);
+  return projects;
+}
+
+shared_ptr<Project> readProjectASDF(istream &is) {
+  auto projects = readProjectsASDF(is);
+  assert(projects.size() == 1);
+  return projects.begin()->second;
+}
+
 #endif
 
 bool Project::invariant() const { return Common::invariant(); }
@@ -405,6 +427,15 @@ ASDF::writer &Project::write(ASDF::writer &w) const {
   aw.group("fields", fields());
   aw.group("coordinatesystems", coordinatesystems());
   return w;
+}
+
+void Project::writeASDF(ostream &file) const {
+  map<string, string> tags{
+      {"sio", "tag:github.com/eschnett/SimulationIO/asdf-cxx/"}};
+  map<string, function<void(ASDF::writer & w)>> funs{
+      {name(), [&](ASDF::writer &w) { w << *this; }}};
+  const auto &doc = ASDF::asdf(move(tags), move(funs));
+  doc.write(file);
 }
 #endif
 

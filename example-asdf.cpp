@@ -171,14 +171,9 @@ int main(int argc, char **argv) {
   // output
   // cout << *project;
 
-  map<string, string> tags{
-      {"sio", "tag:github.com/eschnett/SimulationIO/asdf-cxx/"}};
-  map<string, function<void(ASDF::writer & w)>> funs{
-      {project->name(), [&](ASDF::writer &w) { w << *project; }}};
-  const auto &doc = ASDF::asdf(move(tags), move(funs));
   auto filename = "example.asdf";
   ofstream file(filename, ios::binary | ios::trunc | ios::out);
-  doc.write(file);
+  project->writeASDF(file);
   file.close();
 
   cout << "Done.\n";

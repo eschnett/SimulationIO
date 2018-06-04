@@ -12,6 +12,7 @@
 
 #include <H5Cpp.h>
 
+#include <functional>
 #include <iostream>
 #include <limits>
 #include <map>
@@ -21,6 +22,8 @@
 
 namespace SimulationIO {
 
+using std::function;
+using std::istream;
 using std::make_shared;
 using std::map;
 using std::numeric_limits;
@@ -36,6 +39,8 @@ shared_ptr<Project> readProject(const H5::H5Location &loc);
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<Project> readProject(const ASDF::reader_state &rs,
                                 const YAML::Node &node);
+map<string, shared_ptr<Project>> readProjectsASDF(istream &is);
+shared_ptr<Project> readProjectASDF(istream &is);
 #endif
 
 class Parameter;
@@ -159,6 +164,7 @@ public:
                                   const Project &project) {
     return project.write(writer);
   }
+  void writeASDF(ostream &file) const;
 #endif
 
   shared_ptr<Parameter> createParameter(const string &name);
