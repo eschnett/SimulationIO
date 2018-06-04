@@ -206,6 +206,17 @@ shared_ptr<ASDFData> DiscreteFieldBlockComponent::createASDFData(
   m_datablock = res;
   return res;
 }
+
+shared_ptr<ASDFRef>
+DiscreteFieldBlockComponent::createASDFRef(const string &filename,
+                                           const vector<string> &path) {
+  assert(!m_datablock);
+  auto res =
+      make_shared<ASDFRef>(discretefieldblock()->discretizationblock()->box(),
+                           make_shared<ASDF::reference>(filename, path));
+  m_datablock = res;
+  return res;
+}
 #endif
 
 string DiscreteFieldBlockComponent::getPath() const {

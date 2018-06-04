@@ -169,6 +169,8 @@ public:
     return createASDFData(blob, make_shared<ASDF::datatype_t>(
                                     ASDF::get_scalar_type_id<T>::value));
   }
+  shared_ptr<ASDFRef> createASDFRef(const string &filename,
+                                    const vector<string> &path);
 #endif
 
   string getPath() const;

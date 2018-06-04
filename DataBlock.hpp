@@ -514,8 +514,8 @@ public:
     return DataBlock::invariant() && bool(m_blob) && bool(m_datatype);
   }
 
-  ASDFData(const box_t &box, shared_ptr<ASDF::generic_blob_t> blob,
-           shared_ptr<ASDF::datatype_t> datatype)
+  ASDFData(const box_t &box, const shared_ptr<ASDF::generic_blob_t> &blob,
+           const shared_ptr<ASDF::datatype_t> &datatype)
       : DataBlock(box), m_blob(blob), m_datatype(datatype) {
     assert(blob->nbytes() == box.size() * datatype->type_size());
   }
@@ -541,7 +541,7 @@ public:
     return DataBlock::invariant() && bool(m_ndarray);
   }
 
-  ASDFArray(const box_t &box, shared_ptr<ASDF::ndarray> arr)
+  ASDFArray(const box_t &box, const shared_ptr<ASDF::ndarray> &arr)
       : DataBlock(box), m_ndarray(arr) {}
 
   virtual ~ASDFArray() {}
@@ -551,6 +551,30 @@ public:
   static shared_ptr<ASDFArray> read_asdf(const ASDF::reader_state &rs,
                                          const YAML::Node &node,
                                          const box_t &box);
+  virtual ostream &output(ostream &os) const;
+  virtual void write(const H5::Group &group, const string &entry) const;
+  virtual void write(ASDF::writer &w, const string &entry) const;
+};
+
+// An ASDF reference
+class ASDFRef : public DataBlock {
+  shared_ptr<ASDF::reference> m_reference;
+
+public:
+  virtual bool invariant() const {
+    return DataBlock::invariant() && bool(m_reference);
+  }
+
+  ASDFRef(const box_t &box, const shared_ptr<ASDF::reference> &ref)
+      : DataBlock(box), m_reference(ref) {}
+
+  virtual ~ASDFRef() {}
+
+  static shared_ptr<ASDFRef> read(const H5::Group &group, const string &entry,
+                                  const box_t &box);
+  static shared_ptr<ASDFRef> read_asdf(const ASDF::reader_state &rs,
+                                       const YAML::Node &node,
+                                       const box_t &box);
   virtual ostream &output(ostream &os) const;
   virtual void write(const H5::Group &group, const string &entry) const;
   virtual void write(ASDF::writer &w, const string &entry) const;

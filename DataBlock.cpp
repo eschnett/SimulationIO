@@ -62,14 +62,14 @@ const vector<DataBlock::reader_t> DataBlock::readers = {
     DataRange::read, DataSet::read,   DataBufferEntry::read,
     CopyObj::read,   ExtLink::read,
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-    ASDFData::read,  ASDFArray::read,
+    ASDFData::read,  ASDFArray::read, ASDFRef::read,
 #endif
 };
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 const vector<DataBlock::asdf_reader_t> DataBlock::asdf_readers = {
     DataRange::read_asdf, DataSet::read_asdf, DataBufferEntry::read_asdf,
     CopyObj::read_asdf,   ExtLink::read_asdf, ASDFData::read_asdf,
-    ASDFArray::read_asdf,
+    ASDFArray::read_asdf, ASDFRef::read_asdf,
 };
 #endif
 
@@ -759,6 +759,34 @@ void ASDFArray::write(const H5::Group &group, const string &entry) const {
 
 void ASDFArray::write(ASDF::writer &w, const string &entry) const {
   w << YAML::Key << entry << YAML::Value << *m_ndarray;
+}
+
+// ASDFRef
+
+shared_ptr<ASDFRef> ASDFRef::read(const H5::Group &group, const string &entry,
+                                  const box_t &box) {
+  return nullptr;
+}
+
+shared_ptr<ASDFRef> ASDFRef::read_asdf(const ASDF::reader_state &rs,
+                                       const YAML::Node &node,
+                                       const box_t &box) {
+  if (node.IsMap() && node.size() == 1 && node["$ref"])
+    return make_shared<ASDFRef>(box, make_shared<ASDF::reference>(rs, node));
+  return nullptr;
+}
+
+ostream &ASDFRef::output(ostream &os) const {
+  // TODO: output more detail
+  return os << "ASDFRef";
+}
+
+void ASDFRef::write(const H5::Group &group, const string &entry) const {
+  assert(0);
+}
+
+void ASDFRef::write(ASDF::writer &w, const string &entry) const {
+  w << YAML::Key << entry << YAML::Value << *m_reference;
 }
 
 #endif
