@@ -127,7 +127,8 @@ void DiscreteFieldBlockComponent::write(const H5::H5Location &loc,
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 vector<string> DiscreteFieldBlockComponent::yaml_path() const {
-  return concat(discretefieldblock()->yaml_path(), {type(), name()});
+  return concat(discretefieldblock()->yaml_path(),
+                {"discretefieldblockcomponents", name()});
 }
 
 ASDF::writer &DiscreteFieldBlockComponent::write(ASDF::writer &w) const {

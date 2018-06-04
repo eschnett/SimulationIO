@@ -64,7 +64,7 @@ void BasisVector::write(const H5::H5Location &loc,
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 vector<string> BasisVector::yaml_path() const {
-  return concat(basis()->yaml_path(), {type(), name()});
+  return concat(basis()->yaml_path(), {"basisvectors", name()});
 }
 
 ASDF::writer &BasisVector::write(ASDF::writer &w) const {

@@ -496,9 +496,8 @@ shared_ptr<Parameter> Project::getParameter(const ASDF::reader_state &rs,
   const auto &doc = doc_path.first;
   const auto &path = doc_path.second;
   assert(doc.empty());
-  assert(path.size() == 3);
   assert(path.at(0) == name());
-  assert(path.at(1) == "Parameter");
+  assert(path.at(1) == "parameters");
   const auto &parameter_name = path.at(2);
   return parameters().at(parameter_name);
 }
@@ -563,9 +562,8 @@ Project::getConfiguration(const ASDF::reader_state &rs,
   const auto &doc = doc_path.first;
   const auto &path = doc_path.second;
   assert(doc.empty());
-  assert(path.size() == 3);
   assert(path.at(0) == name());
-  assert(path.at(1) == "Configuration");
+  assert(path.at(1) == "configurations");
   const auto &configuration_name = path.at(2);
   return configurations().at(configuration_name);
 }
@@ -634,9 +632,8 @@ shared_ptr<TensorType> Project::getTensorType(const ASDF::reader_state &rs,
   const auto &doc = doc_path.first;
   const auto &path = doc_path.second;
   assert(doc.empty());
-  assert(path.size() == 3);
   assert(path.at(0) == name());
-  assert(path.at(1) == "TensorType");
+  assert(path.at(1) == "tensortypes");
   const auto &tensortype_name = path.at(2);
   return tensortypes().at(tensortype_name);
 }
@@ -710,9 +707,8 @@ shared_ptr<Manifold> Project::getManifold(const ASDF::reader_state &rs,
   const auto &doc = doc_path.first;
   const auto &path = doc_path.second;
   assert(doc.empty());
-  assert(path.size() == 3);
   assert(path.at(0) == name());
-  assert(path.at(1) == "Manifold");
+  assert(path.at(1) == "manifolds");
   const auto &manifold_name = path.at(2);
   return manifolds().at(manifold_name);
 }
@@ -786,9 +782,8 @@ shared_ptr<TangentSpace> Project::getTangentSpace(const ASDF::reader_state &rs,
   const auto &doc = doc_path.first;
   const auto &path = doc_path.second;
   assert(doc.empty());
-  assert(path.size() == 3);
   assert(path.at(0) == name());
-  assert(path.at(1) == "TangentSpace");
+  assert(path.at(1) == "tangentspaces");
   const auto &tangentspace_name = path.at(2);
   return tangentspaces().at(tangentspace_name);
 }
@@ -871,9 +866,8 @@ shared_ptr<Field> Project::getField(const ASDF::reader_state &rs,
   const auto &doc = doc_path.first;
   const auto &path = doc_path.second;
   assert(doc.empty());
-  assert(path.size() == 3);
   assert(path.at(0) == name());
-  assert(path.at(1) == "Field");
+  assert(path.at(1) == "fields");
   const auto &field_name = path.at(2);
   return fields().at(field_name);
 }

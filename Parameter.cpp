@@ -70,7 +70,7 @@ void Parameter::write(const H5::H5Location &loc,
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 vector<string> Parameter::yaml_path() const {
-  return concat(project()->yaml_path(), {type(), name()});
+  return concat(project()->yaml_path(), {"parameters", name()});
 }
 
 ASDF::writer &Parameter::write(ASDF::writer &w) const {
@@ -144,6 +144,22 @@ Parameter::readParameterValue(const ASDF::reader_state &rs,
                   "Parameter", "parametervalues");
   assert(parametervalue->invariant());
   return parametervalue;
+}
+
+shared_ptr<ParameterValue>
+Parameter::getParameterValue(const ASDF::reader_state &rs,
+                             const YAML::Node &node) {
+  auto ref = ASDF::reference(rs, node);
+  auto doc_path = ref.get_split_target();
+  const auto &doc = doc_path.first;
+  const auto &path = doc_path.second;
+  assert(doc.empty());
+  assert(path.at(0) == project()->name());
+  assert(path.at(1) == "parameters");
+  assert(path.at(2) == name());
+  assert(path.at(3) == "parametervalues");
+  const auto &parametervalue_name = path.at(4);
+  return parametervalues().at(parametervalue_name);
 }
 #endif
 

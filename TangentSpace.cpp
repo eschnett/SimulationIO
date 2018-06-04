@@ -106,7 +106,7 @@ void TangentSpace::write(const H5::H5Location &loc,
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 vector<string> TangentSpace::yaml_path() const {
-  return concat(project()->yaml_path(), {type(), name()});
+  return concat(project()->yaml_path(), {"tangentspaces", name()});
 }
 
 ASDF::writer &TangentSpace::write(ASDF::writer &w) const {
@@ -177,11 +177,10 @@ shared_ptr<Basis> TangentSpace::getBasis(const ASDF::reader_state &rs,
   const auto &doc = doc_path.first;
   const auto &path = doc_path.second;
   assert(doc.empty());
-  assert(path.size() == 5);
   assert(path.at(0) == project()->name());
-  assert(path.at(1) == "TangentSpace");
+  assert(path.at(1) == "tangentspaces");
   assert(path.at(2) == name());
-  assert(path.at(3) == "Basis");
+  assert(path.at(3) == "bases");
   const auto &basis_name = path.at(4);
   return bases().at(basis_name);
 }

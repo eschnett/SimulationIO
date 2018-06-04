@@ -148,7 +148,7 @@ void Field::write(const H5::H5Location &loc,
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 vector<string> Field::yaml_path() const {
-  return concat(project()->yaml_path(), {type(), name()});
+  return concat(project()->yaml_path(), {"fields", name()});
 }
 
 ASDF::writer &Field::write(ASDF::writer &w) const {

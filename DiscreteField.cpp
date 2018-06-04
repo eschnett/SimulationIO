@@ -129,7 +129,7 @@ void DiscreteField::write(const H5::H5Location &loc,
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 vector<string> DiscreteField::yaml_path() const {
-  return concat(field()->yaml_path(), {type(), name()});
+  return concat(field()->yaml_path(), {"discretefields", name()});
 }
 
 ASDF::writer &DiscreteField::write(ASDF::writer &w) const {

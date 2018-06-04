@@ -226,7 +226,8 @@ void DiscretizationBlock::write(const H5::H5Location &loc,
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 vector<string> DiscretizationBlock::yaml_path() const {
-  return concat(discretization()->yaml_path(), {type(), name()});
+  return concat(discretization()->yaml_path(),
+                {"discretizationblocks", name()});
 }
 
 ASDF::writer &DiscretizationBlock::write(ASDF::writer &w) const {

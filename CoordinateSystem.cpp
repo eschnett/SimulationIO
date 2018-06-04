@@ -118,7 +118,7 @@ void CoordinateSystem::write(const H5::H5Location &loc,
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 vector<string> CoordinateSystem::yaml_path() const {
-  return concat(project()->yaml_path(), {type(), name()});
+  return concat(project()->yaml_path(), {"coordinatesystems", name()});
 }
 
 ASDF::writer &CoordinateSystem::write(ASDF::writer &w) const {

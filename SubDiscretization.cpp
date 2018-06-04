@@ -145,7 +145,7 @@ void SubDiscretization::write(const H5::H5Location &loc,
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 vector<string> SubDiscretization::yaml_path() const {
-  return concat(manifold()->yaml_path(), {type(), name()});
+  return concat(manifold()->yaml_path(), {"subdiscretizations", name()});
 }
 
 ASDF::writer &SubDiscretization::write(ASDF::writer &w) const {

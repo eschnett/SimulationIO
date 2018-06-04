@@ -142,7 +142,7 @@ void Manifold::write(const H5::H5Location &loc,
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 vector<string> Manifold::yaml_path() const {
-  return concat(project()->yaml_path(), {type(), name()});
+  return concat(project()->yaml_path(), {"manifolds", name()});
 }
 
 ASDF::writer &Manifold::write(ASDF::writer &w) const {
@@ -225,11 +225,10 @@ Manifold::getDiscretization(const ASDF::reader_state &rs,
   const auto &doc = doc_path.first;
   const auto &path = doc_path.second;
   assert(doc.empty());
-  assert(path.size() == 5);
   assert(path.at(0) == project()->name());
-  assert(path.at(1) == "Manifold");
+  assert(path.at(1) == "manifolds");
   assert(path.at(2) == name());
-  assert(path.at(3) == "Discretization");
+  assert(path.at(3) == "discretizations");
   const auto &discretization_name = path.at(4);
   return discretizations().at(discretization_name);
 }
