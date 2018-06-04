@@ -1,16 +1,28 @@
+#include "Config.hpp"
 #include "SimulationIO.hpp"
+
+#include "H5Helpers.hpp"
+
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+#include <asdf.hpp>
+#endif
 
 #include <gtest/gtest.h>
 
 #include <complex>
 #include <cstdio>
+#include <fstream>
+#include <iomanip>
 #include <limits>
 #include <memory>
 #include <sstream>
 #include <string>
 
 using std::complex;
+using std::ifstream;
+using std::ios;
 using std::numeric_limits;
+using std::ofstream;
 using std::ostringstream;
 using std::remove;
 using std::shared_ptr;
@@ -166,6 +178,29 @@ TEST(Project, HDF5) {
   }
   remove(filename);
 }
+
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+TEST(Project, ASDF) {
+  auto filename = "project.asdf";
+  string orig;
+  {
+    ofstream file(filename, ios::binary | ios::trunc | ios::out);
+    project->writeASDF(file);
+    ostringstream buf;
+    buf << *project;
+    orig = buf.str();
+  }
+  shared_ptr<Project> p1;
+  {
+    ifstream file(filename, ios::binary | ios::in);
+    p1 = readProjectASDF(file);
+    ostringstream buf;
+    buf << *p1;
+    EXPECT_EQ(orig, buf.str());
+  }
+  remove(filename);
+}
+#endif
 
 // This test sets up the global variable "project", which is necessary for most
 // of the following tests. This must be the last of the "Project" tests.
