@@ -64,11 +64,9 @@ void Configuration::read(const ASDF::reader_state &rs, const YAML::Node &node,
   m_name = node["name"].Scalar();
   m_project = project;
   for (const auto &kv : node["parametervalues"]) {
-    const auto &parametervalue = kv.second;
-    const auto &parameter =
-        project->getParameter(rs, parametervalue["parameter"]);
-    insertParameterValue(
-        parameter->parametervalues().at(parametervalue["name"].Scalar()));
+    const auto &parameter = project->getParameter(rs, kv.second);
+    const auto &parametervalue = parameter->getParameterValue(rs, kv.second);
+    insertParameterValue(parametervalue);
   }
 }
 #endif
@@ -148,7 +146,7 @@ void Configuration::write(const H5::H5Location &loc,
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 vector<string> Configuration::yaml_path() const {
-  return concat(project()->yaml_path(), {type(), name()});
+  return concat(project()->yaml_path(), {"configurations", name()});
 }
 
 ASDF::writer &Configuration::write(ASDF::writer &w) const {

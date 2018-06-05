@@ -45,6 +45,28 @@ shared_ptr<Project> readProject(const ASDF::reader_state &rs,
   assert(project->invariant());
   return project;
 }
+map<string, shared_ptr<Project>> readProjectsASDF(istream &is) {
+  map<string, shared_ptr<Project>> projects;
+  function<void(const ASDF::reader_state &rs, const string &name,
+                const YAML::Node &node)>
+      read_project{[&](const ASDF::reader_state &rs, const string &name,
+                       const YAML::Node &node) {
+        projects[name] = readProject(rs, node);
+      }};
+  map<string, function<void(const ASDF::reader_state &rs, const string &name,
+                            const YAML::Node &node)>>
+      readers{{"tag:github.com/eschnett/SimulationIO/asdf-cxx/Project-1.0.0",
+               read_project}};
+  auto doc = ASDF::asdf(is, readers);
+  return projects;
+}
+
+shared_ptr<Project> readProjectASDF(istream &is) {
+  auto projects = readProjectsASDF(is);
+  assert(projects.size() == 1);
+  return projects.begin()->second;
+}
+
 #endif
 
 bool Project::invariant() const { return Common::invariant(); }
@@ -406,6 +428,15 @@ ASDF::writer &Project::write(ASDF::writer &w) const {
   aw.group("coordinatesystems", coordinatesystems());
   return w;
 }
+
+void Project::writeASDF(ostream &file) const {
+  map<string, string> tags{
+      {"sio", "tag:github.com/eschnett/SimulationIO/asdf-cxx/"}};
+  map<string, function<void(ASDF::writer & w)>> funs{
+      {name(), [&](ASDF::writer &w) { w << *this; }}};
+  const auto &doc = ASDF::asdf(move(tags), move(funs));
+  doc.write(file);
+}
 #endif
 
 shared_ptr<Parameter> Project::createParameter(const string &name) {
@@ -465,9 +496,8 @@ shared_ptr<Parameter> Project::getParameter(const ASDF::reader_state &rs,
   const auto &doc = doc_path.first;
   const auto &path = doc_path.second;
   assert(doc.empty());
-  assert(path.size() == 3);
   assert(path.at(0) == name());
-  assert(path.at(1) == "Parameter");
+  assert(path.at(1) == "parameters");
   const auto &parameter_name = path.at(2);
   return parameters().at(parameter_name);
 }
@@ -532,9 +562,8 @@ Project::getConfiguration(const ASDF::reader_state &rs,
   const auto &doc = doc_path.first;
   const auto &path = doc_path.second;
   assert(doc.empty());
-  assert(path.size() == 3);
   assert(path.at(0) == name());
-  assert(path.at(1) == "Configuration");
+  assert(path.at(1) == "configurations");
   const auto &configuration_name = path.at(2);
   return configurations().at(configuration_name);
 }
@@ -603,9 +632,8 @@ shared_ptr<TensorType> Project::getTensorType(const ASDF::reader_state &rs,
   const auto &doc = doc_path.first;
   const auto &path = doc_path.second;
   assert(doc.empty());
-  assert(path.size() == 3);
   assert(path.at(0) == name());
-  assert(path.at(1) == "TensorType");
+  assert(path.at(1) == "tensortypes");
   const auto &tensortype_name = path.at(2);
   return tensortypes().at(tensortype_name);
 }
@@ -679,9 +707,8 @@ shared_ptr<Manifold> Project::getManifold(const ASDF::reader_state &rs,
   const auto &doc = doc_path.first;
   const auto &path = doc_path.second;
   assert(doc.empty());
-  assert(path.size() == 3);
   assert(path.at(0) == name());
-  assert(path.at(1) == "Manifold");
+  assert(path.at(1) == "manifolds");
   const auto &manifold_name = path.at(2);
   return manifolds().at(manifold_name);
 }
@@ -755,9 +782,8 @@ shared_ptr<TangentSpace> Project::getTangentSpace(const ASDF::reader_state &rs,
   const auto &doc = doc_path.first;
   const auto &path = doc_path.second;
   assert(doc.empty());
-  assert(path.size() == 3);
   assert(path.at(0) == name());
-  assert(path.at(1) == "TangentSpace");
+  assert(path.at(1) == "tangentspaces");
   const auto &tangentspace_name = path.at(2);
   return tangentspaces().at(tangentspace_name);
 }
@@ -840,9 +866,8 @@ shared_ptr<Field> Project::getField(const ASDF::reader_state &rs,
   const auto &doc = doc_path.first;
   const auto &path = doc_path.second;
   assert(doc.empty());
-  assert(path.size() == 3);
   assert(path.at(0) == name());
-  assert(path.at(1) == "Field");
+  assert(path.at(1) == "fields");
   const auto &field_name = path.at(2);
   return fields().at(field_name);
 }

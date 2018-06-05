@@ -127,7 +127,8 @@ void DiscreteFieldBlockComponent::write(const H5::H5Location &loc,
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 vector<string> DiscreteFieldBlockComponent::yaml_path() const {
-  return concat(discretefieldblock()->yaml_path(), {type(), name()});
+  return concat(discretefieldblock()->yaml_path(),
+                {"discretefieldblockcomponents", name()});
 }
 
 ASDF::writer &DiscreteFieldBlockComponent::write(ASDF::writer &w) const {
@@ -203,6 +204,28 @@ shared_ptr<ASDFData> DiscreteFieldBlockComponent::createASDFData(
   assert(!m_datablock);
   auto res = make_shared<ASDFData>(
       discretefieldblock()->discretizationblock()->box(), blob, datatype);
+  m_datablock = res;
+  return res;
+}
+
+shared_ptr<ASDFData> DiscreteFieldBlockComponent::createASDFData(
+    const void *data, size_t npoints, const box_t &memlayout,
+    const shared_ptr<ASDF::datatype_t> &datatype) {
+  assert(!m_datablock);
+  auto res =
+      make_shared<ASDFData>(discretefieldblock()->discretizationblock()->box(),
+                            data, npoints, memlayout, datatype);
+  m_datablock = res;
+  return res;
+}
+
+shared_ptr<ASDFRef>
+DiscreteFieldBlockComponent::createASDFRef(const string &filename,
+                                           const vector<string> &path) {
+  assert(!m_datablock);
+  auto res =
+      make_shared<ASDFRef>(discretefieldblock()->discretizationblock()->box(),
+                           make_shared<ASDF::reference>(filename, path));
   m_datablock = res;
   return res;
 }

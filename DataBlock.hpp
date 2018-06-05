@@ -189,8 +189,8 @@ public:
 protected:
   DataBlock(const box_t &box) : m_box(box) {}
 
-  void construct_spaces(const box_t &memshape, // allocated memory
-                        const box_t &membox,   // memory to be transferred
+  void construct_spaces(const box_t &memlayout, // allocated memory
+                        const box_t &membox,    // memory to be transferred
                         const H5::DataSpace &dataspace, // file space
                         H5::DataSpace &memspace,
                         H5::DataSpace &filespace) const;
@@ -253,8 +253,8 @@ class DataSet : public DataBlock {
   mutable bool m_have_attached_data;
   mutable vector<char> m_attached_data;
   mutable H5::DataType m_memtype;
-  mutable box_t m_memshape;
-  mutable box_t m_membox;
+  mutable box_t m_memlayout; // allocated memory
+  mutable box_t m_membox;    // memory to be transferred
 
 public:
   H5::DataSpace dataspace() const { return m_dataspace; }
@@ -514,10 +514,22 @@ public:
     return DataBlock::invariant() && bool(m_blob) && bool(m_datatype);
   }
 
-  ASDFData(const box_t &box, shared_ptr<ASDF::generic_blob_t> blob,
-           shared_ptr<ASDF::datatype_t> datatype)
-      : DataBlock(box), m_blob(blob), m_datatype(datatype) {
-    assert(blob->nbytes() == box.size() * datatype->type_size());
+  ASDFData(const box_t &box, const shared_ptr<ASDF::generic_blob_t> &blob,
+           const shared_ptr<ASDF::datatype_t> &datatype);
+  template <typename T>
+  ASDFData(const box_t &box, const shared_ptr<ASDF::blob_t<T>> &blob)
+      : ASDFData(
+            box, blob,
+            make_shared<ASDF::datatype_t>(ASDF::get_scalar_type_id<T>::value)) {
+  }
+  ASDFData(const box_t &box, const void *data, size_t npoints,
+           const box_t &memlayout,
+           const shared_ptr<ASDF::datatype_t> &datatype);
+  template <typename T>
+  ASDFData(const box_t &box, const vector<T> &data, const box_t &memlayout)
+      : ASDFData(
+            box, data.data(), data.size(), memlayout,
+            make_shared<ASDF::datatype_t>(ASDF::get_scalar_type_id<T>::value)) {
   }
 
   virtual ~ASDFData() {}
@@ -537,11 +549,13 @@ class ASDFArray : public DataBlock {
   shared_ptr<ASDF::ndarray> m_ndarray;
 
 public:
+  shared_ptr<ASDF::ndarray> ndarray() const { return m_ndarray; }
+
   virtual bool invariant() const {
     return DataBlock::invariant() && bool(m_ndarray);
   }
 
-  ASDFArray(const box_t &box, shared_ptr<ASDF::ndarray> arr)
+  ASDFArray(const box_t &box, const shared_ptr<ASDF::ndarray> &arr)
       : DataBlock(box), m_ndarray(arr) {}
 
   virtual ~ASDFArray() {}
@@ -551,6 +565,30 @@ public:
   static shared_ptr<ASDFArray> read_asdf(const ASDF::reader_state &rs,
                                          const YAML::Node &node,
                                          const box_t &box);
+  virtual ostream &output(ostream &os) const;
+  virtual void write(const H5::Group &group, const string &entry) const;
+  virtual void write(ASDF::writer &w, const string &entry) const;
+};
+
+// An ASDF reference
+class ASDFRef : public DataBlock {
+  shared_ptr<ASDF::reference> m_reference;
+
+public:
+  virtual bool invariant() const {
+    return DataBlock::invariant() && bool(m_reference);
+  }
+
+  ASDFRef(const box_t &box, const shared_ptr<ASDF::reference> &ref)
+      : DataBlock(box), m_reference(ref) {}
+
+  virtual ~ASDFRef() {}
+
+  static shared_ptr<ASDFRef> read(const H5::Group &group, const string &entry,
+                                  const box_t &box);
+  static shared_ptr<ASDFRef> read_asdf(const ASDF::reader_state &rs,
+                                       const YAML::Node &node,
+                                       const box_t &box);
   virtual ostream &output(ostream &os) const;
   virtual void write(const H5::Group &group, const string &entry) const;
   virtual void write(ASDF::writer &w, const string &entry) const;

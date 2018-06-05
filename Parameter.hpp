@@ -109,6 +109,8 @@ public:
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   shared_ptr<ParameterValue> readParameterValue(const ASDF::reader_state &rs,
                                                 const YAML::Node &node);
+  shared_ptr<ParameterValue> getParameterValue(const ASDF::reader_state &rs,
+                                               const YAML::Node &node);
 #endif
 };
 

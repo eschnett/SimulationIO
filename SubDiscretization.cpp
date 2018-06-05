@@ -77,6 +77,10 @@ void SubDiscretization::read(const ASDF::reader_state &rs,
       "tag:github.com/eschnett/SimulationIO/asdf-cxx/SubDiscretization-1.0.0");
   m_name = node["name"].Scalar();
   m_manifold = manifold;
+  m_parent_discretization =
+      manifold->getDiscretization(rs, node["parent_discretization"]);
+  m_child_discretization =
+      manifold->getDiscretization(rs, node["child_discretization"]);
   m_factor = node["factor"].as<vector<double>>();
   m_offset = node["offset"].as<vector<double>>();
   m_parent_discretization->insertChild(name(), shared_from_this());
@@ -145,7 +149,7 @@ void SubDiscretization::write(const H5::H5Location &loc,
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 vector<string> SubDiscretization::yaml_path() const {
-  return concat(manifold()->yaml_path(), {type(), name()});
+  return concat(manifold()->yaml_path(), {"subdiscretizations", name()});
 }
 
 ASDF::writer &SubDiscretization::write(ASDF::writer &w) const {

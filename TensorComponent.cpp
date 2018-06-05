@@ -91,7 +91,7 @@ void TensorComponent::write(const H5::H5Location &loc,
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 vector<string> TensorComponent::yaml_path() const {
-  return concat(tensortype()->yaml_path(), {type(), name()});
+  return concat(tensortype()->yaml_path(), {"tensorcomponents", name()});
 }
 
 ASDF::writer &TensorComponent::write(ASDF::writer &w) const {

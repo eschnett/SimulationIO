@@ -89,7 +89,7 @@ void CoordinateField::write(const H5::H5Location &loc,
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 vector<string> CoordinateField::yaml_path() const {
-  return concat(coordinatesystem()->yaml_path(), {type(), name()});
+  return concat(coordinatesystem()->yaml_path(), {"coordinatefields", name()});
 }
 
 ASDF::writer &CoordinateField::write(ASDF::writer &w) const {

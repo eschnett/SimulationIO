@@ -63,6 +63,17 @@ public:
   shared_ptr<ExtLink> extlink() const {
     return dynamic_pointer_cast<ExtLink>(m_datablock);
   }
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+  shared_ptr<ASDFData> asdfdata() const {
+    return dynamic_pointer_cast<ASDFData>(m_datablock);
+  }
+  shared_ptr<ASDFArray> asdfarray() const {
+    return dynamic_pointer_cast<ASDFArray>(m_datablock);
+  }
+  shared_ptr<ASDFRef> asdfref() const {
+    return dynamic_pointer_cast<ASDFRef>(m_datablock);
+  }
+#endif
 
   virtual bool invariant() const;
 
@@ -169,6 +180,18 @@ public:
     return createASDFData(blob, make_shared<ASDF::datatype_t>(
                                     ASDF::get_scalar_type_id<T>::value));
   }
+  shared_ptr<ASDFData>
+  createASDFData(const void *data, size_t npoints, const box_t &memlayout,
+                 const shared_ptr<ASDF::datatype_t> &datatype);
+  template <typename T>
+  shared_ptr<ASDFData> createASDFData(const vector<T> &data,
+                                      const box_t &memlayout) {
+    return createASDFData(
+        data.data(), data.size(), memlayout,
+        make_shared<ASDF::datatype_t>(ASDF::get_scalar_type_id<T>::value));
+  }
+  shared_ptr<ASDFRef> createASDFRef(const string &filename,
+                                    const vector<string> &path);
 #endif
 
   string getPath() const;
