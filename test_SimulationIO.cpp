@@ -1732,6 +1732,7 @@ TEST(DataBlock, cleanup) {
   dfbd4->unsetDataBlock();
 }
 
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 TEST(DataBlock, create2) {
   auto f1 = project->fields().at("f1");
   auto df1 = f1->discretefields().at("df1");
@@ -1908,6 +1909,7 @@ TEST(DataBlock, cleanup2) {
   auto dfbd4 = dfb1->discretefieldblockcomponents().at("dfbd4");
   dfbd4->unsetDataBlock();
 }
+#endif
 
 TEST(ProjectMerge, merge) {
   auto filename = "project.s5";
