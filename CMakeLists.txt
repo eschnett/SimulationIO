@@ -16,11 +16,11 @@ set(CMAKE_MODULE_PATH
 
 # External dependencies
 
-find_package(asdf-cxx 2.3.1)
+find_package(asdf-cxx 2.5.1)
 if(ASDF_CXX_FOUND)
-  if(ASDF_CXX_VERSION_STRING VERSION_LESS 2.3.1)
+  if(ASDF_CXX_VERSION_STRING VERSION_LESS 2.5.1)
     message(HDF5_VERSION)
-    message(SEND_ERROR "asdf-cxx version 2.3.1 or later is required")
+    message(SEND_ERROR "asdf-cxx version 2.5.1 or later is required")
   endif()
   include_directories(${ASDF_CXX_INCLUDE_DIR})
   set(LIBS ${LIBS} ${ASDF_CXX_LIBRARY})

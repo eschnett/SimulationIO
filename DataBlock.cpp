@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cstring>
+#include <type_traits>
 
 namespace SimulationIO {
 using namespace std;
@@ -54,6 +55,170 @@ vector<hsize_t> choose_chunksize(const vector<hsize_t> &size,
 }
 } // namespace
 
+namespace {
+
+template <int D, typename T> array<T, D> mkarray(const vector<T> &xs) {
+  assert(xs.size() == D);
+  array<T, D> rs;
+  for (int d = 0; d < D; ++d)
+    rs[d] = xs[d];
+  return rs;
+}
+
+template <int D> array<ptrdiff_t, D> mkarray(const point_t &xs) {
+  assert(xs.rank() == D);
+  array<ptrdiff_t, D> rs;
+  for (int d = 0; d < D; ++d)
+    rs[d] = xs[d];
+  return rs;
+}
+
+template <int D> class copy_hyperslab_t {
+  array<ptrdiff_t, D> outstrides;
+  array<ptrdiff_t, D> instrides;
+  array<ptrdiff_t, D> shape;
+  ptrdiff_t type_size;
+  unsigned char *outptr_min;
+  unsigned char *outptr_max;
+  const unsigned char *inptr_min;
+  const unsigned char *inptr_max;
+
+  bool outcheck(unsigned char *const outptr) const {
+    return outptr_min <= outptr && outptr < outptr_max;
+  }
+  bool incheck(const unsigned char *const inptr) const {
+    return inptr_min <= inptr && inptr < inptr_max;
+  }
+
+  template <size_t N, int DD, typename enable_if<DD == 0>::type * = nullptr>
+  void copy_nd(unsigned char *const outptr,
+               const unsigned char *const inptr) const {
+    // outcheck(outptr);
+    // incheck(inptr);
+    memcpy(outptr, inptr, N);
+  }
+
+  template <size_t N, int DD,
+            typename enable_if<(DD > 0 && DD <= D)>::type * = nullptr>
+  void copy_nd(unsigned char *const outptr,
+               const unsigned char *const inptr) const {
+    const ptrdiff_t outdi = outstrides[DD - 1];
+    const ptrdiff_t indi = instrides[DD - 1];
+    const ptrdiff_t ni = shape[DD - 1];
+    for (ptrdiff_t i = 0; i < ni; ++i)
+      copy_nd<N, DD - 1>(outptr + i * outdi, inptr + i * indi);
+  }
+
+public:
+  copy_hyperslab_t(unsigned char *const outptr, const ptrdiff_t outnpoints,
+                   const array<ptrdiff_t, D> &outstrides,
+                   const ptrdiff_t outoffset, const unsigned char *const inptr,
+                   const ptrdiff_t innpoints,
+                   const array<ptrdiff_t, D> &instrides,
+                   const ptrdiff_t inoffset, const array<ptrdiff_t, D> &shape,
+                   const ptrdiff_t type_size)
+      : outstrides(outstrides), instrides(instrides), shape(shape),
+        type_size(type_size), outptr_min(outptr),
+        outptr_max(outptr + type_size * outnpoints), inptr_min(inptr),
+        inptr_max(inptr + type_size * innpoints) {
+    unsigned char *const outptr1 = outptr + type_size * outoffset;
+    const unsigned char *const inptr1 = inptr + type_size * inoffset;
+    switch (type_size) {
+    case 1:
+      copy_nd<1, D>(outptr1, inptr1);
+      break;
+    case 2:
+      copy_nd<2, D>(outptr1, inptr1);
+      break;
+    case 4:
+      copy_nd<4, D>(outptr1, inptr1);
+      break;
+    case 8:
+      copy_nd<8, D>(outptr1, inptr1);
+      break;
+    case 16:
+      copy_nd<16, D>(outptr1, inptr1);
+      break;
+    default:
+      assert(0);
+    }
+  }
+};
+
+void copy_hyperslab(void *const outptr0, const ptrdiff_t outnpoints,
+                    const box_t &outlayout, const box_t &outbox,
+                    const void *const inptr0, const ptrdiff_t innpoints,
+                    const box_t &inlayout, const box_t &inbox,
+                    const size_t type_size) {
+  const int rank = outlayout.rank();
+  assert(outbox.rank() == rank);
+  assert(inlayout.rank() == rank);
+  assert(inbox.rank() == rank);
+
+  const auto outptr = static_cast<unsigned char *>(outptr0);
+  assert(outlayout.size() <= outnpoints);
+  assert(outbox <= outlayout);
+  const auto outshape = outbox.shape();
+  // const auto outstrides = outlayout.shape() * point_t(rank, type_size);
+  vector<ptrdiff_t> outstrides(rank);
+  ptrdiff_t outoffset = 0, outstride = type_size;
+  for (int d = 0; d < rank; ++d) {
+    outstrides[d] = outstride;
+    outoffset += (outbox.lower()[d] - outlayout.lower()[d]) * outstride;
+    outstride *= outlayout.shape()[d];
+  }
+  assert(outstride == outlayout.size() * type_size);
+
+  const auto inptr = static_cast<const unsigned char *>(inptr0);
+  assert(inlayout.size() <= innpoints);
+  assert(inbox <= inlayout);
+  const auto inshape = inbox.shape();
+  // const auto instrides = inlayout.shape() * point_t(rank, type_size);
+  vector<ptrdiff_t> instrides(rank);
+  ptrdiff_t inoffset = 0, instride = type_size;
+  for (int d = 0; d < rank; ++d) {
+    instrides[d] = instride;
+    inoffset += (inbox.lower()[d] - inlayout.lower()[d]) * instride;
+    instride *= inlayout.shape()[d];
+  }
+  assert(instride == inlayout.size() * type_size);
+
+  const auto shape = outshape;
+  assert(all(inshape == shape));
+
+  switch (rank) {
+  case 0:
+    copy_hyperslab_t<0>(outptr, outnpoints, mkarray<0>(outstrides), outoffset,
+                        inptr, innpoints, mkarray<0>(instrides), inoffset,
+                        mkarray<0>(shape), type_size);
+    break;
+  case 1:
+    copy_hyperslab_t<1>(outptr, outnpoints, mkarray<1>(outstrides), outoffset,
+                        inptr, innpoints, mkarray<1>(instrides), inoffset,
+                        mkarray<1>(shape), type_size);
+    break;
+  case 2:
+    copy_hyperslab_t<2>(outptr, outnpoints, mkarray<2>(outstrides), outoffset,
+                        inptr, innpoints, mkarray<2>(instrides), inoffset,
+                        mkarray<2>(shape), type_size);
+    break;
+  case 3:
+    copy_hyperslab_t<3>(outptr, outnpoints, mkarray<3>(outstrides), outoffset,
+                        inptr, innpoints, mkarray<3>(instrides), inoffset,
+                        mkarray<3>(shape), type_size);
+    break;
+  case 4:
+    copy_hyperslab_t<4>(outptr, outnpoints, mkarray<4>(outstrides), outoffset,
+                        inptr, innpoints, mkarray<4>(instrides), inoffset,
+                        mkarray<4>(shape), type_size);
+    break;
+  default:
+    assert(0);
+  }
+}
+
+} // namespace
+
 // DataBlock
 
 bool DataBlock::invariant() const { return !m_box.empty(); }
@@ -96,13 +261,13 @@ shared_ptr<DataBlock> DataBlock::read_asdf(const ASDF::reader_state &rs,
 }
 #endif
 
-void DataBlock::construct_spaces(const box_t &memshape, const box_t &membox,
+void DataBlock::construct_spaces(const box_t &memlayout, const box_t &membox,
                                  const H5::DataSpace &dataspace,
                                  H5::DataSpace &memspace,
                                  H5::DataSpace &filespace) const {
   if (rank() == 0)
     assert(!membox.empty()); // HDF5 cannot handle an empty scalar box
-  assert(membox <= memshape);
+  assert(membox <= memlayout);
   assert(membox <= box());
   // TODO: This might not work for scalar spaces
   int ndims = dataspace.getSimpleExtentNdims();
@@ -111,8 +276,8 @@ void DataBlock::construct_spaces(const box_t &memshape, const box_t &membox,
   dataspace.getSimpleExtentDims(dims.data());
   reverse(dims);
   assert(all(point_t(dims) == shape()));
-  memspace =
-      H5::DataSpace(rank(), reversed(vector<hsize_t>(memshape.shape())).data());
+  memspace = H5::DataSpace(rank(),
+                           reversed(vector<hsize_t>(memlayout.shape())).data());
   if (rank() > 0)
     memspace.selectHyperslab(
         H5S_SELECT_SET, reversed(vector<hsize_t>(membox.shape())).data(),
@@ -148,7 +313,12 @@ shared_ptr<DataRange> DataRange::read(const H5::Group &group,
 shared_ptr<DataRange> DataRange::read_asdf(const ASDF::reader_state &rs,
                                            const YAML::Node &node,
                                            const box_t &box) {
-  return nullptr;
+  if (node.Tag() !=
+      "tag:github.com/eschnett/SimulationIO/asdf-cxx/DataRange-1.0.0")
+    return nullptr;
+  auto origin = node["origin"].as<double>();
+  auto delta = node["delta"].as<vector<double>>();
+  return make_shared<DataRange>(box, origin, move(delta));
 }
 #endif
 
@@ -165,6 +335,8 @@ void DataRange::write(const H5::Group &group, const string &entry) const {
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 void DataRange::write(ASDF::writer &w, const string &entry) const {
+#warning "TODO"
+#if 0
   vector<double> coord(size());
   switch (rank()) {
   case 0: {
@@ -246,6 +418,13 @@ void DataRange::write(ASDF::writer &w, const string &entry) const {
                     ASDF::compression_t::zlib, {}, vector<int64_t>(shape()), 0,
                     strides);
   w << YAML::Key << entry << YAML::Value << arr;
+#endif
+  w << YAML::Key << entry;
+  w << YAML::LocalTag("sio", "DataRange-1.0.0") << YAML::BeginMap;
+  // w << YAML::Key << "box" << YAML::Value << box();
+  w << YAML::Key << "origin" << YAML::Value << m_origin;
+  w << YAML::Key << "delta" << YAML::Value << m_delta;
+  w << YAML::EndMap;
 }
 #endif
 
@@ -323,7 +502,7 @@ void DataSet::write(const H5::Group &group, const string &entry) const {
   m_have_location = true;
   create_dataset();
   if (m_have_attached_data) {
-    writeData(m_attached_data.data(), m_memtype, m_memshape, m_membox);
+    writeData(m_attached_data.data(), m_memtype, m_memlayout, m_membox);
     m_attached_data.clear();
     m_have_attached_data = false;
   }
@@ -372,7 +551,7 @@ void DataSet::attachData(const vector<char> &data, const H5::DataType &datatype,
   assert(not m_have_attached_data);
 
   m_memtype = datatype;
-  m_memshape = datashape;
+  m_memlayout = datashape;
   m_membox = databox;
   auto count = m_membox.size();
   auto typesize = m_memtype.getSize();
@@ -390,7 +569,7 @@ void DataSet::attachData(vector<char> &&data, const H5::DataType &datatype,
   assert(not m_have_attached_data);
 
   m_memtype = datatype;
-  m_memshape = datashape;
+  m_memlayout = datashape;
   m_membox = databox;
   auto count = m_membox.size();
   auto typesize = m_memtype.getSize();
@@ -409,7 +588,7 @@ void DataSet::attachData(const void *data, const H5::DataType &datatype,
   assert(data);
 
   m_memtype = datatype;
-  m_memshape = datashape;
+  m_memlayout = datashape;
   m_membox = databox;
   auto count = m_membox.size();
   auto typesize = m_memtype.getSize();
@@ -694,6 +873,27 @@ void ExtLink::write(ASDF::writer &w, const string &entry) const { assert(0); }
 
 // ASDFData
 
+ASDFData::ASDFData(const box_t &box,
+                   const shared_ptr<ASDF::generic_blob_t> &blob,
+                   const shared_ptr<ASDF::datatype_t> &datatype)
+    : DataBlock(box), m_blob(blob), m_datatype(datatype) {
+  assert(blob->nbytes() == box.size() * datatype->type_size());
+}
+
+ASDFData::ASDFData(const box_t &box, const void *data, size_t npoints,
+                   const box_t &memlayout,
+                   const shared_ptr<ASDF::datatype_t> &datatype)
+    : DataBlock(box) {
+  assert(data);
+  assert(box <= memlayout);
+  assert(npoints == memlayout.size());
+  vector<unsigned char> buf(box.size() * datatype->type_size());
+  copy_hyperslab(buf.data(), box.size(), box, box, data, npoints, memlayout,
+                 box, datatype->type_size());
+  m_blob = make_shared<ASDF::blob_t<unsigned char>>(move(buf));
+  m_datatype = datatype;
+}
+
 shared_ptr<ASDFData> ASDFData::read(const H5::Group &group, const string &entry,
                                     const box_t &box) {
   return nullptr;
@@ -727,7 +927,10 @@ void ASDFData::write(ASDF::writer &w, const string &entry) const {
   }
   assert(stride == m_blob->nbytes());
   w << YAML::Key << entry << YAML::Value
-    << ASDF::ndarray(m_blob, ASDF::block_format_t::block,
+    << ASDF::ndarray(m_blob,
+#warning "TODO"
+                     // ASDF::block_format_t::block,
+                     ASDF::block_format_t::inline_array,
                      ASDF::compression_t::zlib, {}, m_datatype,
                      ASDF::host_byteorder(), vector<int64_t>(shape()), 0,
                      move(strides));

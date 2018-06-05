@@ -9,7 +9,9 @@
 
 #include <gtest/gtest.h>
 
+#include <array>
 #include <complex>
+#include <cstdint>
 #include <cstdio>
 #include <fstream>
 #include <iomanip>
@@ -18,8 +20,10 @@
 #include <sstream>
 #include <string>
 
+using std::array;
 using std::complex;
 using std::ifstream;
+using std::int64_t;
 using std::ios;
 using std::numeric_limits;
 using std::ofstream;
@@ -1728,12 +1732,11 @@ TEST(DataBlock, cleanup) {
   dfbd4->unsetDataBlock();
 }
 
-#warning "TODO"
-#if 0
 TEST(DataBlock, create2) {
   auto f1 = project->fields().at("f1");
   auto df1 = f1->discretefields().at("df1");
   auto dfb1 = df1->discretefieldblocks().at("dfb1");
+  auto db1 = dfb1->discretizationblock();
   auto tt1 = f1->tensortype();
   auto bxx1 = tt1->tensorcomponents().at("00");
   auto bxy1 = tt1->tensorcomponents().at("01");
@@ -1748,23 +1751,26 @@ TEST(DataBlock, create2) {
   EXPECT_FALSE(bool(dfbd2->datablock()));
   EXPECT_FALSE(bool(dfbd3->datablock()));
   EXPECT_FALSE(bool(dfbd4->datablock()));
-  dfbd1->createExtLink("discretizationfieldblockcomponent.s5",
-                       project->name() + "/tensortypes/Scalar3D");
+  dfbd1->createASDFRef("discretizationfieldblockcomponent.asdf",
+                       {project->name(), "tensortypes", "Scalar3D"});
   dfbd1->unsetDataBlock();
-  dfbd2->createExtLink("discretizationfieldblockcomponent.s5",
-                       project->name() + "/tensortypes/Scalar3D");
-  dfbd3->createDataSet<double>();
-  int rank =
-      dfb1->discretizationblock()->discretization()->manifold()->dimension();
-  auto dims = dfb1->discretizationblock()->box().shape();
+  dfbd2->createASDFRef("discretizationfieldblockcomponent.asdf",
+                       {project->name(), "tensortypes", "Scalar3D"});
+  auto box = db1->box();
+  auto layout = box_t(box.lower(), point_t(vector<int>{10, 11, 12}));
+  vector<double> data(layout.size());
+  for (int n = 0; n < layout.size(); ++n)
+    data[n] = 42 + n;
+  dfbd3->createASDFData(move(data), layout);
+  int rank = db1->discretization()->manifold()->dimension();
+  auto dims = db1->box().shape();
   double origin{-1.0};
   auto delta = dpoint<double>(rank, 2.0) / dims;
   dfbd4->createDataRange(origin, delta);
   EXPECT_FALSE(bool(dfbd1->datablock()));
-  EXPECT_TRUE(bool(dfbd2->extlink()));
-  EXPECT_TRUE(bool(dfbd3->dataset()));
+  EXPECT_TRUE(bool(dfbd2->asdfref()));
+  EXPECT_TRUE(bool(dfbd3->asdfdata()));
   EXPECT_TRUE(bool(dfbd4->datarange()));
-
   auto f0 = project->fields().at("f0");
   auto df0 = f0->discretefields().at("df0");
   auto dfb0 = df0->discretefieldblocks().at("dfb0");
@@ -1780,8 +1786,6 @@ TEST(DataBlock, create2) {
   EXPECT_TRUE(bool(dfbd0->datarange()));
   dfbd0->unsetDataBlock();
   EXPECT_FALSE(bool(dfbd0->datarange()));
-  dfbd0->createDataSet<int>();
-  EXPECT_TRUE(bool(dfbd0->dataset()));
 }
 
 TEST(DataBlock, ASDF) {
@@ -1789,17 +1793,6 @@ TEST(DataBlock, ASDF) {
   {
     ofstream file(filename, ios::binary | ios::trunc | ios::out);
     project->writeASDF(file);
-    auto f1 = project->fields().at("f1");
-    auto df1 = f1->discretefields().at("df1");
-    auto dfb1 = df1->discretefieldblocks().at("dfb1");
-    auto dfbd3 = dfb1->discretefieldblockcomponents().at("dfbd3");
-    auto ds = dfbd3->dataset();
-    auto shape = box_t(ds->box().lower(), point_t(vector<int>{10, 11, 12}));
-    auto box = ds->box();
-    vector<double> data(shape.size());
-    for (int n = 0; n < shape.size(); ++n)
-      data[n] = 42 + n;
-    ds->writeData(data, shape, box);
   }
   {
     ifstream file(filename, ios::binary | ios::in);
@@ -1817,10 +1810,10 @@ TEST(DataBlock, ASDF) {
               "\"dfb1\" TensorComponent \"00\"\n"
               "  DiscreteFieldBlockComponent \"dfbd2\": DiscreteFieldBlock "
               "\"dfb1\" TensorComponent \"01\"\n"
-              "    CopyObj: ???:\"data\"\n"
+              "    ASDFRef\n"
               "  DiscreteFieldBlockComponent \"dfbd3\": DiscreteFieldBlock "
               "\"dfb1\" TensorComponent \"02\"\n"
-              "    CopyObj: ???:\"data\"\n"
+              "    ASDFArray\n"
               "  DiscreteFieldBlockComponent \"dfbd4\": DiscreteFieldBlock "
               "\"dfb1\" TensorComponent \"11\"\n"
               "    DataRange: origin=-1 delta=[0.333333,0.285714,0.25]\n",
@@ -1835,8 +1828,7 @@ TEST(DataBlock, ASDF) {
     EXPECT_EQ("DiscreteFieldBlock \"dfb0\": DiscreteField \"df0\" "
               "DiscretizationBlock \"db0\"\n"
               "  DiscreteFieldBlockComponent \"dfbd0\": DiscreteFieldBlock "
-              "\"dfb0\" TensorComponent \"scalar\"\n"
-              "    CopyObj: ???:\"data\"\n",
+              "\"dfb0\" TensorComponent \"scalar\"\n",
               buf0.str());
     auto ds = p1->fields()
                   .at("f1")
@@ -1846,13 +1838,31 @@ TEST(DataBlock, ASDF) {
                   .at("dfb1")
                   ->discretefieldblockcomponents()
                   .at("dfbd3")
-                  ->copyobj();
+                  ->asdfarray();
     EXPECT_TRUE(bool(ds));
-    auto data = ds->readData<double>();
-    EXPECT_EQ(6 * 7 * 8, data.size());
+    auto arr = ds->ndarray();
+    auto type_size = arr->get_datatype()->type_size();
+    ASSERT_EQ(sizeof(double), type_size);
+    auto shape = arr->get_shape();
+    EXPECT_EQ((vector<int64_t>{6, 7, 8}), shape);
+    auto data = arr->get_data()->ptr();
     ostringstream bufds;
-    using namespace Output;
-    bufds << data;
+    bufds << "[";
+    bool needcomma = false;
+    for (ptrdiff_t k = 0; k < shape[2]; ++k) {
+      for (ptrdiff_t j = 0; j < shape[1]; ++j) {
+        for (ptrdiff_t i = 0; i < shape[0]; ++i) {
+          ptrdiff_t lin = arr->linear_index(array<int64_t, 3>{i, j, k});
+          double val = *reinterpret_cast<const double *>(
+              reinterpret_cast<const unsigned char *>(data) + lin);
+          if (needcomma)
+            bufds << ",";
+          needcomma = true;
+          bufds << val;
+        }
+      }
+    }
+    bufds << "]";
     EXPECT_EQ("[42,43,44,45,46,47,49,50,51,52,53,54,56,57,58,59,60,61,63,64,65,"
               "66,67,68,70,71,72,73,74,75,77,78,79,80,81,82,84,85,86,87,88,89,"
               "98,99,100,101,102,103,105,106,107,108,109,110,112,113,114,115,"
@@ -1898,7 +1908,6 @@ TEST(DataBlock, cleanup2) {
   auto dfbd4 = dfb1->discretefieldblockcomponents().at("dfbd4");
   dfbd4->unsetDataBlock();
 }
-#endif
 
 TEST(ProjectMerge, merge) {
   auto filename = "project.s5";
