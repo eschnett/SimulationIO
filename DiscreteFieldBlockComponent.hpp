@@ -63,6 +63,7 @@ public:
   shared_ptr<ExtLink> extlink() const {
     return dynamic_pointer_cast<ExtLink>(m_datablock);
   }
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   shared_ptr<ASDFData> asdfdata() const {
     return dynamic_pointer_cast<ASDFData>(m_datablock);
   }
@@ -72,6 +73,7 @@ public:
   shared_ptr<ASDFRef> asdfref() const {
     return dynamic_pointer_cast<ASDFRef>(m_datablock);
   }
+#endif
 
   virtual bool invariant() const;
 
