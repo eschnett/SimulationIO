@@ -5,7 +5,6 @@ sudo: false
 dist: trusty
 
 # Build matrix
-# TODO: Use build matrix to test without ASDF or without HDF5
 os:
   - linux
   - osx
@@ -14,21 +13,25 @@ compiler:
   - clang
   - gcc
 env:
-  - DISABLE_ASDF_CXX=OFF DISABLE_HDF5=OFF
-  - DISABLE_ASDF_CXX=ON DISABLE_HDF5=OFF
-  - DISABLE_ASDF_CXX=OFF DISABLE_HDF5=ON
+  global:
+    - ENABLE_ASDF_CXX=ON
+    - ENABLE_HDF5=ON
+  matrix:
+    - DEFAULT=ON                # dummy setting
+    - ENABLE_ASDF_CXX=OFF
+    - ENABLE_HDF5=OFF
 matrix:
   exclude:
     - os: osx
       compiler: gcc
     - os: osx
-      env: DISABLE_ASDF_CXX=ON DISABLE_HDF5=OFF
+      env: ENABLE_ASDF_CXX=OFF
     - os: osx
-      env: DISABLE_ASDF_CXX=OFF DISABLE_HDF5=ON
+      env: ENABLE_HDF5=OFF
     - compiler: gcc
-      env: DISABLE_ASDF_CXX=ON DISABLE_HDF5=OFF
+      env: ENABLE_ASDF_CXX=OFF
     - compiler: gcc
-      env: DISABLE_ASDF_CXX=OFF DISABLE_HDF5=ON
+      env: ENABLE_HDF5=OFF
 
 # Install, build, and test
 addons:
@@ -170,37 +173,23 @@ install:
 
 script:
   - mkdir build && pushd build
-  - cmake \
-      -DDISABLE_ASDF_CXX=${DISABLE_ASDF_CXX} \
-      -DDISABLE_HDF5=${DISABLE_HDF5} \
-      -DCMAKE_PREFIX_PATH="$HDF5_DIR;$YAML_CPP_DIR;$ASDF_CXX_DIR;$PYTHON_DIR" \
-      -DCMAKE_CXX_COMPILER="$CXX" \
-      -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-      -DCMAKE_INSTALL_PREFIX="$HOME/install" \
-      ..
+  - cmake -DENABLE_ASDF_CXX=${ENABLE_ASDF_CXX} -DENABLE_HDF5=${ENABLE_HDF5} -DCMAKE_PREFIX_PATH="$HDF5_DIR;$YAML_CPP_DIR;$ASDF_CXX_DIR;$PYTHON_DIR" -DCMAKE_CXX_COMPILER="$CXX" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX="$HOME/install" ..
   - make -j2
-  - if [ ${DISABLE_ASDF_CXX} = OFF ]; then ./sio-example-asdf; fi
-  - if [ ${DISABLE_HDF5} = OFF ]; then ./sio-example; fi
+  - if [ ${ENABLE_ASDF_CXX} = ON ]; then ./sio-example-asdf; fi
+  - if [ ${ENABLE_HDF5} = ON ]; then ./sio-example; fi
   - make -j2 test CTEST_OUTPUT_ON_FAILURE=1
   - make -j2 install
   - popd
 
 after_success:
   - |
-    if [ "${DISABLE_ASDF_CXX} ${DISABLE_HDF5}" = "OFF OFF" ]; then
+    if [ "${ENABLE_ASDF_CXX} ${ENABLE_HDF5}" = "ON ON" ]; then
       mkdir -p "$HOME/bin" && ln -s "$(which $GCOV)" "$HOME/bin/gcov" && ls -l "$HOME/bin" && export PATH="$HOME/bin:$PATH" && hash -r
       mkdir build-coveralls && pushd build-coveralls
-      cmake \
-        -DDISABLE_ASDF_CXX=${DISABLE_ASDF_CXX} \
-        -DDISABLE_HDF5=${DISABLE_HDF5} \
-        -DCMAKE_PREFIX_PATH="$HDF5_DIR;$YAML_CPP_DIR;$ASDF_CXX_DIR;$PYTHON_DIR" \
-        -DCMAKE_CXX_COMPILER="$CXX" \
-        -DCMAKE_BUILD_TYPE=Debug \
-        -DCOVERALLS=ON \
-        ..
+      cmake -DENABLE_ASDF_CXX=${ENABLE_ASDF_CXX} -DENABLE_HDF5=${ENABLE_HDF5} -DCMAKE_PREFIX_PATH="$HDF5_DIR;$YAML_CPP_DIR;$ASDF_CXX_DIR;$PYTHON_DIR" -DCMAKE_CXX_COMPILER="$CXX" -DCMAKE_BUILD_TYPE=Debug -DCOVERALLS=ON ..
       make -j2
-     if [ ${DISABLE_ASDF_CXX} = OFF ]; then ./sio-example-asdf; fi
-     if [ ${DISABLE_HDF5} = OFF ]; then ./sio-example; fi
+      if [ ${ENABLE_ASDF_CXX} = ON ]; then ./sio-example-asdf; fi
+      if [ ${ENABLE_HDF5} = ON ]; then ./sio-example; fi
       make -j2 coveralls CTEST_OUTPUT_ON_FAILURE=1
       popd
     fi

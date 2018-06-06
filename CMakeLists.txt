@@ -16,8 +16,8 @@ set(CMAKE_MODULE_PATH
 
 # External dependencies
 
-OPTION(DISABLE_ASDF_CXX "Disable asdf-cxx backend" OFF)
-if(NOT DISABLE_ASDF_CXX)
+OPTION(ENABLE_ASDF_CXX "Enable asdf-cxx backend" ON)
+if(ENABLE_ASDF_CXX)
   find_package(asdf-cxx 2.6.1)
 endif()
 if(ASDF_CXX_FOUND)
@@ -34,7 +34,7 @@ endif()
 # TODO: Add cmake config file to asdf-cxx so that its dependencies are
 # automatically required
 
-if(NOT DISABLE_ASDF_CXX)
+if(ENABLE_ASDF_CXX)
   find_package(BZip2)
   if(BZIP2_FOUND)
     include_directories(${BZIP2_INCLUDE_DIR})
@@ -58,8 +58,8 @@ if(NOT DISABLE_ASDF_CXX)
   endif()
 endif()
 
-OPTION(DISABLE_HDF5 "Disable HDF5 backend" OFF)
-if(NOT DISABLE_HDF5)
+OPTION(ENABLE_HDF5 "Enable HDF5 backend" ON)
+if(ENABLE_HDF5)
   find_package(HDF5 1.10.1 COMPONENTS C CXX)
 endif()
 if(HDF5_FOUND)
