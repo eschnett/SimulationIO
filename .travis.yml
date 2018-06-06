@@ -25,9 +25,9 @@ matrix:
       env: DISABLE_ASDF_CXX=ON DISABLE_HDF5=OFF
     - os: osx
       env: DISABLE_ASDF_CXX=OFF DISABLE_HDF5=ON
-    - compler: gcc
+    - compiler: gcc
       env: DISABLE_ASDF_CXX=ON DISABLE_HDF5=OFF
-    - compler: gcc
+    - compiler: gcc
       env: DISABLE_ASDF_CXX=OFF DISABLE_HDF5=ON
 
 # Install, build, and test
