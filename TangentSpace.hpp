@@ -11,7 +11,9 @@
 #include <asdf.hpp>
 #endif
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 #include <H5Cpp.h>
+#endif
 
 #include <iostream>
 #include <map>
@@ -70,6 +72,7 @@ private:
     configuration->insert(name, tangentspace);
     return tangentspace;
   }
+#ifdef SIMULATIONIO_HAVE_HDF5
   static shared_ptr<TangentSpace> create(const H5::H5Location &loc,
                                          const string &entry,
                                          const shared_ptr<Project> &project) {
@@ -79,6 +82,7 @@ private:
   }
   void read(const H5::H5Location &loc, const string &entry,
             const shared_ptr<Project> &project);
+#endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   static shared_ptr<TangentSpace> create(const ASDF::reader_state &rs,
                                          const YAML::Node &node,
@@ -100,8 +104,10 @@ public:
   friend ostream &operator<<(ostream &os, const TangentSpace &tangentspace) {
     return tangentspace.output(os);
   }
+#ifdef SIMULATIONIO_HAVE_HDF5
   virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
+#endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   virtual vector<string> yaml_path() const;
   ASDF::writer &write(ASDF::writer &w) const;
@@ -117,7 +123,9 @@ public:
                              const shared_ptr<Configuration> &configuration);
   shared_ptr<Basis> copyBasis(const shared_ptr<Basis> &basis,
                               bool copy_children = false);
+#ifdef SIMULATIONIO_HAVE_HDF5
   shared_ptr<Basis> readBasis(const H5::H5Location &loc, const string &entry);
+#endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   shared_ptr<Basis> readBasis(const ASDF::reader_state &rs,
                               const YAML::Node &node);

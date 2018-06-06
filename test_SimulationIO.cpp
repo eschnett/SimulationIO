@@ -1,7 +1,9 @@
 #include "Config.hpp"
 #include "SimulationIO.hpp"
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 #include "H5Helpers.hpp"
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 #include <asdf.hpp>
@@ -46,6 +48,7 @@ TEST(ipow, ipow) {
   EXPECT_EQ(4, ipow(2, 2));
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 TEST(HDF5, types) {
   auto filename = "types.s5";
   {
@@ -151,6 +154,7 @@ TEST(HDF5, types) {
   }
   remove(filename);
 }
+#endif
 
 shared_ptr<Project> project;
 
@@ -162,6 +166,7 @@ TEST(Project, create) {
   EXPECT_EQ("Project \"p1\"\n", buf.str());
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 TEST(Project, HDF5) {
   auto filename = "project.s5";
   string orig;
@@ -182,6 +187,7 @@ TEST(Project, HDF5) {
   }
   remove(filename);
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 TEST(Project, ASDF) {
@@ -225,6 +231,7 @@ TEST(Parameter, create) {
   EXPECT_EQ(par3, project->parameters().at("par3"));
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 TEST(Parameter, HDF5) {
   auto filename = "parameter.s5";
   {
@@ -245,6 +252,7 @@ TEST(Parameter, HDF5) {
   }
   remove(filename);
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 TEST(Parameter, ASDF) {
@@ -307,6 +315,7 @@ TEST(ParameterValue, create) {
   EXPECT_EQ(x5, val5->getValueString());
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 TEST(ParameterValue, HDF5) {
   auto filename = "parametervalue.s5";
   {
@@ -339,6 +348,7 @@ TEST(ParameterValue, HDF5) {
   }
   remove(filename);
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 TEST(ParameterValue, ASDF) {
@@ -396,6 +406,7 @@ TEST(Configuration, create) {
   EXPECT_EQ(val2, conf2->parametervalues().at("val2"));
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 TEST(Configuration, HDF5) {
   auto filename = "configuration.s5";
   {
@@ -416,6 +427,7 @@ TEST(Configuration, HDF5) {
   }
   remove(filename);
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 TEST(Configuration, ASDF) {
@@ -505,6 +517,7 @@ TEST(TensorTypes, SymmetricTensor3D) {
             buf.str());
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 TEST(TensorTypes, HDF5) {
   auto filename = "tensortypes.s5";
   {
@@ -602,6 +615,7 @@ TEST(TensorTypes, HDF5) {
   }
   remove(filename);
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 TEST(TensorTypes, ASDF) {
@@ -714,6 +728,7 @@ TEST(Manifold, create) {
   EXPECT_EQ(m0, project->manifolds().at("m0"));
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 TEST(Manifold, HDF5) {
   auto filename = "manifold.s5";
   {
@@ -732,6 +747,7 @@ TEST(Manifold, HDF5) {
   }
   remove(filename);
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 TEST(Manifold, ASDF) {
@@ -765,6 +781,7 @@ TEST(TangentSpace, create) {
   EXPECT_EQ(s0, project->tangentspaces().at("s0"));
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 TEST(TangentSpace, HDF5) {
   auto filename = "tangentspace.s5";
   {
@@ -785,6 +802,7 @@ TEST(TangentSpace, HDF5) {
   }
   remove(filename);
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 TEST(TangentSpace, ASDF) {
@@ -826,6 +844,7 @@ TEST(Field, create) {
   EXPECT_EQ(&*f0, &*project->fields().at("f0"));
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 TEST(Field, HDF5) {
   auto filename = "field.s5";
   {
@@ -848,6 +867,7 @@ TEST(Field, HDF5) {
   }
   remove(filename);
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 TEST(Field, ASDF) {
@@ -883,6 +903,7 @@ TEST(CoordinateSystem, create) {
   EXPECT_EQ(cs1, project->coordinatesystems().at("cs1"));
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 TEST(CoordinateSystem, HDF5) {
   auto filename = "coordinatesystem.s5";
   {
@@ -900,6 +921,7 @@ TEST(CoordinateSystem, HDF5) {
   }
   remove(filename);
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 TEST(CoordinateSystem, ASDF) {
@@ -937,6 +959,7 @@ TEST(Discretization, create) {
   EXPECT_EQ(d0, m0->discretizations().at("d0"));
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 TEST(Discretization, HDF5) {
   auto filename = "discretization.s5";
   {
@@ -961,6 +984,7 @@ TEST(Discretization, HDF5) {
   }
   remove(filename);
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 TEST(Discretization, ASDF) {
@@ -1000,6 +1024,7 @@ TEST(SubDiscretization, create) {
   EXPECT_EQ(sd1, m1->subdiscretizations().at("sd1"));
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 TEST(SubDiscretization, HDF5) {
   auto filename = "subdiscretization.s5";
   {
@@ -1018,6 +1043,7 @@ TEST(SubDiscretization, HDF5) {
   }
   remove(filename);
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 TEST(SubDiscretization, ASDF) {
@@ -1061,6 +1087,7 @@ TEST(DiscretizationBlock, create) {
   EXPECT_EQ(db0, d0->discretizationblocks().at("db0"));
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 TEST(DiscretizationBlock, HDF5) {
   auto filename = "discretizationblock.s5";
   {
@@ -1084,6 +1111,7 @@ TEST(DiscretizationBlock, HDF5) {
   }
   remove(filename);
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 TEST(DiscretizationBlock, ASDF) {
@@ -1125,6 +1153,7 @@ TEST(Basis, create) {
   EXPECT_EQ(b0, s0->bases().at("b0"));
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 TEST(Basis, HDF5) {
   auto filename = "basis.s5";
   {
@@ -1145,6 +1174,7 @@ TEST(Basis, HDF5) {
   }
   remove(filename);
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 TEST(Basis, ASDF) {
@@ -1185,6 +1215,7 @@ TEST(BasisVector, create) {
   EXPECT_EQ(bz1, b1->basisvectors().at("z"));
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 TEST(BasisVector, HDF5) {
   auto filename = "basisvector.s5";
   {
@@ -1204,6 +1235,7 @@ TEST(BasisVector, HDF5) {
   }
   remove(filename);
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 TEST(BasisVector, ASDF) {
@@ -1249,6 +1281,7 @@ TEST(DiscreteField, create) {
   EXPECT_EQ(df0, f0->discretefields().at("df0"));
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 TEST(DiscreteField, HDF5) {
   auto filename = "discretefield.s5";
   {
@@ -1275,6 +1308,7 @@ TEST(DiscreteField, HDF5) {
   }
   remove(filename);
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 TEST(DiscreteField, ASDF) {
@@ -1314,6 +1348,7 @@ TEST(CoordinateField, create) {
   EXPECT_EQ(csf1, cs1->coordinatefields().at("csf1"));
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 TEST(CoordinateField, HDF5) {
   auto filename = "coordinatefield.s5";
   {
@@ -1333,6 +1368,7 @@ TEST(CoordinateField, HDF5) {
   }
   remove(filename);
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 TEST(CoordinateField, ASDF) {
@@ -1375,6 +1411,7 @@ TEST(DiscreteFieldBlock, create) {
   EXPECT_EQ(dfb0, df0->discretefieldblocks().at("dfb0"));
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 TEST(DiscreteFieldBlock, HDF5) {
   auto filename = "discretefieldblock.s5";
   {
@@ -1401,6 +1438,7 @@ TEST(DiscreteFieldBlock, HDF5) {
   }
   remove(filename);
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 TEST(DiscreteFieldBlock, ASDF) {
@@ -1475,6 +1513,7 @@ TEST(DiscreteFieldBlockComponent, create) {
   EXPECT_FALSE(bool(dfbd0->datablock()));
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 TEST(DiscreteFieldBlockComponent, HDF5) {
   auto filename = "discretizationfieldblockcomponent.s5";
   {
@@ -1517,6 +1556,7 @@ TEST(DiscreteFieldBlockComponent, HDF5) {
   }
   remove(filename);
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 TEST(DiscreteFieldBlockComponent, ASDF) {
@@ -1563,6 +1603,7 @@ TEST(DiscreteFieldBlockComponent, ASDF) {
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 TEST(DataBlock, create) {
   auto f1 = project->fields().at("f1");
   auto df1 = f1->discretefields().at("df1");
@@ -1731,6 +1772,7 @@ TEST(DataBlock, cleanup) {
   auto dfbd4 = dfb1->discretefieldblockcomponents().at("dfbd4");
   dfbd4->unsetDataBlock();
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 TEST(DataBlock, create2) {
@@ -1911,6 +1953,7 @@ TEST(DataBlock, cleanup2) {
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 TEST(ProjectMerge, merge) {
   auto filename = "project.s5";
   string orig = [&] {
@@ -1935,5 +1978,6 @@ TEST(ProjectMerge, merge) {
   EXPECT_EQ(orig, curr);
   remove(filename);
 }
+#endif
 
 #include "src/gtest_main.cc"

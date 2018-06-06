@@ -3,7 +3,9 @@
 #include "DiscreteFieldBlockComponent.hpp"
 #include "DiscretizationBlock.hpp"
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 #include "H5Helpers.hpp"
+#endif
 
 namespace SimulationIO {
 
@@ -17,6 +19,7 @@ bool DiscreteFieldBlock::invariant() const {
   return inv;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 void DiscreteFieldBlock::read(const H5::H5Location &loc, const string &entry,
                               const shared_ptr<DiscreteField> &discretefield) {
   m_discretefield = discretefield;
@@ -39,6 +42,7 @@ void DiscreteFieldBlock::read(const H5::H5Location &loc, const string &entry,
   m_discretizationblock->noinsert(shared_from_this());
   // TODO: check storage_indices
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 void DiscreteFieldBlock::read(const ASDF::reader_state &rs,
@@ -100,6 +104,7 @@ ostream &DiscreteFieldBlock::output(ostream &os, int level) const {
   return os;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 void DiscreteFieldBlock::write(const H5::H5Location &loc,
                                const H5::H5Location &parent) const {
   assert(invariant());
@@ -121,6 +126,7 @@ void DiscreteFieldBlock::write(const H5::H5Location &loc,
                   discretefieldblockcomponents());
   // TODO: write storage_indices
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 vector<string> DiscreteFieldBlock::yaml_path() const {
@@ -179,26 +185,34 @@ DiscreteFieldBlock::copyDiscreteFieldBlockComponent(
   if (copy_children) {
     auto datablock = discretefieldblockcomponent->datablock();
     if (datablock) {
+#ifdef SIMULATIONIO_HAVE_HDF5
       auto copyobj = discretefieldblockcomponent->copyobj();
-      auto datarange = discretefieldblockcomponent->datarange();
       if (copyobj) {
         // Copy object only if it does not already exist
         auto copyobj2 = discretefieldblockcomponent2->copyobj();
         if (!copyobj2)
           copyobj2 = discretefieldblockcomponent2->createCopyObj(
               copyobj->group(), copyobj->name());
-      } else if (datarange) {
+      }
+#endif
+      auto datarange = discretefieldblockcomponent->datarange();
+      if (datarange) {
         // Copy data range only if it does not already exist
         auto datarange2 = discretefieldblockcomponent2->datarange();
         if (!datarange2)
           datarange2 = discretefieldblockcomponent2->createDataRange(
               datarange->origin(), datarange->delta());
       }
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+#warning "TODO: handle ASDF types"
+      assert(0);
+#endif
     }
   }
   return discretefieldblockcomponent2;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 shared_ptr<DiscreteFieldBlockComponent>
 DiscreteFieldBlock::readDiscreteFieldBlockComponent(const H5::H5Location &loc,
                                                     const string &entry) {
@@ -215,6 +229,7 @@ DiscreteFieldBlock::readDiscreteFieldBlockComponent(const H5::H5Location &loc,
   assert(discretefieldblockcomponent->invariant());
   return discretefieldblockcomponent;
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<DiscreteFieldBlockComponent>

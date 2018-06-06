@@ -2,7 +2,9 @@
 
 #include "DiscretizationBlock.hpp"
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 #include "H5Helpers.hpp"
+#endif
 
 namespace SimulationIO {
 
@@ -15,6 +17,7 @@ bool Discretization::invariant() const {
          configuration()->discretizations().at(name()).lock().get() == this;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 void Discretization::read(const H5::H5Location &loc, const string &entry,
                           const shared_ptr<Manifold> &manifold) {
   m_manifold = manifold;
@@ -35,6 +38,7 @@ void Discretization::read(const H5::H5Location &loc, const string &entry,
                 });
   m_configuration->insert(name(), shared_from_this());
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 void Discretization::read(const ASDF::reader_state &rs, const YAML::Node &node,
@@ -72,6 +76,7 @@ ostream &Discretization::output(ostream &os, int level) const {
   return os;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 void Discretization::write(const H5::H5Location &loc,
                            const H5::H5Location &parent) const {
   assert(invariant());
@@ -95,6 +100,7 @@ void Discretization::write(const H5::H5Location &loc,
   group.createGroup("child_discretizations");
   group.createGroup("parent_discretizations");
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 vector<string> Discretization::yaml_path() const {
@@ -148,6 +154,7 @@ shared_ptr<DiscretizationBlock> Discretization::copyDiscretizationBlock(
   return discretizationblock2;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 shared_ptr<DiscretizationBlock>
 Discretization::readDiscretizationBlock(const H5::H5Location &loc,
                                         const string &entry) {
@@ -159,6 +166,7 @@ Discretization::readDiscretizationBlock(const H5::H5Location &loc,
   assert(discretizationblock->invariant());
   return discretizationblock;
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<DiscretizationBlock>

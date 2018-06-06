@@ -12,10 +12,26 @@ language: cpp
 compiler:
   - clang
   - gcc
+env:
+  global:
+    - ENABLE_ASDF_CXX=ON
+    - ENABLE_HDF5=ON
+  matrix:
+    - DEFAULT=ON                # dummy setting
+    - ENABLE_ASDF_CXX=OFF
+    - ENABLE_HDF5=OFF
 matrix:
   exclude:
     - os: osx
       compiler: gcc
+    - os: osx
+      env: ENABLE_ASDF_CXX=OFF
+    - os: osx
+      env: ENABLE_HDF5=OFF
+    - compiler: gcc
+      env: ENABLE_ASDF_CXX=OFF
+    - compiler: gcc
+      env: ENABLE_HDF5=OFF
 
 # Install, build, and test
 addons:
@@ -31,7 +47,7 @@ cache:
   directories:
     - $HOME/hdf5-1.10.1
     - $HOME/yaml-cpp-0.6.2
-    - $HOME/asdf-cxx-2.5.1
+    - $HOME/asdf-cxx-2.6.1
 
 install:
   - which $CXX
@@ -72,18 +88,18 @@ install:
         )
       fi
       # Build asdf-cxx
-      export ASDF_CXX_DIR="$HOME/asdf-cxx-2.5.1"
+      export ASDF_CXX_DIR="$HOME/asdf-cxx-2.6.1"
       export PATH="$ASDF_CXX_DIR/bin:$PATH"
       # Check cache
       if [ ! -e "$ASDF_CXX_DIR/bin/asdf-ls" ]; then
         (
           mkdir -p external
           cd external
-          wget https://github.com/eschnett/asdf-cxx/archive/version/2.5.1.tar.gz
-          tar xzf 2.5.1.tar.gz
-          mkdir asdf-cxx-2.5.1-build
-          cd asdf-cxx-2.5.1-build
-          cmake -DCMAKE_PREFIX_PATH="$YAML_CPP_DIR" -DCMAKE_INSTALL_PREFIX="$ASDF_CXX_DIR" ../asdf-cxx-version-2.5.1
+          wget https://github.com/eschnett/asdf-cxx/archive/version/2.6.1.tar.gz
+          tar xzf 2.6.1.tar.gz
+          mkdir asdf-cxx-2.6.1-build
+          cd asdf-cxx-2.6.1-build
+          cmake -DCMAKE_PREFIX_PATH="$YAML_CPP_DIR" -DCMAKE_INSTALL_PREFIX="$ASDF_CXX_DIR" ../asdf-cxx-version-2.6.1
           make -j2
           make -j2 install
         )
@@ -120,18 +136,18 @@ install:
         )
       fi
       # Build asdf-cxx
-      export ASDF_CXX_DIR="$HOME/asdf-cxx-2.5.1"
+      export ASDF_CXX_DIR="$HOME/asdf-cxx-2.6.1"
       export PATH="$ASDF_CXX_DIR/bin:$PATH"
       # Check cache
       if [ ! -e "$ASDF_CXX_DIR/bin/asdf-ls" ]; then
         (
           mkdir -p external
           cd external
-          wget https://github.com/eschnett/asdf-cxx/archive/version/2.5.1.tar.gz
-          tar xzf 2.5.1.tar.gz
-          mkdir asdf-cxx-2.5.1-build
-          cd asdf-cxx-2.5.1-build
-          cmake -DCMAKE_PREFIX_PATH="$YAML_CPP_DIR" -DCMAKE_MACOSX_RPATH=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX="$ASDF_CXX_DIR" ../asdf-cxx-version-2.5.1
+          wget https://github.com/eschnett/asdf-cxx/archive/version/2.6.1.tar.gz
+          tar xzf 2.6.1.tar.gz
+          mkdir asdf-cxx-2.6.1-build
+          cd asdf-cxx-2.6.1-build
+          cmake -DCMAKE_PREFIX_PATH="$YAML_CPP_DIR" -DCMAKE_MACOSX_RPATH=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX="$ASDF_CXX_DIR" ../asdf-cxx-version-2.6.1
           make -j2
           make -j2 install
         )
@@ -154,30 +170,26 @@ install:
   - gem install coveralls-lcov
   - which lcov
   - lcov --version
+
 script:
-  # Build without ASDF
-  - mkdir build-noasdf && pushd build-noasdf
-  - cmake -DCMAKE_PREFIX_PATH="$HDF5_DIR;$PYTHON_DIR" -DCMAKE_CXX_COMPILER="$CXX" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX="$HOME/install-noasdf" ..
-  - make -j2
-  - ./sio-example
-  - make -j2 test CTEST_OUTPUT_ON_FAILURE=1
-  - make -j2 install
-  - popd
-  # Build with ASDF
   - mkdir build && pushd build
-  - cmake -DCMAKE_PREFIX_PATH="$HDF5_DIR;$YAML_CPP_DIR;$ASDF_CXX_DIR;$PYTHON_DIR" -DCMAKE_CXX_COMPILER="$CXX" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX="$HOME/install" ..
+  - cmake -DENABLE_ASDF_CXX=${ENABLE_ASDF_CXX} -DENABLE_HDF5=${ENABLE_HDF5} -DCMAKE_PREFIX_PATH="$HDF5_DIR;$YAML_CPP_DIR;$ASDF_CXX_DIR;$PYTHON_DIR" -DCMAKE_CXX_COMPILER="$CXX" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX="$HOME/install" ..
   - make -j2
-  - ./sio-example
-  - ./sio-example-asdf
+  - if [ ${ENABLE_ASDF_CXX} = ON ]; then ./sio-example-asdf; fi
+  - if [ ${ENABLE_HDF5} = ON ]; then ./sio-example; fi
   - make -j2 test CTEST_OUTPUT_ON_FAILURE=1
   - make -j2 install
   - popd
+
 after_success:
-  - mkdir -p "$HOME/bin" && ln -s "$(which $GCOV)" "$HOME/bin/gcov" && ls -l "$HOME/bin" && export PATH="$HOME/bin:$PATH" && hash -r
-  - mkdir build-coveralls && pushd build-coveralls
-  - cmake -DCMAKE_PREFIX_PATH="$HDF5_DIR;$YAML_CPP_DIR;$ASDF_CXX_DIR;$PYTHON_DIR" -DCMAKE_CXX_COMPILER="$CXX" -DCMAKE_BUILD_TYPE=Debug -DCOVERALLS=ON ..
-  - make -j2
-  - ./sio-example
-  - ./sio-example-asdf
-  - make -j2 coveralls CTEST_OUTPUT_ON_FAILURE=1
-  - popd
+  - |
+    if [ "${ENABLE_ASDF_CXX} ${ENABLE_HDF5}" = "ON ON" ]; then
+      mkdir -p "$HOME/bin" && ln -s "$(which $GCOV)" "$HOME/bin/gcov" && ls -l "$HOME/bin" && export PATH="$HOME/bin:$PATH" && hash -r
+      mkdir build-coveralls && pushd build-coveralls
+      cmake -DENABLE_ASDF_CXX=${ENABLE_ASDF_CXX} -DENABLE_HDF5=${ENABLE_HDF5} -DCMAKE_PREFIX_PATH="$HDF5_DIR;$YAML_CPP_DIR;$ASDF_CXX_DIR;$PYTHON_DIR" -DCMAKE_CXX_COMPILER="$CXX" -DCMAKE_BUILD_TYPE=Debug -DCOVERALLS=ON ..
+      make -j2
+      if [ ${ENABLE_ASDF_CXX} = ON ]; then ./sio-example-asdf; fi
+      if [ ${ENABLE_HDF5} = ON ]; then ./sio-example; fi
+      make -j2 coveralls CTEST_OUTPUT_ON_FAILURE=1
+      popd
+    fi

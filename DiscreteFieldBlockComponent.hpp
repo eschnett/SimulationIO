@@ -7,13 +7,17 @@
 #include "DiscreteFieldBlock.hpp"
 #include "TensorComponent.hpp"
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 #include "H5Helpers.hpp"
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 #include <asdf.hpp>
 #endif
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 #include <H5Cpp.h>
+#endif
 
 #include <iostream>
 #include <map>
@@ -54,6 +58,7 @@ public:
   shared_ptr<DataRange> datarange() const {
     return dynamic_pointer_cast<DataRange>(m_datablock);
   }
+#ifdef SIMULATIONIO_HAVE_HDF5
   shared_ptr<DataSet> dataset() const {
     return dynamic_pointer_cast<DataSet>(m_datablock);
   }
@@ -63,6 +68,7 @@ public:
   shared_ptr<ExtLink> extlink() const {
     return dynamic_pointer_cast<ExtLink>(m_datablock);
   }
+#endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   shared_ptr<ASDFData> asdfdata() const {
     return dynamic_pointer_cast<ASDFData>(m_datablock);
@@ -104,6 +110,7 @@ private:
     tensorcomponent->noinsert(discretefieldblockcomponent);
     return discretefieldblockcomponent;
   }
+#ifdef SIMULATIONIO_HAVE_HDF5
   static shared_ptr<DiscreteFieldBlockComponent>
   create(const H5::H5Location &loc, const string &entry,
          const shared_ptr<DiscreteFieldBlock> &discretefieldblock) {
@@ -114,6 +121,7 @@ private:
   }
   void read(const H5::H5Location &loc, const string &entry,
             const shared_ptr<DiscreteFieldBlock> &discretefieldblock);
+#endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   static shared_ptr<DiscreteFieldBlockComponent>
   create(const ASDF::reader_state &rs, const YAML::Node &node,
@@ -139,8 +147,10 @@ public:
              const DiscreteFieldBlockComponent &discretefieldblockcomponent) {
     return discretefieldblockcomponent.output(os);
   }
+#ifdef SIMULATIONIO_HAVE_HDF5
   virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
+#endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   virtual vector<string> yaml_path() const;
   ASDF::writer &write(ASDF::writer &w) const;
@@ -154,6 +164,7 @@ public:
   void unsetDataBlock();
   shared_ptr<DataRange> createDataRange(double origin,
                                         const vector<double> &delta);
+#ifdef SIMULATIONIO_HAVE_HDF5
   shared_ptr<DataSet> createDataSet(const H5::DataType &type);
   template <typename T> shared_ptr<DataSet> createDataSet() {
     return createDataSet(H5::getType(T{}));
@@ -165,6 +176,7 @@ public:
   shared_ptr<CopyObj> createCopyObj(const H5::H5File &file, const string &name);
   shared_ptr<ExtLink> createExtLink(const string &filename,
                                     const string &objname);
+#endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   shared_ptr<ASDFData>
   createASDFData(const shared_ptr<ASDF::generic_blob_t> &blob,

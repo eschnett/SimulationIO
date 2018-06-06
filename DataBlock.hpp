@@ -6,10 +6,12 @@
 #include "Helpers.hpp"
 #include "RegionCalculus.hpp"
 
-#include "H5Helpers.hpp"
-
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 #include <asdf.hpp>
+#endif
+
+#ifdef SIMULATIONIO_HAVE_HDF5
+#include "H5Helpers.hpp"
 #endif
 
 #include <algorithm>
@@ -157,10 +159,12 @@ public:
 
 // An abstract block of data
 class DataBlock {
+#ifdef SIMULATIONIO_HAVE_HDF5
   typedef function<shared_ptr<DataBlock>(const H5::Group &group,
                                          const string &entry, const box_t &box)>
       reader_t;
   static const vector<reader_t> readers;
+#endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   typedef function<shared_ptr<DataBlock>(
       const ASDF::reader_state &rs, const YAML::Node &node, const box_t &box)>
@@ -176,8 +180,10 @@ public:
   point_t shape() const { return m_box.shape(); }
   typename point_t::prod_t size() const { return m_box.size(); }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
   static shared_ptr<DataBlock> read(const H5::Group &group, const string &entry,
                                     const box_t &box);
+#endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   static shared_ptr<DataBlock> read_asdf(const ASDF::reader_state &rs,
                                          const YAML::Node &node,
@@ -189,11 +195,13 @@ public:
 protected:
   DataBlock(const box_t &box) : m_box(box) {}
 
+#ifdef SIMULATIONIO_HAVE_HDF5
   void construct_spaces(const box_t &memlayout, // allocated memory
                         const box_t &membox,    // memory to be transferred
                         const H5::DataSpace &dataspace, // file space
                         H5::DataSpace &memspace,
                         H5::DataSpace &filespace) const;
+#endif
 
 public:
   virtual ~DataBlock() {}
@@ -202,7 +210,9 @@ public:
   friend ostream &operator<<(ostream &os, const DataBlock &datablock) {
     return datablock.output(os);
   }
+#ifdef SIMULATIONIO_HAVE_HDF5
   virtual void write(const H5::Group &group, const string &entry) const = 0;
+#endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   virtual void write(ASDF::writer &w, const string &entry) const = 0;
 #endif
@@ -226,19 +236,25 @@ public:
 
   virtual ~DataRange() {}
 
+#ifdef SIMULATIONIO_HAVE_HDF5
   static shared_ptr<DataRange> read(const H5::Group &group, const string &entry,
                                     const box_t &box);
+#endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   static shared_ptr<DataRange> read_asdf(const ASDF::reader_state &rs,
                                          const YAML::Node &node,
                                          const box_t &box);
 #endif
   virtual ostream &output(ostream &os) const;
+#ifdef SIMULATIONIO_HAVE_HDF5
   virtual void write(const H5::Group &group, const string &entry) const;
+#endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   virtual void write(ASDF::writer &w, const string &entry) const;
 #endif
 };
+
+#ifdef SIMULATIONIO_HAVE_HDF5
 
 // An HDF5 dataset
 class DataSet : public DataBlock {
@@ -502,6 +518,8 @@ public:
   // TODO: implement readData
 };
 
+#endif // #ifdef SIMULATIONIO_HAVE_HDF5
+
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 
 // A pointer to data for ASDF
@@ -534,13 +552,17 @@ public:
 
   virtual ~ASDFData() {}
 
+#ifdef SIMULATIONIO_HAVE_HDF5
   static shared_ptr<ASDFData> read(const H5::Group &group, const string &entry,
                                    const box_t &box);
+#endif
   static shared_ptr<ASDFData> read_asdf(const ASDF::reader_state &rs,
                                         const YAML::Node &node,
                                         const box_t &box);
   virtual ostream &output(ostream &os) const;
+#ifdef SIMULATIONIO_HAVE_HDF5
   virtual void write(const H5::Group &group, const string &entry) const;
+#endif
   virtual void write(ASDF::writer &w, const string &entry) const;
 };
 
@@ -560,13 +582,17 @@ public:
 
   virtual ~ASDFArray() {}
 
+#ifdef SIMULATIONIO_HAVE_HDF5
   static shared_ptr<ASDFArray> read(const H5::Group &group, const string &entry,
                                     const box_t &box);
+#endif
   static shared_ptr<ASDFArray> read_asdf(const ASDF::reader_state &rs,
                                          const YAML::Node &node,
                                          const box_t &box);
   virtual ostream &output(ostream &os) const;
+#ifdef SIMULATIONIO_HAVE_HDF5
   virtual void write(const H5::Group &group, const string &entry) const;
+#endif
   virtual void write(ASDF::writer &w, const string &entry) const;
 };
 
@@ -584,17 +610,21 @@ public:
 
   virtual ~ASDFRef() {}
 
+#ifdef SIMULATIONIO_HAVE_HDF5
   static shared_ptr<ASDFRef> read(const H5::Group &group, const string &entry,
                                   const box_t &box);
+#endif
   static shared_ptr<ASDFRef> read_asdf(const ASDF::reader_state &rs,
                                        const YAML::Node &node,
                                        const box_t &box);
   virtual ostream &output(ostream &os) const;
+#ifdef SIMULATIONIO_HAVE_HDF5
   virtual void write(const H5::Group &group, const string &entry) const;
+#endif
   virtual void write(ASDF::writer &w, const string &entry) const;
 };
 
-#endif
+#endif // #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 
 } // namespace SimulationIO
 

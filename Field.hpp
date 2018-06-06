@@ -13,7 +13,9 @@
 #include <asdf.hpp>
 #endif
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 #include <H5Cpp.h>
+#endif
 
 #include <iostream>
 #include <map>
@@ -93,6 +95,7 @@ private:
     tensortype->noinsert(field);
     return field;
   }
+#ifdef SIMULATIONIO_HAVE_HDF5
   static shared_ptr<Field> create(const H5::H5Location &loc,
                                   const string &entry,
                                   const shared_ptr<Project> &project) {
@@ -102,6 +105,7 @@ private:
   }
   void read(const H5::H5Location &loc, const string &entry,
             const shared_ptr<Project> &project);
+#endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   static shared_ptr<Field> create(const ASDF::reader_state &rs,
                                   const YAML::Node &node,
@@ -123,8 +127,10 @@ public:
   friend ostream &operator<<(ostream &os, const Field &field) {
     return field.output(os);
   }
+#ifdef SIMULATIONIO_HAVE_HDF5
   virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
+#endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   virtual vector<string> yaml_path() const;
   ASDF::writer &write(ASDF::writer &w) const;
@@ -146,8 +152,10 @@ public:
   shared_ptr<DiscreteField>
   copyDiscreteField(const shared_ptr<DiscreteField> &discretefield,
                     bool copy_children = false);
+#ifdef SIMULATIONIO_HAVE_HDF5
   shared_ptr<DiscreteField> readDiscreteField(const H5::H5Location &loc,
                                               const string &entry);
+#endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   shared_ptr<DiscreteField> readDiscreteField(const ASDF::reader_state &rs,
                                               const YAML::Node &node);

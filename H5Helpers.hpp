@@ -5,6 +5,10 @@
 
 #include "Helpers.hpp"
 
+#include "Config.hpp"
+
+#ifdef SIMULATIONIO_HAVE_HDF5
+
 #include <H5Cpp.h>
 
 #include <algorithm>
@@ -414,5 +418,7 @@ bool checkGroupNames(const CommonFG &loc, const std::string &name,
 }
 
 } // namespace H5
+
+#endif
 
 #endif // #ifndef H5HELPERS_HPP

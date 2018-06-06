@@ -1,6 +1,8 @@
 #include "TensorComponent.hpp"
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 #include "H5Helpers.hpp"
+#endif
 
 namespace SimulationIO {
 
@@ -34,6 +36,7 @@ bool TensorComponent::invariant() const {
   return inv;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 void TensorComponent::read(const H5::H5Location &loc, const string &entry,
                            const shared_ptr<TensorType> &tensortype) {
   m_tensortype = tensortype;
@@ -47,6 +50,7 @@ void TensorComponent::read(const H5::H5Location &loc, const string &entry,
   H5::readAttribute(group, "storage_index", m_storage_index);
   H5::readAttribute(group, "indexvalues", m_indexvalues);
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 void TensorComponent::read(const ASDF::reader_state &rs, const YAML::Node &node,
@@ -75,6 +79,7 @@ ostream &TensorComponent::output(ostream &os, int level) const {
   return os;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 void TensorComponent::write(const H5::H5Location &loc,
                             const H5::H5Location &parent) const {
   assert(invariant());
@@ -88,6 +93,7 @@ void TensorComponent::write(const H5::H5Location &loc,
   H5::createAttribute(group, "storage_index", storage_index());
   H5::createAttribute(group, "indexvalues", indexvalues());
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 vector<string> TensorComponent::yaml_path() const {

@@ -1,6 +1,8 @@
 #include "DiscreteFieldBlockComponent.hpp"
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 #include "H5Helpers.hpp"
+#endif
 
 #include <algorithm>
 #include <sstream>
@@ -31,6 +33,7 @@ bool DiscreteFieldBlockComponent::invariant() const {
   return inv;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 void DiscreteFieldBlockComponent::read(
     const H5::H5Location &loc, const string &entry,
     const shared_ptr<DiscreteFieldBlock> &discretefieldblock) {
@@ -56,6 +59,7 @@ void DiscreteFieldBlockComponent::read(
       group, dataname(), discretefieldblock->discretizationblock()->box());
   m_tensorcomponent->noinsert(shared_from_this());
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 void DiscreteFieldBlockComponent::read(
@@ -87,8 +91,11 @@ void DiscreteFieldBlockComponent::merge(
     // Cannot combine DataBlocks
     assert(!discretefieldblockcomponent->datablock());
   } else {
+#ifdef SIMULATIONIO_HAVE_HDF5
     // Cannot copy DataSet (yet)
     assert(!discretefieldblockcomponent->dataset());
+#endif
+#warning "TODO: Handle ASDF types"
     m_datablock = discretefieldblockcomponent->datablock();
   }
 }
@@ -102,6 +109,7 @@ ostream &DiscreteFieldBlockComponent::output(ostream &os, int level) const {
   return os;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 void DiscreteFieldBlockComponent::write(const H5::H5Location &loc,
                                         const H5::H5Location &parent) const {
   assert(invariant());
@@ -124,6 +132,7 @@ void DiscreteFieldBlockComponent::write(const H5::H5Location &loc,
   if (bool(datablock()))
     datablock()->write(group, dataname());
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 vector<string> DiscreteFieldBlockComponent::yaml_path() const {
@@ -142,6 +151,7 @@ ASDF::writer &DiscreteFieldBlockComponent::write(ASDF::writer &w) const {
 
 void DiscreteFieldBlockComponent::unsetDataBlock() { m_datablock = nullptr; }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 shared_ptr<DataSet>
 DiscreteFieldBlockComponent::createDataSet(const H5::DataType &type) {
   assert(!m_datablock);
@@ -159,6 +169,7 @@ shared_ptr<DataBufferEntry> DiscreteFieldBlockComponent::createDataBufferEntry(
   m_datablock = res;
   return res;
 }
+#endif
 
 shared_ptr<DataRange>
 DiscreteFieldBlockComponent::createDataRange(double origin,
@@ -169,6 +180,8 @@ DiscreteFieldBlockComponent::createDataRange(double origin,
   m_datablock = res;
   return res;
 }
+
+#ifdef SIMULATIONIO_HAVE_HDF5
 shared_ptr<CopyObj>
 DiscreteFieldBlockComponent::createCopyObj(const H5::Group &group,
                                            const string &name) {
@@ -178,6 +191,7 @@ DiscreteFieldBlockComponent::createCopyObj(const H5::Group &group,
   m_datablock = res;
   return res;
 }
+
 shared_ptr<CopyObj>
 DiscreteFieldBlockComponent::createCopyObj(const H5::H5File &file,
                                            const string &name) {
@@ -187,6 +201,7 @@ DiscreteFieldBlockComponent::createCopyObj(const H5::H5File &file,
   m_datablock = res;
   return res;
 }
+
 shared_ptr<ExtLink>
 DiscreteFieldBlockComponent::createExtLink(const string &filename,
                                            const string &objname) {
@@ -196,6 +211,7 @@ DiscreteFieldBlockComponent::createExtLink(const string &filename,
   m_datablock = res;
   return res;
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<ASDFData> DiscreteFieldBlockComponent::createASDFData(

@@ -2,7 +2,9 @@
 
 #include "DiscreteFieldBlock.hpp"
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 #include "H5Helpers.hpp"
+#endif
 
 namespace SimulationIO {
 
@@ -20,6 +22,7 @@ bool DiscreteField::invariant() const {
          field()->tangentspace().get() == basis()->tangentspace().get();
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 void DiscreteField::read(const H5::H5Location &loc, const string &entry,
                          const shared_ptr<Field> &field) {
   m_field = field;
@@ -48,6 +51,7 @@ void DiscreteField::read(const H5::H5Location &loc, const string &entry,
   m_discretization->noinsert(shared_from_this());
   m_basis->noinsert(shared_from_this());
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 void DiscreteField::read(const ASDF::reader_state &rs, const YAML::Node &node,
@@ -96,6 +100,7 @@ ostream &DiscreteField::output(ostream &os, int level) const {
   return os;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 void DiscreteField::write(const H5::H5Location &loc,
                           const H5::H5Location &parent) const {
   assert(invariant());
@@ -126,6 +131,7 @@ void DiscreteField::write(const H5::H5Location &loc,
                      "../tangentspace/bases/" + basis()->name());
   createGroup(group, "discretefieldblocks", discretefieldblocks());
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 vector<string> DiscreteField::yaml_path() const {
@@ -187,6 +193,7 @@ shared_ptr<DiscreteFieldBlock> DiscreteField::copyDiscreteFieldBlock(
   return discretefieldblock2;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 shared_ptr<DiscreteFieldBlock>
 DiscreteField::readDiscreteFieldBlock(const H5::H5Location &loc,
                                       const string &entry) {
@@ -197,6 +204,7 @@ DiscreteField::readDiscreteFieldBlock(const H5::H5Location &loc,
   assert(discretefieldblock->invariant());
   return discretefieldblock;
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<DiscreteFieldBlock>
