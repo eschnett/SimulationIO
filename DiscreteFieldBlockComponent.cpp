@@ -95,10 +95,7 @@ void DiscreteFieldBlockComponent::merge(
     // Cannot copy DataSet (yet)
     assert(!discretefieldblockcomponent->dataset());
 #endif
-#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 #warning "TODO: Handle ASDF types"
-    assert(0);
-#endif
     m_datablock = discretefieldblockcomponent->datablock();
   }
 }
