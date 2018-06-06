@@ -284,7 +284,7 @@ if(ASDF_CXX_FOUND)
   add_test(NAME list-asdf3 COMMAND ./sio-list-asdf example2.asdf)
   add_test(NAME compare-asdf
     COMMAND ${CMAKE_SOURCE_DIR}/diff-commands.sh
-            "./sio-list-as  df example.asdf" "./sio-list-asdf example2.asdf")
+            "./sio-list-asdf example.asdf" "./sio-list-asdf example2.asdf")
 endif()
 if(HDF5_FOUND AND ASDF_CXX_FOUND)
   add_test(NAME convert-hdf5-asdf
