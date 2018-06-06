@@ -1,6 +1,8 @@
 #include "BasisVector.hpp"
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 #include "H5Helpers.hpp"
+#endif
 
 namespace SimulationIO {
 
@@ -13,6 +15,7 @@ bool BasisVector::invariant() const {
          basis()->directions().at(direction()).get() == this;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 void BasisVector::read(const H5::H5Location &loc, const string &entry,
                        const shared_ptr<Basis> &basis) {
   m_basis = basis;
@@ -25,6 +28,7 @@ void BasisVector::read(const H5::H5Location &loc, const string &entry,
          basis->name());
   H5::readAttribute(group, "direction", m_direction);
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 void BasisVector::read(const ASDF::reader_state &rs, const YAML::Node &node,
@@ -48,6 +52,7 @@ ostream &BasisVector::output(ostream &os, int level) const {
   return os;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 void BasisVector::write(const H5::H5Location &loc,
                         const H5::H5Location &parent) const {
   assert(invariant());
@@ -61,6 +66,7 @@ void BasisVector::write(const H5::H5Location &loc,
   H5::createSoftLink(group, "basis", "..");
   H5::createAttribute(group, "direction", direction());
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 vector<string> BasisVector::yaml_path() const {

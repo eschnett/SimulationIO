@@ -3,7 +3,9 @@
 #include "Basis.hpp"
 #include "Field.hpp"
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 #include "H5Helpers.hpp"
+#endif
 
 namespace SimulationIO {
 
@@ -20,6 +22,7 @@ bool TangentSpace::invariant() const {
   return inv;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 void TangentSpace::read(const H5::H5Location &loc, const string &entry,
                         const shared_ptr<Project> &project) {
   m_project = project;
@@ -42,6 +45,7 @@ void TangentSpace::read(const H5::H5Location &loc, const string &entry,
   // assert(H5::checkGroupNames(group, "fields", fields));
   m_configuration->insert(name(), shared_from_this());
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 void TangentSpace::read(const ASDF::reader_state &rs, const YAML::Node &node,
@@ -82,6 +86,7 @@ ostream &TangentSpace::output(ostream &os, int level) const {
   return os;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 void TangentSpace::write(const H5::H5Location &loc,
                          const H5::H5Location &parent) const {
   assert(invariant());
@@ -103,6 +108,7 @@ void TangentSpace::write(const H5::H5Location &loc,
   H5::createGroup(group, "bases", bases());
   group.createGroup("fields");
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 vector<string> TangentSpace::yaml_path() const {
@@ -153,6 +159,7 @@ shared_ptr<Basis> TangentSpace::copyBasis(const shared_ptr<Basis> &basis,
   return basis2;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 shared_ptr<Basis> TangentSpace::readBasis(const H5::H5Location &loc,
                                           const string &entry) {
   auto basis = Basis::create(loc, entry, shared_from_this());
@@ -160,6 +167,7 @@ shared_ptr<Basis> TangentSpace::readBasis(const H5::H5Location &loc,
   assert(basis->invariant());
   return basis;
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<Basis> TangentSpace::readBasis(const ASDF::reader_state &rs,

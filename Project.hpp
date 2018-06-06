@@ -10,7 +10,9 @@
 #include <asdf.hpp>
 #endif
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 #include <H5Cpp.h>
+#endif
 
 #include <functional>
 #include <iostream>
@@ -35,7 +37,9 @@ using std::vector;
 class Project;
 
 shared_ptr<Project> createProject(const string &name);
+#ifdef SIMULATIONIO_HAVE_HDF5
 shared_ptr<Project> readProject(const H5::H5Location &loc);
+#endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<Project> readProject(const ASDF::reader_state &rs,
                                 const YAML::Node &node);
@@ -85,6 +89,7 @@ public:
     return m_coordinatesystems;
   }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
   mutable H5::EnumType enumtype;
   mutable H5::CompType rangetype;
 
@@ -94,6 +99,7 @@ public:
 
   mutable vector<H5::CompType> linearizationtypes;
   mutable vector<H5::VarLenType> concatenationtypes;
+#endif
 
   virtual bool invariant() const;
 
@@ -103,7 +109,9 @@ public:
   Project &operator=(Project &&) = delete;
 
   friend shared_ptr<Project> createProject(const string &name);
+#ifdef SIMULATIONIO_HAVE_HDF5
   friend shared_ptr<Project> readProject(const H5::H5Location &loc);
+#endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   friend shared_ptr<Project> readProject(const ASDF::reader_state &rs,
                                          const YAML::Node &node);
@@ -111,6 +119,7 @@ public:
   Project(hidden, const string &name) : Common(name) {
     SIMULATIONIO_CHECK_VERSION;
     createTypes();
+
   }
   Project(hidden) : Common(hidden()) { SIMULATIONIO_CHECK_VERSION; }
 
@@ -120,12 +129,14 @@ private:
     project->createTypes();
     return project;
   }
+#ifdef SIMULATIONIO_HAVE_HDF5
   static shared_ptr<Project> create(const H5::H5Location &loc) {
     auto project = make_shared<Project>(hidden());
     project->read(loc);
     return project;
   }
   void read(const H5::H5Location &loc);
+#endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   static shared_ptr<Project> create(const ASDF::reader_state &rs,
                                     const YAML::Node &node) {
@@ -149,14 +160,18 @@ public:
   }
 
 private:
+#ifdef SIMULATIONIO_HAVE_HDF5
   static void insertEnumField(const H5::EnumType &type, const string &name,
                               int value);
+#endif
   void createTypes() const;
 
 public:
+#ifdef SIMULATIONIO_HAVE_HDF5
   virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
   void write(const H5::H5Location &loc) const { write(loc, H5::H5File()); }
+#endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   virtual vector<string> yaml_path() const;
   ASDF::writer &write(ASDF::writer &writer) const;
@@ -171,8 +186,10 @@ public:
   shared_ptr<Parameter> getParameter(const string &name);
   shared_ptr<Parameter> copyParameter(const shared_ptr<Parameter> &parameter,
                                       bool copy_children = false);
+#ifdef SIMULATIONIO_HAVE_HDF5
   shared_ptr<Parameter> readParameter(const H5::H5Location &loc,
                                       const string &entry);
+#endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   shared_ptr<Parameter> readParameter(const ASDF::reader_state &rs,
                                       const YAML::Node &node);
@@ -184,8 +201,10 @@ public:
   shared_ptr<Configuration>
   copyConfiguration(const shared_ptr<Configuration> &configuration,
                     bool copy_children = false);
+#ifdef SIMULATIONIO_HAVE_HDF5
   shared_ptr<Configuration> readConfiguration(const H5::H5Location &loc,
                                               const string &entry);
+#endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   shared_ptr<Configuration> readConfiguration(const ASDF::reader_state &rs,
                                               const YAML::Node &node);
@@ -199,8 +218,10 @@ public:
   shared_ptr<TensorType>
   copyTensorType(const shared_ptr<TensorType> &tensortype,
                  bool copy_children = false);
+#ifdef SIMULATIONIO_HAVE_HDF5
   shared_ptr<TensorType> readTensorType(const H5::H5Location &loc,
                                         const string &entry);
+#endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   shared_ptr<TensorType> readTensorType(const ASDF::reader_state &rs,
                                         const YAML::Node &node);
@@ -215,8 +236,10 @@ public:
               const shared_ptr<Configuration> &configuration, int dimension);
   shared_ptr<Manifold> copyManifold(const shared_ptr<Manifold> &manifold,
                                     bool copy_children = false);
+#ifdef SIMULATIONIO_HAVE_HDF5
   shared_ptr<Manifold> readManifold(const H5::H5Location &loc,
                                     const string &entry);
+#endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   shared_ptr<Manifold> readManifold(const ASDF::reader_state &rs,
                                     const YAML::Node &node);
@@ -234,8 +257,10 @@ public:
   shared_ptr<TangentSpace>
   copyTangentSpace(const shared_ptr<TangentSpace> &tangentspace,
                    bool copy_children = false);
+#ifdef SIMULATIONIO_HAVE_HDF5
   shared_ptr<TangentSpace> readTangentSpace(const H5::H5Location &loc,
                                             const string &entry);
+#endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   shared_ptr<TangentSpace> readTangentSpace(const ASDF::reader_state &rs,
                                             const YAML::Node &node);
@@ -254,7 +279,9 @@ public:
                              const shared_ptr<TensorType> &tensortype);
   shared_ptr<Field> copyField(const shared_ptr<Field> &field,
                               bool copy_children = false);
+#ifdef SIMULATIONIO_HAVE_HDF5
   shared_ptr<Field> readField(const H5::H5Location &loc, const string &entry);
+#endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   shared_ptr<Field> readField(const ASDF::reader_state &rs,
                               const YAML::Node &node);
@@ -272,8 +299,10 @@ public:
   shared_ptr<CoordinateSystem>
   copyCoordinateSystem(const shared_ptr<CoordinateSystem> &coordinatesystem,
                        bool copy_children = false);
+#ifdef SIMULATIONIO_HAVE_HDF5
   shared_ptr<CoordinateSystem> readCoordinateSystem(const H5::H5Location &loc,
                                                     const string &entry);
+#endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   shared_ptr<CoordinateSystem>
   readCoordinateSystem(const ASDF::reader_state &rs, const YAML::Node &node);

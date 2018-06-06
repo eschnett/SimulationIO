@@ -3,7 +3,9 @@
 #include "Configuration.hpp"
 #include "Parameter.hpp"
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 #include "H5Helpers.hpp"
+#endif
 
 #include <exception>
 #include <sstream>
@@ -18,6 +20,7 @@ bool ParameterValue::invariant() const {
          value_type >= type_empty && value_type <= type_string;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 void ParameterValue::read(const H5::H5Location &loc, const string &entry,
                           const shared_ptr<Parameter> &parameter) {
   m_parameter = parameter;
@@ -67,6 +70,7 @@ void ParameterValue::read(const H5::H5Location &loc, const string &entry,
   // Cannot check "configurations" since configurations have not been read yet
   // assert(H5::checkGroupNames(group, "configurations", configurations));
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 void ParameterValue::read(const ASDF::reader_state &rs, const YAML::Node &node,
@@ -203,6 +207,7 @@ ostream &ParameterValue::output(ostream &os, int level) const {
   return os;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 void ParameterValue::write(const H5::H5Location &loc,
                            const H5::H5Location &parent) const {
   assert(invariant());
@@ -238,6 +243,7 @@ void ParameterValue::write(const H5::H5Location &loc,
   }
   group.createGroup("configurations");
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 vector<string> ParameterValue::yaml_path() const {
@@ -251,6 +257,7 @@ ASDF::writer &ParameterValue::write(ASDF::writer &w) const {
     // do nothing
     break;
   case type_int:
+    // TODO: use tags !<tag:yaml.org,2002:str> [float|int|str] instead
     aw.value("type", "int");
     aw.value("data", value_int);
     break;

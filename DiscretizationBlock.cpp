@@ -1,6 +1,8 @@
 #include "DiscretizationBlock.hpp"
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 #include "H5Helpers.hpp"
+#endif
 
 #include <algorithm>
 
@@ -17,6 +19,7 @@ bool DiscretizationBlock::invariant() const {
           active().rank() == discretization()->manifold()->dimension());
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 namespace {
 template <int D>
 void try_read_active(const H5::H5Object &group,
@@ -109,6 +112,7 @@ void DiscretizationBlock::read(
     try_read_active<4>(group, *this, m_active);
   }
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 void DiscretizationBlock::read(
@@ -152,6 +156,7 @@ ostream &DiscretizationBlock::output(ostream &os, int level) const {
   return os;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 namespace {
 template <int D>
 void try_write_active(const H5::H5Object &group,
@@ -223,6 +228,7 @@ void DiscretizationBlock::write(const H5::H5Location &loc,
     try_write_active<4>(group, *this, active());
   }
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 vector<string> DiscretizationBlock::yaml_path() const {

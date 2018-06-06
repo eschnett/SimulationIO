@@ -5,7 +5,9 @@
 #include "Field.hpp"
 #include "SubDiscretization.hpp"
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 #include "H5Helpers.hpp"
+#endif
 
 #include <algorithm>
 #include <set>
@@ -28,6 +30,7 @@ bool Manifold::invariant() const {
   return inv;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 void Manifold::read(const H5::H5Location &loc, const string &entry,
                     const shared_ptr<Project> &project) {
   m_project = project;
@@ -56,6 +59,7 @@ void Manifold::read(const H5::H5Location &loc, const string &entry,
   // assert(H5::checkGroupNames(group, "coordinatesystems", fields));
   m_configuration->insert(name(), shared_from_this());
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 void Manifold::read(const ASDF::reader_state &rs, const YAML::Node &node,
@@ -117,6 +121,7 @@ ostream &Manifold::output(ostream &os, int level) const {
   return os;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 void Manifold::write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const {
   assert(invariant());
@@ -139,6 +144,7 @@ void Manifold::write(const H5::H5Location &loc,
   group.createGroup("fields");
   group.createGroup("coordinatesystems");
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 vector<string> Manifold::yaml_path() const {
@@ -197,6 +203,7 @@ Manifold::copyDiscretization(const shared_ptr<Discretization> &discretization,
   return discretization2;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 shared_ptr<Discretization>
 Manifold::readDiscretization(const H5::H5Location &loc, const string &entry) {
   auto discretization = Discretization::create(loc, entry, shared_from_this());
@@ -205,6 +212,7 @@ Manifold::readDiscretization(const H5::H5Location &loc, const string &entry) {
   assert(discretization->invariant());
   return discretization;
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<Discretization>
@@ -279,6 +287,7 @@ shared_ptr<SubDiscretization> Manifold::copySubDiscretization(
   return subdiscretization2;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 shared_ptr<SubDiscretization>
 Manifold::readSubDiscretization(const H5::H5Location &loc,
                                 const string &entry) {
@@ -289,6 +298,7 @@ Manifold::readSubDiscretization(const H5::H5Location &loc,
   assert(subdiscretization->invariant());
   return subdiscretization;
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<SubDiscretization>

@@ -2,7 +2,9 @@
 
 #include "Discretization.hpp"
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 #include "H5Helpers.hpp"
+#endif
 
 #include <algorithm>
 
@@ -40,6 +42,7 @@ bool SubDiscretization::invariant() const {
   return inv;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 void SubDiscretization::read(const H5::H5Location &loc, const string &entry,
                              const shared_ptr<Manifold> &manifold) {
   m_manifold = manifold;
@@ -67,6 +70,7 @@ void SubDiscretization::read(const H5::H5Location &loc, const string &entry,
   m_parent_discretization->insertChild(name(), shared_from_this());
   m_child_discretization->insertParent(name(), shared_from_this());
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 void SubDiscretization::read(const ASDF::reader_state &rs,
@@ -109,6 +113,7 @@ ostream &SubDiscretization::output(ostream &os, int level) const {
   return os;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 void SubDiscretization::write(const H5::H5Location &loc,
                               const H5::H5Location &parent) const {
   assert(invariant());
@@ -146,6 +151,7 @@ void SubDiscretization::write(const H5::H5Location &loc,
   std::reverse(tmp_offset.begin(), tmp_offset.end());
   H5::createAttribute(group, "offset", tmp_offset);
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 vector<string> SubDiscretization::yaml_path() const {

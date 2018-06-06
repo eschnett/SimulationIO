@@ -7,7 +7,9 @@
 #include <asdf.hpp>
 #endif
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 #include <H5Cpp.h>
+#endif
 
 #include <functional>
 #include <iostream>
@@ -223,8 +225,10 @@ protected:
 public:
   virtual ~Common() {}
   virtual ostream &output(ostream &os, int level = 0) const = 0;
+#ifdef SIMULATIONIO_HAVE_HDF5
   virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const = 0;
+#endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   // virtual string yaml_alias() const = 0;
   virtual vector<string> yaml_path() const = 0;

@@ -10,7 +10,9 @@
 #include "TangentSpace.hpp"
 #include "TensorType.hpp"
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 #include "H5Helpers.hpp"
+#endif
 
 #include <algorithm>
 #include <cstddef>
@@ -33,11 +35,13 @@ shared_ptr<Project> createProject(const string &name) {
   assert(project->invariant());
   return project;
 }
+#ifdef SIMULATIONIO_HAVE_HDF5
 shared_ptr<Project> readProject(const H5::H5Location &loc) {
   auto project = Project::create(loc);
   assert(project->invariant());
   return project;
 }
+#endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<Project> readProject(const ASDF::reader_state &rs,
                                 const YAML::Node &node) {
@@ -71,6 +75,7 @@ shared_ptr<Project> readProjectASDF(istream &is) {
 
 bool Project::invariant() const { return Common::invariant(); }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 void Project::read(const H5::H5Location &loc) {
   auto group = loc.openGroup(".");
   createTypes(); // TODO: read from file instead to ensure integer constants are
@@ -106,6 +111,7 @@ void Project::read(const H5::H5Location &loc) {
                   readCoordinateSystem(group, name);
                 });
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 void Project::read(const ASDF::reader_state &rs, const YAML::Node &node) {
@@ -271,11 +277,14 @@ ostream &Project::output(ostream &os, int level) const {
   return os;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 void Project::insertEnumField(const H5::EnumType &type, const string &name,
                               int value) {
   type.insert(name, &value);
 }
+#endif
 void Project::createTypes() const {
+#ifdef SIMULATIONIO_HAVE_HDF5
   enumtype = H5::EnumType(H5::getType(int{}));
   insertEnumField(enumtype, "Basis", type_Basis);
   insertEnumField(enumtype, "BasisVector", type_BasisVector);
@@ -375,8 +384,10 @@ void Project::createTypes() const {
     }();
     concatenationtypes.push_back(concatenationtype);
   }
+#endif
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 namespace {
 string itos(int d) {
   ostringstream buf;
@@ -413,6 +424,7 @@ void Project::write(const H5::H5Location &loc,
   H5::createGroup(group, "fields", fields());
   H5::createGroup(group, "coordinatesystems", coordinatesystems());
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 vector<string> Project::yaml_path() const { return {name()}; }
@@ -470,6 +482,7 @@ Project::copyParameter(const shared_ptr<Parameter> &parameter,
   return parameter2;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 shared_ptr<Parameter> Project::readParameter(const H5::H5Location &loc,
                                              const string &entry) {
   auto parameter = Parameter::create(loc, entry, shared_from_this());
@@ -478,6 +491,7 @@ shared_ptr<Parameter> Project::readParameter(const H5::H5Location &loc,
   assert(parameter->invariant());
   return parameter;
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<Parameter> Project::readParameter(const ASDF::reader_state &rs,
@@ -534,6 +548,7 @@ Project::copyConfiguration(const shared_ptr<Configuration> &configuration,
   return configuration2;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 shared_ptr<Configuration> Project::readConfiguration(const H5::H5Location &loc,
                                                      const string &entry) {
   auto configuration = Configuration::create(loc, entry, shared_from_this());
@@ -542,6 +557,7 @@ shared_ptr<Configuration> Project::readConfiguration(const H5::H5Location &loc,
   assert(configuration->invariant());
   return configuration;
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<Configuration>
@@ -606,6 +622,7 @@ Project::copyTensorType(const shared_ptr<TensorType> &tensortype,
   return tensortype2;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 shared_ptr<TensorType> Project::readTensorType(const H5::H5Location &loc,
                                                const string &entry) {
   auto tensortype = TensorType::create(loc, entry, shared_from_this());
@@ -614,6 +631,7 @@ shared_ptr<TensorType> Project::readTensorType(const H5::H5Location &loc,
   assert(tensortype->invariant());
   return tensortype;
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<TensorType> Project::readTensorType(const ASDF::reader_state &rs,
@@ -681,6 +699,7 @@ shared_ptr<Manifold> Project::copyManifold(const shared_ptr<Manifold> &manifold,
   return manifold2;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 shared_ptr<Manifold> Project::readManifold(const H5::H5Location &loc,
                                            const string &entry) {
   auto manifold = Manifold::create(loc, entry, shared_from_this());
@@ -689,6 +708,7 @@ shared_ptr<Manifold> Project::readManifold(const H5::H5Location &loc,
   assert(manifold->invariant());
   return manifold;
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<Manifold> Project::readManifold(const ASDF::reader_state &rs,
@@ -756,6 +776,7 @@ Project::copyTangentSpace(const shared_ptr<TangentSpace> &tangentspace,
   return tangentspace2;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 shared_ptr<TangentSpace> Project::readTangentSpace(const H5::H5Location &loc,
                                                    const string &entry) {
   auto tangentspace = TangentSpace::create(loc, entry, shared_from_this());
@@ -764,6 +785,7 @@ shared_ptr<TangentSpace> Project::readTangentSpace(const H5::H5Location &loc,
   assert(tangentspace->invariant());
   return tangentspace;
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<TangentSpace> Project::readTangentSpace(const ASDF::reader_state &rs,
@@ -842,6 +864,7 @@ shared_ptr<Field> Project::copyField(const shared_ptr<Field> &field,
   return field2;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 shared_ptr<Field> Project::readField(const H5::H5Location &loc,
                                      const string &entry) {
   auto field = Field::create(loc, entry, shared_from_this());
@@ -849,6 +872,7 @@ shared_ptr<Field> Project::readField(const H5::H5Location &loc,
   assert(field->invariant());
   return field;
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<Field> Project::readField(const ASDF::reader_state &rs,
@@ -916,6 +940,7 @@ shared_ptr<CoordinateSystem> Project::copyCoordinateSystem(
   return coordinatesystem2;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 shared_ptr<CoordinateSystem>
 Project::readCoordinateSystem(const H5::H5Location &loc, const string &entry) {
   auto coordinatesystem =
@@ -925,6 +950,7 @@ Project::readCoordinateSystem(const H5::H5Location &loc, const string &entry) {
   assert(coordinatesystem->invariant());
   return coordinatesystem;
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<CoordinateSystem>

@@ -1,5 +1,7 @@
 #include "H5Helpers.hpp"
 
+#ifdef SIMULATIONIO_HAVE_HDF5
+
 namespace H5 {
 
 // Wrapper for hid_t that ensures correct HDF5 reference counting
@@ -323,3 +325,5 @@ void readExternalLink(const CommonFG &link_loc, const std::string &link_name,
 }
 
 } // namespace H5
+
+#endif

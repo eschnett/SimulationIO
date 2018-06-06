@@ -2,7 +2,9 @@
 
 #include "DiscreteField.hpp"
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 #include "H5Helpers.hpp"
+#endif
 
 namespace SimulationIO {
 
@@ -24,6 +26,7 @@ bool Field::invariant() const {
   return inv;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 void Field::read(const H5::H5Location &loc, const string &entry,
                  const shared_ptr<Project> &project) {
   m_project = project;
@@ -58,6 +61,7 @@ void Field::read(const H5::H5Location &loc, const string &entry,
   m_tangentspace->insert(name(), shared_from_this());
   m_tensortype->noinsert(shared_from_this());
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 void Field::read(const ASDF::reader_state &rs, const YAML::Node &node,
@@ -110,6 +114,7 @@ ostream &Field::output(ostream &os, int level) const {
   return os;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 void Field::write(const H5::H5Location &loc,
                   const H5::H5Location &parent) const {
   assert(invariant());
@@ -145,6 +150,7 @@ void Field::write(const H5::H5Location &loc,
                      "../tensortypes/" + tensortype()->name());
   H5::createGroup(group, "discretefields", discretefields());
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 vector<string> Field::yaml_path() const {
@@ -215,6 +221,7 @@ Field::copyDiscreteField(const shared_ptr<DiscreteField> &discretefield,
   return discretefield2;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 shared_ptr<DiscreteField> Field::readDiscreteField(const H5::H5Location &loc,
                                                    const string &entry) {
   auto discretefield = DiscreteField::create(loc, entry, shared_from_this());
@@ -223,6 +230,7 @@ shared_ptr<DiscreteField> Field::readDiscreteField(const H5::H5Location &loc,
   assert(discretefield->invariant());
   return discretefield;
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<DiscreteField> Field::readDiscreteField(const ASDF::reader_state &rs,

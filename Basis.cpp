@@ -2,7 +2,9 @@
 
 #include "BasisVector.hpp"
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 #include "H5Helpers.hpp"
+#endif
 
 namespace SimulationIO {
 
@@ -16,6 +18,7 @@ bool Basis::invariant() const {
   // int(directions.size()) == tangentspace->dimension
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 void Basis::read(const H5::H5Location &loc, const string &entry,
                  const shared_ptr<TangentSpace> &tangentspace) {
   m_tangentspace = tangentspace;
@@ -36,6 +39,7 @@ void Basis::read(const H5::H5Location &loc, const string &entry,
   // TODO: check group directions
   m_configuration->insert(name(), shared_from_this());
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 void Basis::read(const ASDF::reader_state &rs, const YAML::Node &node,
@@ -73,6 +77,7 @@ ostream &Basis::output(ostream &os, int level) const {
   return os;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 void Basis::write(const H5::H5Location &loc,
                   const H5::H5Location &parent) const {
   assert(invariant());
@@ -95,6 +100,7 @@ void Basis::write(const H5::H5Location &loc,
   H5::createGroup(group, "basisvectors", basisvectors());
   // TODO: output directions
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 vector<string> Basis::yaml_path() const {
@@ -140,6 +146,7 @@ Basis::copyBasisVector(const shared_ptr<BasisVector> &basisvector,
   return basisvector2;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 shared_ptr<BasisVector> Basis::readBasisVector(const H5::H5Location &loc,
                                                const string &entry) {
   auto basisvector = BasisVector::create(loc, entry, shared_from_this());
@@ -150,6 +157,7 @@ shared_ptr<BasisVector> Basis::readBasisVector(const H5::H5Location &loc,
   assert(basisvector->invariant());
   return basisvector;
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<BasisVector> Basis::readBasisVector(const ASDF::reader_state &rs,

@@ -2,7 +2,9 @@
 
 #include "CoordinateField.hpp"
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 #include "H5Helpers.hpp"
+#endif
 
 namespace SimulationIO {
 
@@ -17,6 +19,7 @@ bool CoordinateSystem::invariant() const {
          manifold()->coordinatesystems().at(name()).lock().get() == this;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 void CoordinateSystem::read(const H5::H5Location &loc, const string &entry,
                             const shared_ptr<Project> &project) {
   m_project = project;
@@ -40,6 +43,7 @@ void CoordinateSystem::read(const H5::H5Location &loc, const string &entry,
   m_configuration->insert(name(), shared_from_this());
   m_manifold->insert(name(), shared_from_this());
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 void CoordinateSystem::read(const ASDF::reader_state &rs,
@@ -89,6 +93,7 @@ ostream &CoordinateSystem::output(ostream &os, int level) const {
   return os;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 void CoordinateSystem::write(const H5::H5Location &loc,
                              const H5::H5Location &parent) const {
   assert(invariant());
@@ -115,6 +120,7 @@ void CoordinateSystem::write(const H5::H5Location &loc,
   H5::createGroup(group, "coordinatefields", coordinatefields());
   // TODO: output directions
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 vector<string> CoordinateSystem::yaml_path() const {
@@ -166,6 +172,7 @@ shared_ptr<CoordinateField> CoordinateSystem::copyCoordinateField(
   return coordinatefield2;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 shared_ptr<CoordinateField>
 CoordinateSystem::readCoordinateField(const H5::H5Location &loc,
                                       const string &entry) {
@@ -178,6 +185,7 @@ CoordinateSystem::readCoordinateField(const H5::H5Location &loc,
   assert(coordinatefield->invariant());
   return coordinatefield;
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<CoordinateField>

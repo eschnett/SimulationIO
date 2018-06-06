@@ -9,7 +9,9 @@
 #include <asdf.hpp>
 #endif
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 #include <H5Cpp.h>
+#endif
 
 #include <iostream>
 #include <string>
@@ -68,6 +70,7 @@ private:
     return make_shared<TensorComponent>(hidden(), name, tensortype,
                                         storage_index, indexvalues);
   }
+#ifdef SIMULATIONIO_HAVE_HDF5
   static shared_ptr<TensorComponent>
   create(const H5::H5Location &loc, const string &entry,
          const shared_ptr<TensorType> &tensortype) {
@@ -77,6 +80,7 @@ private:
   }
   void read(const H5::H5Location &loc, const string &entry,
             const shared_ptr<TensorType> &tensortype);
+#endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   static shared_ptr<TensorComponent>
   create(const ASDF::reader_state &rs, const YAML::Node &node,
@@ -99,8 +103,10 @@ public:
                              const TensorComponent &tensorcomponent) {
     return tensorcomponent.output(os);
   }
+#ifdef SIMULATIONIO_HAVE_HDF5
   virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
+#endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   virtual vector<string> yaml_path() const;
   ASDF::writer &write(ASDF::writer &w) const;

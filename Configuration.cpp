@@ -9,7 +9,9 @@
 #include "ParameterValue.hpp"
 #include "TangentSpace.hpp"
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 #include "H5Helpers.hpp"
+#endif
 
 #include <exception>
 #include <sstream>
@@ -23,6 +25,7 @@ bool Configuration::invariant() const {
          project()->configurations().at(name()).get() == this;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 void Configuration::read(const H5::H5Location &loc, const string &entry,
                          const shared_ptr<Project> &project) {
   m_project = project;
@@ -55,6 +58,7 @@ void Configuration::read(const H5::H5Location &loc, const string &entry,
   // assert(H5::checkGroupNames(group, "manifolds", manifolds));
   // assert(H5::checkGroupNames(group, "tangentspaces", manifolds));
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 void Configuration::read(const ASDF::reader_state &rs, const YAML::Node &node,
@@ -115,6 +119,7 @@ ostream &Configuration::output(ostream &os, int level) const {
   return os;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 void Configuration::write(const H5::H5Location &loc,
                           const H5::H5Location &parent) const {
   assert(invariant());
@@ -143,6 +148,7 @@ void Configuration::write(const H5::H5Location &loc,
   group.createGroup("manifolds");
   group.createGroup("tangentspaces");
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 vector<string> Configuration::yaml_path() const {

@@ -3,7 +3,9 @@
 #include "CoordinateSystem.hpp"
 #include "Field.hpp"
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 #include "H5Helpers.hpp"
+#endif
 
 namespace SimulationIO {
 
@@ -21,6 +23,7 @@ bool CoordinateField::invariant() const {
   // TODO: Ensure the field is a scalar
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 void CoordinateField::read(
     const H5::H5Location &loc, const string &entry,
     const shared_ptr<CoordinateSystem> &coordinatesystem) {
@@ -38,6 +41,7 @@ void CoordinateField::read(
       H5::readGroupAttribute<string>(group, "field", "name"));
   m_field->noinsert(shared_from_this());
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 void CoordinateField::read(
@@ -70,6 +74,7 @@ ostream &CoordinateField::output(ostream &os, int level) const {
   return os;
 }
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 void CoordinateField::write(const H5::H5Location &loc,
                             const H5::H5Location &parent) const {
   assert(invariant());
@@ -86,6 +91,7 @@ void CoordinateField::write(const H5::H5Location &loc,
   //                    "project/fields/" + field->name);
   H5::createSoftLink(group, "field", "../project/fields/" + field()->name());
 }
+#endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 vector<string> CoordinateField::yaml_path() const {

@@ -6,7 +6,7 @@ cmake_policy(SET CMP0048 NEW)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 
-project(SimulationIO VERSION 2.16.1 LANGUAGES C CXX)
+project(SimulationIO VERSION 2.17.0 LANGUAGES C CXX)
 set(PROJECT_DESCRIPTION
   "SimulationIO: Efficient and convenient I/O for large PDE simulations")
 set(PROJECT_URL "https://github.com/eschnett/SimulationIO")
@@ -16,11 +16,14 @@ set(CMAKE_MODULE_PATH
 
 # External dependencies
 
-find_package(asdf-cxx 2.5.1)
+OPTION(DISABLE_ASDF_CXX "Disable asdf-cxx backend" OFF)
+if(NOT DISABLE_ASDF_CXX)
+  find_package(asdf-cxx 2.6.1)
+endif()
 if(ASDF_CXX_FOUND)
-  if(ASDF_CXX_VERSION_STRING VERSION_LESS 2.5.1)
-    message(HDF5_VERSION)
-    message(SEND_ERROR "asdf-cxx version 2.5.1 or later is required")
+  if(ASDF_CXX_VERSION_STRING VERSION_LESS 2.6.1)
+    message(ASDF_CXX_VERSION)
+    message(SEND_ERROR "asdf-cxx version 2.6.1 or later is required")
   endif()
   include_directories(${ASDF_CXX_INCLUDE_DIR})
   set(LIBS ${LIBS} ${ASDF_CXX_LIBRARY})
@@ -31,42 +34,56 @@ endif()
 # TODO: Add cmake config file to asdf-cxx so that its dependencies are
 # automatically required
 
-find_package(BZip2)
-if(BZIP2_FOUND)
-  include_directories(${BZIP2_INCLUDE_DIR})
-  set(LIBS ${LIBS} ${BZIP2_LIBRARIES})
+if(NOT DISABLE_ASDF_CXX)
+  find_package(BZip2)
+  if(BZIP2_FOUND)
+    include_directories(${BZIP2_INCLUDE_DIR})
+    set(LIBS ${LIBS} ${BZIP2_LIBRARIES})
+  endif()
+
+  find_package(OpenSSL)
+  if(OPENSSL_FOUND)
+    include_directories(${OPENSSL_INCLUDE_DIR})
+    set(LIBS ${LIBS} ${OPENSSL_CRYPTO_LIBRARY})
+  endif()
+
+  find_package(yaml-cpp REQUIRED)
+  include_directories(${YAML_CPP_INCLUDE_DIR})
+  set(LIBS ${LIBS} ${YAML_CPP_LIBRARIES})
+
+  find_package(ZLIB)
+  if(ZLIB_FOUND)
+    include_directories(${ZLIB_INCLUDE_DIRS})
+    set(LIBS ${LIBS} ${ZLIB_LIBRARIES})
+  endif()
 endif()
 
-find_package(OpenSSL)
-if(OPENSSL_FOUND)
-  include_directories(${OPENSSL_INCLUDE_DIR})
-  set(LIBS ${LIBS} ${OPENSSL_CRYPTO_LIBRARY})
+OPTION(DISABLE_HDF5 "Disable HDF5 backend" OFF)
+if(NOT DISABLE_HDF5)
+  find_package(HDF5 1.10.1 COMPONENTS C CXX)
+endif()
+if(HDF5_FOUND)
+  if(HDF5_VERSION VERSION_LESS 1.10.1)
+    message(HDF5_VERSION)
+    message(SEND_ERROR "HDF5 version 1.10.1 or later is required")
+  endif()
+  include_directories(${HDF5_INCLUDE_DIRS})
+  set(LIBS ${LIBS} ${HDF5_LIBRARIES})
+  set(HAVE_HDF5 1)
+else()
+  set(HAVE_HDF5 0)
 endif()
 
-find_package(yaml-cpp REQUIRED)
-include_directories(${YAML_CPP_INCLUDE_DIR})
-set(LIBS ${LIBS} ${YAML_CPP_LIBRARIES})
-
-find_package(ZLIB)
-if(ZLIB_FOUND)
-  include_directories(${ZLIB_INCLUDE_DIRS})
-  set(LIBS ${LIBS} ${ZLIB_LIBRARIES})
+if(HDF5_FOUND)
+  # Note: We only look for MPI since HDF5 might require MPI
+  find_package(MPI)
+  # It seems that MPI_INCLUDE_DIRS and MPI_LIBRARIES are old names, and
+  # MPI_CXX_INCLUDE_PATH and MPI_CXX_LIBRARIES are newer names
+  if(MPI_FOUND)
+    include_directories(${MPI_INCLUDE_DIRS} ${MPI_CXX_INCLUDE_PATH})
+    set(LIBS ${LIBS} ${MPI_LIBRARIES} ${MPI_CXX_LIBRARIES})
+  endif()
 endif()
-
-find_package(HDF5 1.10.1 COMPONENTS C CXX REQUIRED)
-if(HDF5_VERSION VERSION_LESS 1.10.1)
-  message(HDF5_VERSION)
-  message(SEND_ERROR "HDF5 version 1.10.1 or later is required")
-endif()
-include_directories(${HDF5_INCLUDE_DIRS})
-set(LIBS ${LIBS} ${HDF5_LIBRARIES})
-
-# Note: We only look for MPI since HDF5 might require MPI
-find_package(MPI REQUIRED)
-# It seems that MPI_INCLUDE_DIRS and MPI_LIBRARIES are old names, and
-# MPI_CXX_INCLUDE_PATH and MPI_CXX_LIBRARIES are newer names
-include_directories(${MPI_INCLUDE_DIRS} ${MPI_CXX_INCLUDE_PATH})
-set(LIBS ${LIBS} ${MPI_LIBRARIES} ${MPI_CXX_LIBRARIES})
 
 set(Python_ADDITIONAL_VERSIONS 2.7)
 # This sets PYTHONINTERP_FOUND
@@ -78,11 +95,14 @@ if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND)
 endif()
 
 if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND)
-  find_package(H5Py)
+  if(HDF5_FOUND)
+    find_package(H5Py)
+  endif()
   find_package(NumPy)
 endif()
 
-if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND AND H5PY_FOUND AND NUMPY_FOUND)
+if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND AND
+    (NOT HDF5_FOUND OR H5PY_FOUND) AND NUMPY_FOUND)
   find_package(SWIG)
 endif()
 if(SWIG_FOUND)
@@ -91,7 +111,6 @@ endif()
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
-# set(LIBS ${LIBS} Threads::Threads)
 
 # Main project
 
@@ -165,61 +184,72 @@ endif()
 
 # Tools
 
-set(EXES
-  sio-benchmark
-  sio-convert-carpet-output
-  sio-copy
-  sio-example
-  sio-example-attach
-  sio-list
-  sio-merge
-  sio-filter
-  )
+set(EXES)
+if(HDF5_FOUND)
+  list(APPEND EXES 
+    sio-benchmark
+    sio-convert-carpet-output
+    sio-copy
+    sio-example
+    sio-example-attach
+    sio-list
+    sio-merge
+    sio-filter
+    )
+endif()
 if(ASDF_CXX_FOUND)
   list(APPEND EXES 
-    sio-convert-hdf5-to-asdf
     sio-copy-asdf
     sio-list-asdf
     sio-example-asdf
     )
 endif()
+if(HDF5_FOUND AND ASDF_CXX_FOUND)
+  list(APPEND EXES 
+    sio-convert-hdf5-to-asdf
+    )
+endif()
 
-add_executable(sio-benchmark benchmark.cpp)
-target_link_libraries(sio-benchmark SimulationIO)
+if(HDF5_FOUND)
+  add_executable(sio-benchmark benchmark.cpp)
+  target_link_libraries(sio-benchmark SimulationIO)
 
-add_executable(sio-convert-carpet-output convert-carpet-output.cpp)
-target_link_libraries(sio-convert-carpet-output SimulationIO)
+  add_executable(sio-convert-carpet-output convert-carpet-output.cpp)
+  target_link_libraries(sio-convert-carpet-output SimulationIO)
 
-add_executable(sio-copy copy.cpp)
-target_link_libraries(sio-copy SimulationIO)
+  add_executable(sio-copy copy.cpp)
+  target_link_libraries(sio-copy SimulationIO)
 
-add_executable(sio-example example.cpp)
-target_link_libraries(sio-example SimulationIO)
+  add_executable(sio-example example.cpp)
+  target_link_libraries(sio-example SimulationIO)
 
-add_executable(sio-example-attach example-attach.cpp)
-target_link_libraries(sio-example-attach SimulationIO)
+  add_executable(sio-example-attach example-attach.cpp)
+  target_link_libraries(sio-example-attach SimulationIO)
 
-add_executable(sio-list list.cpp)
-target_link_libraries(sio-list SimulationIO)
+  add_executable(sio-list list.cpp)
+  target_link_libraries(sio-list SimulationIO)
 
-add_executable(sio-merge merge.cpp)
-target_link_libraries(sio-merge SimulationIO)
+  add_executable(sio-merge merge.cpp)
+  target_link_libraries(sio-merge SimulationIO)
 
-add_executable(sio-filter filter.cpp)
-target_link_libraries(sio-filter SimulationIO)
+  add_executable(sio-filter filter.cpp)
+  target_link_libraries(sio-filter SimulationIO)
+endif()
 
 if(ASDF_CXX_FOUND)
-add_executable(sio-convert-hdf5-to-asdf convert-hdf5-to-asdf.cpp)
-target_link_libraries(sio-convert-hdf5-to-asdf SimulationIO)
+  add_executable(sio-copy-asdf copy-asdf.cpp)
+  target_link_libraries(sio-copy-asdf SimulationIO)
 
-add_executable(sio-copy-asdf copy-asdf.cpp)
-target_link_libraries(sio-copy-asdf SimulationIO)
+  add_executable(sio-example-asdf example-asdf.cpp)
+  target_link_libraries(sio-example-asdf SimulationIO)
 
-add_executable(sio-example-asdf example-asdf.cpp)
-target_link_libraries(sio-example-asdf SimulationIO)
+  add_executable(sio-list-asdf list-asdf.cpp)
+  target_link_libraries(sio-list-asdf SimulationIO)
+endif()
 
-add_executable(sio-list-asdf list-asdf.cpp)
-target_link_libraries(sio-list-asdf SimulationIO)
+if(HDF5_FOUND AND ASDF_CXX_FOUND)
+  add_executable(sio-convert-hdf5-to-asdf convert-hdf5-to-asdf.cpp)
+  target_link_libraries(sio-convert-hdf5-to-asdf SimulationIO)
 endif()
 
 # Tests
@@ -238,29 +268,33 @@ target_link_libraries(test_SimulationIO SimulationIO Threads::Threads)
 enable_testing()
 add_test(NAME test_RegionCalculus COMMAND ./test_RegionCalculus)
 add_test(NAME test_SimulationIO COMMAND ./test_SimulationIO)
-add_test(NAME example COMMAND ./sio-example)
-add_test(NAME list COMMAND ./sio-list example.s5)
-add_test(NAME example-attach COMMAND ./sio-example-attach)
-add_test(NAME list-attach COMMAND ./sio-list example-attach.s5)
-add_test(NAME copy COMMAND ./sio-copy example.s5 example2.s5)
-add_test(NAME list2 COMMAND ./sio-list example2.s5)
-if(ASDF_CXX_FOUND)
-add_test(NAME example-asdf COMMAND ./sio-example-asdf)
-add_test(NAME list-asdf COMMAND asdf-ls example.asdf)
-add_test(NAME list-asdf2 COMMAND ./sio-list-asdf example.asdf)
-add_test(NAME copy-asdf COMMAND ./sio-copy-asdf example.asdf example2.asdf)
-add_test(NAME list-asdf3 COMMAND ./sio-list-asdf example2.asdf)
-add_test(NAME compare-asdf
-  COMMAND ${CMAKE_SOURCE_DIR}/diff-commands.sh
-            "./sio-list-asdf example.asdf" "./sio-list-asdf example2.asdf")
-add_test(NAME convert-hdf5-asdf
-  COMMAND ./sio-convert-hdf5-to-asdf example.s5 example3.asdf)
-add_test(NAME compare-hdf5-asdf
-  COMMAND ${CMAKE_SOURCE_DIR}/diff-commands.sh
-            "./sio-list-asdf example.asdf" "./sio-list-asdf example3.asdf")
+if(HDF5_FOUND)
+  add_test(NAME example COMMAND ./sio-example)
+  add_test(NAME list COMMAND ./sio-list example.s5)
+  add_test(NAME example-attach COMMAND ./sio-example-attach)
+  add_test(NAME list-attach COMMAND ./sio-list example-attach.s5)
+  add_test(NAME copy COMMAND ./sio-copy example.s5 example2.s5)
+  add_test(NAME list2 COMMAND ./sio-list example2.s5)
 endif()
-if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND AND H5PY_FOUND AND NUMPY_FOUND AND
-    SWIG_FOUND)
+if(ASDF_CXX_FOUND)
+  add_test(NAME example-asdf COMMAND ./sio-example-asdf)
+  add_test(NAME list-asdf COMMAND asdf-ls example.asdf)
+  add_test(NAME list-asdf2 COMMAND ./sio-list-asdf example.asdf)
+  add_test(NAME copy-asdf COMMAND ./sio-copy-asdf example.asdf example2.asdf)
+  add_test(NAME list-asdf3 COMMAND ./sio-list-asdf example2.asdf)
+  add_test(NAME compare-asdf
+    COMMAND ${CMAKE_SOURCE_DIR}/diff-commands.sh
+            "./sio-list-as  df example.asdf" "./sio-list-asdf example2.asdf")
+endif()
+if(HDF5_FOUND AND ASDF_CXX_FOUND)
+  add_test(NAME convert-hdf5-asdf
+    COMMAND ./sio-convert-hdf5-to-asdf example.s5 example3.asdf)
+  add_test(NAME compare-hdf5-asdf
+    COMMAND ${CMAKE_SOURCE_DIR}/diff-commands.sh
+              "./sio-list-asdf example.asdf" "./sio-list-asdf example3.asdf")
+endif()
+if(HDF5_FOUND AND PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND AND H5PY_FOUND AND
+     NUMPY_FOUND AND SWIG_FOUND)
   add_test(NAME python-example
     COMMAND
     env "PYTHONPATH=${PROJECT_BINARY_DIR}:$ENV{PYTHONPATH}"

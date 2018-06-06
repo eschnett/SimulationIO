@@ -10,7 +10,9 @@
 #include <asdf.hpp>
 #endif
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 #include <H5Cpp.h>
+#endif
 
 #include <map>
 #include <memory>
@@ -74,6 +76,7 @@ private:
                                        int dimension, int rank) {
     return make_shared<TensorType>(hidden(), name, project, dimension, rank);
   }
+#ifdef SIMULATIONIO_HAVE_HDF5
   static shared_ptr<TensorType> create(const H5::H5Location &loc,
                                        const string &entry,
                                        const shared_ptr<Project> &project) {
@@ -83,6 +86,7 @@ private:
   }
   void read(const H5::H5Location &loc, const string &entry,
             const shared_ptr<Project> &project);
+#endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   static shared_ptr<TensorType> create(const ASDF::reader_state &rs,
                                        const YAML::Node &node,
@@ -104,8 +108,10 @@ public:
   friend ostream &operator<<(ostream &os, const TensorType &tensortype) {
     return tensortype.output(os);
   }
+#ifdef SIMULATIONIO_HAVE_HDF5
   virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
+#endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   virtual vector<string> yaml_path() const;
   ASDF::writer &write(ASDF::writer &w) const;
@@ -124,8 +130,10 @@ public:
   shared_ptr<TensorComponent>
   copyTensorComponent(const shared_ptr<TensorComponent> &tensorcomponent,
                       bool copy_children = false);
+#ifdef SIMULATIONIO_HAVE_HDF5
   shared_ptr<TensorComponent> readTensorComponent(const H5::H5Location &loc,
                                                   const string &entry);
+#endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   shared_ptr<TensorComponent> readTensorComponent(const ASDF::reader_state &rs,
                                                   const YAML::Node &node);

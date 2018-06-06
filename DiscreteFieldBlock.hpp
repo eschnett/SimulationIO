@@ -10,7 +10,9 @@
 #include <asdf.hpp>
 #endif
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 #include <H5Cpp.h>
+#endif
 
 #include <iostream>
 #include <map>
@@ -79,6 +81,7 @@ private:
     return make_shared<DiscreteFieldBlock>(hidden(), name, discretefield,
                                            discretizationblock);
   }
+#ifdef SIMULATIONIO_HAVE_HDF5
   static shared_ptr<DiscreteFieldBlock>
   create(const H5::H5Location &loc, const string &entry,
          const shared_ptr<DiscreteField> &discretefield) {
@@ -88,6 +91,7 @@ private:
   }
   void read(const H5::H5Location &loc, const string &entry,
             const shared_ptr<DiscreteField> &discretefield);
+#endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   static shared_ptr<DiscreteFieldBlock>
   create(const ASDF::reader_state &rs, const YAML::Node &node,
@@ -110,8 +114,10 @@ public:
                              const DiscreteFieldBlock &discretefieldblock) {
     return discretefieldblock.output(os);
   }
+#ifdef SIMULATIONIO_HAVE_HDF5
   virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
+#endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   virtual vector<string> yaml_path() const;
   ASDF::writer &write(ASDF::writer &w) const;
@@ -129,9 +135,11 @@ public:
   copyDiscreteFieldBlockComponent(const shared_ptr<DiscreteFieldBlockComponent>
                                       &discretefieldblockcomponent,
                                   bool copy_children = false);
+#ifdef SIMULATIONIO_HAVE_HDF5
   shared_ptr<DiscreteFieldBlockComponent>
   readDiscreteFieldBlockComponent(const H5::H5Location &loc,
                                   const string &entry);
+#endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   shared_ptr<DiscreteFieldBlockComponent>
   readDiscreteFieldBlockComponent(const ASDF::reader_state &rs,
