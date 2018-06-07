@@ -525,6 +525,9 @@ public:
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 
 // A pointer to data for ASDF
+
+// TODO: Fold this into ASDFArray
+
 class ASDFData : public DataBlock {
   shared_future<shared_ptr<ASDF::generic_blob_t>> m_fblob;
   shared_ptr<ASDF::datatype_t> m_datatype;

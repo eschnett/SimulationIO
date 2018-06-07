@@ -179,6 +179,16 @@ public:
 #endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   shared_ptr<ASDFData>
+  createASDFData(const shared_future<shared_ptr<ASDF::generic_blob_t>> &fblob,
+                 const shared_ptr<ASDF::datatype_t> &datatype);
+  template <typename T>
+  shared_ptr<ASDFData>
+  createASDFData(const shared_future<shared_ptr<ASDF::generic_blob_t>> &fblob) {
+    return createASDFData(fblob, make_shared<ASDF::datatype_t>(
+                                     ASDF::get_scalar_type_id<T>::value));
+  }
+
+  shared_ptr<ASDFData>
   createASDFData(const shared_ptr<ASDF::generic_blob_t> &blob,
                  const shared_ptr<ASDF::datatype_t> &datatype);
   template <typename T>

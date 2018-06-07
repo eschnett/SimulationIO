@@ -107,11 +107,7 @@ int main(int argc, char **argv) {
       for (int pi = 0; pi < npi; ++pi) {
         const int p = pi + npi * (pj + npj * pk);
 
-        // Set data
-        vector<double> datarho(npoints);
-        array<vector<double>, dim> datavel{vector<double>(npoints),
-                                           vector<double>(npoints),
-                                           vector<double>(npoints)};
+        // Coordinates
         array<double, dim> origin;
         getcoords(0, 0, 0, origin[0], origin[1], origin[2]);
         array<double, dim> first;
@@ -121,23 +117,6 @@ int main(int argc, char **argv) {
           delta[d] = {0, 0, 0};
           delta[d][d] = first[d] - origin[d];
         }
-        for (int lk = 0; lk < nlk; ++lk)
-          for (int lj = 0; lj < nlj; ++lj)
-            for (int li = 0; li < nli; ++li) {
-              const int idx = li + nli * (lj + nlj * lk);
-              const int i = li + nli * pi;
-              const int j = lj + nlj * pj;
-              const int k = lk + nlk * pk;
-              double x, y, z;
-              getcoords(i, j, k, x, y, z);
-              const double r = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
-              datarho.at(idx) = exp(-0.5 * pow(r, 2));
-              datavel[0].at(idx) = -y * r * exp(-0.5 * pow(r, 2));
-              datavel[1].at(idx) = +x * r * exp(-0.5 * pow(r, 2));
-              datavel[2].at(idx) = 0.0;
-            }
-
-        // Coordinates
         for (int d = 0; d < dim; ++d) {
           auto block = discretized_coordinates[d]->createDiscreteFieldBlock(
               discretized_coordinates[d]->name() + "-" + blocks.at(p)->name(),
@@ -149,6 +128,34 @@ int main(int argc, char **argv) {
         }
 
         // Fields
+
+        struct data {
+          vector<double> rho;
+          array<vector<double>, dim> vel;
+          data(int pi, int pj, int pk)
+              : rho(npoints), vel{vector<double>(npoints),
+                                  vector<double>(npoints),
+                                  vector<double>(npoints)} {
+            for (int lk = 0; lk < nlk; ++lk)
+              for (int lj = 0; lj < nlj; ++lj)
+                for (int li = 0; li < nli; ++li) {
+                  const int idx = li + nli * (lj + nlj * lk);
+                  const int i = li + nli * pi;
+                  const int j = lj + nlj * pj;
+                  const int k = lk + nlk * pk;
+                  double x, y, z;
+                  getcoords(i, j, k, x, y, z);
+                  const double r = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
+                  rho.at(idx) = exp(-0.5 * pow(r, 2));
+                  vel[0].at(idx) = -y * r * exp(-0.5 * pow(r, 2));
+                  vel[1].at(idx) = +x * r * exp(-0.5 * pow(r, 2));
+                  vel[2].at(idx) = 0.0;
+                }
+          }
+        };
+        shared_future<shared_ptr<data>> fdata = async(
+            launch::deferred, [=]() { return make_shared<data>(pi, pj, pk); });
+
         auto rho_block = discretized_rho->createDiscreteFieldBlock(
             rho->name() + "-" + blocks.at(p)->name(), blocks.at(p));
         auto vel_block = discretized_vel->createDiscreteFieldBlock(
@@ -157,14 +164,19 @@ int main(int argc, char **argv) {
         auto scalar3d_component = scalar3d->storage_indices().at(0);
         auto rho_component = rho_block->createDiscreteFieldBlockComponent(
             "scalar", scalar3d_component);
-        rho_component->createASDFData(
-            make_shared<ASDF::blob_t<double>>(move(datarho)));
+        rho_component->createASDFData<double>(
+            async(launch::deferred, [=]() -> shared_ptr<ASDF::generic_blob_t> {
+              return make_shared<ASDF::blob_t<double>>(move(fdata.get()->rho));
+            }));
         for (int d = 0; d < dim; ++d) {
           auto vector3d_component = vector3d->storage_indices().at(d);
           auto vel_component = vel_block->createDiscreteFieldBlockComponent(
               dirnames[d], vector3d_component);
-          vel_component->createASDFData(
-              make_shared<ASDF::blob_t<double>>(move(datavel[d])));
+          vel_component->createASDFData<double>(async(
+              launch::deferred, [=]() -> shared_ptr<ASDF::generic_blob_t> {
+                return make_shared<ASDF::blob_t<double>>(
+                    move(fdata.get()->vel[d]));
+              }));
         }
       }
 
