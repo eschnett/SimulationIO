@@ -49,7 +49,8 @@ shared_ptr<Project> readProject(const ASDF::reader_state &rs,
   assert(project->invariant());
   return project;
 }
-map<string, shared_ptr<Project>> readProjectsASDF(istream &is) {
+map<string, shared_ptr<Project>>
+readProjectsASDF(const shared_ptr<istream> &pis) {
   map<string, shared_ptr<Project>> projects;
   function<void(const ASDF::reader_state &rs, const string &name,
                 const YAML::Node &node)>
@@ -61,12 +62,12 @@ map<string, shared_ptr<Project>> readProjectsASDF(istream &is) {
                             const YAML::Node &node)>>
       readers{{"tag:github.com/eschnett/SimulationIO/asdf-cxx/Project-1.0.0",
                read_project}};
-  auto doc = ASDF::asdf(is, readers);
+  auto doc = ASDF::asdf(pis, readers);
   return projects;
 }
 
-shared_ptr<Project> readProjectASDF(istream &is) {
-  auto projects = readProjectsASDF(is);
+shared_ptr<Project> readProjectASDF(const shared_ptr<istream> &pis) {
+  auto projects = readProjectsASDF(pis);
   assert(projects.size() == 1);
   return projects.begin()->second;
 }

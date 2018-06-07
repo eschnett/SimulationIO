@@ -732,7 +732,8 @@ void CopyObj::write(ASDF::writer &w, const string &entry) const {
     stride *= shape()[d];
   }
   assert(stride == data.size());
-  ASDF::ndarray arr(make_shared<ASDF::blob_t<char>>(move(data)),
+  ASDF::ndarray arr(ASDF::make_future<shared_ptr<ASDF::generic_blob_t>>(
+                        make_shared<ASDF::blob_t<char>>(move(data))),
                     ASDF::block_format_t::block, ASDF::compression_t::zlib, {},
                     make_shared<ASDF::datatype_t>(asdf_type(type)),
                     ASDF::host_byteorder(), vector<int64_t>(shape()), 0,
@@ -812,10 +813,12 @@ void ExtLink::write(ASDF::writer &w, const string &entry) const { assert(0); }
 // ASDFData
 
 ASDFData::ASDFData(const box_t &box,
-                   const shared_ptr<ASDF::generic_blob_t> &blob,
+                   const shared_future<shared_ptr<ASDF::generic_blob_t>> &fblob,
                    const shared_ptr<ASDF::datatype_t> &datatype)
-    : DataBlock(box), m_blob(blob), m_datatype(datatype) {
-  assert(blob->nbytes() == box.size() * datatype->type_size());
+    : DataBlock(box), m_fblob(fblob), m_datatype(datatype) {
+#warning "TODO: Add delayed check"
+  // assert(blob->nbytes() == box().size() * m_datatype->type_size());
+  assert(fblob.valid());
 }
 
 ASDFData::ASDFData(const box_t &box, const void *data, size_t npoints,
@@ -828,7 +831,8 @@ ASDFData::ASDFData(const box_t &box, const void *data, size_t npoints,
   vector<unsigned char> buf(box.size() * datatype->type_size());
   copy_hyperslab(buf.data(), box.size(), box, box, data, npoints, memlayout,
                  box, datatype->type_size());
-  m_blob = make_shared<ASDF::blob_t<unsigned char>>(move(buf));
+  m_fblob = ASDF::make_future<shared_ptr<ASDF::generic_blob_t>>(
+      (make_shared<ASDF::blob_t<unsigned char>>(move(buf))));
   m_datatype = datatype;
 }
 
@@ -846,9 +850,10 @@ shared_ptr<ASDFData> ASDFData::read_asdf(const ASDF::reader_state &rs,
 }
 
 ostream &ASDFData::output(ostream &os) const {
-  return os << "ASDFData: ptr=" << m_blob->ptr()
-            << " nbytes=" << m_blob->nbytes()
-            << " datatype=" << ASDF::yaml_encode(*m_datatype);
+  // return os << "ASDFData: ptr=" << m_blob->ptr()
+  //           << " nbytes=" << m_blob->nbytes()
+  //           << " datatype=" << ASDF::yaml_encode(*m_datatype);
+  return os << "ASDFData: datatype=" << ASDF::yaml_encode(*m_datatype);
 }
 
 #ifdef SIMULATIONIO_HAVE_HDF5
@@ -867,9 +872,10 @@ void ASDFData::write(ASDF::writer &w, const string &entry) const {
     strides.at(d) = stride;
     stride *= shape()[d];
   }
-  assert(stride == m_blob->nbytes());
+#warning "TODO: add delayed check"
+  // assert(stride == blob->nbytes());
   w << YAML::Key << entry << YAML::Value
-    << ASDF::ndarray(m_blob, ASDF::block_format_t::block,
+    << ASDF::ndarray(m_fblob, ASDF::block_format_t::block,
                      ASDF::compression_t::zlib, {}, m_datatype,
                      ASDF::host_byteorder(), vector<int64_t>(shape()), 0,
                      move(strides));
