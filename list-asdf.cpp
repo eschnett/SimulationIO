@@ -14,8 +14,8 @@ using namespace SimulationIO;
 using namespace std;
 
 shared_ptr<Project> read(const string &filename) {
-  ifstream is(filename, ios::binary | ios::in);
-  return readProjectASDF(is);
+  auto pis = make_shared<ifstream>(filename, ios::binary | ios::in);
+  return readProjectASDF(pis);
 }
 
 int main(int argc, char **argv) {

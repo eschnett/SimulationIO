@@ -19,6 +19,7 @@
 #include <complex>
 #include <cstdlib>
 #include <functional>
+#include <future>
 #include <iostream>
 #include <limits>
 #include <memory>
@@ -34,6 +35,7 @@ using std::function;
 using std::make_shared;
 using std::ostream;
 using std::ptrdiff_t;
+using std::shared_future;
 using std::shared_ptr;
 using std::string;
 using std::vector;
@@ -523,17 +525,26 @@ public:
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 
 // A pointer to data for ASDF
+
+// TODO: Fold this into ASDFArray
+
 class ASDFData : public DataBlock {
-  shared_ptr<ASDF::generic_blob_t> m_blob;
+  shared_future<shared_ptr<ASDF::generic_blob_t>> m_fblob;
   shared_ptr<ASDF::datatype_t> m_datatype;
 
 public:
   virtual bool invariant() const {
-    return DataBlock::invariant() && bool(m_blob) && bool(m_datatype);
+    return DataBlock::invariant() && m_fblob.valid() && bool(m_datatype);
   }
 
-  ASDFData(const box_t &box, const shared_ptr<ASDF::generic_blob_t> &blob,
+  ASDFData(const box_t &box,
+           const shared_future<shared_ptr<ASDF::generic_blob_t>> &fblob,
            const shared_ptr<ASDF::datatype_t> &datatype);
+
+  ASDFData(const box_t &box, const shared_ptr<ASDF::generic_blob_t> &blob,
+           const shared_ptr<ASDF::datatype_t> &datatype)
+      : ASDFData(box, ASDF::make_future<shared_ptr<ASDF::generic_blob_t>>(blob),
+                 datatype) {}
   template <typename T>
   ASDFData(const box_t &box, const shared_ptr<ASDF::blob_t<T>> &blob)
       : ASDFData(

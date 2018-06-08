@@ -43,8 +43,9 @@ shared_ptr<Project> readProject(const H5::H5Location &loc);
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<Project> readProject(const ASDF::reader_state &rs,
                                 const YAML::Node &node);
-map<string, shared_ptr<Project>> readProjectsASDF(istream &is);
-shared_ptr<Project> readProjectASDF(istream &is);
+map<string, shared_ptr<Project>>
+readProjectsASDF(const shared_ptr<istream> &pis);
+shared_ptr<Project> readProjectASDF(const shared_ptr<istream> &pis);
 #endif
 
 class Parameter;
@@ -119,7 +120,6 @@ public:
   Project(hidden, const string &name) : Common(name) {
     SIMULATIONIO_CHECK_VERSION;
     createTypes();
-
   }
   Project(hidden) : Common(hidden()) { SIMULATIONIO_CHECK_VERSION; }
 

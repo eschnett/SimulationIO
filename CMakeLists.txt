@@ -6,7 +6,7 @@ cmake_policy(SET CMP0048 NEW)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 
-project(SimulationIO VERSION 2.17.0 LANGUAGES C CXX)
+project(SimulationIO VERSION 3.0.0 LANGUAGES C CXX)
 set(PROJECT_DESCRIPTION
   "SimulationIO: Efficient and convenient I/O for large PDE simulations")
 set(PROJECT_URL "https://github.com/eschnett/SimulationIO")
@@ -18,12 +18,12 @@ set(CMAKE_MODULE_PATH
 
 OPTION(ENABLE_ASDF_CXX "Enable asdf-cxx backend" ON)
 if(ENABLE_ASDF_CXX)
-  find_package(asdf-cxx 2.6.1)
+  find_package(asdf-cxx 3.1.0)
 endif()
 if(ASDF_CXX_FOUND)
-  if(ASDF_CXX_VERSION_STRING VERSION_LESS 2.6.1)
+  if(ASDF_CXX_VERSION_STRING VERSION_LESS 3.1.0)
     message(ASDF_CXX_VERSION)
-    message(SEND_ERROR "asdf-cxx version 2.6.1 or later is required")
+    message(SEND_ERROR "asdf-cxx version 3.1.0 or later is required")
   endif()
   include_directories(${ASDF_CXX_INCLUDE_DIR})
   set(LIBS ${LIBS} ${ASDF_CXX_LIBRARY})
@@ -111,6 +111,7 @@ endif()
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
+set(LIBS ${LIBS} Threads::Threads)
 
 # Main project
 
