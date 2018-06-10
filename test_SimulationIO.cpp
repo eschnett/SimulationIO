@@ -1856,7 +1856,7 @@ TEST(DataBlock, ASDF) {
               "    ASDFRef\n"
               "  DiscreteFieldBlockComponent \"dfbd3\": DiscreteFieldBlock "
               "\"dfb1\" TensorComponent \"02\"\n"
-              "    ASDFArray\n"
+              "    ASDFData: datatype=float64 shape=[6, 7, 8]\n"
               "  DiscreteFieldBlockComponent \"dfbd4\": DiscreteFieldBlock "
               "\"dfb1\" TensorComponent \"11\"\n"
               "    DataRange: origin=-1 delta=[0.333333,0.285714,0.25]\n",
@@ -1881,7 +1881,7 @@ TEST(DataBlock, ASDF) {
                   .at("dfb1")
                   ->discretefieldblockcomponents()
                   .at("dfbd3")
-                  ->asdfarray();
+                  ->asdfdata();
     EXPECT_TRUE(bool(ds));
     auto arr = ds->ndarray();
     auto type_size = arr->get_datatype()->type_size();

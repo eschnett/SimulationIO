@@ -215,21 +215,20 @@ DiscreteFieldBlockComponent::createExtLink(const string &filename,
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<ASDFData> DiscreteFieldBlockComponent::createASDFData(
-    const shared_future<shared_ptr<ASDF::generic_blob_t>> &fblob,
-    const shared_ptr<ASDF::datatype_t> &datatype) {
+    const shared_ptr<ASDF::ndarray> &ndarray) {
   assert(!m_datablock);
   auto res = make_shared<ASDFData>(
-      discretefieldblock()->discretizationblock()->box(), fblob, datatype);
+      discretefieldblock()->discretizationblock()->box(), ndarray);
   m_datablock = res;
   return res;
 }
 
 shared_ptr<ASDFData> DiscreteFieldBlockComponent::createASDFData(
-    const shared_ptr<ASDF::generic_blob_t> &blob,
+    const ASDF::memoized<ASDF::block_t> &mdata,
     const shared_ptr<ASDF::datatype_t> &datatype) {
   assert(!m_datablock);
   auto res = make_shared<ASDFData>(
-      discretefieldblock()->discretizationblock()->box(), blob, datatype);
+      discretefieldblock()->discretizationblock()->box(), mdata, datatype);
   m_datablock = res;
   return res;
 }
