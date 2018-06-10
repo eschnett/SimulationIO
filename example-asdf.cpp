@@ -129,7 +129,7 @@ int main(int argc, char **argv) {
 
         // Fields
 
-        const auto calcblock{
+        const auto calcblock =
             [=](const function<double(double, double, double, double)> &f) {
               vector<double> res(npoints);
               for (int lk = 0; lk < nlk; ++lk)
@@ -146,7 +146,7 @@ int main(int argc, char **argv) {
                   }
               return make_constant_memoized(shared_ptr<ASDF::block_t>(
                   make_shared<ASDF::typed_block_t<double>>(move(res))));
-            }};
+            };
 
         const ASDF::memoized<ASDF::block_t> mrho{
             calcblock([](double x, double y, double z, double r) {
