@@ -73,9 +73,6 @@ public:
   shared_ptr<ASDFData> asdfdata() const {
     return dynamic_pointer_cast<ASDFData>(m_datablock);
   }
-  shared_ptr<ASDFArray> asdfarray() const {
-    return dynamic_pointer_cast<ASDFArray>(m_datablock);
-  }
   shared_ptr<ASDFRef> asdfref() const {
     return dynamic_pointer_cast<ASDFRef>(m_datablock);
   }
@@ -178,30 +175,22 @@ public:
                                     const string &objname);
 #endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
+  shared_ptr<ASDFData> createASDFData(const shared_ptr<ASDF::ndarray> &ndarray);
   shared_ptr<ASDFData>
-  createASDFData(const shared_future<shared_ptr<ASDF::generic_blob_t>> &fblob,
+  createASDFData(const ASDF::memoized<ASDF::block_t> &mdata,
                  const shared_ptr<ASDF::datatype_t> &datatype);
   template <typename T>
   shared_ptr<ASDFData>
-  createASDFData(const shared_future<shared_ptr<ASDF::generic_blob_t>> &fblob) {
-    return createASDFData(fblob, make_shared<ASDF::datatype_t>(
+  createASDFData(const ASDF::memoized<ASDF::block_t> &mdata) {
+    return createASDFData(mdata, make_shared<ASDF::datatype_t>(
                                      ASDF::get_scalar_type_id<T>::value));
   }
-
-  shared_ptr<ASDFData>
-  createASDFData(const shared_ptr<ASDF::generic_blob_t> &blob,
-                 const shared_ptr<ASDF::datatype_t> &datatype);
-  template <typename T>
-  shared_ptr<ASDFData>
-  createASDFData(const shared_ptr<ASDF::generic_blob_t> &blob) {
-    return createASDFData(blob, make_shared<ASDF::datatype_t>(
-                                    ASDF::get_scalar_type_id<T>::value));
-  }
-  template <typename T>
-  shared_ptr<ASDFData> createASDFData(const shared_ptr<ASDF::blob_t<T>> &blob) {
-    return createASDFData(blob, make_shared<ASDF::datatype_t>(
-                                    ASDF::get_scalar_type_id<T>::value));
-  }
+#warning "TODO: cleanup"
+  // shared_ptr<ASDFData>
+  // createASDFData(vector<unsigned char> data,
+  //                const shared_ptr<ASDF::datatype_t> &datatype);
+  // template <typename T>
+  // shared_ptr<ASDFData> createASDFData(vector<T> data);
   shared_ptr<ASDFData>
   createASDFData(const void *data, size_t npoints, const box_t &memlayout,
                  const shared_ptr<ASDF::datatype_t> &datatype);
@@ -212,6 +201,7 @@ public:
         data.data(), data.size(), memlayout,
         make_shared<ASDF::datatype_t>(ASDF::get_scalar_type_id<T>::value));
   }
+
   shared_ptr<ASDFRef> createASDFRef(const string &filename,
                                     const vector<string> &path);
 #endif

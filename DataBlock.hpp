@@ -19,7 +19,6 @@
 #include <complex>
 #include <cstdlib>
 #include <functional>
-#include <future>
 #include <iostream>
 #include <limits>
 #include <memory>
@@ -35,7 +34,6 @@ using std::function;
 using std::make_shared;
 using std::ostream;
 using std::ptrdiff_t;
-using std::shared_future;
 using std::shared_ptr;
 using std::string;
 using std::vector;
@@ -526,40 +524,57 @@ public:
 
 // A pointer to data for ASDF
 
-// TODO: Fold this into ASDFArray
+vector<int64_t> fortran_strides(const ASDF::datatype_t &datatype,
+                                const vector<int64_t> &shape);
 
 class ASDFData : public DataBlock {
-  shared_future<shared_ptr<ASDF::generic_blob_t>> m_fblob;
-  shared_ptr<ASDF::datatype_t> m_datatype;
+  shared_ptr<ASDF::ndarray> m_ndarray;
 
 public:
+  shared_ptr<ASDF::ndarray> ndarray() const { return m_ndarray; }
+
   virtual bool invariant() const {
-    return DataBlock::invariant() && m_fblob.valid() && bool(m_datatype);
+    return DataBlock::invariant() && bool(m_ndarray);
   }
 
-  ASDFData(const box_t &box,
-           const shared_future<shared_ptr<ASDF::generic_blob_t>> &fblob,
+  // Construct directly
+  ASDFData(const box_t &box, const shared_ptr<ASDF::ndarray> &ndarray)
+      : DataBlock(box), m_ndarray(ndarray) {}
+
+  // Construct from memoized block
+  ASDFData(const box_t &box, const ASDF::memoized<ASDF::block_t> &mdata,
            const shared_ptr<ASDF::datatype_t> &datatype);
+#warning "TODO: cleanup"
+  // template <typename T>
+  // ASDFData(const box_t &box, const ASDF::memoized<ASDF::block_t> &mdata)
+  //     : ASDFData(
+  //           box, mdata,
+  //           make_shared<ASDF::datatype_t>(ASDF::get_scalar_type_id<T>::value))
+  //           {
+  // }
 
-  ASDFData(const box_t &box, const shared_ptr<ASDF::generic_blob_t> &blob,
-           const shared_ptr<ASDF::datatype_t> &datatype)
-      : ASDFData(box, ASDF::make_future<shared_ptr<ASDF::generic_blob_t>>(blob),
-                 datatype) {}
-  template <typename T>
-  ASDFData(const box_t &box, const shared_ptr<ASDF::blob_t<T>> &blob)
-      : ASDFData(
-            box, blob,
-            make_shared<ASDF::datatype_t>(ASDF::get_scalar_type_id<T>::value)) {
-  }
+  // Construct from vector
+  ASDFData(const box_t &box, vector<unsigned char> data,
+           const shared_ptr<ASDF::datatype_t> &datatype);
+  // template <typename T>
+  // ASDFData(const box_t &box, vector<T> data)
+  //     : DataBlock(box),
+  //       m_ndarray(move(data), ASDF::block_format_t::block,
+  //                 ASDF::compression_t::zlib, {}, vector<int64_t>(shape()), 0,
+  //                 fortran_strides(ASDF::get_scalar_type_id<T>::value,
+  //                                 vector<int64_t>(shape()))) {}
+
+  // Construct from pointer
   ASDFData(const box_t &box, const void *data, size_t npoints,
            const box_t &memlayout,
            const shared_ptr<ASDF::datatype_t> &datatype);
-  template <typename T>
-  ASDFData(const box_t &box, const vector<T> &data, const box_t &memlayout)
-      : ASDFData(
-            box, data.data(), data.size(), memlayout,
-            make_shared<ASDF::datatype_t>(ASDF::get_scalar_type_id<T>::value)) {
-  }
+  // template <typename T>
+  // ASDFData(const box_t &box, const vector<T> &data, const box_t &memlayout)
+  //     : ASDFData(
+  //           box, data.data(), data.size(), memlayout,
+  //           make_shared<ASDF::datatype_t>(ASDF::get_scalar_type_id<T>::value))
+  //           {
+  // }
 
   virtual ~ASDFData() {}
 
@@ -570,36 +585,6 @@ public:
   static shared_ptr<ASDFData> read_asdf(const ASDF::reader_state &rs,
                                         const YAML::Node &node,
                                         const box_t &box);
-  virtual ostream &output(ostream &os) const;
-#ifdef SIMULATIONIO_HAVE_HDF5
-  virtual void write(const H5::Group &group, const string &entry) const;
-#endif
-  virtual void write(ASDF::writer &w, const string &entry) const;
-};
-
-// An ASDF ndarray
-class ASDFArray : public DataBlock {
-  shared_ptr<ASDF::ndarray> m_ndarray;
-
-public:
-  shared_ptr<ASDF::ndarray> ndarray() const { return m_ndarray; }
-
-  virtual bool invariant() const {
-    return DataBlock::invariant() && bool(m_ndarray);
-  }
-
-  ASDFArray(const box_t &box, const shared_ptr<ASDF::ndarray> &arr)
-      : DataBlock(box), m_ndarray(arr) {}
-
-  virtual ~ASDFArray() {}
-
-#ifdef SIMULATIONIO_HAVE_HDF5
-  static shared_ptr<ASDFArray> read(const H5::Group &group, const string &entry,
-                                    const box_t &box);
-#endif
-  static shared_ptr<ASDFArray> read_asdf(const ASDF::reader_state &rs,
-                                         const YAML::Node &node,
-                                         const box_t &box);
   virtual ostream &output(ostream &os) const;
 #ifdef SIMULATIONIO_HAVE_HDF5
   virtual void write(const H5::Group &group, const string &entry) const;

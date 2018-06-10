@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cstring>
+#include <memory>
 #include <type_traits>
 
 namespace SimulationIO {
@@ -227,10 +228,10 @@ bool DataBlock::invariant() const { return !m_box.empty(); }
 
 #ifdef SIMULATIONIO_HAVE_HDF5
 const vector<DataBlock::reader_t> DataBlock::readers = {
-    DataRange::read, DataSet::read,   DataBufferEntry::read,
+    DataRange::read, DataSet::read, DataBufferEntry::read,
     CopyObj::read,   ExtLink::read,
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-    ASDFData::read,  ASDFArray::read, ASDFRef::read,
+    ASDFData::read,  ASDFRef::read,
 #endif
 };
 #endif // #ifdef SIMULATIONIO_HAVE_HDF5
@@ -239,10 +240,10 @@ const vector<DataBlock::reader_t> DataBlock::readers = {
 const vector<DataBlock::asdf_reader_t> DataBlock::asdf_readers = {
     DataRange::read_asdf,
 #ifdef SIMULATIONIO_HAVE_HDF5
-    DataSet::read_asdf,   DataBufferEntry::read_asdf, CopyObj::read_asdf,
-    ExtLink::read_asdf,
+    DataSet::read_asdf,   DataBufferEntry::read_asdf,
+    CopyObj::read_asdf,   ExtLink::read_asdf,
 #endif
-    ASDFData::read_asdf,  ASDFArray::read_asdf,       ASDFRef::read_asdf,
+    ASDFData::read_asdf,  ASDFRef::read_asdf,
 };
 #endif // #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 
@@ -721,24 +722,11 @@ void CopyObj::write(ASDF::writer &w, const string &entry) const {
   auto dataset = group().openDataSet(name());
   auto type = dataset.getDataType();
   auto type_size = type.getSize();
-  vector<char> data(size() * type_size);
+  vector<unsigned char> data(size() * type_size);
   readData(data.data(), type, box(), box());
-  int dim = rank();
-  vector<int64_t> strides(dim);
-  int64_t stride = type_size;
-  // SimulationIO uses Fortran array index ordering
-  for (size_t d = 0; d < dim; ++d) {
-    strides.at(d) = stride;
-    stride *= shape()[d];
-  }
-  assert(stride == data.size());
-  ASDF::ndarray arr(ASDF::make_future<shared_ptr<ASDF::generic_blob_t>>(
-                        make_shared<ASDF::blob_t<char>>(move(data))),
-                    ASDF::block_format_t::block, ASDF::compression_t::zlib, {},
-                    make_shared<ASDF::datatype_t>(asdf_type(type)),
-                    ASDF::host_byteorder(), vector<int64_t>(shape()), 0,
-                    strides);
-  w << YAML::Key << entry << YAML::Value << arr;
+  auto arr = ASDFData(box(), move(data),
+                      make_shared<ASDF::datatype_t>(asdf_type(type)));
+  arr.write(w, entry);
 }
 
 #endif // #ifdef SIMULATIONIO_HAVE_ASDF_CXX
@@ -812,14 +800,38 @@ void ExtLink::write(ASDF::writer &w, const string &entry) const { assert(0); }
 
 // ASDFData
 
-ASDFData::ASDFData(const box_t &box,
-                   const shared_future<shared_ptr<ASDF::generic_blob_t>> &fblob,
-                   const shared_ptr<ASDF::datatype_t> &datatype)
-    : DataBlock(box), m_fblob(fblob), m_datatype(datatype) {
-#warning "TODO: Add delayed check"
-  // assert(blob->nbytes() == box().size() * m_datatype->type_size());
-  assert(fblob.valid());
+vector<int64_t> fortran_strides(const ASDF::datatype_t &datatype,
+                                const vector<int64_t> &shape) {
+  int64_t type_size = datatype.type_size();
+  int dim = shape.size();
+  vector<int64_t> strides(dim);
+  int64_t stride = type_size;
+  for (size_t d = 0; d < dim; ++d) {
+    strides.at(d) = stride;
+    stride *= shape.at(d);
+  }
+  return strides;
 }
+
+ASDFData::ASDFData(const box_t &box, const ASDF::memoized<ASDF::block_t> &mdata,
+                   const shared_ptr<ASDF::datatype_t> &datatype)
+    : DataBlock(box),
+      m_ndarray(make_shared<ASDF::ndarray>(
+          mdata, ASDF::block_format_t::block, ASDF::compression_t::zlib,
+          vector<bool>(), datatype, ASDF::host_byteorder(),
+          vector<int64_t>(shape()), 0,
+          fortran_strides(*datatype, vector<int64_t>(shape())))) {}
+
+ASDFData::ASDFData(const box_t &box, vector<unsigned char> data,
+                   const shared_ptr<ASDF::datatype_t> &datatype)
+    : DataBlock(box),
+      m_ndarray(make_shared<ASDF::ndarray>(
+          ASDF::make_constant_memoized(shared_ptr<ASDF::block_t>(
+              make_shared<ASDF::typed_block_t<unsigned char>>(move(data)))),
+          ASDF::block_format_t::block, ASDF::compression_t::zlib,
+          vector<bool>(), datatype, ASDF::host_byteorder(),
+          vector<int64_t>(shape()), 0,
+          fortran_strides(*datatype, vector<int64_t>(shape())))) {}
 
 ASDFData::ASDFData(const box_t &box, const void *data, size_t npoints,
                    const box_t &memlayout,
@@ -831,9 +843,12 @@ ASDFData::ASDFData(const box_t &box, const void *data, size_t npoints,
   vector<unsigned char> buf(box.size() * datatype->type_size());
   copy_hyperslab(buf.data(), box.size(), box, box, data, npoints, memlayout,
                  box, datatype->type_size());
-  m_fblob = ASDF::make_future<shared_ptr<ASDF::generic_blob_t>>(
-      (make_shared<ASDF::blob_t<unsigned char>>(move(buf))));
-  m_datatype = datatype;
+  m_ndarray = make_shared<ASDF::ndarray>(
+      ASDF::make_constant_memoized(shared_ptr<ASDF::block_t>(
+          make_shared<ASDF::typed_block_t<unsigned char>>(move(buf)))),
+      ASDF::block_format_t::block, ASDF::compression_t::zlib, vector<bool>(),
+      datatype, ASDF::host_byteorder(), vector<int64_t>(shape()), 0,
+      fortran_strides(*datatype, vector<int64_t>(shape())));
 }
 
 #ifdef SIMULATIONIO_HAVE_HDF5
@@ -846,14 +861,15 @@ shared_ptr<ASDFData> ASDFData::read(const H5::Group &group, const string &entry,
 shared_ptr<ASDFData> ASDFData::read_asdf(const ASDF::reader_state &rs,
                                          const YAML::Node &node,
                                          const box_t &box) {
+  if (node.Tag() == "tag:stsci.edu:asdf/core/ndarray-1.0.0")
+    return make_shared<ASDFData>(box, make_shared<ASDF::ndarray>(rs, node));
   return nullptr;
 }
 
 ostream &ASDFData::output(ostream &os) const {
-  // return os << "ASDFData: ptr=" << m_blob->ptr()
-  //           << " nbytes=" << m_blob->nbytes()
-  //           << " datatype=" << ASDF::yaml_encode(*m_datatype);
-  return os << "ASDFData: datatype=" << ASDF::yaml_encode(*m_datatype);
+  return os << "ASDFData:"
+            << " datatype=" << ASDF::yaml_encode(*m_ndarray->get_datatype())
+            << " shape=" << ASDF::yaml_encode(m_ndarray->get_shape());
 }
 
 #ifdef SIMULATIONIO_HAVE_HDF5
@@ -863,53 +879,6 @@ void ASDFData::write(const H5::Group &group, const string &entry) const {
 #endif
 
 void ASDFData::write(ASDF::writer &w, const string &entry) const {
-  int64_t type_size = m_datatype->type_size();
-  int dim = rank();
-  vector<int64_t> strides(dim);
-  int64_t stride = type_size;
-  // SimulationIO uses Fortran array index ordering
-  for (size_t d = 0; d < dim; ++d) {
-    strides.at(d) = stride;
-    stride *= shape()[d];
-  }
-#warning "TODO: add delayed check"
-  // assert(stride == blob->nbytes());
-  w << YAML::Key << entry << YAML::Value
-    << ASDF::ndarray(m_fblob, ASDF::block_format_t::block,
-                     ASDF::compression_t::zlib, {}, m_datatype,
-                     ASDF::host_byteorder(), vector<int64_t>(shape()), 0,
-                     move(strides));
-}
-
-// ASDFArray
-
-#ifdef SIMULATIONIO_HAVE_HDF5
-shared_ptr<ASDFArray> ASDFArray::read(const H5::Group &group,
-                                      const string &entry, const box_t &box) {
-  return nullptr;
-}
-#endif
-
-shared_ptr<ASDFArray> ASDFArray::read_asdf(const ASDF::reader_state &rs,
-                                           const YAML::Node &node,
-                                           const box_t &box) {
-  if (node.Tag() == "tag:stsci.edu:asdf/core/ndarray-1.0.0")
-    return make_shared<ASDFArray>(box, make_shared<ASDF::ndarray>(rs, node));
-  return nullptr;
-}
-
-ostream &ASDFArray::output(ostream &os) const {
-  // TODO: output more detail
-  return os << "ASDFArray";
-}
-
-#ifdef SIMULATIONIO_HAVE_HDF5
-void ASDFArray::write(const H5::Group &group, const string &entry) const {
-  assert(0);
-}
-#endif
-
-void ASDFArray::write(ASDF::writer &w, const string &entry) const {
   w << YAML::Key << entry << YAML::Value << *m_ndarray;
 }
 

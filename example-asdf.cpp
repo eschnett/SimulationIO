@@ -129,32 +129,61 @@ int main(int argc, char **argv) {
 
         // Fields
 
-        struct data {
-          vector<double> rho;
-          array<vector<double>, dim> vel;
-          data(int pi, int pj, int pk)
-              : rho(npoints), vel{vector<double>(npoints),
-                                  vector<double>(npoints),
-                                  vector<double>(npoints)} {
-            for (int lk = 0; lk < nlk; ++lk)
-              for (int lj = 0; lj < nlj; ++lj)
-                for (int li = 0; li < nli; ++li) {
-                  const int idx = li + nli * (lj + nlj * lk);
-                  const int i = li + nli * pi;
-                  const int j = lj + nlj * pj;
-                  const int k = lk + nlk * pk;
-                  double x, y, z;
-                  getcoords(i, j, k, x, y, z);
-                  const double r = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
-                  rho.at(idx) = exp(-0.5 * pow(r, 2));
-                  vel[0].at(idx) = -y * r * exp(-0.5 * pow(r, 2));
-                  vel[1].at(idx) = +x * r * exp(-0.5 * pow(r, 2));
-                  vel[2].at(idx) = 0.0;
-                }
-          }
-        };
-        shared_future<shared_ptr<data>> fdata = async(
-            launch::deferred, [=]() { return make_shared<data>(pi, pj, pk); });
+#warning "TODO"
+        // struct calcblock {
+        //   template <typename F>
+        //   vector<double> operator()(int pi, int pj, int pk, const F &f) const
+        //   {
+        //     vector<double> res;
+        //     for (int lk = 0; lk < nlk; ++lk)
+        //       for (int lj = 0; lj < nlj; ++lj)
+        //         for (int li = 0; li < nli; ++li) {
+        //           const int idx = li + nli * (lj + nlj * lk);
+        //           const int i = li + nli * pi;
+        //           const int j = lj + nlj * pj;
+        //           const int k = lk + nlk * pk;
+        //           double x, y, z;
+        //           getcoords(i, j, k, x, y, z);
+        //           const double r = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
+        //           res.at(idx) = f(x, y, z, r);
+        //         }
+        //     return shared_ptr<ASDF::block_t>(
+        //         make_shared<ASDF::typed_block_t<double>>(move(res)));
+        //   }
+        // };
+
+        const auto calcblock{
+            [=](const function<double(double, double, double, double)> &f) {
+              vector<double> res(npoints);
+              for (int lk = 0; lk < nlk; ++lk)
+                for (int lj = 0; lj < nlj; ++lj)
+                  for (int li = 0; li < nli; ++li) {
+                    const int idx = li + nli * (lj + nlj * lk);
+                    const int i = li + nli * pi;
+                    const int j = lj + nlj * pj;
+                    const int k = lk + nlk * pk;
+                    double x, y, z;
+                    getcoords(i, j, k, x, y, z);
+                    const double r = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
+                    res.at(idx) = f(x, y, z, r);
+                  }
+              return make_constant_memoized(shared_ptr<ASDF::block_t>(
+                  make_shared<ASDF::typed_block_t<double>>(move(res))));
+            }};
+
+        const ASDF::memoized<ASDF::block_t> mrho{
+            calcblock([](double x, double y, double z, double r) {
+              return exp(-0.5 * pow(r, 2));
+            })};
+        const array<ASDF::memoized<ASDF::block_t>, dim> mvel{
+            calcblock([](double x, double y, double z, double r) {
+              return -y * r * exp(-0.5 * pow(r, 2));
+            }),
+            calcblock([](double x, double y, double z, double r) {
+              return +x * r * exp(-0.5 * pow(r, 2));
+            }),
+            calcblock(
+                [](double x, double y, double z, double r) { return 0.0; })};
 
         auto rho_block = discretized_rho->createDiscreteFieldBlock(
             rho->name() + "-" + blocks.at(p)->name(), blocks.at(p));
@@ -164,19 +193,12 @@ int main(int argc, char **argv) {
         auto scalar3d_component = scalar3d->storage_indices().at(0);
         auto rho_component = rho_block->createDiscreteFieldBlockComponent(
             "scalar", scalar3d_component);
-        rho_component->createASDFData<double>(
-            async(launch::deferred, [=]() -> shared_ptr<ASDF::generic_blob_t> {
-              return make_shared<ASDF::blob_t<double>>(move(fdata.get()->rho));
-            }));
+        rho_component->createASDFData<double>(mrho);
         for (int d = 0; d < dim; ++d) {
           auto vector3d_component = vector3d->storage_indices().at(d);
           auto vel_component = vel_block->createDiscreteFieldBlockComponent(
               dirnames[d], vector3d_component);
-          vel_component->createASDFData<double>(async(
-              launch::deferred, [=]() -> shared_ptr<ASDF::generic_blob_t> {
-                return make_shared<ASDF::blob_t<double>>(
-                    move(fdata.get()->vel[d]));
-              }));
+          vel_component->createASDFData<double>(mvel[d]);
         }
       }
 
