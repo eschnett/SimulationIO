@@ -185,12 +185,6 @@ public:
     return createASDFData(mdata, make_shared<ASDF::datatype_t>(
                                      ASDF::get_scalar_type_id<T>::value));
   }
-#warning "TODO: cleanup"
-  // shared_ptr<ASDFData>
-  // createASDFData(vector<unsigned char> data,
-  //                const shared_ptr<ASDF::datatype_t> &datatype);
-  // template <typename T>
-  // shared_ptr<ASDFData> createASDFData(vector<T> data);
   shared_ptr<ASDFData>
   createASDFData(const void *data, size_t npoints, const box_t &memlayout,
                  const shared_ptr<ASDF::datatype_t> &datatype);

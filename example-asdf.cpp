@@ -129,29 +129,6 @@ int main(int argc, char **argv) {
 
         // Fields
 
-#warning "TODO"
-        // struct calcblock {
-        //   template <typename F>
-        //   vector<double> operator()(int pi, int pj, int pk, const F &f) const
-        //   {
-        //     vector<double> res;
-        //     for (int lk = 0; lk < nlk; ++lk)
-        //       for (int lj = 0; lj < nlj; ++lj)
-        //         for (int li = 0; li < nli; ++li) {
-        //           const int idx = li + nli * (lj + nlj * lk);
-        //           const int i = li + nli * pi;
-        //           const int j = lj + nlj * pj;
-        //           const int k = lk + nlk * pk;
-        //           double x, y, z;
-        //           getcoords(i, j, k, x, y, z);
-        //           const double r = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
-        //           res.at(idx) = f(x, y, z, r);
-        //         }
-        //     return shared_ptr<ASDF::block_t>(
-        //         make_shared<ASDF::typed_block_t<double>>(move(res)));
-        //   }
-        // };
-
         const auto calcblock{
             [=](const function<double(double, double, double, double)> &f) {
               vector<double> res(npoints);

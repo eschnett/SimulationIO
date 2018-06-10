@@ -544,37 +544,15 @@ public:
   // Construct from memoized block
   ASDFData(const box_t &box, const ASDF::memoized<ASDF::block_t> &mdata,
            const shared_ptr<ASDF::datatype_t> &datatype);
-#warning "TODO: cleanup"
-  // template <typename T>
-  // ASDFData(const box_t &box, const ASDF::memoized<ASDF::block_t> &mdata)
-  //     : ASDFData(
-  //           box, mdata,
-  //           make_shared<ASDF::datatype_t>(ASDF::get_scalar_type_id<T>::value))
-  //           {
-  // }
 
   // Construct from vector
   ASDFData(const box_t &box, vector<unsigned char> data,
            const shared_ptr<ASDF::datatype_t> &datatype);
-  // template <typename T>
-  // ASDFData(const box_t &box, vector<T> data)
-  //     : DataBlock(box),
-  //       m_ndarray(move(data), ASDF::block_format_t::block,
-  //                 ASDF::compression_t::zlib, {}, vector<int64_t>(shape()), 0,
-  //                 fortran_strides(ASDF::get_scalar_type_id<T>::value,
-  //                                 vector<int64_t>(shape()))) {}
 
   // Construct from pointer
   ASDFData(const box_t &box, const void *data, size_t npoints,
            const box_t &memlayout,
            const shared_ptr<ASDF::datatype_t> &datatype);
-  // template <typename T>
-  // ASDFData(const box_t &box, const vector<T> &data, const box_t &memlayout)
-  //     : ASDFData(
-  //           box, data.data(), data.size(), memlayout,
-  //           make_shared<ASDF::datatype_t>(ASDF::get_scalar_type_id<T>::value))
-  //           {
-  // }
 
   virtual ~ASDFData() {}
 
