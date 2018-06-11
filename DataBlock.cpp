@@ -839,8 +839,9 @@ ASDFData::ASDFData(const box_t &box, const void *data, size_t npoints,
     : DataBlock(box) {
   assert(data);
   assert(box <= memlayout);
-  assert(npoints == memlayout.size());
-  vector<unsigned char> buf(box.size() * datatype->type_size());
+  auto type_size = datatype->type_size();
+  assert(memlayout.size() == npoints * type_size);
+  vector<unsigned char> buf(box.size() * type_size);
   copy_hyperslab(buf.data(), box.size(), box, box, data, npoints, memlayout,
                  box, datatype->type_size());
   m_ndarray = make_shared<ASDF::ndarray>(
