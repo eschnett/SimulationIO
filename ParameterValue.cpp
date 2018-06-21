@@ -73,7 +73,8 @@ void ParameterValue::read(const H5::H5Location &loc, const string &entry,
 #endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-void ParameterValue::read(const ASDF::reader_state &rs, const YAML::Node &node,
+void ParameterValue::read(const shared_ptr<ASDF::reader_state> &rs,
+                          const YAML::Node &node,
                           const shared_ptr<Parameter> &parameter) {
   assert(node.Tag() ==
          "tag:github.com/eschnett/SimulationIO/asdf-cxx/ParameterValue-1.0.0");

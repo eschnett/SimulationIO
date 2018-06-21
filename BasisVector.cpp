@@ -31,8 +31,8 @@ void BasisVector::read(const H5::H5Location &loc, const string &entry,
 #endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-void BasisVector::read(const ASDF::reader_state &rs, const YAML::Node &node,
-                       const shared_ptr<Basis> &basis) {
+void BasisVector::read(const shared_ptr<ASDF::reader_state> &rs,
+                       const YAML::Node &node, const shared_ptr<Basis> &basis) {
   assert(node.Tag() ==
          "tag:github.com/eschnett/SimulationIO/asdf-cxx/BasisVector-1.0.0");
   m_name = node["name"].Scalar();

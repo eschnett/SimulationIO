@@ -24,6 +24,7 @@
 #include <memory>
 #include <string>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 namespace SimulationIO {
@@ -33,6 +34,7 @@ using namespace RegionCalculus;
 using std::function;
 using std::make_shared;
 using std::ostream;
+using std::pair;
 using std::ptrdiff_t;
 using std::shared_ptr;
 using std::string;
@@ -157,6 +159,24 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// Hyperslabs
+
+namespace HyperSlab {
+ptrdiff_t layout2offset(ptrdiff_t offset, const point_t &strides,
+                        const box_t &virtual_layout, const box_t &box);
+pair<ptrdiff_t, point_t> layout2strides(const box_t &layout, const box_t &box,
+                                        size_t type_size);
+void copy(void *const outptr0, ptrdiff_t outnbytes, ptrdiff_t outoffset,
+          const point_t &outstrides, const void *inptr0, ptrdiff_t innbytes,
+          ptrdiff_t inoffset, const point_t &instrides, const point_t &shape,
+          size_t type_size);
+void copy(void *outptr0, ptrdiff_t outnpoints, const box_t &outlayout,
+          const box_t &outbox, const void *inptr0, ptrdiff_t innpoints,
+          const box_t &inlayout, const box_t &inbox, size_t type_size);
+} // namespace HyperSlab
+
+////////////////////////////////////////////////////////////////////////////////
+
 // An abstract block of data
 class DataBlock {
 #ifdef SIMULATIONIO_HAVE_HDF5
@@ -167,7 +187,8 @@ class DataBlock {
 #endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   typedef function<shared_ptr<DataBlock>(
-      const ASDF::reader_state &rs, const YAML::Node &node, const box_t &box)>
+      const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node,
+      const box_t &box)>
       asdf_reader_t;
   static const vector<asdf_reader_t> asdf_readers;
 #endif
@@ -185,9 +206,9 @@ public:
                                     const box_t &box);
 #endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-  static shared_ptr<DataBlock> read_asdf(const ASDF::reader_state &rs,
-                                         const YAML::Node &node,
-                                         const box_t &box);
+  static shared_ptr<DataBlock>
+  read_asdf(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node,
+            const box_t &box);
 #endif
 
   virtual bool invariant() const;
@@ -241,9 +262,9 @@ public:
                                     const box_t &box);
 #endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-  static shared_ptr<DataRange> read_asdf(const ASDF::reader_state &rs,
-                                         const YAML::Node &node,
-                                         const box_t &box);
+  static shared_ptr<DataRange>
+  read_asdf(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node,
+            const box_t &box);
 #endif
   virtual ostream &output(ostream &os) const;
 #ifdef SIMULATIONIO_HAVE_HDF5
@@ -301,7 +322,7 @@ public:
   static shared_ptr<DataSet> read(const H5::Group &group, const string &entry,
                                   const box_t &box);
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-  static shared_ptr<DataSet> read_asdf(const ASDF::reader_state &rs,
+  static shared_ptr<DataSet> read_asdf(const shared_ptr<ASDF::reader_state> &rs,
                                        const YAML::Node &node,
                                        const box_t &box);
 #endif
@@ -426,9 +447,9 @@ public:
   static shared_ptr<DataBufferEntry>
   read(const H5::Group &group, const string &entry, const box_t &box);
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-  static shared_ptr<DataBufferEntry> read_asdf(const ASDF::reader_state &rs,
-                                               const YAML::Node &node,
-                                               const box_t &box);
+  static shared_ptr<DataBufferEntry>
+  read_asdf(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node,
+            const box_t &box);
 #endif
   virtual ostream &output(ostream &os) const;
   virtual void write(const H5::Group &group, const string &entry) const;
@@ -458,7 +479,7 @@ public:
   static shared_ptr<CopyObj> read(const H5::Group &group, const string &entry,
                                   const box_t &box);
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-  static shared_ptr<CopyObj> read_asdf(const ASDF::reader_state &rs,
+  static shared_ptr<CopyObj> read_asdf(const shared_ptr<ASDF::reader_state> &rs,
                                        const YAML::Node &node,
                                        const box_t &box);
 #endif
@@ -505,7 +526,7 @@ public:
   static shared_ptr<ExtLink> read(const H5::Group &group, const string &entry,
                                   const box_t &box);
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-  static shared_ptr<ExtLink> read_asdf(const ASDF::reader_state &rs,
+  static shared_ptr<ExtLink> read_asdf(const shared_ptr<ASDF::reader_state> &rs,
                                        const YAML::Node &node,
                                        const box_t &box);
 #endif
@@ -560,9 +581,9 @@ public:
   static shared_ptr<ASDFData> read(const H5::Group &group, const string &entry,
                                    const box_t &box);
 #endif
-  static shared_ptr<ASDFData> read_asdf(const ASDF::reader_state &rs,
-                                        const YAML::Node &node,
-                                        const box_t &box);
+  static shared_ptr<ASDFData>
+  read_asdf(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node,
+            const box_t &box);
   virtual ostream &output(ostream &os) const;
 #ifdef SIMULATIONIO_HAVE_HDF5
   virtual void write(const H5::Group &group, const string &entry) const;
@@ -575,6 +596,8 @@ class ASDFRef : public DataBlock {
   shared_ptr<ASDF::reference> m_reference;
 
 public:
+  shared_ptr<ASDF::reference> reference() const { return m_reference; }
+
   virtual bool invariant() const {
     return DataBlock::invariant() && bool(m_reference);
   }
@@ -588,7 +611,7 @@ public:
   static shared_ptr<ASDFRef> read(const H5::Group &group, const string &entry,
                                   const box_t &box);
 #endif
-  static shared_ptr<ASDFRef> read_asdf(const ASDF::reader_state &rs,
+  static shared_ptr<ASDFRef> read_asdf(const shared_ptr<ASDF::reader_state> &rs,
                                        const YAML::Node &node,
                                        const box_t &box);
   virtual ostream &output(ostream &os) const;

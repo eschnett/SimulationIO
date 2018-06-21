@@ -1375,7 +1375,13 @@ template <typename T> struct region<T, 0> {
   }
 #endif
 
-  ostream &output(ostream &os) const { return os << "{}"; }
+  ostream &output(ostream &os) const {
+    os << "{";
+    if (m_full)
+      os << "(1)";
+    os << "}";
+    return os;
+  }
   friend ostream &operator<<(ostream &os, const region &r) {
     return r.output(os);
   }

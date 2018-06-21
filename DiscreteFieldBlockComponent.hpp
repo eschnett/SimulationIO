@@ -121,14 +121,14 @@ private:
 #endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   static shared_ptr<DiscreteFieldBlockComponent>
-  create(const ASDF::reader_state &rs, const YAML::Node &node,
+  create(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node,
          const shared_ptr<DiscreteFieldBlock> &discretefieldblock) {
     auto discretefieldblockcomponent =
         make_shared<DiscreteFieldBlockComponent>(hidden());
     discretefieldblockcomponent->read(rs, node, discretefieldblock);
     return discretefieldblockcomponent;
   }
-  void read(const ASDF::reader_state &rs, const YAML::Node &node,
+  void read(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node,
             const shared_ptr<DiscreteFieldBlock> &discretefieldblock);
 #endif
 

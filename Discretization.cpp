@@ -41,7 +41,8 @@ void Discretization::read(const H5::H5Location &loc, const string &entry,
 #endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-void Discretization::read(const ASDF::reader_state &rs, const YAML::Node &node,
+void Discretization::read(const shared_ptr<ASDF::reader_state> &rs,
+                          const YAML::Node &node,
                           const shared_ptr<Manifold> &manifold) {
   assert(node.Tag() ==
          "tag:github.com/eschnett/SimulationIO/asdf-cxx/Discretization-1.0.0");
@@ -169,9 +170,8 @@ Discretization::readDiscretizationBlock(const H5::H5Location &loc,
 #endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-shared_ptr<DiscretizationBlock>
-Discretization::readDiscretizationBlock(const ASDF::reader_state &rs,
-                                        const YAML::Node &node) {
+shared_ptr<DiscretizationBlock> Discretization::readDiscretizationBlock(
+    const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node) {
   auto discretizationblock =
       DiscretizationBlock::create(rs, node, shared_from_this());
   checked_emplace(m_discretizationblocks, discretizationblock->name(),
@@ -182,7 +182,7 @@ Discretization::readDiscretizationBlock(const ASDF::reader_state &rs,
 }
 
 shared_ptr<DiscretizationBlock>
-Discretization::getDiscretizationBlock(const ASDF::reader_state &rs,
+Discretization::getDiscretizationBlock(const shared_ptr<ASDF::reader_state> &rs,
                                        const YAML::Node &node) {
   auto ref = ASDF::reference(rs, node);
   auto doc_path = ref.get_split_target();

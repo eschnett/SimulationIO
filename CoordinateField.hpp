@@ -74,13 +74,13 @@ private:
 #endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   static shared_ptr<CoordinateField>
-  create(const ASDF::reader_state &rs, const YAML::Node &node,
+  create(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node,
          const shared_ptr<CoordinateSystem> &coordinatesystem) {
     auto coordinatefield = make_shared<CoordinateField>(hidden());
     coordinatefield->read(rs, node, coordinatesystem);
     return coordinatefield;
   }
-  void read(const ASDF::reader_state &rs, const YAML::Node &node,
+  void read(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node,
             const shared_ptr<CoordinateSystem> &coordinatesystem);
 #endif
 

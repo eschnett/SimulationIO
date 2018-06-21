@@ -45,7 +45,7 @@ void DiscreteFieldBlock::read(const H5::H5Location &loc, const string &entry,
 #endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-void DiscreteFieldBlock::read(const ASDF::reader_state &rs,
+void DiscreteFieldBlock::read(const shared_ptr<ASDF::reader_state> &rs,
                               const YAML::Node &node,
                               const shared_ptr<DiscreteField> &discretefield) {
   assert(
@@ -234,7 +234,7 @@ DiscreteFieldBlock::readDiscreteFieldBlockComponent(const H5::H5Location &loc,
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<DiscreteFieldBlockComponent>
 DiscreteFieldBlock::readDiscreteFieldBlockComponent(
-    const ASDF::reader_state &rs, const YAML::Node &node) {
+    const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node) {
   auto discretefieldblockcomponent =
       DiscreteFieldBlockComponent::create(rs, node, shared_from_this());
   checked_emplace(m_discretefieldblockcomponents,

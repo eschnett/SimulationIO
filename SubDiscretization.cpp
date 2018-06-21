@@ -73,7 +73,7 @@ void SubDiscretization::read(const H5::H5Location &loc, const string &entry,
 #endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-void SubDiscretization::read(const ASDF::reader_state &rs,
+void SubDiscretization::read(const shared_ptr<ASDF::reader_state> &rs,
                              const YAML::Node &node,
                              const shared_ptr<Manifold> &manifold) {
   assert(

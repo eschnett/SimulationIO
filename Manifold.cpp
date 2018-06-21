@@ -62,7 +62,8 @@ void Manifold::read(const H5::H5Location &loc, const string &entry,
 #endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-void Manifold::read(const ASDF::reader_state &rs, const YAML::Node &node,
+void Manifold::read(const shared_ptr<ASDF::reader_state> &rs,
+                    const YAML::Node &node,
                     const shared_ptr<Project> &project) {
   assert(node.Tag() ==
          "tag:github.com/eschnett/SimulationIO/asdf-cxx/Manifold-1.0.0");
@@ -216,7 +217,7 @@ Manifold::readDiscretization(const H5::H5Location &loc, const string &entry) {
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<Discretization>
-Manifold::readDiscretization(const ASDF::reader_state &rs,
+Manifold::readDiscretization(const shared_ptr<ASDF::reader_state> &rs,
                              const YAML::Node &node) {
   auto discretization = Discretization::create(rs, node, shared_from_this());
   checked_emplace(m_discretizations, discretization->name(), discretization,
@@ -226,7 +227,7 @@ Manifold::readDiscretization(const ASDF::reader_state &rs,
 }
 
 shared_ptr<Discretization>
-Manifold::getDiscretization(const ASDF::reader_state &rs,
+Manifold::getDiscretization(const shared_ptr<ASDF::reader_state> &rs,
                             const YAML::Node &node) {
   auto ref = ASDF::reference(rs, node);
   auto doc_path = ref.get_split_target();
@@ -302,7 +303,7 @@ Manifold::readSubDiscretization(const H5::H5Location &loc,
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<SubDiscretization>
-Manifold::readSubDiscretization(const ASDF::reader_state &rs,
+Manifold::readSubDiscretization(const shared_ptr<ASDF::reader_state> &rs,
                                 const YAML::Node &node) {
   auto subdiscretization =
       SubDiscretization::create(rs, node, shared_from_this());

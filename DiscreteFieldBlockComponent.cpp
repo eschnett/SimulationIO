@@ -63,7 +63,7 @@ void DiscreteFieldBlockComponent::read(
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 void DiscreteFieldBlockComponent::read(
-    const ASDF::reader_state &rs, const YAML::Node &node,
+    const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node,
     const shared_ptr<DiscreteFieldBlock> &discretefieldblock) {
   assert(node.Tag() == "tag:github.com/eschnett/SimulationIO/asdf-cxx/"
                        "DiscreteFieldBlockComponent-1.0.0");
@@ -73,9 +73,9 @@ void DiscreteFieldBlockComponent::read(
                           ->field()
                           ->tensortype()
                           ->getTensorComponent(rs, node["tensorcomponent"]);
-  if (node["data"].IsDefined())
+  if (node[dataname()].IsDefined())
     m_datablock = DataBlock::read_asdf(
-        rs, node["data"], discretefieldblock->discretizationblock()->box());
+        rs, node[dataname()], discretefieldblock->discretizationblock()->box());
   m_tensorcomponent->noinsert(shared_from_this());
 }
 #endif
@@ -144,7 +144,7 @@ ASDF::writer &DiscreteFieldBlockComponent::write(ASDF::writer &w) const {
   auto aw = asdf_writer(w);
   aw.alias("tensorcomponent", *tensorcomponent());
   if (bool(datablock()))
-    datablock()->write(w, "data");
+    datablock()->write(w, dataname());
   return w;
 }
 #endif

@@ -117,13 +117,13 @@ private:
 #endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   static shared_ptr<SubDiscretization>
-  create(const ASDF::reader_state &rs, const YAML::Node &node,
+  create(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node,
          const shared_ptr<Manifold> &manifold) {
     auto subdiscretization = make_shared<SubDiscretization>(hidden());
     subdiscretization->read(rs, node, manifold);
     return subdiscretization;
   }
-  void read(const ASDF::reader_state &rs, const YAML::Node &node,
+  void read(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node,
             const shared_ptr<Manifold> &manifold);
 #endif
 

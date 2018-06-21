@@ -53,7 +53,8 @@ void TensorComponent::read(const H5::H5Location &loc, const string &entry,
 #endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-void TensorComponent::read(const ASDF::reader_state &rs, const YAML::Node &node,
+void TensorComponent::read(const shared_ptr<ASDF::reader_state> &rs,
+                           const YAML::Node &node,
                            const shared_ptr<TensorType> &tensortype) {
   assert(node.Tag() ==
          "tag:github.com/eschnett/SimulationIO/asdf-cxx/TensorComponent-1.0.0");

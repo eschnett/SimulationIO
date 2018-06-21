@@ -40,7 +40,8 @@ void TensorType::read(const H5::H5Location &loc, const string &entry,
 #endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-void TensorType::read(const ASDF::reader_state &rs, const YAML::Node &node,
+void TensorType::read(const shared_ptr<ASDF::reader_state> &rs,
+                      const YAML::Node &node,
                       const shared_ptr<Project> &project) {
   assert(node.Tag() ==
          "tag:github.com/eschnett/SimulationIO/asdf-cxx/TensorType-1.0.0");
@@ -164,7 +165,7 @@ TensorType::readTensorComponent(const H5::H5Location &loc,
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<TensorComponent>
-TensorType::readTensorComponent(const ASDF::reader_state &rs,
+TensorType::readTensorComponent(const shared_ptr<ASDF::reader_state> &rs,
                                 const YAML::Node &node) {
   auto tensorcomponent = TensorComponent::create(rs, node, shared_from_this());
   checked_emplace(m_tensorcomponents, tensorcomponent->name(), tensorcomponent,
@@ -176,7 +177,7 @@ TensorType::readTensorComponent(const ASDF::reader_state &rs,
 }
 
 shared_ptr<TensorComponent>
-TensorType::getTensorComponent(const ASDF::reader_state &rs,
+TensorType::getTensorComponent(const shared_ptr<ASDF::reader_state> &rs,
                                const YAML::Node &node) {
   auto ref = ASDF::reference(rs, node);
   auto doc_path = ref.get_split_target();

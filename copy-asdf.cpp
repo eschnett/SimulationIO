@@ -16,7 +16,7 @@ using namespace std;
 
 shared_ptr<Project> read(const string &filename) {
   auto pis = make_shared<ifstream>(filename, ios::binary | ios::in);
-  return readProjectASDF(pis);
+  return readProjectASDF(pis, filename);
 }
 
 void write(const shared_ptr<Project> &project, const string &filename) {

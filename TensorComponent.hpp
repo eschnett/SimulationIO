@@ -83,13 +83,13 @@ private:
 #endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   static shared_ptr<TensorComponent>
-  create(const ASDF::reader_state &rs, const YAML::Node &node,
+  create(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node,
          const shared_ptr<TensorType> &tensortype) {
     auto tensorcomponent = make_shared<TensorComponent>(hidden());
     tensorcomponent->read(rs, node, tensortype);
     return tensorcomponent;
   }
-  void read(const ASDF::reader_state &rs, const YAML::Node &node,
+  void read(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node,
             const shared_ptr<TensorType> &tensortype);
 #endif
 

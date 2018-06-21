@@ -64,8 +64,8 @@ void Field::read(const H5::H5Location &loc, const string &entry,
 #endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-void Field::read(const ASDF::reader_state &rs, const YAML::Node &node,
-                 const shared_ptr<Project> &project) {
+void Field::read(const shared_ptr<ASDF::reader_state> &rs,
+                 const YAML::Node &node, const shared_ptr<Project> &project) {
   assert(node.Tag() ==
          "tag:github.com/eschnett/SimulationIO/asdf-cxx/Field-1.0.0");
   m_name = node["name"].Scalar();
@@ -233,8 +233,9 @@ shared_ptr<DiscreteField> Field::readDiscreteField(const H5::H5Location &loc,
 #endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-shared_ptr<DiscreteField> Field::readDiscreteField(const ASDF::reader_state &rs,
-                                                   const YAML::Node &node) {
+shared_ptr<DiscreteField>
+Field::readDiscreteField(const shared_ptr<ASDF::reader_state> &rs,
+                         const YAML::Node &node) {
   auto discretefield = DiscreteField::create(rs, node, shared_from_this());
   checked_emplace(m_discretefields, discretefield->name(), discretefield,
                   "Field", "discretefields");

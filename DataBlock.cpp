@@ -58,7 +58,7 @@ vector<hsize_t> choose_chunksize(const vector<hsize_t> &size,
 } // namespace
 #endif
 
-namespace {
+namespace HyperSlab {
 
 template <int D, typename T> array<T, D> mkarray(const vector<T> &xs) {
   assert(xs.size() == D);
@@ -76,7 +76,7 @@ template <int D> array<ptrdiff_t, D> mkarray(const point_t &xs) {
   return rs;
 }
 
-template <int D> class copy_hyperslab_t {
+template <int D> class copy_t {
   array<ptrdiff_t, D> outstrides;
   array<ptrdiff_t, D> instrides;
   array<ptrdiff_t, D> shape;
@@ -86,141 +86,250 @@ template <int D> class copy_hyperslab_t {
   const unsigned char *inptr_min;
   const unsigned char *inptr_max;
 
-  bool outcheck(unsigned char *const outptr) const {
-    return outptr_min <= outptr && outptr < outptr_max;
+  bool outcheck(unsigned char *const outptr, size_t nbytes) const {
+    return outptr_min <= outptr && outptr + nbytes <= outptr_max;
   }
-  bool incheck(const unsigned char *const inptr) const {
-    return inptr_min <= inptr && inptr < inptr_max;
+  bool incheck(const unsigned char *const inptr, size_t nbytes) const {
+    return inptr_min <= inptr && inptr + nbytes <= inptr_max;
   }
 
+  // This implementation is efficient for Fortran array order
+
   template <size_t N, int DD, typename enable_if<DD == 0>::type * = nullptr>
-  void copy_nd(unsigned char *const outptr,
-               const unsigned char *const inptr) const {
-    // outcheck(outptr);
-    // incheck(inptr);
+  void copy_nd_f(unsigned char *const outptr,
+                 const unsigned char *const inptr) const {
+    // assert(outcheck(outptr, N));
+    // assert(incheck(inptr, N));
     memcpy(outptr, inptr, N);
   }
 
   template <size_t N, int DD,
             typename enable_if<(DD > 0 && DD <= D)>::type * = nullptr>
-  void copy_nd(unsigned char *const outptr,
-               const unsigned char *const inptr) const {
+  void copy_nd_f(unsigned char *const outptr,
+                 const unsigned char *const inptr) const {
     const ptrdiff_t outdi = outstrides[DD - 1];
     const ptrdiff_t indi = instrides[DD - 1];
     const ptrdiff_t ni = shape[DD - 1];
     for (ptrdiff_t i = 0; i < ni; ++i)
-      copy_nd<N, DD - 1>(outptr + i * outdi, inptr + i * indi);
+      copy_nd_f<N, DD - 1>(outptr + i * outdi, inptr + i * indi);
+  }
+
+  // This implementation is efficient for C array order
+
+  template <size_t N, int DD, typename enable_if<DD == D>::type * = nullptr>
+  void copy_nd_c(unsigned char *const outptr,
+                 const unsigned char *const inptr) const {
+    // assert(outcheck(outptr, N));
+    // assert(incheck(inptr, N));
+    memcpy(outptr, inptr, N);
+  }
+
+  template <size_t N, int DD,
+            typename enable_if<(DD >= 0 && DD < D)>::type * = nullptr>
+  void copy_nd_c(unsigned char *const outptr,
+                 const unsigned char *const inptr) const {
+    const ptrdiff_t outdi = outstrides[DD];
+    const ptrdiff_t indi = instrides[DD];
+    const ptrdiff_t ni = shape[DD];
+    for (ptrdiff_t i = 0; i < ni; ++i)
+      copy_nd_c<N, DD + 1>(outptr + i * outdi, inptr + i * indi);
   }
 
 public:
-  copy_hyperslab_t(unsigned char *const outptr, const ptrdiff_t outnpoints,
-                   const array<ptrdiff_t, D> &outstrides,
-                   const ptrdiff_t outoffset, const unsigned char *const inptr,
-                   const ptrdiff_t innpoints,
-                   const array<ptrdiff_t, D> &instrides,
-                   const ptrdiff_t inoffset, const array<ptrdiff_t, D> &shape,
-                   const ptrdiff_t type_size)
+  copy_t(unsigned char *const outptr, const ptrdiff_t outnbytes,
+         const ptrdiff_t outoffset, const array<ptrdiff_t, D> &outstrides,
+         const unsigned char *const inptr, const ptrdiff_t innbytes,
+         const ptrdiff_t inoffset, const array<ptrdiff_t, D> &instrides,
+         const array<ptrdiff_t, D> &shape, const ptrdiff_t type_size)
       : outstrides(outstrides), instrides(instrides), shape(shape),
         type_size(type_size), outptr_min(outptr),
-        outptr_max(outptr + type_size * outnpoints), inptr_min(inptr),
-        inptr_max(inptr + type_size * innpoints) {
-    unsigned char *const outptr1 = outptr + type_size * outoffset;
-    const unsigned char *const inptr1 = inptr + type_size * inoffset;
-    switch (type_size) {
-    case 1:
-      copy_nd<1, D>(outptr1, inptr1);
-      break;
-    case 2:
-      copy_nd<2, D>(outptr1, inptr1);
-      break;
-    case 4:
-      copy_nd<4, D>(outptr1, inptr1);
-      break;
-    case 8:
-      copy_nd<8, D>(outptr1, inptr1);
-      break;
-    case 16:
-      copy_nd<16, D>(outptr1, inptr1);
-      break;
-    default:
-      assert(0);
+        outptr_max(outptr + outnbytes), inptr_min(inptr),
+        inptr_max(inptr + innbytes) {
+    unsigned char *const outptr1 = outptr + outoffset;
+    const unsigned char *const inptr1 = inptr + inoffset;
+    if (D == 0 || outstrides[0] <= outstrides[D - 1]) {
+      // prefer Fortran order
+      switch (type_size) {
+      case 1:
+        copy_nd_f<1, D>(outptr1, inptr1);
+        break;
+      case 2:
+        copy_nd_f<2, D>(outptr1, inptr1);
+        break;
+      case 4:
+        copy_nd_f<4, D>(outptr1, inptr1);
+        break;
+      case 8:
+        copy_nd_f<8, D>(outptr1, inptr1);
+        break;
+      case 16:
+        copy_nd_f<16, D>(outptr1, inptr1);
+        break;
+      default:
+        assert(0);
+      }
+    } else {
+      // prefer C order
+      switch (type_size) {
+      case 1:
+        copy_nd_c<1, 0>(outptr1, inptr1);
+        break;
+      case 2:
+        copy_nd_c<2, 0>(outptr1, inptr1);
+        break;
+      case 4:
+        copy_nd_c<4, 0>(outptr1, inptr1);
+        break;
+      case 8:
+        copy_nd_c<8, 0>(outptr1, inptr1);
+        break;
+      case 16:
+        copy_nd_c<16, 0>(outptr1, inptr1);
+        break;
+      default:
+        assert(0);
+      }
     }
   }
 };
 
-void copy_hyperslab(void *const outptr0, const ptrdiff_t outnpoints,
-                    const box_t &outlayout, const box_t &outbox,
-                    const void *const inptr0, const ptrdiff_t innpoints,
-                    const box_t &inlayout, const box_t &inbox,
-                    const size_t type_size) {
-  const int rank = outlayout.rank();
-  assert(outbox.rank() == rank);
-  assert(inlayout.rank() == rank);
-  assert(inbox.rank() == rank);
+ptrdiff_t layout2offset(ptrdiff_t offset, const point_t &strides,
+                        const box_t &virtual_layout, const box_t &box) {
+  assert(box <= virtual_layout);
+  const int rank = strides.rank();
+  assert(virtual_layout.rank() == rank);
+  assert(box.rank() == rank);
+  for (int d = 0; d < rank; ++d)
+    offset += (box.lower()[d] - virtual_layout.lower()[d]) * strides[d];
+  return offset;
+}
+
+pair<ptrdiff_t, point_t> layout2strides(const box_t &layout, const box_t &box,
+                                        const size_t type_size) {
+  assert(box <= layout);
+  const int rank = layout.rank();
+  vector<ptrdiff_t> strides(rank);
+  ptrdiff_t offset = 0, stride = type_size;
+  for (int d = 0; d < rank; ++d) {
+    strides[d] = stride;
+    offset += (box.lower()[d] - layout.lower()[d]) * stride;
+    stride *= layout.shape()[d];
+  }
+  assert(stride == layout.size() * type_size);
+  // Test layout2offsets implementation
+  auto other_off = layout2offset(0, point_t(strides), layout, box);
+  assert(other_off == offset);
+  return make_pair(offset, point_t(strides));
+}
+
+void copy(void *const outptr0, const ptrdiff_t outnbytes,
+          const ptrdiff_t outoffset, const point_t &outstrides,
+          const void *const inptr0, const ptrdiff_t innbytes,
+          const ptrdiff_t inoffset, const point_t &instrides,
+          const point_t &shape, const size_t type_size) {
+  const int rank = shape.rank();
+  assert(outstrides.rank() == rank);
+  assert(instrides.rank() == rank);
+
+  // Check all corners whether they are contained in the array
+  for (size_t corner = 0; corner < (size_t(1) << rank); ++corner) {
+    ptrdiff_t outpos = outoffset;
+    for (int d = 0; d < rank; ++d) {
+      size_t dbit = size_t(1) << d;
+      outpos += outstrides[d] * (corner & dbit ? shape[d] - 1 : 0);
+    }
+    assert(outpos >= 0 && outpos + type_size <= outnbytes);
+    ptrdiff_t inpos = inoffset;
+    for (int d = 0; d < rank; ++d) {
+      size_t dbit = size_t(1) << d;
+      inpos += instrides[d] * (corner & dbit ? shape[d] - 1 : 0);
+    }
+    assert(inpos >= 0 && inpos + type_size <= innbytes);
+  }
 
   const auto outptr = static_cast<unsigned char *>(outptr0);
-  assert(outlayout.size() <= outnpoints);
-  assert(outbox <= outlayout);
-  const auto outshape = outbox.shape();
-  // const auto outstrides = outlayout.shape() * point_t(rank, type_size);
-  vector<ptrdiff_t> outstrides(rank);
-  ptrdiff_t outoffset = 0, outstride = type_size;
-  for (int d = 0; d < rank; ++d) {
-    outstrides[d] = outstride;
-    outoffset += (outbox.lower()[d] - outlayout.lower()[d]) * outstride;
-    outstride *= outlayout.shape()[d];
-  }
-  assert(outstride == outlayout.size() * type_size);
-
   const auto inptr = static_cast<const unsigned char *>(inptr0);
-  assert(inlayout.size() <= innpoints);
-  assert(inbox <= inlayout);
-  const auto inshape = inbox.shape();
-  // const auto instrides = inlayout.shape() * point_t(rank, type_size);
-  vector<ptrdiff_t> instrides(rank);
-  ptrdiff_t inoffset = 0, instride = type_size;
-  for (int d = 0; d < rank; ++d) {
-    instrides[d] = instride;
-    inoffset += (inbox.lower()[d] - inlayout.lower()[d]) * instride;
-    instride *= inlayout.shape()[d];
-  }
-  assert(instride == inlayout.size() * type_size);
-
-  const auto shape = outshape;
-  assert(all(inshape == shape));
 
   switch (rank) {
   case 0:
-    copy_hyperslab_t<0>(outptr, outnpoints, mkarray<0>(outstrides), outoffset,
-                        inptr, innpoints, mkarray<0>(instrides), inoffset,
-                        mkarray<0>(shape), type_size);
+    copy_t<0>(outptr, outnbytes, outoffset, mkarray<0>(outstrides), inptr,
+              innbytes, inoffset, mkarray<0>(instrides), mkarray<0>(shape),
+              type_size);
     break;
   case 1:
-    copy_hyperslab_t<1>(outptr, outnpoints, mkarray<1>(outstrides), outoffset,
-                        inptr, innpoints, mkarray<1>(instrides), inoffset,
-                        mkarray<1>(shape), type_size);
+    copy_t<1>(outptr, outnbytes, outoffset, mkarray<1>(outstrides), inptr,
+              innbytes, inoffset, mkarray<1>(instrides), mkarray<1>(shape),
+              type_size);
     break;
   case 2:
-    copy_hyperslab_t<2>(outptr, outnpoints, mkarray<2>(outstrides), outoffset,
-                        inptr, innpoints, mkarray<2>(instrides), inoffset,
-                        mkarray<2>(shape), type_size);
+    copy_t<2>(outptr, outnbytes, outoffset, mkarray<2>(outstrides), inptr,
+              innbytes, inoffset, mkarray<2>(instrides), mkarray<2>(shape),
+              type_size);
     break;
   case 3:
-    copy_hyperslab_t<3>(outptr, outnpoints, mkarray<3>(outstrides), outoffset,
-                        inptr, innpoints, mkarray<3>(instrides), inoffset,
-                        mkarray<3>(shape), type_size);
+    copy_t<3>(outptr, outnbytes, outoffset, mkarray<3>(outstrides), inptr,
+              innbytes, inoffset, mkarray<3>(instrides), mkarray<3>(shape),
+              type_size);
     break;
   case 4:
-    copy_hyperslab_t<4>(outptr, outnpoints, mkarray<4>(outstrides), outoffset,
-                        inptr, innpoints, mkarray<4>(instrides), inoffset,
-                        mkarray<4>(shape), type_size);
+    copy_t<4>(outptr, outnbytes, outoffset, mkarray<4>(outstrides), inptr,
+              innbytes, inoffset, mkarray<4>(instrides), mkarray<4>(shape),
+              type_size);
     break;
   default:
     assert(0);
   }
 }
 
-} // namespace
+void copy(void *const outptr0, const ptrdiff_t outnpoints,
+          const box_t &outlayout, const box_t &outbox, const void *const inptr0,
+          const ptrdiff_t innpoints, const box_t &inlayout, const box_t &inbox,
+          const size_t type_size) {
+  const int rank = outlayout.rank();
+  assert(outbox.rank() == rank);
+  assert(inlayout.rank() == rank);
+  assert(inbox.rank() == rank);
+
+  assert(outlayout.size() <= outnpoints);
+  // assert(outbox <= outlayout);
+  // const auto outshape = outbox.shape();
+  // // const auto outstrides = outlayout.shape() * point_t(rank, type_size);
+  // vector<ptrdiff_t> outstrides(rank);
+  // ptrdiff_t outoffset = 0, outstride = type_size;
+  // for (int d = 0; d < rank; ++d) {
+  //   outstrides[d] = outstride;
+  //   outoffset += (outbox.lower()[d] - outlayout.lower()[d]) * outstride;
+  //   outstride *= outlayout.shape()[d];
+  // }
+  // assert(outstride == outlayout.size() * type_size);
+  const auto out_off_str = layout2strides(outlayout, outbox, type_size);
+  const auto &outoffset = out_off_str.first;
+  const auto &outstrides = out_off_str.second;
+
+  assert(inlayout.size() <= innpoints);
+  // assert(inbox <= inlayout);
+  // const auto inshape = inbox.shape();
+  // // const auto instrides = inlayout.shape() * point_t(rank, type_size);
+  // vector<ptrdiff_t> instrides(rank);
+  // ptrdiff_t inoffset = 0, instride = type_size;
+  // for (int d = 0; d < rank; ++d) {
+  //   instrides[d] = instride;
+  //   inoffset += (inbox.lower()[d] - inlayout.lower()[d]) * instride;
+  //   instride *= inlayout.shape()[d];
+  // }
+  // assert(instride == inlayout.size() * type_size);
+  const auto in_off_str = layout2strides(inlayout, inbox, type_size);
+  const auto &inoffset = in_off_str.first;
+  const auto &instrides = in_off_str.second;
+
+  const auto shape = outbox.shape();
+  assert(all(inbox.shape() == shape));
+
+  copy(outptr0, type_size * outnpoints, outoffset, point_t(outstrides), inptr0,
+       type_size * innpoints, inoffset, point_t(instrides), shape, type_size);
+}
+
+} // namespace HyperSlab
 
 // DataBlock
 
@@ -260,9 +369,9 @@ shared_ptr<DataBlock> DataBlock::read(const H5::Group &group,
 #endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-shared_ptr<DataBlock> DataBlock::read_asdf(const ASDF::reader_state &rs,
-                                           const YAML::Node &node,
-                                           const box_t &box) {
+shared_ptr<DataBlock>
+DataBlock::read_asdf(const shared_ptr<ASDF::reader_state> &rs,
+                     const YAML::Node &node, const box_t &box) {
   for (const auto &asdf_reader : asdf_readers) {
     auto datablock = asdf_reader(rs, node, box);
     if (datablock)
@@ -293,7 +402,8 @@ void DataBlock::construct_spaces(const box_t &memlayout, const box_t &membox,
   if (rank() > 0)
     memspace.selectHyperslab(
         H5S_SELECT_SET, reversed(vector<hsize_t>(membox.shape())).data(),
-        reversed(vector<hsize_t>(membox.lower() - box().lower())).data());
+        // reversed(vector<hsize_t>(membox.lower() - box().lower())).data()
+        reversed(vector<hsize_t>(membox.lower() - memlayout.lower())).data());
   filespace.copy(dataspace);
   if (rank() > 0)
     filespace.selectHyperslab(
@@ -325,9 +435,9 @@ shared_ptr<DataRange> DataRange::read(const H5::Group &group,
 #endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-shared_ptr<DataRange> DataRange::read_asdf(const ASDF::reader_state &rs,
-                                           const YAML::Node &node,
-                                           const box_t &box) {
+shared_ptr<DataRange>
+DataRange::read_asdf(const shared_ptr<ASDF::reader_state> &rs,
+                     const YAML::Node &node, const box_t &box) {
   if (node.Tag() !=
       "tag:github.com/eschnett/SimulationIO/asdf-cxx/DataRange-1.0.0")
     return nullptr;
@@ -408,7 +518,7 @@ shared_ptr<DataSet> DataSet::read(const H5::Group &group, const string &entry,
 }
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-shared_ptr<DataSet> DataSet::read_asdf(const ASDF::reader_state &rs,
+shared_ptr<DataSet> DataSet::read_asdf(const shared_ptr<ASDF::reader_state> &rs,
                                        const YAML::Node &node,
                                        const box_t &box) {
   return nullptr;
@@ -588,8 +698,8 @@ shared_ptr<DataBufferEntry> DataBufferEntry::read(const H5::Group &group,
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<DataBufferEntry>
-DataBufferEntry::read_asdf(const ASDF::reader_state &rs, const YAML::Node &node,
-                           const box_t &box) {
+DataBufferEntry::read_asdf(const shared_ptr<ASDF::reader_state> &rs,
+                           const YAML::Node &node, const box_t &box) {
   return nullptr;
 }
 #endif
@@ -658,7 +768,7 @@ shared_ptr<CopyObj> CopyObj::read(const H5::Group &group, const string &entry,
 }
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-shared_ptr<CopyObj> CopyObj::read_asdf(const ASDF::reader_state &rs,
+shared_ptr<CopyObj> CopyObj::read_asdf(const shared_ptr<ASDF::reader_state> &rs,
                                        const YAML::Node &node,
                                        const box_t &box) {
   return nullptr;
@@ -732,10 +842,10 @@ void CopyObj::write(ASDF::writer &w, const string &entry) const {
 #endif // #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 
 void CopyObj::readData(void *data, const H5::DataType &datatype,
-                       const box_t &datashape, const box_t &databox) const {
+                       const box_t &datalayout, const box_t &databox) const {
   if (rank() == 0)
     assert(!databox.empty()); // HDF5 cannot handle an empty scalar box
-  assert(databox <= datashape);
+  assert(databox <= datalayout);
   assert(databox <= box());
   auto dataset = group().openDataSet(name());
   auto dataspace = dataset.getSpace();
@@ -746,7 +856,7 @@ void CopyObj::readData(void *data, const H5::DataType &datatype,
   reverse(dims);
   assert(all(point_t(dims) == shape()));
   H5::DataSpace memspace, filespace;
-  construct_spaces(datashape, databox, dataspace, memspace, filespace);
+  construct_spaces(datalayout, databox, dataspace, memspace, filespace);
   dataset.read(data, datatype, memspace, filespace);
 }
 
@@ -775,7 +885,7 @@ shared_ptr<ExtLink> ExtLink::read(const H5::Group &group, const string &entry,
 }
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-shared_ptr<ExtLink> ExtLink::read_asdf(const ASDF::reader_state &rs,
+shared_ptr<ExtLink> ExtLink::read_asdf(const shared_ptr<ASDF::reader_state> &rs,
                                        const YAML::Node &node,
                                        const box_t &box) {
   return nullptr;
@@ -840,9 +950,10 @@ ASDFData::ASDFData(const box_t &box, const void *data, size_t npoints,
   assert(data);
   assert(box <= memlayout);
   assert(npoints == memlayout.size());
-  vector<unsigned char> buf(box.size() * datatype->type_size());
-  copy_hyperslab(buf.data(), box.size(), box, box, data, npoints, memlayout,
-                 box, datatype->type_size());
+  auto type_size = datatype->type_size();
+  vector<unsigned char> buf(box.size() * type_size);
+  HyperSlab::copy(buf.data(), buf.size(), box, box, data, type_size * npoints,
+                  memlayout, box, type_size);
   m_ndarray = make_shared<ASDF::ndarray>(
       ASDF::make_constant_memoized(shared_ptr<ASDF::block_t>(
           make_shared<ASDF::typed_block_t<unsigned char>>(move(buf)))),
@@ -858,9 +969,9 @@ shared_ptr<ASDFData> ASDFData::read(const H5::Group &group, const string &entry,
 }
 #endif
 
-shared_ptr<ASDFData> ASDFData::read_asdf(const ASDF::reader_state &rs,
-                                         const YAML::Node &node,
-                                         const box_t &box) {
+shared_ptr<ASDFData>
+ASDFData::read_asdf(const shared_ptr<ASDF::reader_state> &rs,
+                    const YAML::Node &node, const box_t &box) {
   if (node.Tag() == "tag:stsci.edu:asdf/core/ndarray-1.0.0")
     return make_shared<ASDFData>(box, make_shared<ASDF::ndarray>(rs, node));
   return nullptr;
@@ -891,7 +1002,7 @@ shared_ptr<ASDFRef> ASDFRef::read(const H5::Group &group, const string &entry,
 }
 #endif
 
-shared_ptr<ASDFRef> ASDFRef::read_asdf(const ASDF::reader_state &rs,
+shared_ptr<ASDFRef> ASDFRef::read_asdf(const shared_ptr<ASDF::reader_state> &rs,
                                        const YAML::Node &node,
                                        const box_t &box) {
   if (node.IsMap() && node.size() == 1 && node["$ref"])

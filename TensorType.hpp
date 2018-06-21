@@ -88,14 +88,14 @@ private:
             const shared_ptr<Project> &project);
 #endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-  static shared_ptr<TensorType> create(const ASDF::reader_state &rs,
+  static shared_ptr<TensorType> create(const shared_ptr<ASDF::reader_state> &rs,
                                        const YAML::Node &node,
                                        const shared_ptr<Project> &project) {
     auto tensortype = make_shared<TensorType>(hidden());
     tensortype->read(rs, node, project);
     return tensortype;
   }
-  void read(const ASDF::reader_state &rs, const YAML::Node &node,
+  void read(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node,
             const shared_ptr<Project> &project);
 #endif
 
@@ -135,10 +135,12 @@ public:
                                                   const string &entry);
 #endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-  shared_ptr<TensorComponent> readTensorComponent(const ASDF::reader_state &rs,
-                                                  const YAML::Node &node);
-  shared_ptr<TensorComponent> getTensorComponent(const ASDF::reader_state &rs,
-                                                 const YAML::Node &node);
+  shared_ptr<TensorComponent>
+  readTensorComponent(const shared_ptr<ASDF::reader_state> &rs,
+                      const YAML::Node &node);
+  shared_ptr<TensorComponent>
+  getTensorComponent(const shared_ptr<ASDF::reader_state> &rs,
+                     const YAML::Node &node);
 #endif
 
 private:

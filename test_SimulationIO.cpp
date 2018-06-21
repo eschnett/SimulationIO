@@ -203,7 +203,7 @@ TEST(Project, ASDF) {
   shared_ptr<Project> p1;
   {
     auto pfile = make_shared<ifstream>(filename, ios::binary | ios::in);
-    p1 = readProjectASDF(pfile);
+    p1 = readProjectASDF(pfile, filename);
     ostringstream buf;
     buf << *p1;
     EXPECT_EQ(orig, buf.str());
@@ -263,7 +263,7 @@ TEST(Parameter, ASDF) {
   }
   {
     auto pfile = make_shared<ifstream>(filename, ios::binary | ios::in);
-    auto p1 = readProjectASDF(pfile);
+    auto p1 = readProjectASDF(pfile, filename);
     ostringstream buf;
     buf << *p1->parameters().at("par1");
     buf << *p1->parameters().at("par2");
@@ -359,7 +359,7 @@ TEST(ParameterValue, ASDF) {
   }
   {
     auto pfile = make_shared<ifstream>(filename, ios::binary | ios::in);
-    auto p1 = readProjectASDF(pfile);
+    auto p1 = readProjectASDF(pfile, filename);
     ostringstream buf;
     buf << *p1->parameters().at("par1");
     buf << *p1->parameters().at("par2");
@@ -438,7 +438,7 @@ TEST(Configuration, ASDF) {
   }
   {
     auto pfile = make_shared<ifstream>(filename, ios::binary | ios::in);
-    auto p1 = readProjectASDF(pfile);
+    auto p1 = readProjectASDF(pfile, filename);
     ostringstream buf;
     buf << *p1->configurations().at("conf1");
     buf << *p1->configurations().at("conf2");
@@ -626,7 +626,7 @@ TEST(TensorTypes, ASDF) {
   }
   {
     auto pfile = make_shared<ifstream>(filename, ios::binary | ios::in);
-    auto p1 = readProjectASDF(pfile);
+    auto p1 = readProjectASDF(pfile, filename);
     ostringstream buf;
     for (const auto &tt : p1->tensortypes())
       buf << *tt.second;
@@ -758,7 +758,7 @@ TEST(Manifold, ASDF) {
   }
   {
     auto pfile = make_shared<ifstream>(filename, ios::binary | ios::in);
-    auto p1 = readProjectASDF(pfile);
+    auto p1 = readProjectASDF(pfile, filename);
     ostringstream buf;
     buf << *p1->manifolds().at("m1");
     EXPECT_EQ("Manifold \"m1\": Configuration \"conf1\" dim=3\n", buf.str());
@@ -813,7 +813,7 @@ TEST(TangentSpace, ASDF) {
   }
   {
     auto pfile = make_shared<ifstream>(filename, ios::binary | ios::in);
-    auto p1 = readProjectASDF(pfile);
+    auto p1 = readProjectASDF(pfile, filename);
     ostringstream buf;
     buf << *p1->tangentspaces().at("s1");
     EXPECT_EQ("TangentSpace \"s1\": Configuration \"conf1\" dim=3\n",
@@ -878,7 +878,7 @@ TEST(Field, ASDF) {
   }
   {
     auto pfile = make_shared<ifstream>(filename, ios::binary | ios::in);
-    auto p1 = readProjectASDF(pfile);
+    auto p1 = readProjectASDF(pfile, filename);
     ostringstream buf;
     buf << *p1->fields().at("f1");
     EXPECT_EQ("Field \"f1\": Configuration \"conf1\" Manifold \"m1\" "
@@ -932,7 +932,7 @@ TEST(CoordinateSystem, ASDF) {
   }
   {
     auto pfile = make_shared<ifstream>(filename, ios::binary | ios::in);
-    auto p1 = readProjectASDF(pfile);
+    auto p1 = readProjectASDF(pfile, filename);
     ostringstream buf;
     buf << *p1->coordinatesystems().at("cs1");
     EXPECT_EQ(
@@ -995,7 +995,7 @@ TEST(Discretization, ASDF) {
   }
   {
     auto pfile = make_shared<ifstream>(filename, ios::binary | ios::in);
-    auto p1 = readProjectASDF(pfile);
+    auto p1 = readProjectASDF(pfile, filename);
     ostringstream buf;
     buf << *p1->manifolds().at("m1")->discretizations().at("d1");
     buf << *p1->manifolds().at("m1")->discretizations().at("d2");
@@ -1054,7 +1054,7 @@ TEST(SubDiscretization, ASDF) {
   }
   {
     auto pfile = make_shared<ifstream>(filename, ios::binary | ios::in);
-    auto p1 = readProjectASDF(pfile);
+    auto p1 = readProjectASDF(pfile, filename);
     ostringstream buf;
     buf << *p1->manifolds().at("m1")->subdiscretizations().at("sd1");
     EXPECT_EQ("SubDiscretization \"sd1\": Manifold \"m1\" parent "
@@ -1122,7 +1122,7 @@ TEST(DiscretizationBlock, ASDF) {
   }
   {
     auto pfile = make_shared<ifstream>(filename, ios::binary | ios::in);
-    auto p1 = readProjectASDF(pfile);
+    auto p1 = readProjectASDF(pfile, filename);
     ostringstream buf;
     buf << *p1->manifolds().at("m1")->discretizations().at("d1");
     EXPECT_EQ("Discretization \"d1\": Configuration \"conf1\" Manifold \"m1\"\n"
@@ -1185,7 +1185,7 @@ TEST(Basis, ASDF) {
   }
   {
     auto pfile = make_shared<ifstream>(filename, ios::binary | ios::in);
-    auto p1 = readProjectASDF(pfile);
+    auto p1 = readProjectASDF(pfile, filename);
     ostringstream buf;
     buf << *p1->tangentspaces().at("s1")->bases().at("b1");
     EXPECT_EQ("Basis \"b1\": Configuration \"conf1\" TangentSpace \"s1\"\n",
@@ -1246,7 +1246,7 @@ TEST(BasisVector, ASDF) {
   }
   {
     auto pfile = make_shared<ifstream>(filename, ios::binary | ios::in);
-    auto p1 = readProjectASDF(pfile);
+    auto p1 = readProjectASDF(pfile, filename);
     ostringstream buf;
     buf << *p1->tangentspaces().at("s1")->bases().at("b1");
     EXPECT_EQ("Basis \"b1\": Configuration \"conf1\" TangentSpace \"s1\"\n"
@@ -1319,7 +1319,7 @@ TEST(DiscreteField, ASDF) {
   }
   {
     auto pfile = make_shared<ifstream>(filename, ios::binary | ios::in);
-    auto p1 = readProjectASDF(pfile);
+    auto p1 = readProjectASDF(pfile, filename);
     ostringstream buf;
     buf << *p1->fields().at("f1");
     EXPECT_EQ("Field \"f1\": Configuration \"conf1\" Manifold \"m1\" "
@@ -1379,7 +1379,7 @@ TEST(CoordinateField, ASDF) {
   }
   {
     auto pfile = make_shared<ifstream>(filename, ios::binary | ios::in);
-    auto p1 = readProjectASDF(pfile);
+    auto p1 = readProjectASDF(pfile, filename);
     ostringstream buf;
     buf << *p1->coordinatesystems().at("cs1")->coordinatefields().at("csf1");
     EXPECT_EQ("CoordinateField \"csf1\": CoordinateSystem \"cs1\" "
@@ -1449,7 +1449,7 @@ TEST(DiscreteFieldBlock, ASDF) {
   }
   {
     auto pfile = make_shared<ifstream>(filename, ios::binary | ios::in);
-    auto p1 = readProjectASDF(pfile);
+    auto p1 = readProjectASDF(pfile, filename);
     ostringstream buf;
     buf << *p1->fields().at("f1")->discretefields().at("df1");
     EXPECT_EQ("DiscreteField \"df1\": Configuration \"conf1\" Field \"f1\" "
@@ -1567,7 +1567,7 @@ TEST(DiscreteFieldBlockComponent, ASDF) {
   }
   {
     auto pfile = make_shared<ifstream>(filename, ios::binary | ios::in);
-    auto p1 = readProjectASDF(pfile);
+    auto p1 = readProjectASDF(pfile, filename);
     ostringstream buf;
     buf << *p1->fields()
                 .at("f1")
@@ -1839,7 +1839,7 @@ TEST(DataBlock, ASDF) {
   }
   {
     auto pfile = make_shared<ifstream>(filename, ios::binary | ios::in);
-    auto p1 = readProjectASDF(pfile);
+    auto p1 = readProjectASDF(pfile, filename);
     ostringstream buf;
     buf << *p1->fields()
                 .at("f1")

@@ -32,7 +32,8 @@ void Parameter::read(const H5::H5Location &loc, const string &entry,
 #endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-void Parameter::read(const ASDF::reader_state &rs, const YAML::Node &node,
+void Parameter::read(const shared_ptr<ASDF::reader_state> &rs,
+                     const YAML::Node &node,
                      const shared_ptr<Project> &project) {
   assert(node.Tag() ==
          "tag:github.com/eschnett/SimulationIO/asdf-cxx/Parameter-1.0.0");
@@ -145,7 +146,7 @@ Parameter::readParameterValue(const H5::H5Location &loc, const string &entry) {
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<ParameterValue>
-Parameter::readParameterValue(const ASDF::reader_state &rs,
+Parameter::readParameterValue(const shared_ptr<ASDF::reader_state> &rs,
                               const YAML::Node &node) {
   auto parametervalue = ParameterValue::create(rs, node, shared_from_this());
   checked_emplace(m_parametervalues, parametervalue->name(), parametervalue,
@@ -155,7 +156,7 @@ Parameter::readParameterValue(const ASDF::reader_state &rs,
 }
 
 shared_ptr<ParameterValue>
-Parameter::getParameterValue(const ASDF::reader_state &rs,
+Parameter::getParameterValue(const shared_ptr<ASDF::reader_state> &rs,
                              const YAML::Node &node) {
   auto ref = ASDF::reference(rs, node);
   auto doc_path = ref.get_split_target();

@@ -94,13 +94,13 @@ private:
 #endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   static shared_ptr<Basis>
-  create(const ASDF::reader_state &rs, const YAML::Node &node,
+  create(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node,
          const shared_ptr<TangentSpace> &tangentspace) {
     auto basis = make_shared<Basis>(hidden());
     basis->read(rs, node, tangentspace);
     return basis;
   }
-  void read(const ASDF::reader_state &rs, const YAML::Node &node,
+  void read(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node,
             const shared_ptr<TangentSpace> &tangentspace);
 #endif
 
@@ -135,8 +135,9 @@ public:
                                           const string &entry);
 #endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-  shared_ptr<BasisVector> readBasisVector(const ASDF::reader_state &rs,
-                                          const YAML::Node &node);
+  shared_ptr<BasisVector>
+  readBasisVector(const shared_ptr<ASDF::reader_state> &rs,
+                  const YAML::Node &node);
 #endif
 
 private:
