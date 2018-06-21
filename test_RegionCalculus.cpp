@@ -986,7 +986,9 @@ TEST(RegionCalculus, dregion_dim) {
     buf << r12;
     ostringstream goodbuf;
     goodbuf << "{";
-    if (dim > 0) {
+    if (dim == 0) {
+      goodbuf << "(" << true << ")";
+    } else {
       goodbuf << "([";
       for (int d = 0; d < dim; ++d) {
         if (d > 0)

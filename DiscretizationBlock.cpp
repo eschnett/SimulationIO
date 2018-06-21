@@ -116,7 +116,7 @@ void DiscretizationBlock::read(
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 void DiscretizationBlock::read(
-    const ASDF::reader_state &rs, const YAML::Node &node,
+    const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node,
     const shared_ptr<Discretization> &discretization) {
   assert(node.Tag() == "tag:github.com/eschnett/SimulationIO/asdf-cxx/"
                        "DiscretizationBlock-1.0.0");

@@ -54,7 +54,8 @@ void DiscreteField::read(const H5::H5Location &loc, const string &entry,
 #endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-void DiscreteField::read(const ASDF::reader_state &rs, const YAML::Node &node,
+void DiscreteField::read(const shared_ptr<ASDF::reader_state> &rs,
+                         const YAML::Node &node,
                          const shared_ptr<Field> &field) {
   assert(node.Tag() ==
          "tag:github.com/eschnett/SimulationIO/asdf-cxx/DiscreteField-1.0.0");
@@ -208,7 +209,7 @@ DiscreteField::readDiscreteFieldBlock(const H5::H5Location &loc,
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<DiscreteFieldBlock>
-DiscreteField::readDiscreteFieldBlock(const ASDF::reader_state &rs,
+DiscreteField::readDiscreteFieldBlock(const shared_ptr<ASDF::reader_state> &rs,
                                       const YAML::Node &node) {
   auto discretefieldblock =
       DiscreteFieldBlock::create(rs, node, shared_from_this());

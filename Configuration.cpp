@@ -61,7 +61,8 @@ void Configuration::read(const H5::H5Location &loc, const string &entry,
 #endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-void Configuration::read(const ASDF::reader_state &rs, const YAML::Node &node,
+void Configuration::read(const shared_ptr<ASDF::reader_state> &rs,
+                         const YAML::Node &node,
                          const shared_ptr<Project> &project) {
   assert(node.Tag() ==
          "tag:github.com/eschnett/SimulationIO/asdf-cxx/Configuration-1.0.0");

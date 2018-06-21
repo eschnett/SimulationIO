@@ -37,15 +37,22 @@ using std::vector;
 class Project;
 
 shared_ptr<Project> createProject(const string &name);
+
 #ifdef SIMULATIONIO_HAVE_HDF5
-shared_ptr<Project> readProject(const H5::H5Location &loc);
+shared_ptr<Project> readProject(const H5::H5Location &loc,
+                                const string &filename = {});
+shared_ptr<Project> readProjectHDF5(const string &filename);
 #endif
+
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-shared_ptr<Project> readProject(const ASDF::reader_state &rs,
+shared_ptr<Project> readProject(const shared_ptr<ASDF::reader_state> &rs,
                                 const YAML::Node &node);
 map<string, shared_ptr<Project>>
-readProjectsASDF(const shared_ptr<istream> &pis);
-shared_ptr<Project> readProjectASDF(const shared_ptr<istream> &pis);
+readProjectsASDF(const shared_ptr<istream> &pis, const string &filename = {});
+map<string, shared_ptr<Project>> readProjectsASDF(const string &filename);
+shared_ptr<Project> readProjectASDF(const shared_ptr<istream> &pis,
+                                    const string &filename = {});
+shared_ptr<Project> readProjectASDF(const string &filename);
 #endif
 
 class Parameter;
@@ -111,11 +118,12 @@ public:
 
   friend shared_ptr<Project> createProject(const string &name);
 #ifdef SIMULATIONIO_HAVE_HDF5
-  friend shared_ptr<Project> readProject(const H5::H5Location &loc);
+  friend shared_ptr<Project> readProject(const H5::H5Location &loc,
+                                         const string &filename);
 #endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-  friend shared_ptr<Project> readProject(const ASDF::reader_state &rs,
-                                         const YAML::Node &node);
+  friend shared_ptr<Project>
+  readProject(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node);
 #endif
   Project(hidden, const string &name) : Common(name) {
     SIMULATIONIO_CHECK_VERSION;
@@ -130,21 +138,22 @@ private:
     return project;
   }
 #ifdef SIMULATIONIO_HAVE_HDF5
-  static shared_ptr<Project> create(const H5::H5Location &loc) {
+  static shared_ptr<Project> create(const H5::H5Location &loc,
+                                    const string &filename) {
     auto project = make_shared<Project>(hidden());
-    project->read(loc);
+    project->read(loc, filename);
     return project;
   }
-  void read(const H5::H5Location &loc);
+  void read(const H5::H5Location &loc, const string &filename);
 #endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-  static shared_ptr<Project> create(const ASDF::reader_state &rs,
+  static shared_ptr<Project> create(const shared_ptr<ASDF::reader_state> &rs,
                                     const YAML::Node &node) {
     auto project = make_shared<Project>(hidden());
     project->read(rs, node);
     return project;
   }
-  void read(const ASDF::reader_state &rs, const YAML::Node &node);
+  void read(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node);
 #endif
 
 public:
@@ -171,6 +180,7 @@ public:
   virtual void write(const H5::H5Location &loc,
                      const H5::H5Location &parent) const;
   void write(const H5::H5Location &loc) const { write(loc, H5::H5File()); }
+  void writeHDF5(const string &filename) const;
 #endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   virtual vector<string> yaml_path() const;
@@ -180,6 +190,7 @@ public:
     return project.write(writer);
   }
   void writeASDF(ostream &file) const;
+  void writeASDF(const string &filename) const;
 #endif
 
   shared_ptr<Parameter> createParameter(const string &name);
@@ -191,9 +202,9 @@ public:
                                       const string &entry);
 #endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-  shared_ptr<Parameter> readParameter(const ASDF::reader_state &rs,
+  shared_ptr<Parameter> readParameter(const shared_ptr<ASDF::reader_state> &rs,
                                       const YAML::Node &node);
-  shared_ptr<Parameter> getParameter(const ASDF::reader_state &rs,
+  shared_ptr<Parameter> getParameter(const shared_ptr<ASDF::reader_state> &rs,
                                      const YAML::Node &node);
 #endif
   shared_ptr<Configuration> createConfiguration(const string &name);
@@ -206,10 +217,12 @@ public:
                                               const string &entry);
 #endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-  shared_ptr<Configuration> readConfiguration(const ASDF::reader_state &rs,
-                                              const YAML::Node &node);
-  shared_ptr<Configuration> getConfiguration(const ASDF::reader_state &rs,
-                                             const YAML::Node &node);
+  shared_ptr<Configuration>
+  readConfiguration(const shared_ptr<ASDF::reader_state> &rs,
+                    const YAML::Node &node);
+  shared_ptr<Configuration>
+  getConfiguration(const shared_ptr<ASDF::reader_state> &rs,
+                   const YAML::Node &node);
 #endif
   shared_ptr<TensorType> createTensorType(const string &name, int dimension,
                                           int rank);
@@ -223,9 +236,10 @@ public:
                                         const string &entry);
 #endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-  shared_ptr<TensorType> readTensorType(const ASDF::reader_state &rs,
-                                        const YAML::Node &node);
-  shared_ptr<TensorType> getTensorType(const ASDF::reader_state &rs,
+  shared_ptr<TensorType>
+  readTensorType(const shared_ptr<ASDF::reader_state> &rs,
+                 const YAML::Node &node);
+  shared_ptr<TensorType> getTensorType(const shared_ptr<ASDF::reader_state> &rs,
                                        const YAML::Node &node);
 #endif
   shared_ptr<Manifold>
@@ -241,9 +255,9 @@ public:
                                     const string &entry);
 #endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-  shared_ptr<Manifold> readManifold(const ASDF::reader_state &rs,
+  shared_ptr<Manifold> readManifold(const shared_ptr<ASDF::reader_state> &rs,
                                     const YAML::Node &node);
-  shared_ptr<Manifold> getManifold(const ASDF::reader_state &rs,
+  shared_ptr<Manifold> getManifold(const shared_ptr<ASDF::reader_state> &rs,
                                    const YAML::Node &node);
 #endif
   shared_ptr<TangentSpace>
@@ -262,10 +276,12 @@ public:
                                             const string &entry);
 #endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-  shared_ptr<TangentSpace> readTangentSpace(const ASDF::reader_state &rs,
-                                            const YAML::Node &node);
-  shared_ptr<TangentSpace> getTangentSpace(const ASDF::reader_state &rs,
-                                           const YAML::Node &node);
+  shared_ptr<TangentSpace>
+  readTangentSpace(const shared_ptr<ASDF::reader_state> &rs,
+                   const YAML::Node &node);
+  shared_ptr<TangentSpace>
+  getTangentSpace(const shared_ptr<ASDF::reader_state> &rs,
+                  const YAML::Node &node);
 #endif
   shared_ptr<Field> createField(const string &name,
                                 const shared_ptr<Configuration> &configuration,
@@ -283,9 +299,9 @@ public:
   shared_ptr<Field> readField(const H5::H5Location &loc, const string &entry);
 #endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-  shared_ptr<Field> readField(const ASDF::reader_state &rs,
+  shared_ptr<Field> readField(const shared_ptr<ASDF::reader_state> &rs,
                               const YAML::Node &node);
-  shared_ptr<Field> getField(const ASDF::reader_state &rs,
+  shared_ptr<Field> getField(const shared_ptr<ASDF::reader_state> &rs,
                              const YAML::Node &node);
 #endif
   shared_ptr<CoordinateSystem>
@@ -305,7 +321,8 @@ public:
 #endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   shared_ptr<CoordinateSystem>
-  readCoordinateSystem(const ASDF::reader_state &rs, const YAML::Node &node);
+  readCoordinateSystem(const shared_ptr<ASDF::reader_state> &rs,
+                       const YAML::Node &node);
 #endif
 };
 

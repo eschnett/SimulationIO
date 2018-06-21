@@ -67,14 +67,14 @@ private:
             const shared_ptr<Basis> &basis);
 #endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-  static shared_ptr<BasisVector> create(const ASDF::reader_state &rs,
-                                        const YAML::Node &node,
-                                        const shared_ptr<Basis> &basis) {
+  static shared_ptr<BasisVector>
+  create(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node,
+         const shared_ptr<Basis> &basis) {
     auto basisvector = make_shared<BasisVector>(hidden());
     basisvector->read(rs, node, basis);
     return basisvector;
   }
-  void read(const ASDF::reader_state &rs, const YAML::Node &node,
+  void read(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node,
             const shared_ptr<Basis> &basis);
 #endif
 

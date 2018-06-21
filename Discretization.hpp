@@ -101,13 +101,13 @@ private:
 #endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   static shared_ptr<Discretization>
-  create(const ASDF::reader_state &rs, const YAML::Node &node,
+  create(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node,
          const shared_ptr<Manifold> &manifold) {
     auto discretization = make_shared<Discretization>(hidden());
     discretization->read(rs, node, manifold);
     return discretization;
   }
-  void read(const ASDF::reader_state &rs, const YAML::Node &node,
+  void read(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node,
             const shared_ptr<Manifold> &manifold);
 #endif
 
@@ -145,9 +145,11 @@ public:
 #endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   shared_ptr<DiscretizationBlock>
-  readDiscretizationBlock(const ASDF::reader_state &rs, const YAML::Node &node);
+  readDiscretizationBlock(const shared_ptr<ASDF::reader_state> &rs,
+                          const YAML::Node &node);
   shared_ptr<DiscretizationBlock>
-  getDiscretizationBlock(const ASDF::reader_state &rs, const YAML::Node &node);
+  getDiscretizationBlock(const shared_ptr<ASDF::reader_state> &rs,
+                         const YAML::Node &node);
 #endif
 
 private:

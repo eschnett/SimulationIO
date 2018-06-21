@@ -103,14 +103,14 @@ private:
             const shared_ptr<Project> &project);
 #endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-  static shared_ptr<Configuration> create(const ASDF::reader_state &rs,
-                                          const YAML::Node &node,
-                                          const shared_ptr<Project> &project) {
+  static shared_ptr<Configuration>
+  create(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node,
+         const shared_ptr<Project> &project) {
     auto configuration = make_shared<Configuration>(hidden());
     configuration->read(rs, node, project);
     return configuration;
   }
-  void read(const ASDF::reader_state &rs, const YAML::Node &node,
+  void read(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node,
             const shared_ptr<Project> &project);
 #endif
 

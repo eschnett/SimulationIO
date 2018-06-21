@@ -46,7 +46,7 @@ void CoordinateSystem::read(const H5::H5Location &loc, const string &entry,
 #endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-void CoordinateSystem::read(const ASDF::reader_state &rs,
+void CoordinateSystem::read(const shared_ptr<ASDF::reader_state> &rs,
                             const YAML::Node &node,
                             const shared_ptr<Project> &project) {
   assert(
@@ -189,7 +189,7 @@ CoordinateSystem::readCoordinateField(const H5::H5Location &loc,
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<CoordinateField>
-CoordinateSystem::readCoordinateField(const ASDF::reader_state &rs,
+CoordinateSystem::readCoordinateField(const shared_ptr<ASDF::reader_state> &rs,
                                       const YAML::Node &node) {
   auto coordinatefield = CoordinateField::create(rs, node, shared_from_this());
   checked_emplace(m_coordinatefields, coordinatefield->name(), coordinatefield,

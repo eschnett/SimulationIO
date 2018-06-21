@@ -84,14 +84,14 @@ private:
             const shared_ptr<Project> &project);
 #endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-  static shared_ptr<TangentSpace> create(const ASDF::reader_state &rs,
-                                         const YAML::Node &node,
-                                         const shared_ptr<Project> &project) {
+  static shared_ptr<TangentSpace>
+  create(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node,
+         const shared_ptr<Project> &project) {
     auto tangentspace = make_shared<TangentSpace>(hidden());
     tangentspace->read(rs, node, project);
     return tangentspace;
   }
-  void read(const ASDF::reader_state &rs, const YAML::Node &node,
+  void read(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node,
             const shared_ptr<Project> &project);
 #endif
 
@@ -127,9 +127,9 @@ public:
   shared_ptr<Basis> readBasis(const H5::H5Location &loc, const string &entry);
 #endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-  shared_ptr<Basis> readBasis(const ASDF::reader_state &rs,
+  shared_ptr<Basis> readBasis(const shared_ptr<ASDF::reader_state> &rs,
                               const YAML::Node &node);
-  shared_ptr<Basis> getBasis(const ASDF::reader_state &rs,
+  shared_ptr<Basis> getBasis(const shared_ptr<ASDF::reader_state> &rs,
                              const YAML::Node &node);
 #endif
 

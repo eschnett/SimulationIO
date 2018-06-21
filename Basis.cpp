@@ -42,7 +42,8 @@ void Basis::read(const H5::H5Location &loc, const string &entry,
 #endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-void Basis::read(const ASDF::reader_state &rs, const YAML::Node &node,
+void Basis::read(const shared_ptr<ASDF::reader_state> &rs,
+                 const YAML::Node &node,
                  const shared_ptr<TangentSpace> &tangentspace) {
   assert(node.Tag() ==
          "tag:github.com/eschnett/SimulationIO/asdf-cxx/Basis-1.0.0");
@@ -160,8 +161,9 @@ shared_ptr<BasisVector> Basis::readBasisVector(const H5::H5Location &loc,
 #endif
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-shared_ptr<BasisVector> Basis::readBasisVector(const ASDF::reader_state &rs,
-                                               const YAML::Node &node) {
+shared_ptr<BasisVector>
+Basis::readBasisVector(const shared_ptr<ASDF::reader_state> &rs,
+                       const YAML::Node &node) {
   auto basisvector = BasisVector::create(rs, node, shared_from_this());
   checked_emplace(m_basisvectors, basisvector->name(), basisvector, "Basis",
                   "basisvectors");

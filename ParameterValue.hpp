@@ -82,13 +82,13 @@ private:
 #endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   static shared_ptr<ParameterValue>
-  create(const ASDF::reader_state &rs, const YAML::Node &node,
+  create(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node,
          const shared_ptr<Parameter> &parameter) {
     auto parametervalue = make_shared<ParameterValue>(hidden());
     parametervalue->read(rs, node, parameter);
     return parametervalue;
   }
-  void read(const ASDF::reader_state &rs, const YAML::Node &node,
+  void read(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node,
             const shared_ptr<Parameter> &parameter);
 #endif
 
