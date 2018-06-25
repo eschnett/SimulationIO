@@ -2,7 +2,6 @@
 
 from math import *
 
-import h5py
 import numpy as np
 
 from SimulationIO import *
@@ -106,8 +105,7 @@ for p in range(ngrids):
         vel_component.createDataSet_double()
 
 # Write file
-file = h5py.File("python-example.s5", "w", libver="latest")
-project.writeFile(file._id.id)
+project.writeHDF5("python-example.s5")
 
 # Write data
 for pk in range(npk):

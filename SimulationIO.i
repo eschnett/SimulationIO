@@ -633,14 +633,14 @@ struct Project {
 
   void createStandardTensorTypes();
   void write(const H5::H5Location& loc);
-  %extend {
-    void writeFile(long file_id) {
-      return self->write(H5::H5File(file_id));
-    }
-    void writeGroup(long group_id) {
-      return self->write(H5::Group(group_id));
-    }
-  }
+  //UNTESTED %extend {
+  //UNTESTED   void writeFile(long file_id) {
+  //UNTESTED     return self->write(H5::H5File(file_id));
+  //UNTESTED   }
+  //UNTESTED   void writeGroup(long group_id) {
+  //UNTESTED     return self->write(H5::Group(group_id));
+  //UNTESTED   }
+  //UNTESTED }
 
   std::shared_ptr<Parameter> createParameter(const string& name);
   std::shared_ptr<Configuration> createConfiguration(const string& name);
