@@ -1,6 +1,11 @@
 // SWIG interface file
 
 %module SimulationIO
+
+%{
+  #include "Config.hpp"
+%}
+
 %{
   #include "RegionCalculus.hpp"
   using namespace RegionCalculus;
