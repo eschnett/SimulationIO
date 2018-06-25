@@ -1,11 +1,6 @@
 // SWIG interface file
 
 %module SimulationIO
-
-%{
-  #include <H5Cpp.h>
-%}
-
 %{
   #include "RegionCalculus.hpp"
   using namespace RegionCalculus;
@@ -16,6 +11,12 @@
   #include "SimulationIO.hpp"
   using namespace SimulationIO;
 %}
+
+#ifdef SIMULATIONIO_HAVE_HDF5
+%{
+  #include <H5Cpp.h>
+%}
+#endif
 
 %include <std_map.i>
 %include <std_shared_ptr.i>
@@ -625,7 +626,12 @@ struct Project {
 
   void createStandardTensorTypes();
   void write(const H5::H5Location& loc);
+#ifdef SIMULATIONIO_HAVE_HDF5
   void writeHDF5(const string& name);
+#endif
+#ifdef SIMULATIONIO_HAVE_ASDF
+  void writeASDF(const string& name);
+#endif
 
   std::shared_ptr<Parameter> createParameter(const string& name);
   std::shared_ptr<Configuration> createConfiguration(const string& name);
@@ -652,7 +658,12 @@ struct Project {
 };
 std::shared_ptr<Project> createProject(const string& name);
 std::shared_ptr<Project> readProject(const H5::H5Location& loc);
+#ifdef SIMULATIONIO_HAVE_HDF5
 std::shared_ptr<Project> readProjectHDF5(const string& name);
+#endif
+#ifdef SIMULATIONIO_HAVE_ASDF
+std::shared_ptr<Project> readProjectASDF(const string& name);
+#endif
 
 struct SubDiscretization {
   string name() const;

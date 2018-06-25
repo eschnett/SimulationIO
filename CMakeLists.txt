@@ -161,8 +161,8 @@ set_property(TARGET SimulationIO PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 
 # SWIG bindings
 
-if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND AND
-    H5PY_FOUND AND NUMPY_FOUND AND SWIG_FOUND)
+#  AND H5PY_FOUND AND ASDF_FOUND
+if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND AND SWIG_FOUND)
   set_source_files_properties(RegionCalculus.i PROPERTIES CPLUSPLUS ON)
   swig_add_module(RegionCalculus python RegionCalculus.i)
   swig_link_libraries(RegionCalculus SimulationIO ${PYTHON_LIBRARIES})
@@ -283,26 +283,36 @@ if(HDF5_FOUND AND ASDF_CXX_FOUND)
     COMMAND ${CMAKE_SOURCE_DIR}/diff-commands.sh
               "./sio-list-asdf example.asdf" "./sio-list-asdf example3.asdf")
 endif()
-if(HDF5_FOUND AND PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND AND H5PY_FOUND AND
+if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND AND H5PY_FOUND AND
      NUMPY_FOUND AND SWIG_FOUND)
-  add_test(NAME python-example
-    COMMAND
-    env "PYTHONPATH=${PROJECT_BINARY_DIR}:$ENV{PYTHONPATH}"
-    ${PYTHON_EXECUTABLE} "${PROJECT_SOURCE_DIR}/python-example.py")
-  add_test(NAME python-example-attach
-    COMMAND
-    env "PYTHONPATH=${PROJECT_BINARY_DIR}:$ENV{PYTHONPATH}"
-    ${PYTHON_EXECUTABLE} "${PROJECT_SOURCE_DIR}/python-example-attach.py")
-  add_test(NAME python-read
-    COMMAND
-    env "PYTHONPATH=${PROJECT_BINARY_DIR}:$ENV{PYTHONPATH}"
-    ${PYTHON_EXECUTABLE} "${PROJECT_SOURCE_DIR}/python-read.py")
-  add_test(NAME h5format_convert
-    COMMAND h5format_convert python-example.s5)
-  add_test(NAME python-read-direct
-    COMMAND
-    env "PYTHONPATH=${PROJECT_BINARY_DIR}:$ENV{PYTHONPATH}"
-    ${PYTHON_EXECUTABLE} "${PROJECT_SOURCE_DIR}/python-read-direct.py")
+  if(HDF5_FOUND)
+    add_test(NAME python-example
+      COMMAND
+      env "PYTHONPATH=${PROJECT_BINARY_DIR}:$ENV{PYTHONPATH}"
+      ${PYTHON_EXECUTABLE} "${PROJECT_SOURCE_DIR}/python-example.py")
+    add_test(NAME python-example-attach
+      COMMAND
+      env "PYTHONPATH=${PROJECT_BINARY_DIR}:$ENV{PYTHONPATH}"
+      ${PYTHON_EXECUTABLE} "${PROJECT_SOURCE_DIR}/python-example-attach.py")
+    add_test(NAME python-read
+      COMMAND
+      env "PYTHONPATH=${PROJECT_BINARY_DIR}:$ENV{PYTHONPATH}"
+      ${PYTHON_EXECUTABLE} "${PROJECT_SOURCE_DIR}/python-read.py")
+    add_test(NAME h5format_convert
+      COMMAND h5format_convert python-example.s5)
+    if(H5PY_FOUND)
+      add_test(NAME python-read-h5py
+        COMMAND
+        env "PYTHONPATH=${PROJECT_BINARY_DIR}:$ENV{PYTHONPATH}"
+        ${PYTHON_EXECUTABLE} "${PROJECT_SOURCE_DIR}/python-read-h5py.py")
+    endif()
+  endif()
+  if(ASDF_FOUND)
+    add_test(NAME python-example-asdf
+      COMMAND
+      env "PYTHONPATH=${PROJECT_BINARY_DIR}:$ENV{PYTHONPATH}"
+      ${PYTHON_EXECUTABLE} "${PROJECT_SOURCE_DIR}/python-example-asdf.py")
+  endif()
 endif()
 
 # Install
