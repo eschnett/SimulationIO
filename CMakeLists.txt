@@ -165,20 +165,14 @@ if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND AND
     H5PY_FOUND AND NUMPY_FOUND AND SWIG_FOUND)
   set_source_files_properties(H5.i PROPERTIES CPLUSPLUS ON)
   swig_add_module(H5 python H5.i)
-  # set_property(TARGET ${SWIG_MODULE_H5_REAL_NAME} PROPERTY CXX_STANDARD 11
-  # set_property(TARGET ${SWIG_MODULE_H5_REAL_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
   swig_link_libraries(H5 SimulationIO ${PYTHON_LIBRARIES})
 
   set_source_files_properties(RegionCalculus.i PROPERTIES CPLUSPLUS ON)
   swig_add_module(RegionCalculus python RegionCalculus.i)
-  # set_property(TARGET ${SWIG_MODULE_RegionCalculus_REAL_NAME} PROPERTY CXX_STANDARD 11)
-  # set_property(TARGET ${SWIG_MODULE_RegionCalculus_REAL_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
   swig_link_libraries(RegionCalculus SimulationIO ${PYTHON_LIBRARIES})
 
   set_source_files_properties(SimulationIO.i PROPERTIES CPLUSPLUS ON)
   swig_add_module(SimulationIO python SimulationIO.i)
-  # set_property(TARGET ${SWIG_MODULE_SimulationIO_REAL_NAME} PROPERTY CXX_STANDARD 11)
-  # set_property(TARGET ${SWIG_MODULE_SimulationIO_REAL_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
   swig_link_libraries(SimulationIO SimulationIO ${PYTHON_LIBRARIES})
 endif()
 
