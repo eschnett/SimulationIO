@@ -106,7 +106,7 @@ for p in range(ngrids):
         vel_component.createDataSet_double()
 
 # Write file
-file = h5py.File(filename, "w", libver="latest")
+file = h5py.File("python-example.s5", "w", libver="latest")
 project.write(file)
 
 # Write data
