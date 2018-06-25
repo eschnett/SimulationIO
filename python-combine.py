@@ -61,7 +61,7 @@ def message(*msgs):
 
 # Read project
 message("Reading project...")
-project = SIO.readProject(input_filename)
+project = SIO.readProjectHDF5(input_filename)
 indent()
 message("Project \"%s\"" % project.name())
 outdent()
@@ -260,7 +260,7 @@ for coordinatesystem in project.coordinatesystems().values():
 outdent()
 
 # Write project
-project2.write(output_filename)
+project2.writeHDF5(output_filename)
 
 message()
 message("Copying data..")

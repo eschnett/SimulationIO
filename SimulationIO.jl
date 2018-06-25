@@ -144,21 +144,6 @@ end
 
 
 
-module H5
-
-using PyCall
-@pyimport H5
-
-export H5F_ACC_RDONLY
-#TODO const H5F_ACC_RDONLY = H5.H5F_ACC_RDONLY
-
-export H5File
-H5File(filename::String, acc) = H5.H5File(filename, acc)
-
-end
-
-
-
 module RegionCalculus
 
 using PyCall

@@ -166,4 +166,4 @@ for pk in range(npk):
                     np.reshape([datavelx, datavely, datavelz][d], npoints), box)
 
 # Write file
-project.write("python-example-attach.s5")
+project.writeHDF5("python-example-attach.s5")

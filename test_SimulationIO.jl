@@ -1,7 +1,6 @@
 unshift!(LOAD_PATH, ".")
 
 using SimulationIO
-using H5
 using RegionCalculus
 using Base.Test
 

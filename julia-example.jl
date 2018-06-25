@@ -2,7 +2,6 @@
 
 using PyCall
 
-@pyimport H5
 @pyimport RegionCalculus as RC
 @pyimport SimulationIO as SIO
 
@@ -109,9 +108,7 @@ for p in 1:ngrids
 end
 
 # Write file
-filename = "julia-example.s5"
-file = H5.H5File(filename, H5.H5F_ACC_TRUNC)
-project[:write](file)
+project[:writeHDF5]("julia-example.s5")
 
 # Write data
 for pk in 1:npk, pj in 1:npj, pi in 1:npi
