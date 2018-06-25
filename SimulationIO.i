@@ -5,6 +5,7 @@
 %{
   #include "Config.hpp"
 %}
+%include "Config.hpp"
 
 %{
   #include "RegionCalculus.hpp"
@@ -465,6 +466,7 @@ struct DiscreteFieldBlockComponent {
       return self->createDataSet<double>();
     }
   }
+#ifdef SIMULATIONIO_HAVE_HDF5
   std::shared_ptr<CopyObj>
     createCopyObj(const H5::Group& group, const string& name);
   std::shared_ptr<CopyObj>
@@ -479,6 +481,7 @@ struct DiscreteFieldBlockComponent {
   //     return self->createCopyObj(H5::H5File(file_id), name);
   //   }
   // }
+#endif
   std::shared_ptr<ExtLink>
   createExtLink(const string& filename, const string& objname);
   // TODO: Eliminate these (requires writing hyperslabs for the combiners)
@@ -630,8 +633,8 @@ struct Project {
   bool invariant() const;
 
   void createStandardTensorTypes();
-  void write(const H5::H5Location& loc);
 #ifdef SIMULATIONIO_HAVE_HDF5
+  void write(const H5::H5Location& loc);
   void writeHDF5(const string& name);
 #endif
 #ifdef SIMULATIONIO_HAVE_ASDF
@@ -662,8 +665,8 @@ struct Project {
                            const std::shared_ptr<Manifold>& manifold);
 };
 std::shared_ptr<Project> createProject(const string& name);
-std::shared_ptr<Project> readProject(const H5::H5Location& loc);
 #ifdef SIMULATIONIO_HAVE_HDF5
+std::shared_ptr<Project> readProject(const H5::H5Location& loc);
 std::shared_ptr<Project> readProjectHDF5(const string& name);
 #endif
 #ifdef SIMULATIONIO_HAVE_ASDF
