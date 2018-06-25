@@ -463,24 +463,16 @@ struct DiscreteFieldBlockComponent {
     createCopyObj(const H5::Group& group, const string& name);
   std::shared_ptr<CopyObj>
     createCopyObj(const H5::H5File& file, const string& name);
-  %extend {
-
-    // IF THIS WORKS, DO THIS FOR ALL HDF5 INTERFACES, AND REMOVE H5.I;
-    // 
-    // IF THE H5FILE CANNOT BE CREATED,
-    //   THEN LOOK INTO DATABLOCK.HPP FOR A WORK-AROUND;
-    // 
-    // CHECK HDF5 OBJECT LIFETIMES (H5PY AND H5CPP);
-
-    std::shared_ptr<CopyObj>
-      createCopyObInGroup(long group_id, const string& name) {
-      return self->createCopyObj(H5::Group(group_id), name);
-    }
-    std::shared_ptr<CopyObj>
-      createCopyObInFile(long file_id, const string& name) {
-      return self->createCopyObj(H5::H5File(file_id), name);
-    }
-  }
+  // %extend {
+  //   std::shared_ptr<CopyObj>
+  //     createCopyObInGroup(long group_id, const string& name) {
+  //     return self->createCopyObj(H5::Group(group_id), name);
+  //   }
+  //   std::shared_ptr<CopyObj>
+  //     createCopyObInFile(long file_id, const string& name) {
+  //     return self->createCopyObj(H5::H5File(file_id), name);
+  //   }
+  // }
   std::shared_ptr<ExtLink>
   createExtLink(const string& filename, const string& objname);
   // TODO: Eliminate these (requires writing hyperslabs for the combiners)
@@ -633,14 +625,7 @@ struct Project {
 
   void createStandardTensorTypes();
   void write(const H5::H5Location& loc);
-  //UNTESTED %extend {
-  //UNTESTED   void writeFile(long file_id) {
-  //UNTESTED     return self->write(H5::H5File(file_id));
-  //UNTESTED   }
-  //UNTESTED   void writeGroup(long group_id) {
-  //UNTESTED     return self->write(H5::Group(group_id));
-  //UNTESTED   }
-  //UNTESTED }
+  void writeHDF5(const string& name);
 
   std::shared_ptr<Parameter> createParameter(const string& name);
   std::shared_ptr<Configuration> createConfiguration(const string& name);
@@ -667,10 +652,7 @@ struct Project {
 };
 std::shared_ptr<Project> createProject(const string& name);
 std::shared_ptr<Project> readProject(const H5::H5Location& loc);
-// TODO: Support
-//    import h5py
-//    h5py.File(name,readwritetype).id.id
-// Do this as well for all other functions taking HDF5 objects as arguments.
+std::shared_ptr<Project> readProjectHDF5(const string& name);
 
 struct SubDiscretization {
   string name() const;
