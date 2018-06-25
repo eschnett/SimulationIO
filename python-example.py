@@ -107,7 +107,7 @@ for p in range(ngrids):
 
 # Write file
 file = h5py.File("python-example.s5", "w", libver="latest")
-project.write(file)
+project.writeFile(file._id.id)
 
 # Write data
 for pk in range(npk):

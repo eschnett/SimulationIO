@@ -633,6 +633,14 @@ struct Project {
 
   void createStandardTensorTypes();
   void write(const H5::H5Location& loc);
+  %extend {
+    void writeFile(long file_id) {
+      return self->write(H5::H5File(file_id));
+    }
+    void writeGroup(long group_id) {
+      return self->write(H5::Group(group_id));
+    }
+  }
 
   std::shared_ptr<Parameter> createParameter(const string& name);
   std::shared_ptr<Configuration> createConfiguration(const string& name);
