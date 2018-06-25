@@ -321,7 +321,6 @@ struct DataSet: DataBlock {
 };
 
 struct CopyObj: DataBlock {
-  // H5::hid location() const;
   string name() const;
   %extend {
     std::vector<int> readData_int(const box_t& databox) const {
@@ -464,8 +463,26 @@ struct DiscreteFieldBlockComponent {
     createCopyObj(const H5::Group& group, const string& name);
   std::shared_ptr<CopyObj>
     createCopyObj(const H5::H5File& file, const string& name);
+  %extend {
+
+    // IF THIS WORKS, DO THIS FOR ALL HDF5 INTERFACES, AND REMOVE H5.I;
+    // 
+    // IF THE H5FILE CANNOT BE CREATED,
+    //   THEN LOOK INTO DATABLOCK.HPP FOR A WORK-AROUND;
+    // 
+    // CHECK HDF5 OBJECT LIFETIMES (H5PY AND H5CPP);
+
+    std::shared_ptr<CopyObj>
+      createCopyObInGroup(long group_id, const string& name) {
+      return self->createCopyObj(H5::Group(group_id), name);
+    }
+    std::shared_ptr<CopyObj>
+      createCopyObInFile(long file_id, const string& name) {
+      return self->createCopyObj(H5::H5File(file_id), name);
+    }
+  }
   std::shared_ptr<ExtLink>
-    createExtLink(const string& filename, const string& objname);
+  createExtLink(const string& filename, const string& objname);
   // TODO: Eliminate these (requires writing hyperslabs for the combiners)
   string getPath() const;
   string getName() const;
