@@ -2,9 +2,9 @@
 
 from math import *
 
+import h5py
 import numpy as np
 
-import H5
 from SimulationIO import *
 
 dim = 3
@@ -89,8 +89,6 @@ discretized_rho = rho.createDiscreteField(
 discretized_vel = vel.createDiscreteField(
     "vel", configuration, discretization, basis)
 for p in range(ngrids):
-    dataspace = H5.DataSpace.make([nli, nlj, nlk])
-    datatype = H5.DataType(H5.PredType.NATIVE_DOUBLE)
     # Create discrete region
     rho_block = discretized_rho.createDiscreteFieldBlock(
         "%s-%s" % (rho.name(), blocks[p].name()), blocks[p])
@@ -108,10 +106,7 @@ for p in range(ngrids):
         vel_component.createDataSet_double()
 
 # Write file
-filename = "python-example.s5"
-fapl = H5.FileAccPropList()
-fapl.setLibverBounds(H5.H5F_LIBVER_LATEST, H5.H5F_LIBVER_LATEST)
-file = H5.H5File(filename, H5.H5F_ACC_TRUNC, H5.FileCreatPropList(), fapl)
+file = h5py.File(filename, "w", libver="latest")
 project.write(file)
 
 # Write data
