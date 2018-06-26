@@ -375,11 +375,9 @@ struct ExtLink: DataBlock {
 #ifdef SIMULATIONIO_HAVE_HDF5
 
 struct ASDFData: DataBlock {
-  string name() const;
 };
 
 struct ASDFRef: DataBlock {
-  string name() const;
 };
 
 #endif
