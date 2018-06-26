@@ -20,6 +20,7 @@
 #include <map>
 #include <memory>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 // Whether extra, expensive run-time tests should be enabled. Set to 0 or 1.
@@ -36,11 +37,14 @@ using SimulationIO::make_unique1;
 using std::abs;
 using std::array;
 using std::is_sorted;
+using std::make_pair;
 using std::map;
 using std::max;
 using std::min;
+using std::move;
 using std::numeric_limits;
 using std::ostream;
+using std::pair;
 using std::size_t;
 using std::sort;
 using std::unique;
@@ -107,8 +111,8 @@ T reduce(Op &&op, vector<T> &xs) {
   assert(!xs.empty());
   for (size_t dist = 1; dist < xs.size(); dist *= 2)
     for (size_t i = 0; i + dist < xs.size(); i += 2 * dist)
-      xs[i] = std::forward<Op>(op)(std::move(xs[i]), std::move(xs[i + dist]));
-  return std::move(xs[0]);
+      xs[i] = std::forward<Op>(op)(move(xs[i]), move(xs[i + dist]));
+  return move(xs[0]);
 }
 
 // // op is assignment-like
@@ -119,7 +123,7 @@ T reduce(Op &&op, vector<T> &xs) {
 //   for (size_t dist = 1; dist < xs.size(); dist *= 2)
 //     for (size_t i = 0; i + dist < x.size(); i += 2 * dist)
 //       std::forward<Op>(op)(xs[i], xs[i + dist]);
-//   return std::move(xs[0]);
+//   return move(xs[0]);
 // }
 
 template <typename F, typename Op, typename R, typename B, typename E>
@@ -1004,7 +1008,7 @@ template <typename T, int D> struct region {
     normalize();
     assert(invariant());
   }
-  region(vector<box<T, D>> &&bs) : boxes(std::move(bs)) {
+  region(vector<box<T, D>> &&bs) : boxes(move(bs)) {
     normalize();
     assert(invariant());
   }
@@ -1405,7 +1409,7 @@ template <typename T> struct region<T, 1> {
   constexpr static int D = 1;
 
   typedef region<T, D - 1> subregion_t; // This is essentially a bool
-  typedef std::vector<T> subregions_t;
+  typedef vector<T> subregions_t;
   subregions_t subregions;
 
   region() = default;
@@ -1596,7 +1600,7 @@ public:
       lbnds.push_back(box.lower()[0]);
       ubnds.push_back(box.upper()[0]);
     }
-    subregions = subregions_from_bounds(std::move(lbnds), std::move(ubnds));
+    subregions = subregions_from_bounds(move(lbnds), move(ubnds));
     assert(invariant());
   }
 
@@ -1650,12 +1654,13 @@ public:
       ubnds.push_back(pos1 + dup[0]);
     }
     region nr;
-    nr.subregions = subregions_from_bounds(std::move(lbnds), std::move(ubnds));
+    nr.subregions = subregions_from_bounds(move(lbnds), move(ubnds));
     assert(nr.invariant());
 #if REGIONCALCULUS_DEBUG
     {
       region reg;
-      for (const auto &box : vector<box<T, D>>(*this))
+      // Note: Parentheses around conversion for some compilers
+      for (const auto &box : (vector<box<T, D>>)(*this))
         reg |= box.grow(dlo, dup);
       assert(nr == reg);
     }
@@ -1825,7 +1830,7 @@ public:
 
 template <typename T, int D> struct region {
   typedef region<T, D - 1> subregion_t;
-  typedef std::map<T, subregion_t> subregions_t;
+  typedef vector<pair<T, subregion_t>> subregions_t;
   subregions_t subregions;
 
   region() = default;
@@ -1838,16 +1843,17 @@ template <typename T, int D> struct region {
     if (b.empty())
       return;
     box<T, D - 1> subbox(b.lower().subpoint(D - 1), b.upper().subpoint(D - 1));
-    subregions[b.lower()[D - 1]] = subregion_t(subbox);
-    subregions[b.upper()[D - 1]] = subregion_t(subbox);
+    subregions = {{b.lower()[D - 1], subregion_t(subbox)},
+                  {b.upper()[D - 1], subregion_t(subbox)}};
     assert(invariant());
   }
-  region(const point<T, D> &p) { *this = region(box<T, D>(p)); }
+  region(const point<T, D> &p) : region(box<T, D>(p)) {}
   template <typename U> region(const region<U, D> &r) {
+    subregions.reserve(r.subregions.size());
     for (const auto &pos_subregion : r.subregions) {
       T pos(pos_subregion.first);
       subregion_t subregion(pos_subregion.second);
-      subregions[pos] = std::move(subregion);
+      subregions.emplace_back(make_pair(pos, move(subregion)));
     }
   }
 
@@ -1907,9 +1913,8 @@ private:
           auto decoded_subregion = op(decoded_subregion0);
           auto subregion = decoded_subregion ^ old_decoded_subregion;
           if (!subregion.empty())
-            res.subregions[pos] = std::move(subregion);
-          using std::swap;
-          swap(old_decoded_subregion, decoded_subregion);
+            res.subregions.emplace_back(make_pair(pos, move(subregion)));
+          old_decoded_subregion = move(decoded_subregion);
         });
     assert(old_decoded_subregion.empty());
     assert(res.invariant());
@@ -1926,9 +1931,8 @@ private:
           auto decoded_subregion = op(decoded_subregion0, decoded_subregion1);
           auto subregion = decoded_subregion ^ old_decoded_subregion;
           if (!subregion.empty())
-            res.subregions[pos] = std::move(subregion);
-          using std::swap;
-          swap(old_decoded_subregion, decoded_subregion);
+            res.subregions.emplace_back(make_pair(pos, move(subregion)));
+          old_decoded_subregion = move(decoded_subregion);
         },
         other);
     assert(old_decoded_subregion.empty());
@@ -1981,10 +1985,30 @@ public:
   }
 
   // Conversion from and to boxes
+private:
+  static region
+  region_from_boxes(const typename vector<box<T, D>>::const_iterator &begin,
+                    const typename vector<box<T, D>>::const_iterator &end) {
+    auto sz = end - begin;
+    if (sz == 0)
+      return region();
+    if (sz == 1)
+      return region(*begin);
+    const auto mid = begin + sz / 2;
+    return region_from_boxes(begin, mid) | region_from_boxes(mid, end);
+  }
+
+public:
   region(const vector<box<T, D>> &boxes) {
-    // TODO: Use a tree reduction to make this more efficient
-    for (const auto &box : boxes)
-      *this |= region(box);
+    *this = region_from_boxes(boxes.begin(), boxes.end());
+#if REGIONCALCULUS_DEBUG
+    {
+      region reg;
+      for (const auto &box : boxes)
+        reg |= region(box);
+      assert(*this == reg);
+    }
+#endif
   }
 
   operator vector<box<T, D>>() const {
@@ -2022,15 +2046,13 @@ public:
           // The current bbox continues unchanged -- keep it
           subboxes[subbox1] = old_pos;
         } else {
-          if (active0) {
-            // The current box changed; ize it
+          if (active0)
+            // The current box changed; finalize it
             res.push_back(box<T, D>(subbox0.lower().superpoint(D - 1, old_pos),
                                     subbox0.upper().superpoint(D - 1, pos)));
-          }
-          if (active1) {
+          if (active1)
             // There is a new box; add it
             subboxes[subbox1] = pos;
-          }
         }
 
         if (active0)
@@ -2038,8 +2060,7 @@ public:
         if (active1)
           ++iter1;
       }
-      using std::swap;
-      swap(old_subboxes, subboxes);
+      old_subboxes = move(subboxes);
     });
     assert(old_subboxes.empty());
 #if REGIONCALCULUS_DEBUG
@@ -2059,13 +2080,15 @@ public:
   // Shift and scale operators
   region operator>>(const point<T, D> &d) const {
     region nr;
+    nr.subregions.reserve(subregions.size());
     T dx = d[D - 1];
     auto subd = d.subpoint(D - 1);
     for (const auto &pos_subregion : subregions) {
       const T pos = pos_subregion.first;
       const auto &subregion = pos_subregion.second;
-      nr.subregions[pos + dx] = subregion >> subd;
+      nr.subregions.emplace_back(make_pair(pos + dx, subregion >> subd));
     }
+    assert(nr.invariant());
     return nr;
   }
   region operator<<(const point<T, D> &d) const { return *this >> -d; }
@@ -2253,7 +2276,7 @@ template <typename T> struct vpoint {
     auto rT(vector<T>(*this));
     vector<U> rU(rT.size());
     for (size_t i = 0; i < rU.size(); ++i)
-      rU[i] = U(std::move(rT[i]));
+      rU[i] = U(move(rT[i]));
     return rU;
   }
   template <typename U> static unique_ptr<vpoint> make(const vpoint<U> &p);
@@ -2502,7 +2525,7 @@ template <typename T, int D> struct wpoint : vpoint<T> {
     vector<T> rT(val);
     vector<U> rU(rT.size());
     for (size_t i = 0; i < rU.size(); ++i)
-      rU[i] = U(std::move(rT[i]));
+      rU[i] = U(move(rT[i]));
     return rU;
   }
   template <typename U> wpoint(const wpoint<U, D> &p) : val(p.val) {}
@@ -2818,7 +2841,7 @@ template <typename T, int D> struct wregion : vregion<T> {
   }
 
   wregion(const region<T, D> &r) : val(r) {}
-  wregion(region<T, D> &&r) : val(std::move(r)) {}
+  wregion(region<T, D> &&r) : val(move(r)) {}
 
   wregion() = default;
   wregion(const wbox<T, D> &b) : val(b.val) {}
@@ -3293,7 +3316,7 @@ template <typename T> struct dpoint {
     if (val)
       this->val = val->copy();
   }
-  dpoint(unique_ptr<vpoint<T>> &&val) : val(std::move(val)) {}
+  dpoint(unique_ptr<vpoint<T>> &&val) : val(move(val)) {}
 
   explicit dpoint(int d) : val(vpoint<T>::make(d)) {}
   dpoint(int d, T x) : val(vpoint<T>::make(d, x)) {}
@@ -3516,7 +3539,7 @@ template <typename T> struct dbox {
     if (val)
       this->val = val->copy();
   }
-  dbox(unique_ptr<vbox<T>> &&val) : val(std::move(val)) {}
+  dbox(unique_ptr<vbox<T>> &&val) : val(move(val)) {}
 
   explicit dbox(int d) : val(vbox<T>::make(d)) {}
   dbox(const dpoint<T> &lo, const dpoint<T> &hi)
@@ -3659,7 +3682,7 @@ template <typename T> struct dregion {
     if (val)
       this->val = val->copy();
   }
-  dregion(unique_ptr<vregion<T>> &&val) : val(std::move(val)) {}
+  dregion(unique_ptr<vregion<T>> &&val) : val(move(val)) {}
 
   explicit dregion(int d) : val(vregion<T>::make(d)) {}
   dregion(const dbox<T> &b) : val(vregion<T>::make(*b.val)) {}
@@ -3667,19 +3690,19 @@ template <typename T> struct dregion {
     vector<unique_ptr<vbox<T>>> rs;
     for (const auto &b : bs)
       rs.push_back(b.val->copy());
-    val = vregion<T>::make(std::move(rs));
+    val = vregion<T>::make(move(rs));
   }
   dregion(vector<dbox<T>> &&bs) {
     vector<unique_ptr<vbox<T>>> rs;
     for (auto &b : bs)
-      rs.push_back(std::move(b.val));
-    val = vregion<T>::make(std::move(rs));
+      rs.push_back(move(b.val));
+    val = vregion<T>::make(move(rs));
   }
   operator vector<dbox<T>>() const {
     vector<unique_ptr<vbox<T>>> bs(*val);
     vector<dbox<T>> rs;
     for (auto &b : bs)
-      rs.push_back(dbox<T>(std::move(b)));
+      rs.push_back(dbox<T>(move(b)));
     return rs;
   }
   template <typename U> dregion(const dregion<U> &p) {
