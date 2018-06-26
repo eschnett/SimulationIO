@@ -93,7 +93,7 @@ struct CopyObj;
 struct DataSet;
 struct ExtLink;
 #endif
-#ifdef SIMULATIONIO_HAVE_HDF5
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 struct ASDFData;
 struct ASDFRef;
 #endif
@@ -372,7 +372,7 @@ struct ExtLink: DataBlock {
 
 #endif
 
-#ifdef SIMULATIONIO_HAVE_HDF5
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
 
 struct ASDFData: DataBlock {
 };
@@ -488,7 +488,7 @@ struct DiscreteFieldBlockComponent {
   std::shared_ptr<CopyObj> copyobj() const;
   std::shared_ptr<ExtLink> extlink() const;
 #endif
-#ifdef SIMULATIONIO_HAVE_HDF5
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   std::shared_ptr<ASDFData> asdfdata() const;
   std::shared_ptr<ASDFRef> asdfref() const;
 #endif
