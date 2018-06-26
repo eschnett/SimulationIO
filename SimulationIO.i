@@ -54,11 +54,17 @@ public:
 // using std::shared_ptr;
 using std::string;
 
-%shared_ptr(CopyObj);
 %shared_ptr(DataBlock);
 %shared_ptr(DataRange);
+#ifdef SIMULATIONIO_HAVE_HDF5
+%shared_ptr(CopyObj);
 %shared_ptr(DataSet);
 %shared_ptr(ExtLink);
+#endif
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+%shared_ptr(ASDFData);
+%shared_ptr(ASDFRef);
+#endif
 
 %shared_ptr(Basis);
 %shared_ptr(BasisVector);
@@ -80,11 +86,17 @@ using std::string;
 %shared_ptr(TensorComponent);
 %shared_ptr(TensorType);
 
-struct CopyObj;
 struct DataBlock;
 struct DataRange;
+#ifdef SIMULATIONIO_HAVE_HDF5
+struct CopyObj;
 struct DataSet;
 struct ExtLink;
+#endif
+#ifdef SIMULATIONIO_HAVE_HDF5
+struct ASDFData;
+struct ASDFRef;
+#endif
 
 struct Basis;
 struct BasisVector;
@@ -193,11 +205,17 @@ struct TensorType;
 %template(map_string_weak_ptr_TensorType)
   std::map<string, std::weak_ptr<TensorType> >;
 
-%template(shared_ptr_CopyObj) std::shared_ptr<CopyObj>;
 %template(shared_ptr_DataBlock) std::shared_ptr<DataBlock>;
 %template(shared_ptr_DataRange) std::shared_ptr<DataRange>;
+#ifdef SIMULATIONIO_HAVE_HDF5
+%template(shared_ptr_CopyObj) std::shared_ptr<CopyObj>;
 %template(shared_ptr_DataSet) std::shared_ptr<DataSet>;
 %template(shared_ptr_ExtLink) std::shared_ptr<ExtLink>;
+#endif
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+%template(shared_ptr_ASDFData) std::shared_ptr<ASDFData>;
+%template(shared_ptr_ASDFRef) std::shared_ptr<ASDFRef>;
+#endif
 
 %template(shared_ptr_Basis)
   std::shared_ptr<Basis>;
@@ -297,6 +315,8 @@ struct DataRange: DataBlock {
   std::vector<double> delta() const;
 };
 
+#ifdef SIMULATIONIO_HAVE_HDF5
+
 struct DataSet: DataBlock {
   // H5::DataSpace dataspace() const;
   // H5::DataType datatype() const;
@@ -349,6 +369,20 @@ struct ExtLink: DataBlock {
   string filename() const;
   string objname() const;
 };
+
+#endif
+
+#ifdef SIMULATIONIO_HAVE_HDF5
+
+struct ASDFData: DataBlock {
+  string name() const;
+};
+
+struct ASDFRef: DataBlock {
+  string name() const;
+};
+
+#endif
 
 
 
@@ -451,13 +485,20 @@ struct DiscreteFieldBlockComponent {
   std::shared_ptr<TensorComponent> tensorcomponent() const;
   std::shared_ptr<DataBlock> datablock() const;
   std::shared_ptr<DataRange> datarange() const;
+#ifdef SIMULATIONIO_HAVE_HDF5
   std::shared_ptr<DataSet> dataset() const;
   std::shared_ptr<CopyObj> copyobj() const;
   std::shared_ptr<ExtLink> extlink() const;
+#endif
+#ifdef SIMULATIONIO_HAVE_HDF5
+  std::shared_ptr<ASDFData> asdfdata() const;
+  std::shared_ptr<ASDFRef> asdfref() const;
+#endif
   bool invariant() const;
   void unsetDataBlock();
   std::shared_ptr<DataRange>
     createDataRange(double origin, const std::vector<double>& delta);
+#ifdef SIMULATIONIO_HAVE_HDF5
   %extend {
     std::shared_ptr<DataSet> createDataSet_int() {
       return self->createDataSet<int>();
@@ -466,7 +507,6 @@ struct DiscreteFieldBlockComponent {
       return self->createDataSet<double>();
     }
   }
-#ifdef SIMULATIONIO_HAVE_HDF5
   std::shared_ptr<CopyObj>
     createCopyObj(const H5::Group& group, const string& name);
   std::shared_ptr<CopyObj>
@@ -481,9 +521,9 @@ struct DiscreteFieldBlockComponent {
   //     return self->createCopyObj(H5::H5File(file_id), name);
   //   }
   // }
-#endif
   std::shared_ptr<ExtLink>
   createExtLink(const string& filename, const string& objname);
+#endif
   // TODO: Eliminate these (requires writing hyperslabs for the combiners)
   string getPath() const;
   string getName() const;
