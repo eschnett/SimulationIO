@@ -165,7 +165,7 @@ set_property(TARGET SimulationIO PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND AND SWIG_FOUND)
   set_source_files_properties(RegionCalculus.i PROPERTIES CPLUSPLUS ON)
   swig_add_module(RegionCalculus python RegionCalculus.i)
-  swig_link_libraries(RegionCalculus SimulationIO ${PYTHON_LIBRARIES})
+  swig_link_libraries(RegionCalculus ${LIBS} ${PYTHON_LIBRARIES})
 
   set_source_files_properties(SimulationIO.i PROPERTIES CPLUSPLUS ON)
   swig_add_module(SimulationIO python SimulationIO.i)
@@ -249,7 +249,7 @@ include_directories("${GOOGLETEST_DIR}/include" "${GOOGLETEST_DIR}")
 
 add_executable(test_RegionCalculus
   test_RegionCalculus.cpp "${GOOGLETEST_DIR}/src/gtest-all.cc")
-target_link_libraries(test_RegionCalculus SimulationIO Threads::Threads)
+target_link_libraries(test_RegionCalculus ${LIBS} Threads::Threads)
 
 add_executable(test_SimulationIO
   test_SimulationIO.cpp "${GOOGLETEST_DIR}/src/gtest-all.cc")
