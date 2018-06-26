@@ -1658,9 +1658,10 @@ public:
     assert(nr.invariant());
 #if REGIONCALCULUS_DEBUG
     {
+      const vector<box<T, D>> boxes(*this);
       region reg;
       // Note: Parentheses around conversion for some compilers
-      for (const auto &box : (vector<box<T, D>>)(*this))
+      for (const auto &box : boxes)
         reg |= box.grow(dlo, dup);
       assert(nr == reg);
     }
