@@ -7,7 +7,6 @@ import sys
 
 import numpy as np
 
-import H5
 import RegionCalculus as RC
 import SimulationIO as SIO
 
@@ -61,10 +60,8 @@ def message(*msgs):
 
 
 # Read project
-file = H5.H5File()
-file.openFile(input_filename, H5.H5F_ACC_RDONLY, H5.FileAccPropList())
 message("Reading project...")
-project = SIO.readProject(file)
+project = SIO.readProjectHDF5(input_filename)
 indent()
 message("Project \"%s\"" % project.name())
 outdent()
@@ -263,12 +260,7 @@ for coordinatesystem in project.coordinatesystems().values():
 outdent()
 
 # Write project
-cpl = H5.FileCreatPropList()
-apl = H5.FileAccPropList()
-apl.setFcloseDegree(H5.H5F_CLOSE_STRONG)
-apl.setLibverBounds(H5.H5F_LIBVER_LATEST, H5.H5F_LIBVER_LATEST)
-file2 = H5.H5File(output_filename, H5.H5F_ACC_TRUNC, cpl, apl)
-project2.write(file2)
+project2.writeHDF5(output_filename)
 
 message()
 message("Copying data..")
@@ -384,8 +376,6 @@ for field2 in project2.fields().values():
 
     outdent()
 outdent()
-
-file2.close()
 
 message()
 message("Done.")

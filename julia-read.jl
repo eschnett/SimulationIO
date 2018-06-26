@@ -2,7 +2,6 @@
 
 using PyCall
 
-@pyimport H5
 @pyimport SimulationIO as SIO
 
 
@@ -30,8 +29,7 @@ tensorcomponentname = "scalar"
 # tensorcomponentname = "1"
 
 # Read project
-file = H5.H5File(filename, H5.H5F_ACC_RDONLY)
-project = SIO.readProject(file)
+project = SIO.readProjectHDF5(filename)
 
 rsum = 0.0
 rsum2 = 0.0

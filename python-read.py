@@ -1,13 +1,12 @@
 #! /usr/bin/env python
 
-import H5
-from RegionCalculus import *
-from SimulationIO import *
+from math import *
+import sys
 
 import numpy as np
 
-from math import *
-import sys
+from RegionCalculus import *
+from SimulationIO import *
 
 
 
@@ -15,9 +14,7 @@ import sys
 
 # Read project
 filename = "python-example.s5"
-file = H5.H5File(filename, H5.H5F_ACC_RDONLY, H5.FileCreatPropList(),
-                 H5.FileAccPropList())
-project = readProject(file)
+project = readProjectHDF5("python-example.s5")
 
 rsum = 0.0
 rsum2 = 0.0

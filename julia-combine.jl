@@ -5,7 +5,6 @@ using PyCall
 # Add current directory to Python module search path
 unshift!(PyVector(pyimport("sys")["path"]), "")
 
-@pyimport H5
 @pyimport RegionCalculus as RC
 @pyimport SimulationIO as SIO
 
@@ -25,10 +24,8 @@ filename = "cactus/iof5-uniform-p2.s5"
 filename2 = "cactus/iof5-uniform-p2-combined.s5"
 
 # Read project
-file = H5.H5File()
-file[:openFile](filename, H5.H5F_ACC_RDONLY, H5.FileAccPropList())
 message("Reading project...")
-project = SIO.readProject(file)
+project = SIO.readProjectHDF5(filename)
 indent()
 message("Project \"$(project[:name]())\"")
 outdent()
@@ -243,13 +240,7 @@ end
 outdent()
 
 # Write project
-cpl = H5.FileCreatPropList()
-apl = H5.FileAccPropList()
-apl[:setFcloseDegree](H5.H5F_CLOSE_STRONG)
-# apl[:setLibverBounds](H5.H5F_LIBVER_LATEST, H5.H5F_LIBVER_LATEST)
-file2 = H5.H5File(filename2, H5.H5F_ACC_TRUNC, cpl, apl)
-project2[:write](file2)
-file2[:close]()
+project2[:writeHDF5](filename2)
 
 message()
 message("Copying data..")

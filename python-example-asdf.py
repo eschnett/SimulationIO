@@ -104,7 +104,10 @@ for p in range(ngrids):
             dirnames[d], vector3d_component)
         vel_component.createDataSet_double()
 
-# Attach data
+# Write file
+project.writeASDF("python-example.asdf")
+
+# Write data
 for pk in range(npk):
     for pj in range(npj):
         for pi in range(npi):
@@ -116,9 +119,6 @@ for pk in range(npk):
             datavelx = np.empty((nli,nlj,nlk), order='F')
             datavely = np.empty((nli,nlj,nlk), order='F')
             datavelz = np.empty((nli,nlj,nlk), order='F')
-            # lo = RC.point_t([nli * pi, nlj * pj, nlk * pk])
-            # hi = lo + RC.point_t([nli, nlj, nlk])
-            # box = RC.box_t(lo, hi)
             for lk in range(nlk):
                 for lj in range(nlj):
                     for li in range(nli):
@@ -141,9 +141,8 @@ for pk in range(npk):
                 block = discretefield.discretefieldblocks()[
                     "%s-%s" % (discretefield.name(), blocks[p].name())]
                 component = block.discretefieldblockcomponents()["scalar"]
-                box = block.discretizationblock().box()
-                component.dataset().attachData_double(
-                    np.reshape([coordx, coordy, coordz][d], npoints), box)
+                component.dataset().writeData_double(
+                    np.reshape([coordx, coordy, coordz][d], npoints))
             # Write rho
             for d in range(1):
                 field = rho
@@ -151,9 +150,8 @@ for pk in range(npk):
                 block = discretefield.discretefieldblocks()[
                     "%s-%s" % (discretefield.name(), blocks[p].name())]
                 component = block.discretefieldblockcomponents()["scalar"]
-                box = block.discretizationblock().box()
-                component.dataset().attachData_double(
-                    np.reshape(datarho, npoints), box)
+                component.dataset().writeData_double(
+                    np.reshape(datarho, npoints))
             # Write velocity
             for d in range(dim):
                 field = vel
@@ -161,9 +159,5 @@ for pk in range(npk):
                 block = discretefield.discretefieldblocks()[
                     "%s-%s" % (discretefield.name(), blocks[p].name())]
                 component = block.discretefieldblockcomponents()[dirnames[d]]
-                box = block.discretizationblock().box()
-                component.dataset().attachData_double(
-                    np.reshape([datavelx, datavely, datavelz][d], npoints), box)
-
-# Write file
-project.writeHDF5("python-example-attach.s5")
+                component.dataset().writeData_double(
+                    np.reshape([datavelx, datavely, datavelz][d], npoints))

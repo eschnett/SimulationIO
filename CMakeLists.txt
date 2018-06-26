@@ -6,7 +6,7 @@ cmake_policy(SET CMP0048 NEW)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 
-project(SimulationIO VERSION 6.0.0 LANGUAGES C CXX)
+project(SimulationIO VERSION 7.0.0 LANGUAGES C CXX)
 set(PROJECT_DESCRIPTION
   "SimulationIO: Efficient and convenient I/O for large PDE simulations")
 set(PROJECT_URL "https://github.com/eschnett/SimulationIO")
@@ -161,24 +161,14 @@ set_property(TARGET SimulationIO PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 
 # SWIG bindings
 
-if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND AND
-    H5PY_FOUND AND NUMPY_FOUND AND SWIG_FOUND)
-  set_source_files_properties(H5.i PROPERTIES CPLUSPLUS ON)
-  swig_add_module(H5 python H5.i)
-  # set_property(TARGET ${SWIG_MODULE_H5_REAL_NAME} PROPERTY CXX_STANDARD 11
-  # set_property(TARGET ${SWIG_MODULE_H5_REAL_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
-  swig_link_libraries(H5 SimulationIO ${PYTHON_LIBRARIES})
-
+#  AND H5PY_FOUND AND ASDF_FOUND
+if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND AND SWIG_FOUND)
   set_source_files_properties(RegionCalculus.i PROPERTIES CPLUSPLUS ON)
   swig_add_module(RegionCalculus python RegionCalculus.i)
-  # set_property(TARGET ${SWIG_MODULE_RegionCalculus_REAL_NAME} PROPERTY CXX_STANDARD 11)
-  # set_property(TARGET ${SWIG_MODULE_RegionCalculus_REAL_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
   swig_link_libraries(RegionCalculus SimulationIO ${PYTHON_LIBRARIES})
 
   set_source_files_properties(SimulationIO.i PROPERTIES CPLUSPLUS ON)
   swig_add_module(SimulationIO python SimulationIO.i)
-  # set_property(TARGET ${SWIG_MODULE_SimulationIO_REAL_NAME} PROPERTY CXX_STANDARD 11)
-  # set_property(TARGET ${SWIG_MODULE_SimulationIO_REAL_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
   swig_link_libraries(SimulationIO SimulationIO ${PYTHON_LIBRARIES})
 endif()
 
@@ -293,26 +283,36 @@ if(HDF5_FOUND AND ASDF_CXX_FOUND)
     COMMAND ${CMAKE_SOURCE_DIR}/diff-commands.sh
               "./sio-list-asdf example.asdf" "./sio-list-asdf example3.asdf")
 endif()
-if(HDF5_FOUND AND PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND AND H5PY_FOUND AND
+if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND AND H5PY_FOUND AND
      NUMPY_FOUND AND SWIG_FOUND)
-  add_test(NAME python-example
-    COMMAND
-    env "PYTHONPATH=${PROJECT_BINARY_DIR}:$ENV{PYTHONPATH}"
-    ${PYTHON_EXECUTABLE} "${PROJECT_SOURCE_DIR}/python-example.py")
-  add_test(NAME python-example-attach
-    COMMAND
-    env "PYTHONPATH=${PROJECT_BINARY_DIR}:$ENV{PYTHONPATH}"
-    ${PYTHON_EXECUTABLE} "${PROJECT_SOURCE_DIR}/python-example-attach.py")
-  add_test(NAME python-read
-    COMMAND
-    env "PYTHONPATH=${PROJECT_BINARY_DIR}:$ENV{PYTHONPATH}"
-    ${PYTHON_EXECUTABLE} "${PROJECT_SOURCE_DIR}/python-read.py")
-  add_test(NAME h5format_convert
-    COMMAND h5format_convert python-example.s5)
-  add_test(NAME python-read-direct
-    COMMAND
-    env "PYTHONPATH=${PROJECT_BINARY_DIR}:$ENV{PYTHONPATH}"
-    ${PYTHON_EXECUTABLE} "${PROJECT_SOURCE_DIR}/python-read-direct.py")
+  if(HDF5_FOUND)
+    add_test(NAME python-example
+      COMMAND
+      env "PYTHONPATH=${PROJECT_BINARY_DIR}:$ENV{PYTHONPATH}"
+      ${PYTHON_EXECUTABLE} "${PROJECT_SOURCE_DIR}/python-example.py")
+    add_test(NAME python-example-attach
+      COMMAND
+      env "PYTHONPATH=${PROJECT_BINARY_DIR}:$ENV{PYTHONPATH}"
+      ${PYTHON_EXECUTABLE} "${PROJECT_SOURCE_DIR}/python-example-attach.py")
+    add_test(NAME python-read
+      COMMAND
+      env "PYTHONPATH=${PROJECT_BINARY_DIR}:$ENV{PYTHONPATH}"
+      ${PYTHON_EXECUTABLE} "${PROJECT_SOURCE_DIR}/python-read.py")
+    add_test(NAME h5format_convert
+      COMMAND h5format_convert python-example.s5)
+    if(H5PY_FOUND)
+      add_test(NAME python-read-h5py
+        COMMAND
+        env "PYTHONPATH=${PROJECT_BINARY_DIR}:$ENV{PYTHONPATH}"
+        ${PYTHON_EXECUTABLE} "${PROJECT_SOURCE_DIR}/python-read-h5py.py")
+    endif()
+  endif()
+  if(ASDF_FOUND)
+    add_test(NAME python-example-asdf
+      COMMAND
+      env "PYTHONPATH=${PROJECT_BINARY_DIR}:$ENV{PYTHONPATH}"
+      ${PYTHON_EXECUTABLE} "${PROJECT_SOURCE_DIR}/python-example-asdf.py")
+  endif()
 endif()
 
 # Install
@@ -354,7 +354,6 @@ install(TARGETS ${EXES} DESTINATION bin)
 
 if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND AND
     H5PY_FOUND AND NUMPY_FOUND AND SWIG_FOUND)
-  install(TARGETS ${SWIG_MODULE_H5_REAL_NAME} DESTINATION lib)
   install(TARGETS ${SWIG_MODULE_RegionCalculus_REAL_NAME} DESTINATION lib)
   install(TARGETS ${SWIG_MODULE_SimulationIO_REAL_NAME} DESTINATION lib)
 endif()
