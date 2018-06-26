@@ -45,6 +45,7 @@ using std::move;
 using std::numeric_limits;
 using std::ostream;
 using std::pair;
+using std::ptrdiff_t;
 using std::size_t;
 using std::sort;
 using std::unique;
