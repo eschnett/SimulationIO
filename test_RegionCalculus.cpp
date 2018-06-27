@@ -2,17 +2,23 @@
 
 #include <gtest/gtest.h>
 
+#include <array>
 #include <cstdlib>
 #include <functional>
 #include <random>
+#include <set>
 #include <sstream>
+#include <vector>
 
+using std::array;
 using std::equal_to;
 using std::ostringstream;
+using std::set;
+using std::vector;
 
 int irand(int imax) {
   static std::mt19937 rng;
-  return std::uniform_int_distribution<>(0, imax + 1)(rng);
+  return std::uniform_int_distribution<>(0, imax)(rng);
 }
 
 using namespace RegionCalculus;
@@ -518,6 +524,261 @@ TEST(RegionCalculus, region2) {
   EXPECT_EQ("{([0,0,0]:[1,1,1]),([1,1,1]:[2,2,2])}", buf.str());
 }
 
+// Get random set element
+template <typename T> T getelt(const set<T> &xs) {
+  assert(!xs.empty());
+  int n = irand(xs.size() - 1);
+  auto p = xs.begin();
+  for (int i = 0; i < n; ++i)
+    ++p;
+  return *p;
+}
+
+template <int D> void test_point() {
+  typedef point<int, D> P;
+
+  // Create a few points
+  set<P> ps;
+  while (ps.size() < 10) {
+    array<int, D> xs;
+    for (int d = 0; d < D; ++d)
+      xs[d] = irand(10);
+    P p(xs);
+    ps.insert(p);
+  }
+
+  const int niters = 100;
+  for (int n = 0; n < niters; ++n) {
+    auto p1 = getelt(ps);
+    auto p2 = getelt(ps);
+    auto p3 = getelt(ps);
+    std::equal_to<P> eq;
+    std::less<P> lt;
+    auto eq1 = eq(p1, p2);
+    auto eq2 = eq(p2, p1);
+    auto eq3 = eq(p2, p3);
+    auto eq4 = eq(p1, p3);
+    auto lt1 = lt(p1, p2);
+    auto lt2 = lt(p2, p1);
+    auto lt3 = lt(p2, p3);
+    auto lt4 = lt(p1, p3);
+    EXPECT_TRUE(eq1 == eq2); // eq is reflexive
+    EXPECT_FALSE(eq1 && lt1);
+    EXPECT_FALSE(eq1 && lt2);
+    EXPECT_FALSE(lt1 && lt2); // lt is irreflexive
+    EXPECT_EQ(1, eq1 + lt1 + lt2);
+    if (eq1 && eq3)
+      EXPECT_TRUE(eq4); // eq is transitive
+    if (lt1 && lt3)
+      EXPECT_TRUE(lt4); // lt is transitive
+  }
+}
+
+template <int D> void test_box() {
+  typedef point<int, D> P;
+  typedef box<int, D> B;
+
+  // Create a few boxes
+  set<B> bs;
+  bs.insert(B());
+  while (bs.size() < 10) {
+    array<int, D> xs, ys;
+    for (int d = 0; d < D; ++d) {
+      xs[d] = irand(10);
+      ys[d] = irand(10);
+    }
+    P px(xs), py(ys);
+    B b{xs, ys};
+    bs.insert(b);
+  }
+
+  const int niters = 100;
+  for (int n = 0; n < niters; ++n) {
+    const auto b1 = getelt(bs);
+    const auto b2 = getelt(bs);
+    const auto bint = b1 & b2;
+    const auto bbox = b1.bounding_box(b2);
+    EXPECT_TRUE(bint <= b1);
+    EXPECT_TRUE(bint <= b2);
+    EXPECT_TRUE(b1 <= bbox);
+    EXPECT_TRUE(b2 <= bbox);
+    EXPECT_TRUE(bint <= bbox);
+    bs.insert(bint);
+    bs.insert(bbox);
+
+    array<int, D> xs, ys;
+    for (int d = 0; d < D; ++d) {
+      xs[d] = irand(5) - 2;
+      ys[d] = irand(5) - 2;
+    }
+    P plo(xs);
+    P phi(ys);
+    const auto bshl = b1 << plo;
+    const auto bshr = b2 >> phi;
+    const auto bgro = b1.grow(plo, phi);
+    const auto bred = b2.shrink(plo, phi);
+    EXPECT_TRUE((bshl >> plo) == b1);
+    EXPECT_TRUE((bshr << phi) == b2);
+    if (all(plo + phi >= P(0))) {
+      EXPECT_TRUE(bgro.size() >= b1.size());
+      EXPECT_TRUE(bred.size() <= b2.size());
+      EXPECT_TRUE(bgro.shrink(plo, phi) >= b1);
+      EXPECT_TRUE(bred.grow(plo, phi) <= b2);
+    }
+    bs.insert(bshl);
+    bs.insert(bshr);
+    bs.insert(bgro);
+    bs.insert(bred);
+  }
+
+  for (int n = 0; n < niters; ++n) {
+    auto b1 = getelt(bs);
+    auto b2 = getelt(bs);
+    auto b3 = getelt(bs);
+    std::equal_to<B> eq;
+    std::less<B> lt;
+    auto eq1 = eq(b1, b2);
+    auto eq2 = eq(b2, b1);
+    auto eq3 = eq(b2, b3);
+    auto eq4 = eq(b1, b3);
+    auto lt1 = lt(b1, b2);
+    auto lt2 = lt(b2, b1);
+    auto lt3 = lt(b2, b3);
+    auto lt4 = lt(b1, b3);
+    EXPECT_TRUE(eq1 == eq2); // eq is reflexive
+    EXPECT_FALSE(eq1 && lt1);
+    EXPECT_FALSE(eq1 && lt2);
+    EXPECT_FALSE(lt1 && lt2); // lt is irreflexive
+    EXPECT_EQ(1, eq1 + lt1 + lt2);
+    if (eq1 && eq3)
+      EXPECT_TRUE(eq4); // eq is transitive
+    if (lt1 && lt3)
+      EXPECT_TRUE(lt4); // lt is transitive
+  }
+}
+
+template <int D> void test_region() {
+  typedef point<int, D> P;
+  typedef box<int, D> B;
+  typedef region<int, D> R;
+
+  // Create a few regions
+  set<R> rs;
+  rs.insert(R());
+  while (rs.size() < 10) {
+    array<int, D> xs, ys;
+    for (int d = 0; d < D; ++d) {
+      xs[d] = irand(10);
+      ys[d] = irand(10);
+    }
+    P px(xs), py(ys);
+    B b{xs, ys};
+    R r(b);
+    rs.insert(r);
+  }
+
+  // Perform a few operations
+  const auto getelt = [](const set<R> &rs) {
+    assert(!rs.empty());
+    int n = irand(rs.size() - 1);
+    auto p = rs.begin();
+    for (int i = 0; i < n; ++i)
+      ++p;
+    return *p;
+  };
+
+  const int niters = 1000 >> (2 * (D - 1));
+  for (int n = 0; n < niters; ++n) {
+    const auto r1 = getelt(rs);
+    const auto r2 = getelt(rs);
+    const auto rint = r1 & r2;
+    const auto runi = r1 | r2;
+    const auto rsym = r1 ^ r2;
+    const auto rdif = r1 - r2;
+    EXPECT_TRUE(rint <= r1);
+    EXPECT_TRUE(rint <= r2);
+    EXPECT_TRUE(r1 <= runi);
+    EXPECT_TRUE(r2 <= runi);
+    EXPECT_TRUE(rint <= runi);
+    EXPECT_TRUE(rsym <= runi);
+    EXPECT_TRUE(rsym.isdisjoint(rint));
+    EXPECT_TRUE(rdif <= r1);
+    EXPECT_TRUE(rdif.isdisjoint(r2));
+    EXPECT_TRUE((rsym | rint) == runi);
+    rs.insert(rint);
+    rs.insert(runi);
+    rs.insert(rsym);
+    rs.insert(rdif);
+
+    P plo, phi;
+    while (1) {
+      array<int, D> xs, ys;
+      for (int d = 0; d < D; ++d) {
+        xs[d] = irand(5) - 2;
+        ys[d] = irand(5) - 2;
+      }
+      plo = P(xs);
+      phi = P(ys);
+      if (all(plo + phi >= P(0)))
+        break;
+    }
+    const auto rshl = r1 << plo;
+    const auto rshr = r2 >> phi;
+    const auto rgro = r1.grow(plo, phi);
+    const auto rred = r2.shrink(plo, phi);
+    EXPECT_TRUE((rshl >> plo) == r1);
+    EXPECT_TRUE((rshr << phi) == r2);
+    EXPECT_TRUE(rgro.size() >= r1.size());
+    EXPECT_TRUE(rred.size() <= r2.size());
+    EXPECT_TRUE(rgro.shrink(plo, phi) >= r1);
+    EXPECT_TRUE(rred.grow(plo, phi) <= r2);
+    rs.insert(rshl);
+    rs.insert(rshr);
+    rs.insert(rgro);
+    rs.insert(rred);
+  }
+
+  for (int n = 0; n < niters; ++n) {
+    auto r1 = getelt(rs);
+    auto r2 = getelt(rs);
+    auto r3 = getelt(rs);
+    std::equal_to<R> eq;
+    std::less<R> lt;
+    auto eq1 = eq(r1, r2);
+    auto eq2 = eq(r2, r1);
+    auto eq3 = eq(r2, r3);
+    auto eq4 = eq(r1, r3);
+    auto lt1 = lt(r1, r2);
+    auto lt2 = lt(r2, r1);
+    auto lt3 = lt(r2, r3);
+    auto lt4 = lt(r1, r3);
+    EXPECT_TRUE(eq1 == eq2); // eq is reflexive
+    EXPECT_FALSE(eq1 && lt1);
+    EXPECT_FALSE(eq1 && lt2);
+    EXPECT_FALSE(lt1 && lt2); // lt is irreflexive
+    EXPECT_EQ(1, eq1 + lt1 + lt2);
+    if (eq1 && eq3)
+      EXPECT_TRUE(eq4); // eq is transitive
+    if (lt1 && lt3)
+      EXPECT_TRUE(lt4); // lt is transitive
+  }
+}
+
+TEST(RegionCalculus, point_1d) { test_point<1>(); }
+TEST(RegionCalculus, point_2d) { test_point<2>(); }
+TEST(RegionCalculus, point_3d) { test_point<3>(); }
+TEST(RegionCalculus, point_4d) { test_point<4>(); }
+
+TEST(RegionCalculus, box_1d) { test_box<1>(); }
+TEST(RegionCalculus, box_2d) { test_box<2>(); }
+TEST(RegionCalculus, box_3d) { test_box<3>(); }
+TEST(RegionCalculus, box_4d) { test_box<4>(); }
+
+TEST(RegionCalculus, region_1d) { test_region<1>(); }
+TEST(RegionCalculus, region_2d) { test_region<2>(); }
+TEST(RegionCalculus, region_3d) { test_region<3>(); }
+TEST(RegionCalculus, region_4d) { test_region<4>(); }
+
 TEST(RegionCalculus, dpoint) {
   const int dim = 3;
   typedef dpoint<int> dpoint;
@@ -818,6 +1079,9 @@ TEST(RegionCalculus, dbox_dim) {
     dbox b5 = b4 >> p1;
     dbox b3 = b4 << p1;
     dbox b6 = b3 * dpoint(dim, 2);
+    dbox b7 = b4.grow(p0, p1);
+    dbox b8 = b4.grow(p1, p0);
+    dbox b9 = b4.shrink(p0, p1);
     EXPECT_EQ(b4, dbox(::dbox<long long>(b4)));
     EXPECT_TRUE(b4 == b4);
     if (dim == 0)
@@ -946,6 +1210,10 @@ TEST(RegionCalculus, dregion_dim) {
     rs.push_back(r12);
     rs.push_back(r2.difference(r1));
     rs.push_back(r2.symmetric_difference(r12));
+    rs.push_back(r2 >> p1);
+    rs.push_back(r2 << p1);
+    rs.push_back(r2.grow(p1));
+    rs.push_back(r2.shrink(p1));
     for (std::size_t i = 0; i < rs.size(); ++i) {
       const auto &ri = rs[i];
       EXPECT_TRUE(ri.invariant());
@@ -1075,6 +1343,7 @@ TEST(RegionCalculus, box_double) {
   box b6 = b3 * point(2);
   box b7 = b4.grow(p0, p1);
   box b8 = b4.grow(p1, p0);
+  box b9 = b4.shrink(p0, p1);
   EXPECT_EQ(b4, (box(::box<double, 3>(b4))));
   EXPECT_TRUE(b4 == b4);
   EXPECT_TRUE(b4 != b5);
