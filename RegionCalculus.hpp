@@ -19,6 +19,7 @@
 #include <limits>
 #include <map>
 #include <memory>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -36,8 +37,12 @@ using SimulationIO::make_unique1;
 
 using std::abs;
 using std::array;
+using std::equal_to;
+using std::hash;
 using std::is_sorted;
+using std::less;
 using std::make_pair;
+using std::make_tuple;
 using std::map;
 using std::max;
 using std::min;
@@ -48,6 +53,7 @@ using std::pair;
 using std::ptrdiff_t;
 using std::size_t;
 using std::sort;
+using std::tuple;
 using std::unique;
 using std::unique_ptr;
 using std::vector;
@@ -55,6 +61,14 @@ using std::vector;
 ////////////////////////////////////////////////////////////////////////////////
 // C++ helper functions
 ////////////////////////////////////////////////////////////////////////////////
+
+// Combine hashes
+template <typename T> size_t hash_combine(size_t seed, const T &x) {
+  hash<T> h;
+  // Taken from Boost
+  return seed ^
+         h(x) + size_t(0x00e6052366ac4440eULL) + (seed << 6) + (seed >> 2);
+}
 
 namespace detail {
 // Abort when called
@@ -405,6 +419,12 @@ template <typename T, int D> struct point {
     }
     return false;
   }
+  size_t hash() const {
+    size_t r = size_t(0xb89a122a8c3f540eULL);
+    for (int d = 0; d < D; ++d)
+      r = hash_combine(r, elt[d]);
+    return r;
+  }
 
   // Reductions
   bool all() const {
@@ -591,6 +611,11 @@ template <typename T, int D> struct less<RegionCalculus::point<T, D>> {
     return p.less(q);
   }
 };
+template <typename T, int D> struct hash<RegionCalculus::point<T, D>> {
+  size_t operator()(const RegionCalculus::point<T, D> &p) const {
+    return p.hash();
+  }
+};
 } // namespace std
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -648,6 +673,10 @@ template <typename T> struct box<T, 0> {
 
   bool equal_to(const box &p) const { return m_full == p.m_full; }
   bool less(const box &p) const { return m_full < p.m_full; }
+  size_t hash() const {
+    std::hash<bool> h;
+    return h(m_full) ^ size_t(0x4a473053c081f0efULL);
+  }
 
   // Set comparison operators
   bool contains(const point<T, D> &p) const { return !empty(); }
@@ -803,6 +832,9 @@ template <typename T, int D> struct box {
     if (lt(b.lo, lo))
       return false;
     return lt(hi, b.hi);
+  }
+  size_t hash() const {
+    return hash_combine(hash_combine(size_t(0x8ba458a873481993ULL), lo), hi);
   }
 
   // Set comparison operators
@@ -1012,6 +1044,11 @@ template <typename T, int D> struct less<RegionCalculus::box<T, D>> {
   bool operator()(const RegionCalculus::box<T, D> &p,
                   const RegionCalculus::box<T, D> &q) const {
     return p.less(q);
+  }
+};
+template <typename T, int D> struct hash<RegionCalculus::box<T, D>> {
+  size_t operator()(const RegionCalculus::box<T, D> &b) const {
+    return b.hash();
   }
 };
 } // namespace std
@@ -1242,7 +1279,18 @@ public:
   bool operator==(const region &r) const { return (*this ^ r).empty(); }
   bool operator!=(const region &r) const { return !(*this == r); }
 
-  bool less(const region &r) const { return boxes < r.boxes; }
+  bool equal_to(const region &r) const {
+    std::equal_to<vector<T>> eq;
+    return eq(boxes, r.boxes);
+  }
+  bool less(const region &r) const {
+    std::less<vector<T>> lt;
+    return lt(boxes, r.boxes);
+  }
+  size_t hash() const {
+    std::hash<vector<T>> h;
+    return h(boxes) ^ size_t(0x4861d2118c306aefULL);
+  }
 
   // I/O
 
@@ -1287,10 +1335,21 @@ public:
 } // namespace RegionCalculus
 
 namespace std {
+template <typename T, int D> struct equal_to<RegionCalculus::region<T, D>> {
+  bool operator()(const RegionCalculus::region<T, D> &p,
+                  const RegionCalculus::region<T, D> &q) const {
+    return p.equal_to(q);
+  }
+};
 template <typename T, int D> struct less<RegionCalculus::region<T, D>> {
   bool operator()(const RegionCalculus::region<T, D> &p,
                   const RegionCalculus::region<T, D> &q) const {
     return p.less(q);
+  }
+};
+template <typename T, int D> struct hash<RegionCalculus::region<T, D>> {
+  size_t operator()(const RegionCalculus::region<T, D> &p) const {
+    return p.hash();
   }
 };
 } // namespace std
@@ -1399,6 +1458,10 @@ template <typename T> struct region<T, 0> {
 
   bool equal_to(const region &other) const { return m_full == other.m_full; }
   bool less(const region &other) const { return m_full < other.m_full; }
+  size_t hash() const {
+    std::hash<bool> h;
+    return h(m_full) ^ size_t(0x07da947bfacbea06ULL);
+  }
 
   // I/O
 
@@ -1812,6 +1875,12 @@ public:
   bool less(const region &other) const {
     std::less<subregions_t> lt;
     return lt(subregions, other.subregions);
+  }
+  size_t hash() const {
+    size_t r = size_t(0x725f347c326789eeULL);
+    for (const auto &pos : subregions)
+      r = hash_combine(r, pos);
+    return r;
   }
 
   // I/O
@@ -2238,6 +2307,12 @@ public:
     std::less<subregions_t> lt;
     return lt(subregions, other.subregions);
   }
+  size_t hash() const {
+    size_t r = size_t(0x4eecc6384bcd469dULL);
+    for (const auto &p : subregions)
+      r = hash_combine(hash_combine(r, p.first), p.second);
+    return r;
+  }
 
   // I/O
 
@@ -2304,6 +2379,11 @@ template <typename T, int D> struct less<RegionCalculus::region<T, D>> {
   bool operator()(const RegionCalculus::region<T, D> &p,
                   const RegionCalculus::region<T, D> &q) const {
     return p.less(q);
+  }
+};
+template <typename T, int D> struct hash<RegionCalculus::region<T, D>> {
+  size_t operator()(const RegionCalculus::region<T, D> &p) const {
+    return p.hash();
   }
 };
 } // namespace std
@@ -2391,6 +2471,7 @@ template <typename T> struct vpoint {
 
   virtual bool equal_to(const vpoint &p) const = 0;
   virtual bool less(const vpoint &p) const = 0;
+  virtual size_t hash() const = 0;
 
   // Reductions
   virtual bool any() const = 0;
@@ -2455,7 +2536,9 @@ template <typename T> struct vbox {
   // Comparison operators
   virtual bool operator==(const vbox &b) const = 0;
 
+  virtual bool equal_to(const vbox &b) const = 0;
   virtual bool less(const vbox &b) const = 0;
+  virtual size_t hash() const = 0;
 
   // Set comparison operators
   virtual bool contains(const vpoint<T> &p) const = 0;
@@ -2541,7 +2624,9 @@ template <typename T> struct vregion {
   virtual bool operator==(const vregion &r) const = 0;
   virtual bool operator!=(const vregion &r) const = 0;
 
+  virtual bool equal_to(const vregion &r) const = 0;
   virtual bool less(const vregion &r) const = 0;
+  virtual size_t hash() const = 0;
 
   // I/O
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
@@ -2740,6 +2825,7 @@ template <typename T, int D> struct wpoint : vpoint<T> {
   bool less(const vpoint<T> &p) const {
     return val.less(dynamic_cast<const wpoint &>(p).val);
   }
+  size_t hash() const { return val.hash(); }
 
   // Reductions
   bool any() const { return val.any(); }
@@ -2849,9 +2935,13 @@ template <typename T, int D> struct wbox : vbox<T> {
     return rank() == b.rank() && val == dynamic_cast<const wbox<T, D> &>(b).val;
   }
 
+  bool equal_to(const vbox<T> &b) const {
+    return val.equal_to(dynamic_cast<const wbox<T, D> &>(b).val);
+  }
   bool less(const vbox<T> &b) const {
     return val.less(dynamic_cast<const wbox<T, D> &>(b).val);
   }
+  size_t hash() const { return val.hash(); }
 
   // Set comparison operators
   bool contains(const vpoint<T> &p) const {
@@ -3035,9 +3125,13 @@ template <typename T, int D> struct wregion : vregion<T> {
     return rank() != r.rank() || val != dynamic_cast<const wregion &>(r).val;
   }
 
+  bool equal_to(const vregion<T> &r) const {
+    return val.equal_to(dynamic_cast<const wregion &>(r).val);
+  }
   bool less(const vregion<T> &r) const {
     return val.less(dynamic_cast<const wregion &>(r).val);
   }
+  size_t hash() const { return val.hash(); }
 
   // I/O
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
@@ -3509,6 +3603,7 @@ template <typename T> struct dpoint {
 
   bool equal_to(const dpoint &p) const { return val->equal_to(*p.val); }
   bool less(const dpoint &p) const { return val->less(*p.val); }
+  size_t hash() const { return val->hash(); }
 
   // Reductions
   bool all() const { return val->all(); }
@@ -3580,6 +3675,11 @@ template <typename T> struct less<RegionCalculus::dpoint<T>> {
   bool operator()(const RegionCalculus::dpoint<T> &p,
                   const RegionCalculus::dpoint<T> &q) const {
     return p.less(q);
+  }
+};
+template <typename T> struct hash<RegionCalculus::dpoint<T>> {
+  size_t operator()(const RegionCalculus::dpoint<T> &p) const {
+    return p.hash();
   }
 };
 } // namespace std
@@ -3670,6 +3770,7 @@ template <typename T> struct dbox {
   bool operator!=(const dbox &b) const { return !(*this == b); }
   bool equal_to(const dbox &b) const { return val->equal_to(*b.val); }
   bool less(const dbox &b) const { return val->less(*b.val); }
+  size_t hash() const { return val->hash(); }
 
   // Set comparison operators
   bool contains(const dpoint<T> &p) const { return val->contains(*p.val); }
@@ -3736,6 +3837,9 @@ template <typename T> struct less<RegionCalculus::dbox<T>> {
                   const RegionCalculus::dbox<T> &q) const {
     return p.less(q);
   }
+};
+template <typename T> struct hash<RegionCalculus::dbox<T>> {
+  size_t operator()(const RegionCalculus::dbox<T> &p) const { return p.hash(); }
 };
 } // namespace std
 
@@ -3873,6 +3977,7 @@ template <typename T> struct dregion {
 
   bool equal_to(const dregion &r) const { return val->equal_to(*r.val); }
   bool less(const dregion &r) const { return val->less(*r.val); }
+  size_t hash() const { return val->hash(); }
 
   // I/O
 
@@ -3914,6 +4019,11 @@ template <typename T> struct less<RegionCalculus::dregion<T>> {
   bool operator()(const RegionCalculus::dregion<T> &p,
                   const RegionCalculus::dregion<T> &q) const {
     return p.less(q);
+  }
+};
+template <typename T> struct hash<RegionCalculus::dregion<T>> {
+  size_t operator()(const RegionCalculus::dregion<T> &p) const {
+    return p.hash();
   }
 };
 } // namespace std
