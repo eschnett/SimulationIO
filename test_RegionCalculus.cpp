@@ -1518,4 +1518,63 @@ TEST(RegionCalculus, double_) {
   }
 }
 
+namespace benchmark {
+constexpr int D = 3;
+typedef double T;
+typedef point<T, D> P;
+typedef box<T, D> B;
+typedef region<T, D> R;
+array<R, 2> regs;
+} // namespace benchmark
+
+TEST(RegionCalculus, benchmark_region_setup) {
+  using namespace benchmark;
+
+  constexpr int niters = 10000;
+  for (int i = 0; i < 2; ++i) {
+    vector<B> bs;
+    bs.reserve(niters);
+    for (int n = 0; n < niters; ++n) {
+      array<int, D> xs, ys;
+      for (int d = 0; d < D; ++d) {
+        xs[d] = irand(100);
+        ys[d] = xs[d] + irand(10);
+      }
+      P px(xs), py(ys);
+      B b{px, py};
+      bs.push_back(b);
+    }
+    regs[i] = R(bs);
+  }
+}
+
+TEST(RegionCalculus, benchmark_region_intersection) {
+  using namespace benchmark;
+  auto rint = regs[0] & regs[1];
+}
+TEST(RegionCalculus, benchmark_region_union) {
+  using namespace benchmark;
+  auto runi = regs[0] | regs[1];
+}
+TEST(RegionCalculus, benchmark_region_symmetric_difference) {
+  using namespace benchmark;
+  auto rsym = regs[0] ^ regs[1];
+}
+TEST(RegionCalculus, benchmark_region_difference) {
+  using namespace benchmark;
+  auto rdif = regs[0] - regs[1];
+}
+TEST(RegionCalculus, benchmark_region_equal) {
+  using namespace benchmark;
+  auto req = regs[0] == regs[1];
+}
+TEST(RegionCalculus, benchmark_region_subset) {
+  using namespace benchmark;
+  auto rle = regs[0] & regs[1];
+}
+TEST(RegionCalculus, benchmark_region_strict_subset) {
+  using namespace benchmark;
+  auto rlt = regs[0] < regs[1];
+}
+
 #include "src/gtest_main.cc"

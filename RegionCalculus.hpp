@@ -24,7 +24,7 @@
 #include <vector>
 
 // Whether extra, expensive run-time tests should be enabled. Set to 0 or 1.
-#define REGIONCALCULUS_DEBUG 1
+#define REGIONCALCULUS_DEBUG 0
 
 // Whether the more complex and more efficient tree-based implementation should
 // be used. Set to 0 or 1.
