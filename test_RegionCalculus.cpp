@@ -12,6 +12,8 @@
 
 using std::array;
 using std::equal_to;
+using std::hash;
+using std::less;
 using std::ostringstream;
 using std::set;
 using std::vector;
@@ -554,6 +556,7 @@ template <int D> void test_point() {
     auto p3 = getelt(ps);
     std::equal_to<P> eq;
     std::less<P> lt;
+    std::hash<P> h;
     auto eq1 = eq(p1, p2);
     auto eq2 = eq(p2, p1);
     auto eq3 = eq(p2, p3);
@@ -571,6 +574,22 @@ template <int D> void test_point() {
       EXPECT_TRUE(eq4); // eq is transitive
     if (lt1 && lt3)
       EXPECT_TRUE(lt4); // lt is transitive
+    if (eq1)
+      EXPECT_EQ(h(p1), h(p2));
+    if (eq2)
+      EXPECT_EQ(h(p2), h(p1));
+    if (eq3)
+      EXPECT_EQ(h(p2), h(p3));
+    if (eq4)
+      EXPECT_EQ(h(p1), h(p3));
+    if (h(p1) != h(p2))
+      EXPECT_FALSE(eq1);
+    if (h(p2) != h(p1))
+      EXPECT_FALSE(eq2);
+    if (h(p2) != h(p3))
+      EXPECT_FALSE(eq3);
+    if (h(p1) != h(p3))
+      EXPECT_FALSE(eq4);
   }
 }
 
@@ -637,6 +656,7 @@ template <int D> void test_box() {
     auto b3 = getelt(bs);
     std::equal_to<B> eq;
     std::less<B> lt;
+    std::hash<B> h;
     auto eq1 = eq(b1, b2);
     auto eq2 = eq(b2, b1);
     auto eq3 = eq(b2, b3);
@@ -654,6 +674,22 @@ template <int D> void test_box() {
       EXPECT_TRUE(eq4); // eq is transitive
     if (lt1 && lt3)
       EXPECT_TRUE(lt4); // lt is transitive
+    if (eq1)
+      EXPECT_EQ(h(b1), h(b2));
+    if (eq2)
+      EXPECT_EQ(h(b2), h(b1));
+    if (eq3)
+      EXPECT_EQ(h(b2), h(b3));
+    if (eq4)
+      EXPECT_EQ(h(b1), h(b3));
+    if (h(b1) != h(b2))
+      EXPECT_FALSE(eq1);
+    if (h(b2) != h(b1))
+      EXPECT_FALSE(eq2);
+    if (h(b2) != h(b3))
+      EXPECT_FALSE(eq3);
+    if (h(b1) != h(b3))
+      EXPECT_FALSE(eq4);
   }
 }
 
@@ -744,6 +780,7 @@ template <int D> void test_region() {
     auto r3 = getelt(rs);
     std::equal_to<R> eq;
     std::less<R> lt;
+    std::hash<R> h;
     auto eq1 = eq(r1, r2);
     auto eq2 = eq(r2, r1);
     auto eq3 = eq(r2, r3);
@@ -761,6 +798,22 @@ template <int D> void test_region() {
       EXPECT_TRUE(eq4); // eq is transitive
     if (lt1 && lt3)
       EXPECT_TRUE(lt4); // lt is transitive
+    if (eq1)
+      EXPECT_EQ(h(r1), h(r2));
+    if (eq2)
+      EXPECT_EQ(h(r2), h(r1));
+    if (eq3)
+      EXPECT_EQ(h(r2), h(r3));
+    if (eq4)
+      EXPECT_EQ(h(r1), h(r3));
+    if (h(r1) != h(r2))
+      EXPECT_FALSE(eq1);
+    if (h(r2) != h(r1))
+      EXPECT_FALSE(eq2);
+    if (h(r2) != h(r3))
+      EXPECT_FALSE(eq3);
+    if (h(r1) != h(r3))
+      EXPECT_FALSE(eq4);
   }
 }
 
