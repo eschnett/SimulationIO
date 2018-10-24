@@ -111,6 +111,7 @@ install:
     if [ "$TRAVIS_OS_NAME" = osx ]; then
       # Handle HDF5
       brew update
+      brew install --override gcc
       brew install hdf5
       brew install lcov
       brew install open-mpi
