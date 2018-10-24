@@ -6,7 +6,7 @@ dist: trusty
 
 # Build matrix
 os:
-  #TODO - linux
+  - linux
   - osx
 language: cpp
 compiler:
