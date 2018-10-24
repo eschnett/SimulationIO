@@ -271,7 +271,7 @@ void Project::createStandardTensorTypes() {
     t2d->createTensorComponent("00", 0, {0, 0});
     t2d->createTensorComponent("01", 1, {0, 1});
     t2d->createTensorComponent("10", 2, {1, 0});
-    t2d->createTensorComponent("11", 2, {1, 1});
+    t2d->createTensorComponent("11", 3, {1, 1});
   }
 
   {
@@ -335,18 +335,18 @@ void Project::createStandardTensorTypes() {
     t4d->createTensorComponent("01", 1, {0, 1});
     t4d->createTensorComponent("02", 2, {0, 2});
     t4d->createTensorComponent("03", 3, {0, 3});
-    t4d->createTensorComponent("10", 0, {1, 0});
-    t4d->createTensorComponent("11", 1, {1, 1});
-    t4d->createTensorComponent("12", 2, {1, 2});
-    t4d->createTensorComponent("13", 3, {1, 3});
-    t4d->createTensorComponent("20", 0, {2, 0});
-    t4d->createTensorComponent("21", 1, {2, 1});
-    t4d->createTensorComponent("22", 2, {2, 2});
-    t4d->createTensorComponent("23", 3, {2, 3});
-    t4d->createTensorComponent("30", 0, {3, 0});
-    t4d->createTensorComponent("31", 1, {3, 1});
-    t4d->createTensorComponent("32", 2, {3, 2});
-    t4d->createTensorComponent("33", 3, {3, 3});
+    t4d->createTensorComponent("10", 4, {1, 0});
+    t4d->createTensorComponent("11", 5, {1, 1});
+    t4d->createTensorComponent("12", 6, {1, 2});
+    t4d->createTensorComponent("13", 7, {1, 3});
+    t4d->createTensorComponent("20", 8, {2, 0});
+    t4d->createTensorComponent("21", 9, {2, 1});
+    t4d->createTensorComponent("22", 10, {2, 2});
+    t4d->createTensorComponent("23", 11, {2, 3});
+    t4d->createTensorComponent("30", 12, {3, 0});
+    t4d->createTensorComponent("31", 13, {3, 1});
+    t4d->createTensorComponent("32", 14, {3, 2});
+    t4d->createTensorComponent("33", 15, {3, 3});
   }
 
   {
