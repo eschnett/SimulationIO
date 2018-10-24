@@ -112,11 +112,15 @@ install:
       # Handle HDF5
       brew update
       brew install gcc gcc
+      # Resolve a conflict with "/usr/local/include/c++"
       brew link --overwrite gcc
       brew install hdf5
       brew install lcov
       brew install open-mpi
+      # brew install python
+      # brew install python@2
       brew install swig
+      brew list
       export HDF5_DIR="/usr/local"
       # Build yaml-cpp
       export YAML_CPP_DIR="$HOME/yaml-cpp-0.6.2"
@@ -155,8 +159,10 @@ install:
         )
       fi
       # Handle Python
-      export PYTHON_DIR="/usr/local/Cellar/python/2.7.14/Frameworks/Python.framework/Versions/2.7"
-      export PATH="/usr/local/Cellar/python/2.7.14/bin:$PATH"
+      export PATH="/usr/local/bin:$PATH"
+      export PYTHONHOME="/usr/local"
+      # export PYTHON_DIR="/usr/local/Cellar/python/2.7.14/Frameworks/Python.framework/Versions/2.7"
+      export PYTHON_DIR="/usr/local"
     fi
   - hash -r
   - which mpirun
@@ -179,14 +185,11 @@ script:
   - mkdir build && pushd build
   - cmake -DENABLE_ASDF_CXX=${ENABLE_ASDF_CXX} -DENABLE_HDF5=${ENABLE_HDF5} -DCMAKE_PREFIX_PATH="$HDF5_DIR;$YAML_CPP_DIR;$ASDF_CXX_DIR;$PYTHON_DIR" -DCMAKE_CXX_COMPILER="$CXX" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX="$HOME/install" ..
   - make -j2
-  - echo 'BEGIN LOG OUTPUT'
   - |
     if [ "$TRAVIS_OS_NAME" = osx ]; then
-      brew list
       which python
       otool -L _SimulationIO.so
     fi
-  - echo 'END LOG OUTPUT'
   - if [ ${ENABLE_ASDF_CXX} = ON ]; then ./sio-example-asdf; fi
   - if [ ${ENABLE_HDF5} = ON ]; then ./sio-example; fi
   - make -j2 test CTEST_OUTPUT_ON_FAILURE=1
