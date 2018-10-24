@@ -6,7 +6,7 @@ dist: trusty
 
 # Build matrix
 os:
-  - linux
+  #TODO - linux
   - osx
 language: cpp
 compiler:
@@ -166,6 +166,8 @@ install:
   - asdf-ls
   - which python
   - python --version
+  - which pip
+  - pip --version
   - pip install --user h5py
   - pip install --user codecov
   - gem install coveralls-lcov
@@ -176,6 +178,14 @@ script:
   - mkdir build && pushd build
   - cmake -DENABLE_ASDF_CXX=${ENABLE_ASDF_CXX} -DENABLE_HDF5=${ENABLE_HDF5} -DCMAKE_PREFIX_PATH="$HDF5_DIR;$YAML_CPP_DIR;$ASDF_CXX_DIR;$PYTHON_DIR" -DCMAKE_CXX_COMPILER="$CXX" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX="$HOME/install" ..
   - make -j2
+  - echo 'BEGIN LOG OUTPUT'
+  - |
+    if [ "$TRAVIS_OS_NAME" = osx ]; then
+      brew list
+      which python
+      otool -L _SimulationIO.so
+    fi
+  - echo 'END LOG OUTPUT'
   - if [ ${ENABLE_ASDF_CXX} = ON ]; then ./sio-example-asdf; fi
   - if [ ${ENABLE_HDF5} = ON ]; then ./sio-example; fi
   - make -j2 test CTEST_OUTPUT_ON_FAILURE=1
