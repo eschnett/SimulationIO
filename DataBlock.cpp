@@ -626,21 +626,24 @@ void DataSet::attachData(vector<char> &&data, const H5::DataType &datatype,
 }
 
 void DataSet::attachData(const void *data, const H5::DataType &datatype,
-                         const box_t &datashape, const box_t &databox) const {
+                         const box_t &datalayout, const box_t &databox) const {
   assert(not m_have_dataset);
   assert(not m_have_location);
   assert(not m_have_attached_data);
   assert(data);
 
   m_memtype = datatype;
-  m_memlayout = datashape;
+  // m_memlayout = datalayout;
+  m_memlayout = databox; // since we copy
   m_membox = databox;
   auto count = m_membox.size();
   auto typesize = m_memtype.getSize();
 
   assert(m_attached_data.empty());
   m_attached_data.resize(count * typesize);
-  memcpy(m_attached_data.data(), data, m_attached_data.size());
+  // memcpy(m_attached_data.data(), data, m_attached_data.size());
+  HyperSlab::copy(m_attached_data.data(), count, m_memlayout, m_membox, data,
+                  datalayout.size(), datalayout, databox, typesize);
   m_have_attached_data = true;
 }
 
