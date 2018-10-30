@@ -337,21 +337,21 @@ private:
 
 public:
   void writeData(const void *data, const H5::DataType &datatype,
-                 const box_t &datashape, const box_t &databox) const;
+                 const box_t &datalayout, const box_t &databox) const;
   template <typename T>
-  void writeData(const T *data, const box_t &datashape,
+  void writeData(const T *data, const box_t &datalayout,
                  const box_t &databox) const {
-    writeData(data, H5::getType(T{}), datashape, databox);
+    writeData(data, H5::getType(T{}), datalayout, databox);
   }
   template <typename T>
   void writeData(const T *data, const box_t &databox) const {
     writeData(data, databox, databox);
   }
   template <typename T>
-  void writeData(const vector<T> &data, const box_t &datashape,
+  void writeData(const vector<T> &data, const box_t &datalayout,
                  const box_t &databox) const {
-    assert(ptrdiff_t(data.size()) == datashape.size());
-    writeData(data.data(), datashape, databox);
+    assert(ptrdiff_t(data.size()) == datalayout.size());
+    writeData(data.data(), datalayout, databox);
   }
   template <typename T>
   void writeData(const vector<T> &data, const box_t &databox) const {
@@ -376,25 +376,25 @@ public:
   }
 
   void attachData(const vector<char> &data, const H5::DataType &datatype,
-                  const box_t &datashape, const box_t &databox) const;
+                  const box_t &datalayout, const box_t &databox) const;
   void attachData(vector<char> &&data, const H5::DataType &datatype,
-                  const box_t &datashape, const box_t &databox) const;
+                  const box_t &datalayout, const box_t &databox) const;
   void attachData(const void *data, const H5::DataType &datatype,
-                  const box_t &datashape, const box_t &databox) const;
+                  const box_t &datalayout, const box_t &databox) const;
   template <typename T>
-  void attachData(const T *data, const box_t &datashape,
+  void attachData(const T *data, const box_t &datalayout,
                   const box_t &databox) const {
-    attachData(data, H5::getType(T{}), datashape, databox);
+    attachData(data, H5::getType(T{}), datalayout, databox);
   }
   template <typename T>
   void attachData(const T *data, const box_t &databox) const {
     attachData(data, databox, databox);
   }
   template <typename T>
-  void attachData(const vector<T> &data, const box_t &datashape,
+  void attachData(const vector<T> &data, const box_t &datalayout,
                   const box_t &databox) const {
-    assert(ptrdiff_t(data.size()) == datashape.size());
-    attachData(data.data(), datashape, databox);
+    assert(ptrdiff_t(data.size()) == datalayout.size());
+    attachData(data.data(), datalayout, databox);
   }
   template <typename T>
   void attachData(const vector<T> &data, const box_t &databox) const {
@@ -490,10 +490,10 @@ public:
 #endif
 
   void readData(void *data, const H5::DataType &datatype,
-                const box_t &datashape, const box_t &databox) const;
+                const box_t &datalayout, const box_t &databox) const;
   template <typename T>
-  void readData(T *data, const box_t &datashape, const box_t &databox) const {
-    readData(data, H5::getType(T{}), datashape, databox);
+  void readData(T *data, const box_t &datalayout, const box_t &databox) const {
+    readData(data, H5::getType(T{}), datalayout, databox);
   }
   template <typename T> vector<T> readData(const box_t &databox) const {
     vector<T> data(databox.size());

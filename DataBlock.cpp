@@ -582,21 +582,21 @@ void DataSet::create_dataset() const {
 }
 
 void DataSet::writeData(const void *data, const H5::DataType &datatype,
-                        const box_t &datashape, const box_t &databox) const {
+                        const box_t &datalayout, const box_t &databox) const {
   // create_dataset();
   H5::DataSpace memspace, filespace;
-  construct_spaces(datashape, databox, m_dataspace, memspace, filespace);
+  construct_spaces(datalayout, databox, m_dataspace, memspace, filespace);
   m_dataset.write(data, datatype, memspace, filespace);
 }
 
 void DataSet::attachData(const vector<char> &data, const H5::DataType &datatype,
-                         const box_t &datashape, const box_t &databox) const {
+                         const box_t &datalayout, const box_t &databox) const {
   assert(not m_have_dataset);
   assert(not m_have_location);
   assert(not m_have_attached_data);
 
   m_memtype = datatype;
-  m_memlayout = datashape;
+  m_memlayout = datalayout;
   m_membox = databox;
   auto count = m_membox.size();
   auto typesize = m_memtype.getSize();
@@ -608,13 +608,13 @@ void DataSet::attachData(const vector<char> &data, const H5::DataType &datatype,
 }
 
 void DataSet::attachData(vector<char> &&data, const H5::DataType &datatype,
-                         const box_t &datashape, const box_t &databox) const {
+                         const box_t &datalayout, const box_t &databox) const {
   assert(not m_have_dataset);
   assert(not m_have_location);
   assert(not m_have_attached_data);
 
   m_memtype = datatype;
-  m_memlayout = datashape;
+  m_memlayout = datalayout;
   m_membox = databox;
   auto count = m_membox.size();
   auto typesize = m_memtype.getSize();
