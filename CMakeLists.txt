@@ -6,7 +6,7 @@ cmake_policy(SET CMP0048 NEW)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 
-project(SimulationIO VERSION 7.4.0 LANGUAGES C CXX)
+project(SimulationIO VERSION 7.5.0 LANGUAGES C CXX)
 set(PROJECT_DESCRIPTION
   "SimulationIO: Efficient and convenient I/O for large PDE simulations")
 set(PROJECT_URL "https://github.com/eschnett/SimulationIO")
@@ -56,6 +56,18 @@ if(ENABLE_ASDF_CXX)
     include_directories(${ZLIB_INCLUDE_DIRS})
     set(LIBS ${LIBS} ${ZLIB_LIBRARIES})
   endif()
+endif()
+
+OPTION(ENABLE_RNPL "Enable RNPL (SDF) backend" ON)
+if(ENABLE_RNPL)
+  find_package(RNPL)
+endif()
+if(RNPL_FOUND)
+  include_directories(${RNPL_INCLUDE_DIRS})
+  set(LIBS ${LIBS} ${RNPL_LIBRARIES})
+  set(HAVE_RNPL 1)
+else()
+  set(HAVE_RNPL 0)
 endif()
 
 OPTION(ENABLE_HDF5 "Enable HDF5 backend" ON)
@@ -186,6 +198,11 @@ if(HDF5_FOUND)
     sio-merge
     sio-filter
     )
+  if(RNPL_FOUND)
+    list(APPEND EXES 
+      sio-convert-from-rnpl-sdf
+      )
+  endif()
 endif()
 if(ASDF_CXX_FOUND)
   list(APPEND EXES 
@@ -224,6 +241,11 @@ if(HDF5_FOUND)
 
   add_executable(sio-filter filter.cpp)
   target_link_libraries(sio-filter SimulationIO)
+
+  if(RNPL_FOUND)
+    add_executable(sio-convert-from-rnpl-sdf convert-from-rnpl-sdf.cpp)
+    target_link_libraries(sio-convert-from-rnpl-sdf SimulationIO)
+  endif()
 endif()
 
 if(ASDF_CXX_FOUND)

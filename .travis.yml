@@ -1,8 +1,10 @@
 # General settings
 notifications:
   email: false
+
 sudo: false
-dist: trusty
+
+dist: xenial
 
 # Build matrix
 os:
