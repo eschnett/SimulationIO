@@ -110,6 +110,13 @@ int main(int argc, char **argv) {
       cout << "  opening dataset #" << iteration << " \"" << fieldname
            << "\"...\n";
 
+      // Coordintes are scalars
+      const int scalarrank = 0;
+      const vector<int> scalarindices{};
+      const string scalartypename =
+          vector<string>{"Scalar0D", "Scalar1D", "Scalar2D", "Scalar3D"}.at(
+              dimension);
+
       // The tensor type is not stored, so we assume a scalar
       const int tensorrank = 0;
       const vector<int> tensorindices{};
@@ -146,6 +153,18 @@ int main(int argc, char **argv) {
       }
       auto configuration = project->configurations().at(configurationname);
 
+      // Get coordinate tensor type
+      auto scalartype = project->tensortypes().at(scalartypename);
+      assert(scalartype->rank() == scalarrank);
+      shared_ptr<TensorComponent> scalarcomponent;
+      for (const auto &tc : scalartype->tensorcomponents()) {
+        if (tc.second->indexvalues() == scalarindices) {
+          scalarcomponent = tc.second;
+          break;
+        }
+      }
+      assert(scalarcomponent);
+
       // Get tensor type
       auto tensortype = project->tensortypes().at(tensortypename);
       assert(tensortype->rank() == tensorrank);
@@ -176,10 +195,10 @@ int main(int argc, char **argv) {
 
       // Get discretization
       auto discretizationname = configuration->name();
-      if (!discretizations.count(configuration->name()))
-        discretizations[configuration->name()] =
+      if (!discretizations.count(discretizationname))
+        discretizations[discretizationname] =
             manifold->createDiscretization(discretizationname, configuration);
-      auto discretization = discretizations.at(configuration->name());
+      auto discretization = discretizations.at(discretizationname);
 
       // Get discretization block
       string blockname = "grid";
@@ -196,6 +215,91 @@ int main(int argc, char **argv) {
       }
       auto discretizationblock =
           discretization->discretizationblocks().at(blockname);
+
+      // Get coordinates
+      string coordinatesystemname = "coordinates";
+      if (!project->coordinatesystems().count(coordinatesystemname))
+        project->createCoordinateSystem(coordinatesystemname, configuration,
+                                        manifold);
+      auto coordinatesystem =
+          project->coordinatesystems().at(coordinatesystemname);
+      for (int direction = 0; direction < dimension; ++direction) {
+        string coordinatefieldname = [&] {
+          ostringstream buf;
+          buf << coordinatesystem->name() << "-" << configuration->name() << "-"
+              << dirnames[direction];
+          return buf.str();
+        }();
+
+        // Get coordinate field
+        if (!project->fields().count(coordinatefieldname))
+          project->createField(coordinatefieldname, configuration, manifold,
+                               tangentspace, tensortype);
+        auto coordinatefield = project->fields().at(coordinatefieldname);
+        if (!coordinatesystem->directions().count(direction))
+          coordinatesystem->createCoordinateField(coordinatefieldname,
+                                                  direction, coordinatefield);
+
+        // Get discrete coordinate field
+        string discretecoordinatefieldname = [&] {
+          ostringstream buf;
+          buf << coordinatefieldname << "-" << discretization->name();
+          return buf.str();
+        }();
+
+        auto discretecoordinatefield = coordinatefield->createDiscreteField(
+            discretecoordinatefieldname, configuration, discretization, basis);
+        auto discretecoordinatefieldblock =
+            discretecoordinatefield->createDiscreteFieldBlock(
+                discretizationblock->name(), discretizationblock);
+        auto discretecoordinatefieldblockcomponent =
+            discretecoordinatefieldblock->createDiscreteFieldBlockComponent(
+                scalarcomponent->name(), scalarcomponent);
+
+        auto box = discretizationblock->getBox();
+
+        if (coord_size == 2 * dimension) {
+          double origin = sdf_bbox[2 * direction];
+          vector<double> delta(dimension, 0.0);
+          delta[direction] =
+              sdf_bbox[2 * direction + 1] / (box.shape()[direction] - 1);
+          discretecoordinatefieldblockcomponent->createDataRange(origin, delta);
+        } else {
+          ptrdiff_t sum_shapes = 0;
+          for (int d = 0; d < dimension; ++d)
+            sum_shapes += box.shape()[d];
+          assert(coord_size == sum_shapes);
+
+          auto coordinatedataset =
+              discretecoordinatefieldblockcomponent->createDataSet<double>();
+          vector<double> coord_data(box.size());
+          assert(dimension <= 3);
+          const ptrdiff_t kmax = dimension >= 3 ? box.shape()[2] : 1;
+          const ptrdiff_t jmax = dimension >= 2 ? box.shape()[1] : 1;
+          const ptrdiff_t imax = dimension >= 1 ? box.shape()[0] : 1;
+          for (ptrdiff_t k = 0; k < kmax; ++k)
+            for (ptrdiff_t j = 0; j < jmax; ++j)
+              for (ptrdiff_t i = 0; i < imax; ++i) {
+                ptrdiff_t idx = i + imax * (j + jmax * k);
+                double coord;
+                switch (direction) {
+                case 0:
+                  coord = coord_data[i];
+                  break;
+                case 1:
+                  coord = coord_data[imax + j];
+                  break;
+                case 2:
+                  coord = coord_data[imax + jmax + k];
+                  break;
+                default:
+                  assert(0);
+                }
+                coord_data[idx] = coord;
+              }
+          coordinatedataset->attachData(coord_data, box);
+        }
+      }
 
       // Get field
       if (!project->fields().count(fieldname))
@@ -219,7 +323,9 @@ int main(int argc, char **argv) {
               tensorcomponent->name(), tensorcomponent);
 
       auto dataset = discretefieldblockcomponent->createDataSet<double>();
-      dataset->attachData(data_pointer, discretizationblock->getBox());
+      auto box = discretizationblock->getBox();
+      assert(box.size() == data_size);
+      dataset->attachData(data_pointer, box);
 
       ++iteration;
     } // while low_read_sdf_stream
