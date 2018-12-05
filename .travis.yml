@@ -1,7 +1,9 @@
 # General settings
 notifications:
   email: false
+
 sudo: false
+
 dist: xenial
 
 # Build matrix
