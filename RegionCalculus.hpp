@@ -254,10 +254,9 @@ template <typename T, int D> struct point {
   // Access and conversion
   const T &operator[](int d) const { return elt[d]; }
   T &operator[](int d) { return elt[d]; }
-  typename std::conditional<(D > 0), point<T, D - 1>, point<T, 0>>::type
-  subpoint(int dir) const {
+  point<T, (D > 0 ? D - 1 : 0)> subpoint(int dir) const {
     assert(dir >= 0 && dir < D);
-    typename std::conditional<(D > 0), point<T, D - 1>, point<T, 0>>::type r;
+    point<T, (D > 0 ? D - 1 : 0)> r;
     for (int d = 0; d < D - 1; ++d)
       r.elt[d] = elt[d + (d >= dir)];
     return r;
@@ -2681,10 +2680,12 @@ template <typename T, int D> struct wpoint : vpoint<T> {
   T operator[](int d) const { return val[d]; }
   T &operator[](int d) { return val[d]; }
   unique_ptr<vpoint<T>> subpoint(int dir) const {
-    return make_unique1<wpoint>(val.subpoint(dir));
+    return make_unique1<wpoint<T, (D > 0 ? D - 1 : 0)>>(val.subpoint(dir));
   }
   unique_ptr<vpoint<T>> superpoint(int dir, T x) const {
-    return make_unique1<wpoint>(val.superpoint(dir, x));
+    // This is intentionally wrong for D >= 4 to avoid infinite recursion to
+    // ever larger ranks
+    return make_unique1<wpoint<T, (D < 4 ? D + 1 : 0)>>(val.superpoint(dir, x));
   }
   unique_ptr<vpoint<T>> reversed() const {
     return make_unique1<wpoint>(val.reversed());

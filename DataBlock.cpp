@@ -95,44 +95,46 @@ template <int D> class copy_t {
 
   // This implementation is efficient for Fortran array order
 
-  template <size_t N, int DD, typename enable_if<DD == 0>::type * = nullptr>
-  void copy_nd_f(unsigned char *const outptr,
-                 const unsigned char *const inptr) const {
-    // assert(outcheck(outptr, N));
-    // assert(incheck(inptr, N));
-    memcpy(outptr, inptr, N);
+  template <ptrdiff_t N, int DD, typename enable_if<DD == 0>::type * = nullptr>
+  void copy_nd_f(unsigned char *const outptr, const unsigned char *const inptr,
+                 const ptrdiff_t type_size) const {
+    const ptrdiff_t n = N >= 0 ? N : type_size;
+    // assert(outcheck(outptr, n));
+    // assert(incheck(inptr, n));
+    memcpy(outptr, inptr, n);
   }
 
-  template <size_t N, int DD,
+  template <ptrdiff_t N, int DD,
             typename enable_if<(DD > 0 && DD <= D)>::type * = nullptr>
-  void copy_nd_f(unsigned char *const outptr,
-                 const unsigned char *const inptr) const {
+  void copy_nd_f(unsigned char *const outptr, const unsigned char *const inptr,
+                 const ptrdiff_t type_size) const {
     const ptrdiff_t outdi = outstrides[DD - 1];
     const ptrdiff_t indi = instrides[DD - 1];
     const ptrdiff_t ni = shape[DD - 1];
     for (ptrdiff_t i = 0; i < ni; ++i)
-      copy_nd_f<N, DD - 1>(outptr + i * outdi, inptr + i * indi);
+      copy_nd_f<N, DD - 1>(outptr + i * outdi, inptr + i * indi, type_size);
   }
 
   // This implementation is efficient for C array order
 
-  template <size_t N, int DD, typename enable_if<DD == D>::type * = nullptr>
-  void copy_nd_c(unsigned char *const outptr,
-                 const unsigned char *const inptr) const {
-    // assert(outcheck(outptr, N));
-    // assert(incheck(inptr, N));
-    memcpy(outptr, inptr, N);
+  template <ptrdiff_t N, int DD, typename enable_if<DD == D>::type * = nullptr>
+  void copy_nd_c(unsigned char *const outptr, const unsigned char *const inptr,
+                 const ptrdiff_t type_size) const {
+    const ptrdiff_t n = N >= 0 ? N : type_size;
+    // assert(outcheck(outptr, n));
+    // assert(incheck(inptr, n));
+    memcpy(outptr, inptr, n);
   }
 
-  template <size_t N, int DD,
+  template <ptrdiff_t N, int DD,
             typename enable_if<(DD >= 0 && DD < D)>::type * = nullptr>
-  void copy_nd_c(unsigned char *const outptr,
-                 const unsigned char *const inptr) const {
+  void copy_nd_c(unsigned char *const outptr, const unsigned char *const inptr,
+                 const ptrdiff_t type_size) const {
     const ptrdiff_t outdi = outstrides[DD];
     const ptrdiff_t indi = instrides[DD];
     const ptrdiff_t ni = shape[DD];
     for (ptrdiff_t i = 0; i < ni; ++i)
-      copy_nd_c<N, DD + 1>(outptr + i * outdi, inptr + i * indi);
+      copy_nd_c<N, DD + 1>(outptr + i * outdi, inptr + i * indi, type_size);
   }
 
 public:
@@ -151,43 +153,45 @@ public:
       // prefer Fortran order
       switch (type_size) {
       case 1:
-        copy_nd_f<1, D>(outptr1, inptr1);
+        copy_nd_f<1, D>(outptr1, inptr1, type_size);
         break;
       case 2:
-        copy_nd_f<2, D>(outptr1, inptr1);
+        copy_nd_f<2, D>(outptr1, inptr1, type_size);
         break;
       case 4:
-        copy_nd_f<4, D>(outptr1, inptr1);
+        copy_nd_f<4, D>(outptr1, inptr1, type_size);
         break;
       case 8:
-        copy_nd_f<8, D>(outptr1, inptr1);
+        copy_nd_f<8, D>(outptr1, inptr1, type_size);
         break;
       case 16:
-        copy_nd_f<16, D>(outptr1, inptr1);
+        copy_nd_f<16, D>(outptr1, inptr1, type_size);
         break;
       default:
-        assert(0);
+        copy_nd_f<-1, D>(outptr1, inptr1, type_size);
+        break;
       }
     } else {
       // prefer C order
       switch (type_size) {
       case 1:
-        copy_nd_c<1, 0>(outptr1, inptr1);
+        copy_nd_c<1, 0>(outptr1, inptr1, type_size);
         break;
       case 2:
-        copy_nd_c<2, 0>(outptr1, inptr1);
+        copy_nd_c<2, 0>(outptr1, inptr1, type_size);
         break;
       case 4:
-        copy_nd_c<4, 0>(outptr1, inptr1);
+        copy_nd_c<4, 0>(outptr1, inptr1, type_size);
         break;
       case 8:
-        copy_nd_c<8, 0>(outptr1, inptr1);
+        copy_nd_c<8, 0>(outptr1, inptr1, type_size);
         break;
       case 16:
-        copy_nd_c<16, 0>(outptr1, inptr1);
+        copy_nd_c<16, 0>(outptr1, inptr1, type_size);
         break;
       default:
-        assert(0);
+        copy_nd_c<-1, 0>(outptr1, inptr1, type_size);
+        break;
       }
     }
   }
@@ -250,31 +254,53 @@ void copy(void *const outptr0, const ptrdiff_t outnbytes,
   const auto outptr = static_cast<unsigned char *>(outptr0);
   const auto inptr = static_cast<const unsigned char *>(inptr0);
 
-  switch (rank) {
+  // Compress stride description
+  point_t outstrides2 = outstrides;
+  point_t instrides2 = instrides;
+  point_t shape2 = shape;
+  int rank2 = shape2.rank();
+  size_t type_size2 = type_size;
+  bool redo = true;
+  while (redo) {
+    redo = false;
+    for (int r = 0; r < rank2; ++r) {
+      if (outstrides2[r] == type_size2 && instrides2[r] == type_size2) {
+        outstrides2 = outstrides2.subpoint(r);
+        instrides2 = instrides2.subpoint(r);
+        type_size2 *= shape2[r];
+        shape2 = shape2.subpoint(r);
+        rank2 = shape2.rank();
+        redo = true;
+        break;
+      }
+    }
+  }
+
+  switch (rank2) {
   case 0:
-    copy_t<0>(outptr, outnbytes, outoffset, mkarray<0>(outstrides), inptr,
-              innbytes, inoffset, mkarray<0>(instrides), mkarray<0>(shape),
-              type_size);
+    copy_t<0>(outptr, outnbytes, outoffset, mkarray<0>(outstrides2), inptr,
+              innbytes, inoffset, mkarray<0>(instrides2), mkarray<0>(shape2),
+              type_size2);
     break;
   case 1:
-    copy_t<1>(outptr, outnbytes, outoffset, mkarray<1>(outstrides), inptr,
-              innbytes, inoffset, mkarray<1>(instrides), mkarray<1>(shape),
-              type_size);
+    copy_t<1>(outptr, outnbytes, outoffset, mkarray<1>(outstrides2), inptr,
+              innbytes, inoffset, mkarray<1>(instrides2), mkarray<1>(shape2),
+              type_size2);
     break;
   case 2:
-    copy_t<2>(outptr, outnbytes, outoffset, mkarray<2>(outstrides), inptr,
-              innbytes, inoffset, mkarray<2>(instrides), mkarray<2>(shape),
-              type_size);
+    copy_t<2>(outptr, outnbytes, outoffset, mkarray<2>(outstrides2), inptr,
+              innbytes, inoffset, mkarray<2>(instrides2), mkarray<2>(shape2),
+              type_size2);
     break;
   case 3:
-    copy_t<3>(outptr, outnbytes, outoffset, mkarray<3>(outstrides), inptr,
-              innbytes, inoffset, mkarray<3>(instrides), mkarray<3>(shape),
-              type_size);
+    copy_t<3>(outptr, outnbytes, outoffset, mkarray<3>(outstrides2), inptr,
+              innbytes, inoffset, mkarray<3>(instrides2), mkarray<3>(shape2),
+              type_size2);
     break;
   case 4:
-    copy_t<4>(outptr, outnbytes, outoffset, mkarray<4>(outstrides), inptr,
-              innbytes, inoffset, mkarray<4>(instrides), mkarray<4>(shape),
-              type_size);
+    copy_t<4>(outptr, outnbytes, outoffset, mkarray<4>(outstrides2), inptr,
+              innbytes, inoffset, mkarray<4>(instrides2), mkarray<4>(shape2),
+              type_size2);
     break;
   default:
     assert(0);
