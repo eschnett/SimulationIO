@@ -97,7 +97,7 @@ for p in range(ngrids):
     scalar3d_component = scalar3d.storage_indices()[0]
     rho_component = rho_block.createDiscreteFieldBlockComponent(
         "scalar", scalar3d_component)
-    rho_component.createDataSet_double()
+    rho_component.createDataSet_double(WriteOptions())
     for d in range(dim):
         vector3d_component = vector3d.storage_indices()[d]
         vel_component = vel_block.createDiscreteFieldBlockComponent(
