@@ -153,61 +153,72 @@ void DiscreteFieldBlockComponent::unsetDataBlock() { m_datablock = nullptr; }
 
 #ifdef SIMULATIONIO_HAVE_HDF5
 shared_ptr<DataSet>
-DiscreteFieldBlockComponent::createDataSet(const H5::DataType &type) {
+DiscreteFieldBlockComponent::createDataSet(const WriteOptions &write_options,
+                                           const H5::DataType &type) {
   assert(!m_datablock);
   auto res = make_shared<DataSet>(
-      discretefieldblock()->discretizationblock()->box(), type);
+      write_options, discretefieldblock()->discretizationblock()->box(), type);
   m_datablock = res;
   return res;
 }
 
 shared_ptr<DataBufferEntry> DiscreteFieldBlockComponent::createDataBufferEntry(
-    const H5::DataType &type, const shared_ptr<DataBuffer> &databuffer) {
+    const WriteOptions &write_options, const H5::DataType &type,
+    const shared_ptr<DataBuffer> &databuffer) {
   assert(!m_datablock);
   auto res = make_shared<DataBufferEntry>(
-      discretefieldblock()->discretizationblock()->box(), type, databuffer);
+      write_options, discretefieldblock()->discretizationblock()->box(), type,
+      databuffer);
   m_datablock = res;
   return res;
 }
 #endif
 
 shared_ptr<DataRange>
-DiscreteFieldBlockComponent::createDataRange(double origin,
+DiscreteFieldBlockComponent::createDataRange(const WriteOptions &write_options,
+                                             double origin,
                                              const vector<double> &delta) {
   assert(!m_datablock);
   auto res = make_shared<DataRange>(
-      discretefieldblock()->discretizationblock()->box(), origin, delta);
+      write_options, discretefieldblock()->discretizationblock()->box(), origin,
+      delta);
   m_datablock = res;
   return res;
 }
 
 #ifdef SIMULATIONIO_HAVE_HDF5
 shared_ptr<CopyObj>
-DiscreteFieldBlockComponent::createCopyObj(const H5::Group &group,
+DiscreteFieldBlockComponent::createCopyObj(const WriteOptions &write_options,
+                                           const H5::Group &group,
                                            const string &name) {
   assert(!m_datablock);
   auto res = make_shared<CopyObj>(
-      discretefieldblock()->discretizationblock()->box(), group, name);
+      write_options, discretefieldblock()->discretizationblock()->box(), group,
+      name);
   m_datablock = res;
   return res;
 }
 
 shared_ptr<CopyObj>
-DiscreteFieldBlockComponent::createCopyObj(const H5::H5File &file,
+DiscreteFieldBlockComponent::createCopyObj(const WriteOptions &write_options,
+                                           const H5::H5File &file,
                                            const string &name) {
   assert(!m_datablock);
   auto res = make_shared<CopyObj>(
-      discretefieldblock()->discretizationblock()->box(), file, name);
+      write_options, discretefieldblock()->discretizationblock()->box(), file,
+      name);
   m_datablock = res;
   return res;
 }
 
 shared_ptr<ExtLink>
-DiscreteFieldBlockComponent::createExtLink(const string &filename,
+DiscreteFieldBlockComponent::createExtLink(const WriteOptions &write_options,
+                                           const string &filename,
                                            const string &objname) {
   assert(!m_datablock);
   auto res = make_shared<ExtLink>(
-      discretefieldblock()->discretizationblock()->box(), filename, objname);
+      write_options, discretefieldblock()->discretizationblock()->box(),
+      filename, objname);
   m_datablock = res;
   return res;
 }
@@ -215,42 +226,47 @@ DiscreteFieldBlockComponent::createExtLink(const string &filename,
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 shared_ptr<ASDFData> DiscreteFieldBlockComponent::createASDFData(
+    const WriteOptions &write_options,
     const shared_ptr<ASDF::ndarray> &ndarray) {
   assert(!m_datablock);
   auto res = make_shared<ASDFData>(
-      discretefieldblock()->discretizationblock()->box(), ndarray);
+      write_options, discretefieldblock()->discretizationblock()->box(),
+      ndarray);
   m_datablock = res;
   return res;
 }
 
 shared_ptr<ASDFData> DiscreteFieldBlockComponent::createASDFData(
+    const WriteOptions &write_options,
     const ASDF::memoized<ASDF::block_t> &mdata,
     const shared_ptr<ASDF::datatype_t> &datatype) {
   assert(!m_datablock);
   auto res = make_shared<ASDFData>(
-      discretefieldblock()->discretizationblock()->box(), mdata, datatype);
+      write_options, discretefieldblock()->discretizationblock()->box(), mdata,
+      datatype);
   m_datablock = res;
   return res;
 }
 
 shared_ptr<ASDFData> DiscreteFieldBlockComponent::createASDFData(
-    const void *data, size_t npoints, const box_t &memlayout,
-    const shared_ptr<ASDF::datatype_t> &datatype) {
+    const WriteOptions &write_options, const void *data, size_t npoints,
+    const box_t &memlayout, const shared_ptr<ASDF::datatype_t> &datatype) {
   assert(!m_datablock);
-  auto res =
-      make_shared<ASDFData>(discretefieldblock()->discretizationblock()->box(),
-                            data, npoints, memlayout, datatype);
+  auto res = make_shared<ASDFData>(
+      write_options, discretefieldblock()->discretizationblock()->box(), data,
+      npoints, memlayout, datatype);
   m_datablock = res;
   return res;
 }
 
 shared_ptr<ASDFRef>
-DiscreteFieldBlockComponent::createASDFRef(const string &filename,
+DiscreteFieldBlockComponent::createASDFRef(const WriteOptions &write_options,
+                                           const string &filename,
                                            const vector<string> &path) {
   assert(!m_datablock);
-  auto res =
-      make_shared<ASDFRef>(discretefieldblock()->discretizationblock()->box(),
-                           make_shared<ASDF::reference>(filename, path));
+  auto res = make_shared<ASDFRef>(
+      write_options, discretefieldblock()->discretizationblock()->box(),
+      make_shared<ASDF::reference>(filename, path));
   m_datablock = res;
   return res;
 }

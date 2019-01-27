@@ -263,7 +263,8 @@ int main(int argc, char **argv) {
           vector<double> delta(dimension, 0.0);
           delta[direction] =
               sdf_bbox[2 * direction + 1] / (box.shape()[direction] - 1);
-          discretecoordinatefieldblockcomponent->createDataRange(origin, delta);
+          discretecoordinatefieldblockcomponent->createDataRange(WriteOptions(),
+                                                                 origin, delta);
         } else {
           ptrdiff_t sum_shapes = 0;
           for (int d = 0; d < dimension; ++d)
@@ -271,7 +272,8 @@ int main(int argc, char **argv) {
           assert(coord_size == sum_shapes);
 
           auto coordinatedataset =
-              discretecoordinatefieldblockcomponent->createDataSet<double>();
+              discretecoordinatefieldblockcomponent->createDataSet<double>(
+                  WriteOptions());
           vector<double> coord_data(box.size());
           assert(dimension <= 3);
           const ptrdiff_t kmax = dimension >= 3 ? box.shape()[2] : 1;
@@ -322,7 +324,8 @@ int main(int argc, char **argv) {
           discretefieldblock->createDiscreteFieldBlockComponent(
               tensorcomponent->name(), tensorcomponent);
 
-      auto dataset = discretefieldblockcomponent->createDataSet<double>();
+      auto dataset =
+          discretefieldblockcomponent->createDataSet<double>(WriteOptions());
       auto box = discretizationblock->getBox();
       assert(box.size() == data_size);
       dataset->attachData(data_pointer, box);

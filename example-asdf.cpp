@@ -101,6 +101,13 @@ int main(int argc, char **argv) {
     coordinatefields[d] =
         coordinatesystem->createCoordinateField(dirnames[d], d, coordinates[d]);
 
+  WriteOptions write_options;
+  write_options.compress = true;
+  write_options.compression_method = WriteOptions::compression_method_t::zlib;
+  write_options.compression_level = 9;
+  write_options.shuffle = true;
+  write_options.checksum = true;
+
   // DiscretizationBlocks
   for (int pk = 0; pk < npk; ++pk)
     for (int pj = 0; pj < npj; ++pj)
@@ -124,7 +131,8 @@ int main(int argc, char **argv) {
           auto scalar3d_component = scalar3d->storage_indices().at(0);
           auto coordinate_component = block->createDiscreteFieldBlockComponent(
               "scalar", scalar3d_component);
-          coordinate_component->createDataRange(origin[d], delta[d]);
+          coordinate_component->createDataRange(write_options, origin[d],
+                                                delta[d]);
         }
 
         // Fields
@@ -170,12 +178,14 @@ int main(int argc, char **argv) {
         auto scalar3d_component = scalar3d->storage_indices().at(0);
         auto rho_component = rho_block->createDiscreteFieldBlockComponent(
             "scalar", scalar3d_component);
-        rho_component->createASDFData<double>(mrho);
+        auto rho_data =
+            rho_component->createASDFData<double>(write_options, mrho);
         for (int d = 0; d < dim; ++d) {
           auto vector3d_component = vector3d->storage_indices().at(d);
           auto vel_component = vel_block->createDiscreteFieldBlockComponent(
               dirnames[d], vector3d_component);
-          vel_component->createASDFData<double>(mvel[d]);
+          auto vel_data =
+              vel_component->createASDFData<double>(write_options, mvel[d]);
         }
       }
 

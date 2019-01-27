@@ -302,6 +302,17 @@ struct TensorType;
 
 %nodefaultctor;
 
+struct WriteOptions {
+  enum class compression_method_t { bzip2, szip, zlib };
+
+  bool chunk;
+  bool compress;
+  compression_method_t compression_method;
+  int compression_level;
+  bool shuffle;
+  bool checksum;
+};
+
 struct DataBlock {
   box_t box() const;
   int rank() const;
@@ -495,20 +506,27 @@ struct DiscreteFieldBlockComponent {
   bool invariant() const;
   void unsetDataBlock();
   std::shared_ptr<DataRange>
-    createDataRange(double origin, const std::vector<double>& delta);
+    createDataRange(const WriteOptions& write_options,
+                    double origin, const std::vector<double>& delta);
 #ifdef SIMULATIONIO_HAVE_HDF5
   %extend {
-    std::shared_ptr<DataSet> createDataSet_int() {
-      return self->createDataSet<int>();
+    std::shared_ptr<DataSet>
+      createDataSet_int(const WriteOptions& write_options)
+    {
+      return self->createDataSet<int>(write_options);
     }
-    std::shared_ptr<DataSet> createDataSet_double() {
-      return self->createDataSet<double>();
+    std::shared_ptr<DataSet>
+      createDataSet_double(const WriteOptions& write_options)
+    {
+      return self->createDataSet<double>(write_options);
     }
   }
   std::shared_ptr<CopyObj>
-    createCopyObj(const H5::Group& group, const string& name);
+    createCopyObj(const WriteOptions& write_options,
+                  const H5::Group& group, const string& name);
   std::shared_ptr<CopyObj>
-    createCopyObj(const H5::H5File& file, const string& name);
+    createCopyObj(const WriteOptions& write_options,
+                  const H5::H5File& file, const string& name);
   // %extend {
   //   std::shared_ptr<CopyObj>
   //     createCopyObInGroup(long group_id, const string& name) {
@@ -520,7 +538,8 @@ struct DiscreteFieldBlockComponent {
   //   }
   // }
   std::shared_ptr<ExtLink>
-  createExtLink(const string& filename, const string& objname);
+    createExtLink(const WriteOptions& write_options,
+                  const string& filename, const string& objname);
 #endif
   // TODO: Eliminate these (requires writing hyperslabs for the combiners)
   string getPath() const;

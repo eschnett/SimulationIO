@@ -177,6 +177,25 @@ void copy(void *outptr0, ptrdiff_t outnpoints, const box_t &outlayout,
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// Options for writing data, e.g. compression settings
+struct WriteOptions {
+  enum class compression_method_t { bzip2, szip, zlib };
+
+  bool chunk;
+  bool compress;
+  compression_method_t compression_method;
+  int compression_level;
+  bool shuffle;
+  bool checksum;
+
+  WriteOptions()
+      : chunk(true), compress(true),
+        compression_method(compression_method_t::zlib), compression_level(1),
+        shuffle(true), checksum(true) {}
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 // An abstract block of data
 class DataBlock {
 #ifdef SIMULATIONIO_HAVE_HDF5
@@ -193,6 +212,10 @@ class DataBlock {
   static const vector<asdf_reader_t> asdf_readers;
 #endif
 
+protected:
+  const WriteOptions write_options;
+
+private:
   box_t m_box;
 
 public:
@@ -214,7 +237,8 @@ public:
   virtual bool invariant() const;
 
 protected:
-  DataBlock(const box_t &box) : m_box(box) {}
+  DataBlock(const WriteOptions &write_options, const box_t &box)
+      : write_options(write_options), m_box(box) {}
 
 #ifdef SIMULATIONIO_HAVE_HDF5
   void construct_spaces(const box_t &memlayout, // allocated memory
@@ -248,8 +272,9 @@ public:
   double origin() const { return m_origin; }
   vector<double> delta() const { return m_delta; }
 
-  DataRange(const box_t &box, double origin, const vector<double> &delta)
-      : DataBlock(box), m_origin(origin), m_delta(delta) {
+  DataRange(const WriteOptions &write_options, const box_t &box, double origin,
+            const vector<double> &delta)
+      : DataBlock(write_options, box), m_origin(origin), m_delta(delta) {
     assert(invariant());
   }
 
@@ -301,17 +326,20 @@ public:
 
   virtual bool invariant() const;
 
-  DataSet(const box_t &box, const H5::DataType &datatype)
-      : DataBlock(box), m_dataspace(H5::DataSpace(
-                            rank(), reversed(vector<hsize_t>(shape())).data())),
+  DataSet(const WriteOptions &write_options, const box_t &box,
+          const H5::DataType &datatype)
+      : DataBlock(write_options, box),
+        m_dataspace(
+            H5::DataSpace(rank(), reversed(vector<hsize_t>(shape())).data())),
         m_datatype(datatype), m_have_location(false), m_have_dataset(false),
         m_have_attached_data(false) {
     assert(invariant());
   }
   template <typename T>
-  DataSet(T, const box_t &box)
-      : DataBlock(box), m_dataspace(H5::DataSpace(
-                            rank(), reversed(vector<hsize_t>(shape())).data())),
+  DataSet(T, const WriteOptions &write_options, const box_t &box)
+      : DataBlock(write_options, box),
+        m_dataspace(
+            H5::DataSpace(rank(), reversed(vector<hsize_t>(shape())).data())),
         m_datatype(H5::getType(T{})), m_have_location(false),
         m_have_dataset(false), m_have_attached_data(false) {
     assert(invariant());
@@ -423,7 +451,7 @@ public:
   DataBuffer() = delete;
   DataBuffer(int dim, const H5::DataType &datatype);
 
-  void write(const H5::Group &group, const string &entry) const;
+  virtual void write(const H5::Group &group, const string &entry) const;
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   virtual void write(ASDF::writer &w, const string &entry) const;
 #endif
@@ -441,7 +469,8 @@ public:
 
   virtual ~DataBufferEntry() {}
 
-  DataBufferEntry(const box_t &box, const H5::DataType &datatype,
+  DataBufferEntry(const WriteOptions &write_options, const box_t &box,
+                  const H5::DataType &datatype,
                   const shared_ptr<DataBuffer> &databuffer);
 
   static shared_ptr<DataBufferEntry>
@@ -469,10 +498,13 @@ public:
 
   virtual bool invariant() const;
 
-  CopyObj(const box_t &box, const H5::Group &group, const string &name)
-      : DataBlock(box), m_group(group), m_name(name) {}
-  CopyObj(const box_t &box, const H5::H5File &file, const string &name)
-      : DataBlock(box), m_group(file.openGroup("/")), m_name(name) {}
+  CopyObj(const WriteOptions &write_options, const box_t &box,
+          const H5::Group &group, const string &name)
+      : DataBlock(write_options, box), m_group(group), m_name(name) {}
+  CopyObj(const WriteOptions &write_options, const box_t &box,
+          const H5::H5File &file, const string &name)
+      : DataBlock(write_options, box), m_group(file.openGroup("/")),
+        m_name(name) {}
 
   virtual ~CopyObj() {}
 
@@ -518,8 +550,10 @@ public:
     return DataBlock::invariant() && !m_filename.empty() && !m_objname.empty();
   }
 
-  ExtLink(const box_t &box, const string &filename, const string &objname)
-      : DataBlock(box), m_filename(filename), m_objname(objname) {}
+  ExtLink(const WriteOptions &write_options, const box_t &box,
+          const string &filename, const string &objname)
+      : DataBlock(write_options, box), m_filename(filename),
+        m_objname(objname) {}
 
   virtual ~ExtLink() {}
 
@@ -551,6 +585,9 @@ vector<int64_t> fortran_strides(const ASDF::datatype_t &datatype,
 class ASDFData : public DataBlock {
   shared_ptr<ASDF::ndarray> m_ndarray;
 
+  ASDF::compression_t asdf_compression_method() const;
+  int asdf_compression_level() const;
+
 public:
   shared_ptr<ASDF::ndarray> ndarray() const { return m_ndarray; }
 
@@ -559,20 +596,23 @@ public:
   }
 
   // Construct directly
-  ASDFData(const box_t &box, const shared_ptr<ASDF::ndarray> &ndarray)
-      : DataBlock(box), m_ndarray(ndarray) {}
+  ASDFData(const WriteOptions &write_options, const box_t &box,
+           const shared_ptr<ASDF::ndarray> &ndarray)
+      : DataBlock(write_options, box), m_ndarray(ndarray) {}
 
   // Construct from memoized block
-  ASDFData(const box_t &box, const ASDF::memoized<ASDF::block_t> &mdata,
+  ASDFData(const WriteOptions &write_options, const box_t &box,
+           const ASDF::memoized<ASDF::block_t> &mdata,
            const shared_ptr<ASDF::datatype_t> &datatype);
 
   // Construct from vector
-  ASDFData(const box_t &box, vector<unsigned char> data,
+  ASDFData(const WriteOptions &write_options, const box_t &box,
+           vector<unsigned char> data,
            const shared_ptr<ASDF::datatype_t> &datatype);
 
   // Construct from pointer
-  ASDFData(const box_t &box, const void *data, size_t npoints,
-           const box_t &memlayout,
+  ASDFData(const WriteOptions &write_options, const box_t &box,
+           const void *data, size_t npoints, const box_t &memlayout,
            const shared_ptr<ASDF::datatype_t> &datatype);
 
   virtual ~ASDFData() {}
@@ -602,8 +642,9 @@ public:
     return DataBlock::invariant() && bool(m_reference);
   }
 
-  ASDFRef(const box_t &box, const shared_ptr<ASDF::reference> &ref)
-      : DataBlock(box), m_reference(ref) {}
+  ASDFRef(const WriteOptions &write_options, const box_t &box,
+          const shared_ptr<ASDF::reference> &ref)
+      : DataBlock(write_options, box), m_reference(ref) {}
 
   virtual ~ASDFRef() {}
 

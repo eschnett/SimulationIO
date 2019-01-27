@@ -101,7 +101,7 @@ int main(int argc, char **argv) {
       auto scalar3d_component = scalar3d->storage_indices().at(0);
       auto component = block->createDiscreteFieldBlockComponent(
           "scalar", scalar3d_component);
-      component->createDataSet<double>();
+      component->createDataSet<double>(WriteOptions());
     }
     coordinates.push_back(
         coordinatesystem->createCoordinateField(dirnames[d], d, field));
@@ -130,15 +130,16 @@ int main(int argc, char **argv) {
     auto rho_component = rho_block->createDiscreteFieldBlockComponent(
         "scalar", scalar3d_component);
 #if 1
-    rho_component->createDataSet<double>();
+    rho_component->createDataSet<double>(WriteOptions());
 #else
-    rho_component->createDataBufferEntry(H5::getType(double{}), databuffer);
+    rho_component->createDataBufferEntry(WriteOptions(), H5::getType(double{}),
+                                         databuffer);
 #endif
     for (int d = 0; d < dim; ++d) {
       auto vector3d_component = vector3d->storage_indices().at(d);
       auto vel_component = vel_block->createDiscreteFieldBlockComponent(
           dirnames[d], vector3d_component);
-      vel_component->createDataSet<double>();
+      vel_component->createDataSet<double>(WriteOptions());
     }
   }
 

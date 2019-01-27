@@ -454,7 +454,7 @@ shared_ptr<DataRange> DataRange::read(const H5::Group &group,
     vector<double> delta;
     H5::readAttribute(group, entry + "_delta", delta);
     reverse(delta);
-    return make_shared<DataRange>(box, origin, delta);
+    return make_shared<DataRange>(WriteOptions(), box, origin, delta);
   }
   return nullptr;
 }
@@ -469,7 +469,7 @@ DataRange::read_asdf(const shared_ptr<ASDF::reader_state> &rs,
     return nullptr;
   auto origin = node["origin"].as<double>();
   auto delta = node["delta"].as<vector<double>>();
-  return make_shared<DataRange>(box, origin, move(delta));
+  return make_shared<DataRange>(WriteOptions(), box, origin, move(delta));
 }
 #endif
 
@@ -594,12 +594,23 @@ void DataSet::create_dataset() const {
   dataspace().getSimpleExtentDims(size.data());
   if (dim > 0) {
     // Zero-dimensional (scalar) datasets cannot be chunked
-    auto chunksize = choose_chunksize(size, datatype().getSize());
-    proplist.setChunk(dim, chunksize.data());
-    proplist.setFletcher32();
-    proplist.setShuffle(); // Shuffling improves compression
-    const int level = 1;   // Level 1 is fast, but still offers good compression
-    proplist.setDeflate(level);
+    if (write_options.chunk || write_options.compress ||
+        write_options.shuffle || write_options.checksum) {
+      auto chunksize = choose_chunksize(size, datatype().getSize());
+      proplist.setChunk(dim, chunksize.data());
+    }
+    if (write_options.checksum) {
+      proplist.setFletcher32();
+    }
+    if (write_options.shuffle) {
+      proplist.setShuffle(); // Shuffling improves compression
+    }
+    if (write_options.compress) {
+      // Level 1 is fast, but still offers good compression
+      const int level = write_options.compression_level;
+      // We always use deflate, ignoring the user's choice
+      proplist.setDeflate(level);
+    }
   }
   assert(m_have_location);
   m_dataset = m_location_group.createDataSet(m_location_name, datatype(),
@@ -712,9 +723,10 @@ bool DataBufferEntry::invariant() const {
   return true;
 }
 
-DataBufferEntry::DataBufferEntry(const box_t &box, const H5::DataType &datatype,
+DataBufferEntry::DataBufferEntry(const WriteOptions &write_options,
+                                 const box_t &box, const H5::DataType &datatype,
                                  const shared_ptr<DataBuffer> &databuffer)
-    : DataBlock(box), m_databuffer(databuffer) {
+    : DataBlock(write_options, box), m_databuffer(databuffer) {
   assert(datatype == databuffer->datatype());
   m_linearization = databuffer->concatenation()->push_back(box);
 }
@@ -787,10 +799,10 @@ shared_ptr<CopyObj> CopyObj::read(const H5::Group &group, const string &entry,
       //     H5Oget_info_by_name(group.getLocId(), entry.c_str(), &info, lapl);
       // assert(!herr);
       // assert(info.type == H5O_TYPE_DATASET);
-      return make_shared<CopyObj>(box, group, entry);
+      return make_shared<CopyObj>(WriteOptions(), box, group, entry);
     }
 #else
-    return make_shared<CopyObj>(box, group, entry);
+    return make_shared<CopyObj>(WriteOptions(), box, group, entry);
 #endif
   }
   return nullptr;
@@ -863,7 +875,7 @@ void CopyObj::write(ASDF::writer &w, const string &entry) const {
   auto type_size = type.getSize();
   vector<unsigned char> data(size() * type_size);
   readData(data.data(), type, box(), box());
-  auto arr = ASDFData(box(), move(data),
+  auto arr = ASDFData(WriteOptions(), box(), move(data),
                       make_shared<ASDF::datatype_t>(asdf_type(type)));
   arr.write(w, entry);
 }
@@ -952,30 +964,52 @@ vector<int64_t> fortran_strides(const ASDF::datatype_t &datatype,
   return strides;
 }
 
-ASDFData::ASDFData(const box_t &box, const ASDF::memoized<ASDF::block_t> &mdata,
+ASDF::compression_t ASDFData::asdf_compression_method() const {
+  if (write_options.compress) {
+    switch (write_options.compression_method) {
+    case WriteOptions::compression_method_t::bzip2:
+      return ASDF::compression_t::bzip2;
+    case WriteOptions::compression_method_t::szip:
+    case WriteOptions::compression_method_t::zlib:
+      return ASDF::compression_t::zlib;
+    default:
+      assert(0);
+    }
+  } else {
+    return ASDF::compression_t::none;
+  }
+}
+
+int ASDFData::asdf_compression_level() const {
+  return write_options.compression_level;
+}
+
+ASDFData::ASDFData(const WriteOptions &write_options, const box_t &box,
+                   const ASDF::memoized<ASDF::block_t> &mdata,
                    const shared_ptr<ASDF::datatype_t> &datatype)
-    : DataBlock(box),
+    : DataBlock(write_options, box),
       m_ndarray(make_shared<ASDF::ndarray>(
-          mdata, ASDF::block_format_t::block, ASDF::compression_t::zlib,
-          vector<bool>(), datatype, ASDF::host_byteorder(),
-          vector<int64_t>(shape()), 0,
+          mdata, ASDF::block_format_t::block, asdf_compression_method(),
+          asdf_compression_level(), vector<bool>(), datatype,
+          ASDF::host_byteorder(), vector<int64_t>(shape()), 0,
           fortran_strides(*datatype, vector<int64_t>(shape())))) {}
 
-ASDFData::ASDFData(const box_t &box, vector<unsigned char> data,
+ASDFData::ASDFData(const WriteOptions &write_options, const box_t &box,
+                   vector<unsigned char> data,
                    const shared_ptr<ASDF::datatype_t> &datatype)
-    : DataBlock(box),
+    : DataBlock(write_options, box),
       m_ndarray(make_shared<ASDF::ndarray>(
           ASDF::make_constant_memoized(shared_ptr<ASDF::block_t>(
               make_shared<ASDF::typed_block_t<unsigned char>>(move(data)))),
-          ASDF::block_format_t::block, ASDF::compression_t::zlib,
-          vector<bool>(), datatype, ASDF::host_byteorder(),
-          vector<int64_t>(shape()), 0,
+          ASDF::block_format_t::block, asdf_compression_method(),
+          asdf_compression_level(), vector<bool>(), datatype,
+          ASDF::host_byteorder(), vector<int64_t>(shape()), 0,
           fortran_strides(*datatype, vector<int64_t>(shape())))) {}
 
-ASDFData::ASDFData(const box_t &box, const void *data, size_t npoints,
-                   const box_t &memlayout,
+ASDFData::ASDFData(const WriteOptions &write_options, const box_t &box,
+                   const void *data, size_t npoints, const box_t &memlayout,
                    const shared_ptr<ASDF::datatype_t> &datatype)
-    : DataBlock(box) {
+    : DataBlock(write_options, box) {
   assert(data);
   assert(box <= memlayout);
   assert(npoints == memlayout.size());
@@ -986,8 +1020,9 @@ ASDFData::ASDFData(const box_t &box, const void *data, size_t npoints,
   m_ndarray = make_shared<ASDF::ndarray>(
       ASDF::make_constant_memoized(shared_ptr<ASDF::block_t>(
           make_shared<ASDF::typed_block_t<unsigned char>>(move(buf)))),
-      ASDF::block_format_t::block, ASDF::compression_t::zlib, vector<bool>(),
-      datatype, ASDF::host_byteorder(), vector<int64_t>(shape()), 0,
+      ASDF::block_format_t::block, asdf_compression_method(),
+      asdf_compression_level(), vector<bool>(), datatype,
+      ASDF::host_byteorder(), vector<int64_t>(shape()), 0,
       fortran_strides(*datatype, vector<int64_t>(shape())));
 }
 
@@ -1002,7 +1037,8 @@ shared_ptr<ASDFData>
 ASDFData::read_asdf(const shared_ptr<ASDF::reader_state> &rs,
                     const YAML::Node &node, const box_t &box) {
   if (node.Tag() == "tag:stsci.edu:asdf/core/ndarray-1.0.0")
-    return make_shared<ASDFData>(box, make_shared<ASDF::ndarray>(rs, node));
+    return make_shared<ASDFData>(WriteOptions(), box,
+                                 make_shared<ASDF::ndarray>(rs, node));
   return nullptr;
 }
 
@@ -1035,7 +1071,8 @@ shared_ptr<ASDFRef> ASDFRef::read_asdf(const shared_ptr<ASDF::reader_state> &rs,
                                        const YAML::Node &node,
                                        const box_t &box) {
   if (node.IsMap() && node.size() == 1 && node["$ref"])
-    return make_shared<ASDFRef>(box, make_shared<ASDF::reference>(rs, node));
+    return make_shared<ASDFRef>(WriteOptions(), box,
+                                make_shared<ASDF::reference>(rs, node));
   return nullptr;
 }
 
