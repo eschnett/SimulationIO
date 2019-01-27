@@ -176,11 +176,11 @@ set_property(TARGET SimulationIO PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 #  AND H5PY_FOUND AND ASDF_FOUND
 if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND AND SWIG_FOUND)
   set_source_files_properties(RegionCalculus.i PROPERTIES CPLUSPLUS ON)
-  swig_add_module(RegionCalculus python RegionCalculus.i)
+  swig_add_library(RegionCalculus LANGUAGE python SOURCES RegionCalculus.i)
   swig_link_libraries(RegionCalculus ${LIBS} ${PYTHON_LIBRARIES})
 
   set_source_files_properties(SimulationIO.i PROPERTIES CPLUSPLUS ON)
-  swig_add_module(SimulationIO python SimulationIO.i)
+  swig_add_library(SimulationIO LANGUAGE python SOURCES SimulationIO.i)
   swig_link_libraries(SimulationIO SimulationIO ${PYTHON_LIBRARIES})
 endif()
 
