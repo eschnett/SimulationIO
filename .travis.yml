@@ -49,7 +49,7 @@ cache:
   directories:
     - $HOME/hdf5-1.10.1
     - $HOME/yaml-cpp-0.6.2
-    - $HOME/asdf-cxx-6.3.0
+    - $HOME/asdf-cxx-7.0.0
 
 install:
   - which $CXX
@@ -90,18 +90,18 @@ install:
         )
       fi
       # Build asdf-cxx
-      export ASDF_CXX_DIR="$HOME/asdf-cxx-6.3.0"
+      export ASDF_CXX_DIR="$HOME/asdf-cxx-7.0.0"
       export PATH="$ASDF_CXX_DIR/bin:$PATH"
       # Check cache
       if [ ! -e "$ASDF_CXX_DIR/bin/asdf-ls" ]; then
         (
           mkdir -p external
           cd external
-          wget https://github.com/eschnett/asdf-cxx/archive/version/6.3.0.tar.gz
-          tar xzf 6.3.0.tar.gz
-          mkdir asdf-cxx-6.3.0-build
-          cd asdf-cxx-6.3.0-build
-          cmake -DCMAKE_PREFIX_PATH="$YAML_CPP_DIR" -DCMAKE_INSTALL_PREFIX="$ASDF_CXX_DIR" ../asdf-cxx-version-6.3.0
+          wget https://github.com/eschnett/asdf-cxx/archive/version/7.0.0.tar.gz
+          tar xzf 7.0.0.tar.gz
+          mkdir asdf-cxx-7.0.0-build
+          cd asdf-cxx-7.0.0-build
+          cmake -DCMAKE_PREFIX_PATH="$YAML_CPP_DIR" -DCMAKE_INSTALL_PREFIX="$ASDF_CXX_DIR" ../asdf-cxx-version-7.0.0
           make -j2
           make -j2 install
         )
@@ -144,18 +144,18 @@ install:
         )
       fi
       # Build asdf-cxx
-      export ASDF_CXX_DIR="$HOME/asdf-cxx-6.3.0"
+      export ASDF_CXX_DIR="$HOME/asdf-cxx-7.0.0"
       export PATH="$ASDF_CXX_DIR/bin:$PATH"
       # Check cache
       if [ ! -e "$ASDF_CXX_DIR/bin/asdf-ls" ]; then
         (
           mkdir -p external
           cd external
-          wget https://github.com/eschnett/asdf-cxx/archive/version/6.3.0.tar.gz
-          tar xzf 6.3.0.tar.gz
-          mkdir asdf-cxx-6.3.0-build
-          cd asdf-cxx-6.3.0-build
-          cmake -DCMAKE_PREFIX_PATH="$YAML_CPP_DIR" -DCMAKE_MACOSX_RPATH=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX="$ASDF_CXX_DIR" ../asdf-cxx-version-6.3.0
+          wget https://github.com/eschnett/asdf-cxx/archive/version/7.0.0.tar.gz
+          tar xzf 7.0.0.tar.gz
+          mkdir asdf-cxx-7.0.0-build
+          cd asdf-cxx-7.0.0-build
+          cmake -DCMAKE_PREFIX_PATH="$YAML_CPP_DIR" -DCMAKE_MACOSX_RPATH=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX="$ASDF_CXX_DIR" ../asdf-cxx-version-7.0.0
           make -j2
           make -j2 install
         )
