@@ -21,9 +21,7 @@ find_path(ASDF_CXX_INCLUDE_DIR NAMES asdf.hpp)
 mark_as_advanced(ASDF_CXX_INCLUDE_DIR)
 
 # Look for the library (sorted from most current/relevant entry to least).
-find_library(ASDF_CXX_LIBRARY NAMES
-  asdf-cxx
-)
+find_library(ASDF_CXX_LIBRARY NAMES asdf-cxx)
 mark_as_advanced(ASDF_CXX_LIBRARY)
 
 if(ASDF_CXX_INCLUDE_DIR)
