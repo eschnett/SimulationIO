@@ -6,7 +6,7 @@ cmake_policy(SET CMP0048 NEW)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 
-project(SimulationIO VERSION 7.6.0 LANGUAGES C CXX)
+project(SimulationIO VERSION 8.0.0 LANGUAGES C CXX)
 set(PROJECT_DESCRIPTION
   "SimulationIO: Efficient and convenient I/O for large PDE simulations")
 set(PROJECT_URL "https://github.com/eschnett/SimulationIO")
@@ -18,12 +18,12 @@ set(CMAKE_MODULE_PATH
 
 OPTION(ENABLE_ASDF_CXX "Enable asdf-cxx backend" ON)
 if(ENABLE_ASDF_CXX)
-  find_package(asdf-cxx 6.3.0)
+  find_package(asdf-cxx 7.0.0)
 endif()
 if(ASDF_CXX_FOUND)
-  if(ASDF_CXX_VERSION_STRING VERSION_LESS 6.3.0)
+  if(ASDF_CXX_VERSION_STRING VERSION_LESS 7.0.0)
     message(ASDF_CXX_VERSION)
-    message(SEND_ERROR "asdf-cxx version 6.3.0 or later is required")
+    message(SEND_ERROR "asdf-cxx version 7.0.0 or later is required")
   endif()
   include_directories(${ASDF_CXX_INCLUDE_DIR})
   set(LIBS ${LIBS} ${ASDF_CXX_LIBRARY})
@@ -176,11 +176,11 @@ set_property(TARGET SimulationIO PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 #  AND H5PY_FOUND AND ASDF_FOUND
 if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND AND SWIG_FOUND)
   set_source_files_properties(RegionCalculus.i PROPERTIES CPLUSPLUS ON)
-  swig_add_module(RegionCalculus python RegionCalculus.i)
+  swig_add_library(RegionCalculus LANGUAGE python SOURCES RegionCalculus.i)
   swig_link_libraries(RegionCalculus ${LIBS} ${PYTHON_LIBRARIES})
 
   set_source_files_properties(SimulationIO.i PROPERTIES CPLUSPLUS ON)
-  swig_add_module(SimulationIO python SimulationIO.i)
+  swig_add_library(SimulationIO LANGUAGE python SOURCES SimulationIO.i)
   swig_link_libraries(SimulationIO SimulationIO ${PYTHON_LIBRARIES})
 endif()
 

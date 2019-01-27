@@ -192,7 +192,7 @@ DiscreteFieldBlock::copyDiscreteFieldBlockComponent(
         auto copyobj2 = discretefieldblockcomponent2->copyobj();
         if (!copyobj2)
           copyobj2 = discretefieldblockcomponent2->createCopyObj(
-              copyobj->group(), copyobj->name());
+              WriteOptions(), copyobj->group(), copyobj->name());
       }
 #endif
       auto datarange = discretefieldblockcomponent->datarange();
@@ -201,7 +201,7 @@ DiscreteFieldBlock::copyDiscreteFieldBlockComponent(
         auto datarange2 = discretefieldblockcomponent2->datarange();
         if (!datarange2)
           datarange2 = discretefieldblockcomponent2->createDataRange(
-              datarange->origin(), datarange->delta());
+              WriteOptions(), datarange->origin(), datarange->delta());
       }
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 #warning "TODO: handle ASDF types"

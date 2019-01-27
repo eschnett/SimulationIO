@@ -74,7 +74,7 @@ for d in range(dim):
         scalar3d_component = scalar3d.storage_indices()[0]
         component = block.createDiscreteFieldBlockComponent(
             "scalar", scalar3d_component)
-        component.createDataSet_double()
+        component.createDataSet_double(WriteOptions())
     coordinates.append(
         coordinatesystem.createCoordinateField(dirnames[d], d, field))
 
@@ -97,12 +97,12 @@ for p in range(ngrids):
     scalar3d_component = scalar3d.storage_indices()[0]
     rho_component = rho_block.createDiscreteFieldBlockComponent(
         "scalar", scalar3d_component)
-    rho_component.createDataSet_double()
+    rho_component.createDataSet_double(WriteOptions())
     for d in range(dim):
         vector3d_component = vector3d.storage_indices()[d]
         vel_component = vel_block.createDiscreteFieldBlockComponent(
             dirnames[d], vector3d_component)
-        vel_component.createDataSet_double()
+        vel_component.createDataSet_double(WriteOptions())
 
 # Attach data
 for pk in range(npk):

@@ -159,44 +159,58 @@ public:
 #endif
 
   void unsetDataBlock();
-  shared_ptr<DataRange> createDataRange(double origin,
+  shared_ptr<DataRange> createDataRange(const WriteOptions &write_options,
+                                        double origin,
                                         const vector<double> &delta);
 #ifdef SIMULATIONIO_HAVE_HDF5
-  shared_ptr<DataSet> createDataSet(const H5::DataType &type);
-  template <typename T> shared_ptr<DataSet> createDataSet() {
-    return createDataSet(H5::getType(T{}));
+  shared_ptr<DataSet> createDataSet(const WriteOptions &write_options,
+                                    const H5::DataType &type);
+  template <typename T>
+  shared_ptr<DataSet> createDataSet(const WriteOptions &write_options) {
+    return createDataSet(write_options, H5::getType(T{}));
   }
   shared_ptr<DataBufferEntry>
-  createDataBufferEntry(const H5::DataType &type,
+  createDataBufferEntry(const WriteOptions &write_options,
+                        const H5::DataType &type,
                         const shared_ptr<DataBuffer> &databuffer);
-  shared_ptr<CopyObj> createCopyObj(const H5::Group &group, const string &name);
-  shared_ptr<CopyObj> createCopyObj(const H5::H5File &file, const string &name);
-  shared_ptr<ExtLink> createExtLink(const string &filename,
+  shared_ptr<CopyObj> createCopyObj(const WriteOptions &write_options,
+                                    const H5::Group &group, const string &name);
+  shared_ptr<CopyObj> createCopyObj(const WriteOptions &write_options,
+                                    const H5::H5File &file, const string &name);
+  shared_ptr<ExtLink> createExtLink(const WriteOptions &write_options,
+                                    const string &filename,
                                     const string &objname);
 #endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-  shared_ptr<ASDFData> createASDFData(const shared_ptr<ASDF::ndarray> &ndarray);
+  shared_ptr<ASDFData> createASDFData(const WriteOptions &write_options,
+                                      const shared_ptr<ASDF::ndarray> &ndarray);
   shared_ptr<ASDFData>
-  createASDFData(const ASDF::memoized<ASDF::block_t> &mdata,
+  createASDFData(const WriteOptions &write_options,
+                 const ASDF::memoized<ASDF::block_t> &mdata,
                  const shared_ptr<ASDF::datatype_t> &datatype);
   template <typename T>
   shared_ptr<ASDFData>
-  createASDFData(const ASDF::memoized<ASDF::block_t> &mdata) {
-    return createASDFData(mdata, make_shared<ASDF::datatype_t>(
-                                     ASDF::get_scalar_type_id<T>::value));
+  createASDFData(const WriteOptions &write_options,
+                 const ASDF::memoized<ASDF::block_t> &mdata) {
+    return createASDFData(
+        write_options, mdata,
+        make_shared<ASDF::datatype_t>(ASDF::get_scalar_type_id<T>::value));
   }
   shared_ptr<ASDFData>
-  createASDFData(const void *data, size_t npoints, const box_t &memlayout,
+  createASDFData(const WriteOptions &write_options, const void *data,
+                 size_t npoints, const box_t &memlayout,
                  const shared_ptr<ASDF::datatype_t> &datatype);
   template <typename T>
-  shared_ptr<ASDFData> createASDFData(const vector<T> &data,
+  shared_ptr<ASDFData> createASDFData(const WriteOptions &write_options,
+                                      const vector<T> &data,
                                       const box_t &memlayout) {
     return createASDFData(
-        data.data(), data.size(), memlayout,
+        write_options, data.data(), data.size(), memlayout,
         make_shared<ASDF::datatype_t>(ASDF::get_scalar_type_id<T>::value));
   }
 
-  shared_ptr<ASDFRef> createASDFRef(const string &filename,
+  shared_ptr<ASDFRef> createASDFRef(const WriteOptions &write_options,
+                                    const string &filename,
                                     const vector<string> &path);
 #endif
 

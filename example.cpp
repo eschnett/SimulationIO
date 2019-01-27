@@ -79,6 +79,13 @@ int main(int argc, char **argv) {
     directions.push_back(basis->createBasisVector(dirnames[d], d));
   }
 
+  WriteOptions write_options;
+  write_options.compress = true;
+  write_options.compression_method = WriteOptions::compression_method_t::zlib;
+  write_options.compression_level = 9;
+  write_options.shuffle = true;
+  write_options.checksum = true;
+
   // Coordinate System
   auto coordinatesystem =
       project->createCoordinateSystem("Cartesian", configuration, manifold);
@@ -104,7 +111,7 @@ int main(int argc, char **argv) {
         delta[d] = {0, 0, 0};
         delta[d][d] = first[d] - origin[d];
       }
-      component->createDataRange(origin[d], delta[d]);
+      component->createDataRange(write_options, origin[d], delta[d]);
     }
     coordinates.push_back(
         coordinatesystem->createCoordinateField(dirnames[d], d, field));
@@ -133,15 +140,16 @@ int main(int argc, char **argv) {
     auto rho_component = rho_block->createDiscreteFieldBlockComponent(
         "scalar", scalar3d_component);
 #if 1
-    rho_component->createDataSet<double>();
+    auto rho_dataset = rho_component->createDataSet<double>(write_options);
 #else
-    rho_component->createDataBufferEntry(H5::getType(double{}), databuffer);
+    auto rho_dataset = rho_component->createDataBufferEntry(
+        write_options, H5::getType(double{}), databuffer);
 #endif
     for (int d = 0; d < dim; ++d) {
       auto vector3d_component = vector3d->storage_indices().at(d);
       auto vel_component = vel_block->createDiscreteFieldBlockComponent(
           dirnames[d], vector3d_component);
-      vel_component->createDataSet<double>();
+      auto vel_dataset = vel_component->createDataSet<double>(write_options);
     }
   }
 

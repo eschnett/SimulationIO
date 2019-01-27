@@ -1760,18 +1760,18 @@ TEST(DataBlock, create) {
   EXPECT_FALSE(bool(dfbd2->datablock()));
   EXPECT_FALSE(bool(dfbd3->datablock()));
   EXPECT_FALSE(bool(dfbd4->datablock()));
-  dfbd1->createExtLink("discretizationfieldblockcomponent.s5",
+  dfbd1->createExtLink(WriteOptions(), "discretizationfieldblockcomponent.s5",
                        project->name() + "/tensortypes/Scalar3D");
   dfbd1->unsetDataBlock();
-  dfbd2->createExtLink("discretizationfieldblockcomponent.s5",
+  dfbd2->createExtLink(WriteOptions(), "discretizationfieldblockcomponent.s5",
                        project->name() + "/tensortypes/Scalar3D");
-  dfbd3->createDataSet<double>();
+  dfbd3->createDataSet<double>(WriteOptions());
   int rank =
       dfb1->discretizationblock()->discretization()->manifold()->dimension();
   auto dims = dfb1->discretizationblock()->box().shape();
   double origin{-1.0};
   auto delta = dpoint<double>(rank, 2.0) / dims;
-  dfbd4->createDataRange(origin, delta);
+  dfbd4->createDataRange(WriteOptions(), origin, delta);
   EXPECT_FALSE(bool(dfbd1->datablock()));
   EXPECT_TRUE(bool(dfbd2->extlink()));
   EXPECT_TRUE(bool(dfbd3->dataset()));
@@ -1788,11 +1788,11 @@ TEST(DataBlock, create) {
       dfb0->discretizationblock()->discretization()->manifold()->dimension();
   double origin0{-1.0};
   dpoint<double> delta0(rank0);
-  dfbd0->createDataRange(origin0, delta0);
+  dfbd0->createDataRange(WriteOptions(), origin0, delta0);
   EXPECT_TRUE(bool(dfbd0->datarange()));
   dfbd0->unsetDataBlock();
   EXPECT_FALSE(bool(dfbd0->datarange()));
-  dfbd0->createDataSet<int>();
+  dfbd0->createDataSet<int>(WriteOptions());
   EXPECT_TRUE(bool(dfbd0->dataset()));
 }
 
@@ -1932,22 +1932,22 @@ TEST(DataBlock, create2) {
   EXPECT_FALSE(bool(dfbd2->datablock()));
   EXPECT_FALSE(bool(dfbd3->datablock()));
   EXPECT_FALSE(bool(dfbd4->datablock()));
-  dfbd1->createASDFRef("discretizationfieldblockcomponent.asdf",
+  dfbd1->createASDFRef(WriteOptions(), "discretizationfieldblockcomponent.asdf",
                        {project->name(), "tensortypes", "Scalar3D"});
   dfbd1->unsetDataBlock();
-  dfbd2->createASDFRef("discretizationfieldblockcomponent.asdf",
+  dfbd2->createASDFRef(WriteOptions(), "discretizationfieldblockcomponent.asdf",
                        {project->name(), "tensortypes", "Scalar3D"});
   auto box = db1->box();
   auto layout = box_t(box.lower(), point_t(vector<int>{10, 11, 12}));
   vector<double> data(layout.size());
   for (int n = 0; n < layout.size(); ++n)
     data[n] = 42 + n;
-  dfbd3->createASDFData(move(data), layout);
+  dfbd3->createASDFData(WriteOptions(), move(data), layout);
   int rank = db1->discretization()->manifold()->dimension();
   auto dims = db1->box().shape();
   double origin{-1.0};
   auto delta = dpoint<double>(rank, 2.0) / dims;
-  dfbd4->createDataRange(origin, delta);
+  dfbd4->createDataRange(WriteOptions(), origin, delta);
   EXPECT_FALSE(bool(dfbd1->datablock()));
   EXPECT_TRUE(bool(dfbd2->asdfref()));
   EXPECT_TRUE(bool(dfbd3->asdfdata()));
@@ -1963,7 +1963,7 @@ TEST(DataBlock, create2) {
       dfb0->discretizationblock()->discretization()->manifold()->dimension();
   double origin0{-1.0};
   dpoint<double> delta0(rank0);
-  dfbd0->createDataRange(origin0, delta0);
+  dfbd0->createDataRange(WriteOptions(), origin0, delta0);
   EXPECT_TRUE(bool(dfbd0->datarange()));
   dfbd0->unsetDataBlock();
   EXPECT_FALSE(bool(dfbd0->datarange()));
