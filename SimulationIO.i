@@ -311,6 +311,8 @@ struct WriteOptions {
   int compression_level;
   bool shuffle;
   bool checksum;
+
+  WriteOptions();
 };
 
 struct DataBlock {
