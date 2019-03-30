@@ -16,7 +16,14 @@ bool endswith(const string &str, const string &suffix) {
          str.substr(str.length() - suffix.length()) == suffix;
 }
 
-enum format_t { format_asdf, format_hdf5 };
+enum format_t {
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+  format_asdf,
+#endif
+#ifdef SIMULATIONIO_HAVE_HDF5
+  format_hdf5,
+#endif
+};
 
 format_t classify_filename(const string &filename) {
   if (endswith(filename, "5"))
@@ -30,11 +37,13 @@ format_t classify_filename(const string &filename) {
 
 shared_ptr<Project> read(const string &filename) {
   switch (classify_filename(filename)) {
-  case format_asdf: {
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+  case format_asdf:
     return readProjectASDF(filename);
     break;
-  }
-  case format_hdf5: {
+#endif
+#ifdef SIMULATIONIO_HAVE_HDF5
+  case format_hdf5:
     // return readProjectHDF5(filename);
     try {
       auto file = H5::H5File(filename, H5F_ACC_RDONLY);
@@ -44,7 +53,7 @@ shared_ptr<Project> read(const string &filename) {
       exit(1);
     }
     break;
-  }
+#endif
   }
   assert(0);
 }
