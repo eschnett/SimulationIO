@@ -21,7 +21,7 @@ shared_ptr<Project> read(const string &filename) {
 int main(int argc, char **argv) {
   cout << "sio-list-asdf: List content of ASDF files\n";
 
-  if (argc < 1) {
+  if (argc <= 1) {
     cerr << "Synopsis:\n" << argv[0] << " <file name>*\n";
     return 1;
   }

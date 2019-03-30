@@ -63,12 +63,15 @@ TEST(RegionCalculus, point) {
   p3.elt[1] = 1;
   p3.elt[2] = 2;
   EXPECT_TRUE(all((p1 + p3) * point(2) - p3 == p3 + p2));
-  EXPECT_TRUE(all(p3 == ::point<int, 3>(vector<int>{{0, 1, 2}})));
-  EXPECT_TRUE(all(p3 == ::point<int, 3>(vector<short>{{0, 1, 2}})));
   EXPECT_TRUE(all(p3 == ::point<int, 3>(array<int, 3>{{0, 1, 2}})));
   EXPECT_TRUE(all(p3 == ::point<int, 3>(array<short, 3>{{0, 1, 2}})));
+  EXPECT_TRUE(all(p3 == ::point<int, 3>(vector<int>{{0, 1, 2}})));
+  EXPECT_TRUE(all(p3 == ::point<int, 3>(vector<short>{{0, 1, 2}})));
   EXPECT_TRUE(all(p2 == ::point<int, 3>(::point<int, 3>(2))));
   EXPECT_TRUE(all(p2 == ::point<int, 3>(::point<short, 3>(2))));
+  auto v2a = array<int, 3>{2, 2, 2};
+  EXPECT_EQ(v2a, (array<int, 3>(::point<int, 3>(2))));
+  EXPECT_EQ(v2a, (array<int, 3>(::point<short, 3>(2))));
   auto v2 = vector<int>({2, 2, 2});
   EXPECT_EQ(v2, vector<int>(::point<int, 3>(2)));
   EXPECT_EQ(v2, vector<int>(::point<short, 3>(2)));

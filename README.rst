@@ -1,7 +1,7 @@
 SimulationIO
 ============
 
-|Build Status| |Coverage Status| |codecov.io| |Dependency Status|
+|Build Status| |Coverage Status| |codecov.io| |Dependency Status| |Zenodo|
 
 Efficient and convenient I/O for large PDE simulations
 
@@ -78,3 +78,5 @@ Sub-Manifolds
    :target: https://codecov.io/github/eschnett/SimulationIO?branch=master
 .. |Dependency Status| image:: https://dependencyci.com/github/eschnett/SimulationIO/badge
    :target: https://dependencyci.com/github/eschnett/SimulationIO
+.. |Zenodo| image:: https://zenodo.org/badge/43850770.svg
+   :target: https://zenodo.org/badge/latestdoi/43850770

@@ -218,6 +218,18 @@ template <typename T, int D> struct point {
     for (int d = 0; d < D; ++d)
       elt[d] = T(p.elt[d]);
   }
+  operator array<T, D>() const {
+    array<T, D> r;
+    for (int d = 0; d < D; ++d)
+      r[d] = elt[d];
+    return r;
+  }
+  template <typename U> explicit operator array<U, D>() const {
+    array<U, D> r;
+    for (int d = 0; d < D; ++d)
+      r[d] = U(elt[d]);
+    return r;
+  }
   operator vector<T>() const {
     vector<T> r(D);
     for (int d = 0; d < D; ++d)

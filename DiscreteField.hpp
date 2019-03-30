@@ -50,6 +50,7 @@ public:
   discretefieldblocks() const {
     return m_discretefieldblocks;
   }
+  // TODO: Introduce map from DiscretizationBlock to DiscreteFieldBlock
 
   virtual bool invariant() const;
 

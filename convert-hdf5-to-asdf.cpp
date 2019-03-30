@@ -17,6 +17,7 @@ using namespace SimulationIO;
 using namespace std;
 
 shared_ptr<Project> read(const string &filename) {
+  // return readProjectHDF5(filename);
   try {
     auto file = H5::H5File(filename, H5F_ACC_RDONLY);
     return readProject(file);
@@ -27,13 +28,13 @@ shared_ptr<Project> read(const string &filename) {
 }
 
 void write(const shared_ptr<Project> &project, const string &filename) {
-  ofstream os(filename, ios::binary | ios::trunc | ios::out);
-  project->writeASDF(os);
+  project->writeASDF(filename);
 }
 
 int main(int argc, char **argv) {
   cout << "sio-convert-hdf5-to-asdf: Convert an SimulationIO file from HDF5 to "
           "ASDF\n";
+  cout << "DEPRECATED: Use sio-copy instead\n";
   if (argc != 3) {
     cerr << "Wrong number of arguments\n"
          << "Syntax: " << argv[0] << " <input file> <output file>\n";

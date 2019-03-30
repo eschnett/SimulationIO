@@ -26,23 +26,23 @@ template <typename T, typename U> inline T ipow(T base, U exp) {
 // Indented output
 const int indentsize = 2;
 const char indentchar = ' ';
-inline std::string indent(int level) {
-  return std::string(level * indentsize, indentchar);
-}
+std::string indent(int level);
 
-// Quote a string
-inline std::string quote(const std::string &str) {
+// Convert to string
+template <typename T> std::string to_string(const T &x) {
   std::ostringstream buf;
-  buf << "\"";
-  for (char ch : str) {
-    if (ch == '"' || ch == '\\')
-      buf << '\\';
-    buf << ch;
-  }
-  buf << "\"";
+  buf << x;
   return buf.str();
 }
 
+// Quote a string
+std::string quote(const std::string &str);
+
+// String queries
+bool starts_with(const std::string &str, const std::string &prefix);
+bool ends_with(const std::string &str, const std::string &suffix);
+
+// Create a unique pointers
 template <typename T, typename... Args>
 std::unique_ptr<T> make_unique1(Args &&... args) {
   return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
@@ -56,6 +56,19 @@ std::vector<R> make_vector(const std::vector<T> &v) {
     r[i] = v[i];
   return r;
 }
+
+// Concatenate two vectors
+template <typename T>
+std::vector<T> concat(std::vector<T> x, const std::vector<T> &y) {
+  std::vector<T> r(move(x));
+  r.insert(r.end(), y.begin(), y.end());
+  return r;
+}
+
+// Join a vector of strings
+std::string joinpath(const std::vector<std::string> &path);
+std::string joinpath(const std::vector<std::string> &path,
+                     const std::vector<std::string> &path2);
 
 // Reverse a vector
 template <typename T> void reverse(std::vector<T> &v) {

@@ -90,21 +90,12 @@ int main(int argc, char **argv) {
 
   // Write file
   auto filename = "benchmark.s5";
-  {
-    auto fapl = H5::FileAccPropList();
-    fapl.setLibverBounds(H5F_LIBVER_LATEST, H5F_LIBVER_LATEST);
-    auto file = H5::H5File(filename, H5F_ACC_TRUNC,
-                           H5::FileCreatPropList::DEFAULT, fapl);
-    project->write(file);
-  }
+  project->writeHDF5(filename);
 
   const auto t2 = std::chrono::system_clock::now();
 
   // Read file
-  {
-    auto file = H5::H5File(filename, H5F_ACC_RDONLY);
-    auto project2 = readProject(file);
-  }
+  auto project2 = readProjectHDF5(filename);
 
   const auto t3 = std::chrono::system_clock::now();
 
