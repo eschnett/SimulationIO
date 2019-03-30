@@ -6,7 +6,7 @@ cmake_policy(SET CMP0048 NEW)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 
-project(SimulationIO VERSION 8.0.0 LANGUAGES C CXX)
+project(SimulationIO VERSION 8.1.0 LANGUAGES C CXX)
 set(PROJECT_DESCRIPTION
   "SimulationIO: Efficient and convenient I/O for large PDE simulations")
 set(PROJECT_URL "https://github.com/eschnett/SimulationIO")
@@ -58,18 +58,6 @@ if(ENABLE_ASDF_CXX)
   endif()
 endif()
 
-OPTION(ENABLE_RNPL "Enable RNPL (SDF) backend" ON)
-if(ENABLE_RNPL)
-  find_package(RNPL)
-endif()
-if(RNPL_FOUND)
-  include_directories(${RNPL_INCLUDE_DIRS})
-  set(LIBS ${LIBS} ${RNPL_LIBRARIES})
-  set(HAVE_RNPL 1)
-else()
-  set(HAVE_RNPL 0)
-endif()
-
 OPTION(ENABLE_HDF5 "Enable HDF5 backend" ON)
 if(ENABLE_HDF5)
   find_package(HDF5 1.10.1 COMPONENTS C CXX)
@@ -95,6 +83,18 @@ if(HDF5_FOUND)
     include_directories(${MPI_INCLUDE_DIRS} ${MPI_CXX_INCLUDE_PATH})
     set(LIBS ${LIBS} ${MPI_LIBRARIES} ${MPI_CXX_LIBRARIES})
   endif()
+endif()
+
+OPTION(ENABLE_RNPL "Enable RNPL (SDF) backend" ON)
+if(ENABLE_RNPL)
+  find_package(RNPL)
+endif()
+if(RNPL_FOUND)
+  include_directories(${RNPL_INCLUDE_DIRS})
+  set(LIBS ${LIBS} ${RNPL_LIBRARIES})
+  set(HAVE_RNPL 1)
+else()
+  set(HAVE_RNPL 0)
 endif()
 
 set(Python_ADDITIONAL_VERSIONS 2.7)
@@ -157,6 +157,7 @@ set(SIO_SRCS
   DiscretizationBlock.cpp
   Field.cpp
   H5Helpers.cpp
+  Helpers.cpp
   Manifold.cpp
   Parameter.cpp
   ParameterValue.cpp
@@ -191,6 +192,7 @@ if(HDF5_FOUND)
   list(APPEND EXES 
     sio-benchmark
     sio-convert-carpet-output
+    sio-convert-to-carpet
     sio-copy
     sio-example
     sio-example-attach
@@ -223,6 +225,9 @@ if(HDF5_FOUND)
 
   add_executable(sio-convert-carpet-output convert-carpet-output.cpp)
   target_link_libraries(sio-convert-carpet-output SimulationIO)
+
+  add_executable(sio-convert-to-carpet convert-to-carpet.cpp)
+  target_link_libraries(sio-convert-to-carpet SimulationIO)
 
   add_executable(sio-copy copy.cpp)
   target_link_libraries(sio-copy SimulationIO)

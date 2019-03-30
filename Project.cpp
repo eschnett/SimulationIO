@@ -4,6 +4,7 @@
 #include "Configuration.hpp"
 #include "CoordinateSystem.hpp"
 #include "Field.hpp"
+#include "Helpers.hpp"
 #include "Manifold.hpp"
 #include "Parameter.hpp"
 #include "ParameterValue.hpp"
@@ -494,14 +495,6 @@ void Project::createTypes() const {
 }
 
 #ifdef SIMULATIONIO_HAVE_HDF5
-namespace {
-string itos(int d) {
-  ostringstream buf;
-  buf << d;
-  return buf.str();
-}
-} // namespace
-
 void Project::write(const H5::H5Location &loc,
                     const H5::H5Location &parent) const {
   assert(invariant());
@@ -514,11 +507,11 @@ void Project::write(const H5::H5Location &loc,
   rangetype.commit(typegroup, "Range");
 #endif
   for (int d = 0; d < int(pointtypes.size()); ++d)
-    pointtypes.at(d).commit(typegroup, "Point[" + itos(d) + "]");
+    pointtypes.at(d).commit(typegroup, "Point[" + to_string(d) + "]");
   for (int d = 0; d < int(boxtypes.size()); ++d)
-    boxtypes.at(d).commit(typegroup, "Box[" + itos(d) + "]");
+    boxtypes.at(d).commit(typegroup, "Box[" + to_string(d) + "]");
   for (int d = 0; d < int(regiontypes.size()); ++d)
-    regiontypes.at(d).commit(typegroup, "Region[" + itos(d) + "]");
+    regiontypes.at(d).commit(typegroup, "Region[" + to_string(d) + "]");
   H5::createAttribute(group, "type", enumtype, "Project");
   H5::createAttribute(group, "name", name());
   // no link to parent

@@ -2,6 +2,7 @@
 #define COMMON_HPP
 
 #include "Config.hpp"
+#include "Helpers.hpp"
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 #include <asdf.hpp>
@@ -28,13 +29,6 @@ using std::shared_ptr;
 using std::string;
 using std::unique_ptr;
 using std::vector;
-
-// Concatenate two vectors
-template <typename T> vector<T> concat(vector<T> x, const vector<T> &y) {
-  vector<T> r(move(x));
-  r.insert(r.end(), y.begin(), y.end());
-  return r;
-}
 
 // C++ make_shared requires constructors to be public; we add a field of type
 // `hidden` to ensure they are not called accidentally.
@@ -230,7 +224,6 @@ public:
                      const H5::H5Location &parent) const = 0;
 #endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-  // virtual string yaml_alias() const = 0;
   virtual vector<string> yaml_path() const = 0;
 #endif
 

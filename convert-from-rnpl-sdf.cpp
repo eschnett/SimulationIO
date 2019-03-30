@@ -335,10 +335,7 @@ int main(int argc, char **argv) {
   }   // for inputfilename
 
   // Write file
-  auto file =
-      H5::H5File(outputfilename, H5F_ACC_TRUNC, H5::FileCreatPropList::DEFAULT,
-                 H5::FileAccPropList::DEFAULT);
-  project->write(file);
+  project->writeHDF5(outputfilename);
 
   return 0;
 }

@@ -25,7 +25,8 @@ void write(const shared_ptr<Project> &project, const string &filename) {
 }
 
 int main(int argc, char **argv) {
-  cout << "sio-copy: Copy the content of a SimulationIO file\n";
+  cout << "sio-copy-asdf: Copy the content of a SimulationIO file\n";
+  cout << "DEPRECATED: Use sio-copy instead\n";
   if (argc != 3) {
     cerr << "Wrong number of arguments\n"
          << "Syntax: " << argv[0] << " <input file> <output file>\n";

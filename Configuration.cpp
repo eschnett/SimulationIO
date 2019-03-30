@@ -132,6 +132,7 @@ void Configuration::write(const H5::H5Location &loc,
   H5::createSoftLink(group, "project", "..");
   auto val_group = group.createGroup("parametervalues");
   for (const auto &val : parametervalues()) {
+    // TODO: Should these be soft links instead?
     H5::createHardLink(val_group, val.second->name(), parent,
                        "parameters/" + val.second->parameter()->name() +
                            "/parametervalues/" + val.second->name());
@@ -169,7 +170,7 @@ void Configuration::insertParameterValue(
   for (const auto &val : parametervalues()) {
     if (val.second->parameter().get() == parametervalue->parameter().get()) {
       ostringstream buf;
-      buf << "Cannot merge Configurations \"" << name()
+      buf << "Cannot merge Configuration \"" << name()
           << "\" with conflicting Parameter settings:\n"
           << indent(1) << "current:\n";
       parametervalue->output(buf, 2);

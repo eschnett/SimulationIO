@@ -992,11 +992,7 @@ int main(int argc, char **argv) {
   }
 
   // Write file
-  auto fapl = H5::FileAccPropList();
-  fapl.setLibverBounds(H5F_LIBVER_LATEST, H5F_LIBVER_LATEST);
-  auto file = H5::H5File(outputfilename, H5F_ACC_TRUNC,
-                         H5::FileCreatPropList::DEFAULT, fapl);
-  project->write(file);
+  project->writeHDF5(outputfilename);
 
   return 0;
 }
