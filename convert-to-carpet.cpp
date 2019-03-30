@@ -26,10 +26,14 @@ enum format_t {
 };
 
 format_t classify_filename(const string &filename) {
+#ifdef SIMULATIONIO_HAVE_HDF5
   if (endswith(filename, "5"))
     return format_hdf5;
+#endif
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
   if (endswith(filename, ".asdf"))
     return format_asdf;
+#endif
   cerr << "Cannot determine file format from file name \"" << filename
        << "\"\n";
   exit(1);
