@@ -125,6 +125,25 @@ ASDF::writer &TangentSpace::write(ASDF::writer &w) const {
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_TILEDB
+vector<string> TangentSpace::tiledb_path() const {
+  return concat(project()->tiledb_path(), {"tangentspaces", name()});
+}
+
+void TangentSpace::write(const tiledb::Context &ctx, const string &loc) const {
+  assert(invariant());
+  const tiledb_writer w(*this, ctx, loc);
+  w.add_symlink(concat(tiledb_path(), {"configuration"}),
+                configuration()->tiledb_path());
+  w.add_symlink(
+      concat(configuration()->tiledb_path(), {"tangentspaces", name()}),
+      tiledb_path());
+  w.add_attribute("dimension", dimension());
+  w.add_group("bases", bases());
+  w.create_group("fields");
+}
+#endif
+
 shared_ptr<Basis>
 TangentSpace::createBasis(const string &name,
                           const shared_ptr<Configuration> &configuration) {

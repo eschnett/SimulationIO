@@ -2,6 +2,7 @@
 #define DATABLOCK_HPP
 
 #include "Buffer.hpp"
+#include "Common.hpp"
 #include "Config.hpp"
 #include "Helpers.hpp"
 #include "RegionCalculus.hpp"
@@ -14,9 +15,14 @@
 #include "H5Helpers.hpp"
 #endif
 
+#ifdef SIMULATIONIO_HAVE_TILEDB
+#include <tiledb/tiledb>
+#endif
+
 #include <algorithm>
 #include <cmath>
 #include <complex>
+#include <cstdint>
 #include <cstdlib>
 #include <functional>
 #include <iostream>
@@ -211,6 +217,13 @@ class DataBlock {
       asdf_reader_t;
   static const vector<asdf_reader_t> asdf_readers;
 #endif
+  // #ifdef SIMULATIONIO_HAVE_TILEDB
+  //   typedef function<shared_ptr<DataBlock>(const tiledb::Context &ctx,
+  //                                          const string &loc, const box_t
+  //                                          &box)>
+  //       tiledb_reader_t;
+  //   static const vector<tiledb_reader_t> tiledb_readers;
+  // #endif
 
 protected:
   const WriteOptions write_options;
@@ -261,6 +274,9 @@ public:
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   virtual void write(ASDF::writer &w, const string &entry) const = 0;
 #endif
+#ifdef SIMULATIONIO_HAVE_TILEDB
+  virtual void write(const tiledb_writer &w, const string &entry) const = 0;
+#endif
 };
 
 // A multi-linear range
@@ -297,6 +313,9 @@ public:
 #endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   virtual void write(ASDF::writer &w, const string &entry) const;
+#endif
+#ifdef SIMULATIONIO_HAVE_TILEDB
+  virtual void write(const tiledb_writer &w, const string &entry) const;
 #endif
 };
 
@@ -358,6 +377,12 @@ public:
   virtual void write(const H5::Group &group, const string &entry) const;
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   virtual void write(ASDF::writer &w, const string &entry) const;
+#endif
+#ifdef SIMULATIONIO_HAVE_TILEDB
+  virtual void write(const tiledb_writer &w, const string &entry) const {
+#warning "TODO"
+    assert(0);
+  }
 #endif
 
 private:
@@ -455,6 +480,12 @@ public:
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   virtual void write(ASDF::writer &w, const string &entry) const;
 #endif
+#ifdef SIMULATIONIO_HAVE_TILEDB
+  virtual void write(const tiledb_writer &w, const string &entry) const {
+#warning "TODO"
+    assert(0);
+  }
+#endif
 };
 
 // A pointer into a DataBuffer
@@ -484,6 +515,12 @@ public:
   virtual void write(const H5::Group &group, const string &entry) const;
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   virtual void write(ASDF::writer &w, const string &entry) const;
+#endif
+#ifdef SIMULATIONIO_HAVE_TILEDB
+  virtual void write(const tiledb_writer &w, const string &entry) const {
+#warning "TODO"
+    assert(0);
+  }
 #endif
 };
 
@@ -519,6 +556,9 @@ public:
   virtual void write(const H5::Group &group, const string &entry) const;
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   virtual void write(ASDF::writer &w, const string &entry) const;
+#endif
+#ifdef SIMULATIONIO_HAVE_TILEDB
+  virtual void write(const tiledb_writer &w, const string &entry) const;
 #endif
 
   void readData(void *data, const H5::DataType &datatype,
@@ -568,6 +608,12 @@ public:
   virtual void write(const H5::Group &group, const string &entry) const;
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   virtual void write(ASDF::writer &w, const string &entry) const;
+#endif
+#ifdef SIMULATIONIO_HAVE_TILEDB
+  virtual void write(const tiledb_writer &w, const string &entry) const {
+#warning "TODO"
+    assert(0);
+  }
 #endif
 
   // TODO: implement readData
@@ -629,6 +675,12 @@ public:
   virtual void write(const H5::Group &group, const string &entry) const;
 #endif
   virtual void write(ASDF::writer &w, const string &entry) const;
+#ifdef SIMULATIONIO_HAVE_TILEDB
+  virtual void write(const tiledb_writer &w, const string &entry) const {
+#warning "TODO"
+    assert(0);
+  }
+#endif
 };
 
 // An ASDF reference
@@ -660,9 +712,83 @@ public:
   virtual void write(const H5::Group &group, const string &entry) const;
 #endif
   virtual void write(ASDF::writer &w, const string &entry) const;
+#ifdef SIMULATIONIO_HAVE_TILEDB
+  virtual void write(const tiledb_writer &w, const string &entry) const {
+#warning "TODO"
+    assert(0);
+  }
+#endif
 };
 
 #endif // #ifdef SIMULATIONIO_HAVE_ASDF_CXX
+
+#ifdef SIMULATIONIO_HAVE_TILEDB
+
+namespace {
+template <typename T> struct get_tiledb_datatype;
+template <>
+struct get_tiledb_datatype<std::int32_t>
+    : std::integral_constant<tiledb_datatype_t, TILEDB_INT32> {};
+template <>
+struct get_tiledb_datatype<float>
+    : std::integral_constant<tiledb_datatype_t, TILEDB_FLOAT32> {};
+template <>
+struct get_tiledb_datatype<double>
+    : std::integral_constant<tiledb_datatype_t, TILEDB_FLOAT64> {};
+} // namespace
+
+class TileDBData : public DataBlock {
+  // set by attachData()
+  mutable bool m_have_attached_data;
+  mutable vector<char> m_memdata;
+  mutable tiledb_datatype_t m_memtype;
+  mutable box_t m_memlayout;
+  mutable box_t m_membox;
+
+  // set by write()
+  mutable bool m_have_context;
+  mutable tiledb::Context m_ctx;
+  mutable string m_loc;
+
+public:
+  virtual bool invariant() const {
+#warning "TODO"
+    return DataBlock::invariant();
+  }
+
+  TileDBData(const WriteOptions &write_options, const box_t &box);
+
+  virtual ~TileDBData() {}
+
+  void attachData(vector<char> data, tiledb_datatype_t datatype,
+                  const box_t &datalayout, const box_t &databox) const;
+  void attachData(const void *dataptr, tiledb_datatype_t datatype,
+                  const box_t &datalayout, const box_t &databox) const;
+  template <typename T>
+  void attachData(const vector<T> &data, const box_t &databox) const {
+    tiledb_datatype_t datatype = get_tiledb_datatype<T>::value;
+    const auto &datalayout = databox;
+    attachData(data.data(), datatype, datalayout, databox);
+  }
+
+  void writeData(const tiledb_writer &w, const string &entry,
+                 const void *dataptr, tiledb_datatype_t datatype,
+                 const box_t &datalayout, const box_t &databox) const;
+  void writeData(const tiledb_writer &w, const string &entry,
+                 const vector<char> &data, tiledb_datatype_t datatype,
+                 const box_t &datalayout, const box_t &databox) const;
+
+  virtual ostream &output(ostream &os) const;
+#ifdef SIMULATIONIO_HAVE_HDF5
+  virtual void write(const H5::Group &group, const string &entry) const;
+#endif
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+  virtual void write(ASDF::writer &w, const string &entry) const;
+#endif
+  virtual void write(const tiledb_writer &w, const string &entry) const;
+};
+
+#endif // #ifdef SIMULATIONIO_HAVE_TILEDB
 
 } // namespace SimulationIO
 

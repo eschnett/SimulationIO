@@ -109,4 +109,18 @@ ASDF::writer &TensorComponent::write(ASDF::writer &w) const {
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_TILEDB
+vector<string> TensorComponent::tiledb_path() const {
+  return concat(tensortype()->tiledb_path(), {"tensorcomponents", name()});
+}
+
+void TensorComponent::write(const tiledb::Context &ctx,
+                            const string &loc) const {
+  assert(invariant());
+  const tiledb_writer w(*this, ctx, loc);
+  w.add_attribute("storage_index", storage_index());
+  w.add_attribute("indexvalues", indexvalues());
+}
+#endif
+
 } // namespace SimulationIO

@@ -80,4 +80,16 @@ ASDF::writer &BasisVector::write(ASDF::writer &w) const {
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_TILEDB
+vector<string> BasisVector::tiledb_path() const {
+  return concat(basis()->tiledb_path(), {"basisvectors", name()});
+}
+
+void BasisVector::write(const tiledb::Context &ctx, const string &loc) const {
+  assert(invariant());
+  const tiledb_writer w(*this, ctx, loc);
+  w.add_attribute("direction", direction());
+}
+#endif
+
 } // namespace SimulationIO

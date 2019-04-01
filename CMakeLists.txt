@@ -6,7 +6,7 @@ cmake_policy(SET CMP0048 NEW)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 
-project(SimulationIO VERSION 8.1.0 LANGUAGES C CXX)
+project(SimulationIO VERSION 8.2.0 LANGUAGES C CXX)
 set(PROJECT_DESCRIPTION
   "SimulationIO: Efficient and convenient I/O for large PDE simulations")
 set(PROJECT_URL "https://github.com/eschnett/SimulationIO")
@@ -96,6 +96,19 @@ if(RNPL_FOUND)
 else()
   set(HAVE_RNPL 0)
 endif()
+
+OPTION(ENABLE_TILEDB "Enable TileDB backend" ON)
+if(ENABLE_TILEDB)
+  find_package(TILEDB)
+endif()
+if(TILEDB_FOUND)
+  include_directories(${TILEDB_INCLUDE_DIRS})
+  set(LIBS ${LIBS} tiledb)
+  set(HAVE_TILEDB 1)
+else()
+  set(HAVE_TILEDB 0)
+endif()
+# set(HAVE_TILEDB 0)
 
 set(Python_ADDITIONAL_VERSIONS 2.7)
 # This sets PYTHONINTERP_FOUND
@@ -218,6 +231,11 @@ if(HDF5_FOUND AND ASDF_CXX_FOUND)
     sio-convert-hdf5-to-asdf
     )
 endif()
+if(TILEDB_FOUND)
+  list(APPEND EXES 
+    sio-example-attach-tiledb
+    )
+endif()
 
 if(HDF5_FOUND)
   add_executable(sio-benchmark benchmark.cpp)
@@ -269,6 +287,11 @@ if(HDF5_FOUND AND ASDF_CXX_FOUND)
   target_link_libraries(sio-convert-hdf5-to-asdf SimulationIO)
 endif()
 
+if(TILEDB_FOUND)
+  add_executable(sio-example-attach-tiledb example-attach-tiledb.cpp)
+  target_link_libraries(sio-example-attach-tiledb SimulationIO)
+endif()
+
 # Tests
 
 set(GOOGLETEST_DIR "googletest-release-1.8.0/googletest")
@@ -309,6 +332,9 @@ if(HDF5_FOUND AND ASDF_CXX_FOUND)
   add_test(NAME compare-hdf5-asdf
     COMMAND ${CMAKE_SOURCE_DIR}/diff-commands.sh
               "./sio-list-asdf example.asdf" "./sio-list-asdf example3.asdf")
+endif()
+if(TILEDB_FOUND)
+  add_test(NAME example-attach-tiledb COMMAND ./sio-example-attach-tiledb)
 endif()
 if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND AND H5PY_FOUND AND
      NUMPY_FOUND AND SWIG_FOUND)

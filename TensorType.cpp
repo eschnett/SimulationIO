@@ -114,6 +114,28 @@ ASDF::writer &TensorType::write(ASDF::writer &w) const {
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_TILEDB
+vector<string> TensorType::tiledb_path() const {
+  return concat(project()->tiledb_path(), {"tensortypes", name()});
+}
+
+void TensorType::write(const tiledb::Context &ctx, const string &loc) const {
+  assert(invariant());
+  const tiledb_writer w(*this, ctx, loc);
+  w.add_attribute("dimension", dimension());
+  w.add_attribute("rank", rank());
+  w.add_group("tensorcomponents", tensorcomponents());
+  w.create_group("storage_indices");
+  for (const auto &kv : storage_indices()) {
+    const auto &idx = kv.first;
+    const auto &storage_index = kv.second;
+    string idx_string = to_string(idx);
+    w.add_symlink(concat(tiledb_path(), {"storage_indices", idx_string}),
+                  storage_index->tiledb_path());
+  }
+}
+#endif
+
 shared_ptr<TensorComponent>
 TensorType::createTensorComponent(const string &name, int storage_index,
                                   const vector<int> &indexvalues) {

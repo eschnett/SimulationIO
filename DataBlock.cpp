@@ -1,6 +1,8 @@
 #include "DataBlock.hpp"
 
 #include <algorithm>
+#include <cassert>
+#include <cstdint>
 #include <cstring>
 #include <memory>
 #include <type_traits>
@@ -13,6 +15,7 @@ namespace {
 vector<hsize_t> choose_chunksize(const vector<hsize_t> &size,
                                  hsize_t typesize) {
   // Guess a good chunk size:
+  // - chunk should not be larger than the dataset size
   // - chunk should fit in L3 cache
   // - chunk should be larger than stripe size
   // - chunk should be larger than bandwidth-latency product
@@ -45,6 +48,51 @@ vector<hsize_t> choose_chunksize(const vector<hsize_t> &size,
       hsize_t new_chunklength = 1;
       for (int d = 0; d < dim; ++d)
         new_chunklength *= new_chunksize.at(d);
+      if (new_chunklength > target_chunklength)
+        return chunksize;
+      chunksize = new_chunksize;
+      chunklength = new_chunklength;
+    }
+    // Ensure progress
+    if (chunklength == old_chunklength)
+      return chunksize;
+  }
+}
+} // namespace
+#endif
+
+#ifdef SIMULATIONIO_HAVE_TILEDB
+namespace {
+point_t choose_tilesize(const point_t &size, long long typesize) {
+  // Guess a good tile size:
+  // - chunk should not be larger than the dataset size
+  // - chunk should fit in L3 cache
+  // - chunk should be larger than stripe size
+  // - chunk should be larger than bandwidth-latency product
+  // A typical L3 cache size is several MByte
+  // A typical stripe size is 128 kByte
+  // A typical disk latency-bandwidth product is
+  //    L = 1 / (10,000/min) / 2 = 0.006 sec
+  //    BW = 100 MByte/sec
+  //    BW * L = 600 kByte
+  // We choose a chunk size of 64^3:
+  //    64^3 * 8 B = 2 MByte
+  auto rank = size.rank();
+  auto length = size.prod();
+  if (length == 0)
+    return size;
+  long long target_bytes = 2 * 1024 * 2014;
+  long long target_chunklength = min(length, max(1LL, target_bytes / typesize));
+  point_t chunksize(rank, 1);
+  long long chunklength = 1;
+  assert(chunklength <= target_chunklength);
+  for (;;) {
+    long long old_chunklength = chunklength;
+    // Loop in C index order
+    for (int dir = rank - 1; dir >= 0; --dir) {
+      point_t new_chunksize(chunksize);
+      new_chunksize[dir] = min(2 * chunksize[dir], size[dir]);
+      auto new_chunklength = new_chunksize.prod();
       if (new_chunklength > target_chunklength)
         return chunksize;
       chunksize = new_chunksize;
@@ -497,6 +545,13 @@ void DataRange::write(ASDF::writer &w, const string &entry) const {
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_TILEDB
+void DataRange::write(const tiledb_writer &w, const string &entry) const {
+  w.add_attribute(entry + "_origin", origin());
+  w.add_attribute(entry + "_delta", delta());
+}
+#endif
+
 #ifdef SIMULATIONIO_HAVE_HDF5
 
 // DataSet
@@ -882,6 +937,75 @@ void CopyObj::write(ASDF::writer &w, const string &entry) const {
 
 #endif // #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 
+#ifdef SIMULATIONIO_HAVE_TILEDB
+
+namespace {
+tiledb_datatype_t type_hdf5_to_tiledb(const H5::DataType &h5type) {
+  if (h5type == H5::getType(int8_t()))
+    return TILEDB_INT8;
+  if (h5type == H5::getType(int16_t()))
+    return TILEDB_INT16;
+  if (h5type == H5::getType(int32_t()))
+    return TILEDB_INT32;
+  if (h5type == H5::getType(int64_t()))
+    return TILEDB_INT64;
+  if (h5type == H5::getType(uint8_t()))
+    return TILEDB_UINT8;
+  if (h5type == H5::getType(uint16_t()))
+    return TILEDB_UINT16;
+  if (h5type == H5::getType(uint32_t()))
+    return TILEDB_UINT32;
+  if (h5type == H5::getType(uint64_t()))
+    return TILEDB_UINT64;
+  if (h5type == H5::getType(float()))
+    return TILEDB_FLOAT32;
+  if (h5type == H5::getType(double()))
+    return TILEDB_FLOAT64;
+  assert(0);
+}
+} // namespace
+
+void CopyObj::write(const tiledb_writer &w, const string &entry) const {
+  auto dataset = group().openDataSet(name());
+  auto type = dataset.getDataType();
+  auto type_size = type.getSize();
+  vector<unsigned char> data(size() * type_size);
+  readData(data.data(), type, box(), box());
+
+#warning "TODO: create TileDBData object instead"
+  tiledb_datatype_t datatype = type_hdf5_to_tiledb(type);
+  tiledb::Domain domain(w.ctx());
+  if (rank() == 0)
+    domain.add_dimension(
+        tiledb::Dimension::create<long long>(w.ctx(), "0", {{0, 0}}));
+  else
+    for (int d = 0; d < rank(); ++d)
+      domain.add_dimension(tiledb::Dimension::create<long long>(
+          w.ctx(), to_string(d), {{box().lower()[d], box().upper()[d] - 1}}));
+  tiledb::ArraySchema schema(w.ctx(), TILEDB_DENSE);
+  schema.set_domain(domain);
+  if (datatype == TILEDB_FLOAT64)
+    schema.add_attribute(tiledb::Attribute::create<double>(w.ctx(), "a"));
+  else
+    assert(0);
+  schema.set_tile_order(TILEDB_COL_MAJOR);
+  schema.set_cell_order(TILEDB_COL_MAJOR);
+  string arrayloc = w.loc() + "/" + entry;
+  tiledb::Array::create(arrayloc, schema);
+  tiledb::Array array(w.ctx(), arrayloc, TILEDB_WRITE);
+  array.uri(); // Check whether URI is valid
+  tiledb::Query query(w.ctx(), array, TILEDB_WRITE);
+  if (datatype == TILEDB_FLOAT64)
+    query.set_buffer("a", (double *)data.data(), size());
+  else
+    assert(0);
+  query.submit();
+  query.finalize();
+  array.close();
+}
+
+#endif
+
 void CopyObj::readData(void *data, const H5::DataType &datatype,
                        const box_t &datalayout, const box_t &databox) const {
   if (rank() == 0)
@@ -1092,5 +1216,149 @@ void ASDFRef::write(ASDF::writer &w, const string &entry) const {
 }
 
 #endif // #ifdef SIMULATIONIO_HAVE_ASDF_CXX
+
+#ifdef SIMULATIONIO_HAVE_TILEDB
+
+// TileDBData
+
+TileDBData::TileDBData(const WriteOptions &write_options, const box_t &box)
+    : DataBlock(write_options, box), m_have_attached_data(false),
+      m_have_context(false) {
+  assert(invariant());
+}
+
+namespace {
+size_t tiledb_type_size(tiledb_datatype_t type) {
+  switch (type) {
+  case TILEDB_INT8:
+    return sizeof(int8_t);
+  case TILEDB_UINT8:
+    return sizeof(uint8_t);
+  case TILEDB_INT16:
+    return sizeof(int16_t);
+  case TILEDB_UINT16:
+    return sizeof(uint16_t);
+  case TILEDB_INT32:
+    return sizeof(int32_t);
+  case TILEDB_UINT32:
+    return sizeof(uint32_t);
+  case TILEDB_INT64:
+    return sizeof(int64_t);
+  case TILEDB_UINT64:
+    return sizeof(uint64_t);
+  case TILEDB_FLOAT32:
+    return sizeof(float);
+  case TILEDB_FLOAT64:
+    return sizeof(double);
+  case TILEDB_CHAR:
+    return sizeof(char);
+  }
+  assert(0);
+}
+} // namespace
+
+void TileDBData::attachData(vector<char> data, tiledb_datatype_t datatype,
+                            const box_t &datalayout,
+                            const box_t &databox) const {
+  assert(!m_have_attached_data);
+  assert(!m_have_context);
+  m_have_attached_data = true;
+  m_memdata = move(data);
+  m_memtype = datatype;
+  m_memlayout = datalayout;
+  m_membox = databox;
+}
+
+void TileDBData::attachData(const void *dataptr, tiledb_datatype_t datatype,
+                            const box_t &datalayout,
+                            const box_t &databox) const {
+  vector<char> data(datalayout.size() * tiledb_type_size(datatype));
+  memcpy(data.data(), dataptr, data.size());
+  attachData(move(data), datatype, datalayout, databox);
+}
+
+void TileDBData::writeData(const tiledb_writer &w, const string &entry,
+                           const void *data, tiledb_datatype_t datatype,
+                           const box_t &datalayout,
+                           const box_t &databox) const {
+  auto tilesize = choose_tilesize(box().shape(), tiledb_type_size(datatype));
+
+  tiledb::Domain domain(w.ctx());
+  if (rank() == 0)
+    domain.add_dimension(
+        tiledb::Dimension::create<long long>(w.ctx(), "0", {{0, 0}}));
+  else
+    for (int d = 0; d < rank(); ++d)
+      domain.add_dimension(tiledb::Dimension::create<long long>(
+          w.ctx(), to_string(d), {{box().lower()[d], box().upper()[d] - 1}},
+          {tilesize[d]}));
+  tiledb::ArraySchema schema(w.ctx(), TILEDB_DENSE);
+  schema.set_domain(domain);
+  if (datatype == TILEDB_FLOAT64)
+    schema.add_attribute(tiledb::Attribute::create<double>(w.ctx(), "a"));
+  else
+    assert(0);
+  schema.set_tile_order(TILEDB_COL_MAJOR);
+  schema.set_cell_order(TILEDB_COL_MAJOR);
+  string arrayloc = w.loc() + "/" + entry;
+  tiledb::Array::create(arrayloc, schema);
+  tiledb::Array array(w.ctx(), arrayloc, TILEDB_WRITE);
+  array.uri(); // Check whether URI is valid
+  tiledb::Query query(w.ctx(), array, TILEDB_WRITE);
+#warning                                                                       \
+    "TODO: copy only the requested hyperslab. (or can a subarray be larger than the destination array?)"
+  assert(datalayout == box());
+  assert(databox == box());
+  // vector<array<long long, 2>> subarray(max(1, rank()));
+  // if (rank() == 0)
+  //   subarray.at(0) = {{0, 0}};
+  // else
+  //   for (int d = 0; d < rank(); ++d)
+  //     subarray.at(d) = {{memlayout.lower()[d], memlayout.upper()[d] - 1}};
+  // query.set_subarray(subarray);
+  if (datatype == TILEDB_FLOAT64)
+    query.set_buffer("a", (double *)data, databox.size());
+  else
+    assert(0);
+  query.submit();
+  query.finalize();
+  array.close();
+}
+
+void TileDBData::writeData(const tiledb_writer &w, const string &entry,
+                           const vector<char> &data, tiledb_datatype_t datatype,
+                           const box_t &datalayout,
+                           const box_t &databox) const {
+  writeData(w, entry, data.data(), datatype, datalayout, databox);
+}
+
+ostream &TileDBData::output(ostream &os) const {
+#warning "TODO: output more detail"
+  return os << "TileDBData";
+}
+
+#ifdef SIMULATIONIO_HAVE_HDF5
+void TileDBData::write(const H5::Group &group, const string &entry) const {
+  assert(0);
+}
+#endif
+
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+void TileDBData::write(ASDF::writer &w, const string &entry) const {
+  assert(0);
+}
+#endif
+
+void TileDBData::write(const tiledb_writer &w, const string &entry) const {
+#warning "TODO"
+
+  m_ctx = w.ctx();
+  m_loc = w.loc();
+
+  if (m_have_attached_data)
+    writeData(w, entry, m_memdata, m_memtype, m_memlayout, m_membox);
+}
+
+#endif // #ifdef SIMULATIONIO_HAVE_TILEDB
 
 } // namespace SimulationIO

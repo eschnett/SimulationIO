@@ -149,6 +149,26 @@ ASDF::writer &DiscreteField::write(ASDF::writer &w) const {
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_TILEDB
+vector<string> DiscreteField::tiledb_path() const {
+  return concat(field()->tiledb_path(), {"discretefields", name()});
+}
+
+void DiscreteField::write(const tiledb::Context &ctx, const string &loc) const {
+  assert(invariant());
+  const tiledb_writer w(*this, ctx, loc);
+  w.add_symlink(concat(tiledb_path(), {"configuration"}),
+                configuration()->tiledb_path());
+  w.add_symlink(
+      concat(configuration()->tiledb_path(), {"discretefields", name()}),
+      tiledb_path());
+  w.add_symlink(concat(tiledb_path(), {"discretization"}),
+                discretization()->tiledb_path());
+  w.add_symlink(concat(tiledb_path(), {"basis"}), basis()->tiledb_path());
+  w.add_group("discretefieldblocks", discretefieldblocks());
+}
+#endif
+
 shared_ptr<DiscreteFieldBlock> DiscreteField::createDiscreteFieldBlock(
     const string &name,
     const shared_ptr<DiscretizationBlock> &discretizationblock) {

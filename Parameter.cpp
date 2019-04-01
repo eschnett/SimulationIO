@@ -87,6 +87,18 @@ ASDF::writer &Parameter::write(ASDF::writer &w) const {
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_TILEDB
+vector<string> Parameter::tiledb_path() const {
+  return concat(project()->tiledb_path(), {"parameters", name()});
+}
+
+void Parameter::write(const tiledb::Context &ctx, const string &loc) const {
+  assert(invariant());
+  const tiledb_writer w(*this, ctx, loc);
+  w.add_group("parametervalues", parametervalues());
+}
+#endif
+
 shared_ptr<ParameterValue> Parameter::createParameterValue(const string &name) {
   auto parametervalue = ParameterValue::create(name, shared_from_this());
   checked_emplace(m_parametervalues, parametervalue->name(), parametervalue,

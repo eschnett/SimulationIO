@@ -106,4 +106,19 @@ ASDF::writer &CoordinateField::write(ASDF::writer &w) const {
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_TILEDB
+vector<string> CoordinateField::tiledb_path() const {
+  return concat(coordinatesystem()->tiledb_path(),
+                {"coordinatefields", name()});
+}
+
+void CoordinateField::write(const tiledb::Context &ctx,
+                            const string &loc) const {
+  assert(invariant());
+  const tiledb_writer w(*this, ctx, loc);
+  w.add_attribute("direction", direction());
+  w.add_symlink(concat(tiledb_path(), {"field"}), field()->tiledb_path());
+}
+#endif
+
 } // namespace SimulationIO

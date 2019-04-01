@@ -13,6 +13,10 @@
 #include <H5Cpp.h>
 #endif
 
+#ifdef SIMULATIONIO_HAVE_TILEDB
+#include <tiledb/tiledb>
+#endif
+
 #include <iostream>
 #include <map>
 #include <memory>
@@ -125,6 +129,10 @@ public:
                                   const ParameterValue &parametervalue) {
     return parametervalue.write(w);
   }
+#endif
+#ifdef SIMULATIONIO_HAVE_TILEDB
+  virtual vector<string> tiledb_path() const;
+  virtual void write(const tiledb::Context &ctx, const string &loc) const;
 #endif
 
 private:
