@@ -12,6 +12,10 @@
 #include <H5Cpp.h>
 #endif
 
+#ifdef SIMULATIONIO_HAVE_TILEDB
+#include <tiledb/tiledb>
+#endif
+
 #include <functional>
 #include <iostream>
 #include <map>
@@ -196,6 +200,10 @@ template <typename T> struct NoBackLink {
 class asdf_writer_;
 #endif
 
+#ifdef SIMULATIONIO_HAVE_TILEDB
+class tiledb_writer;
+#endif
+
 class Common {
 protected:
   // TODO: Make m_name private, provide an HDF5 read routine, handle the type
@@ -225,6 +233,10 @@ public:
 #endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   virtual vector<string> yaml_path() const = 0;
+#endif
+#ifdef SIMULATIONIO_HAVE_TILEDB
+  virtual vector<string> tiledb_path() const = 0;
+  virtual void write(const tiledb::Context &ctx, const string &loc) const = 0;
 #endif
 
   // The association between names and integer values below MUST NOT BE
@@ -296,6 +308,136 @@ public:
   template <typename T>
   void short_sequence(const string &name, const vector<T> &values) {
     m_writer << YAML::Key << name << YAML::Value << YAML::Flow << values;
+  }
+};
+#endif
+
+#ifdef SIMULATIONIO_HAVE_TILEDB
+class tiledb_writer {
+  const Common &m_common;
+  const tiledb::Context &m_ctx;
+  const string &m_loc;
+
+public:
+  tiledb::Context ctx() const { return m_ctx; }
+  string loc() const { return m_loc; }
+
+  tiledb_writer() = delete;
+  tiledb_writer(const Common &common, const tiledb::Context &ctx,
+                const string &loc);
+
+  // const tiledb::Config &config() const { return *m_config; }
+  // tiledb::Config &config() { return *m_config; }
+  // const tiledb::Context &context() const { return *m_context; }
+
+private:
+  template <typename T>
+  void add_attribute_fixed(const string &name, const T &value) const {
+    // We don't handle absolute paths
+    assert(!starts_with(name, "/"));
+    // We don't want trailing slashes
+    assert(!ends_with(name, "/"));
+    tiledb::Domain domain(m_ctx);
+    // Arrays need to have at least one dimension...
+    domain.add_dimension(tiledb::Dimension::create<int>(m_ctx, "0", {{0, 0}}));
+    tiledb::ArraySchema schema(m_ctx, TILEDB_DENSE);
+    schema.set_domain(domain);
+    schema.add_attribute(tiledb::Attribute::create<T>(m_ctx, "a"));
+    string arrayloc = m_loc + "/" + name;
+    tiledb::Array::create(arrayloc, schema);
+    tiledb::Array array(m_ctx, arrayloc, TILEDB_WRITE);
+    array.uri(); // Check whether URI is valid
+    tiledb::Query query(m_ctx, array, TILEDB_WRITE);
+    auto buffer = value;
+    query.set_buffer("a", &buffer, 1);
+    query.submit();
+    query.finalize();
+    array.close();
+  }
+
+  template <typename T>
+  void add_attribute_variable(const string &name, const T &value) const {
+    // We don't handle absolute paths
+    assert(!starts_with(name, "/"));
+    // We don't want trailing slashes
+    assert(!ends_with(name, "/"));
+    tiledb::Domain domain(m_ctx);
+    // Arrays need to have at least one dimension...
+    domain.add_dimension(tiledb::Dimension::create<int>(m_ctx, "0", {{0, 0}}));
+    tiledb::ArraySchema schema(m_ctx, TILEDB_DENSE);
+    schema.set_domain(domain);
+    schema.add_attribute(tiledb::Attribute::create<T>(m_ctx, "a"));
+    string arrayloc = m_loc + "/" + name;
+    tiledb::Array::create(arrayloc, schema);
+    tiledb::Array array(m_ctx, arrayloc, TILEDB_WRITE);
+    array.uri(); // Check whether URI is valid
+    tiledb::Query query(m_ctx, array, TILEDB_WRITE);
+    uint64_t offset = 0;
+    auto buffer = value;
+    query.set_buffer("a", &offset, 1,
+                     const_cast<typename T::value_type *>(buffer.data()),
+                     buffer.size());
+    query.submit();
+    query.finalize();
+    array.close();
+  }
+
+  template <typename T>
+  void add_attribute_array(const string &name, const vector<T> &value) const {
+    // We don't handle absolute paths
+    assert(!starts_with(name, "/"));
+    // We don't want trailing slashes
+    assert(!ends_with(name, "/"));
+    // Array dimensions cannot be empty...
+    if (value.empty())
+      return;
+    tiledb::Domain domain(m_ctx);
+    domain.add_dimension(tiledb::Dimension::create<int>(
+        m_ctx, "0", {{0, int(value.size() - 1)}}));
+    tiledb::ArraySchema schema(m_ctx, TILEDB_DENSE);
+    schema.set_domain(domain);
+    schema.add_attribute(tiledb::Attribute::create<T>(m_ctx, "a"));
+    string arrayloc = m_loc + "/" + name;
+    tiledb::Array::create(arrayloc, schema);
+    tiledb::Array array(m_ctx, arrayloc, TILEDB_WRITE);
+    array.uri(); // Check whether URI is valid
+    tiledb::Query query(m_ctx, array, TILEDB_WRITE);
+    auto buffer = value;
+    query.set_buffer("a", buffer);
+    query.submit();
+    query.finalize();
+    array.close();
+  }
+
+public:
+  void add_attribute(const string &name, bool value) const;
+  void add_attribute(const string &name, int value) const;
+  void add_attribute(const string &name, long value) const;
+  void add_attribute(const string &name, long long value) const;
+  void add_attribute(const string &name, double value) const;
+  void add_attribute(const string &name, const string &value) const;
+  template <typename T>
+  void add_attribute(const string &name, const vector<T> &value) const {
+    add_attribute_array(name, value);
+  }
+
+#if 0
+  void add_symlink(const string &name, const string &destination) const;
+#endif
+  void add_symlink(const vector<string> &source_path,
+                   const vector<string> &destination_path) const;
+
+  void create_group(const string &name) const;
+
+  template <typename K, typename T>
+  void add_group(const string &name,
+                 const map<K, shared_ptr<T>> &values) const {
+    create_group(name);
+    string prefix = m_loc + "/" + name + "/";
+    for (const auto &kv : values) {
+      const auto &value = kv.second;
+      value->write(m_ctx, prefix + value->name());
+    }
   }
 };
 #endif

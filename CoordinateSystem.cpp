@@ -137,6 +137,36 @@ ASDF::writer &CoordinateSystem::write(ASDF::writer &w) const {
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_TILEDB
+vector<string> CoordinateSystem::tiledb_path() const {
+  return concat(project()->tiledb_path(), {"coordinatesystems", name()});
+}
+
+void CoordinateSystem::write(const tiledb::Context &ctx,
+                             const string &loc) const {
+  assert(invariant());
+  const tiledb_writer w(*this, ctx, loc);
+  w.add_symlink(concat(tiledb_path(), {"configuration"}),
+                configuration()->tiledb_path());
+  w.add_symlink(
+      concat(configuration()->tiledb_path(), {"coordinatesystems", name()}),
+      tiledb_path());
+  w.add_symlink(concat(tiledb_path(), {"manifold"}), manifold()->tiledb_path());
+  w.add_symlink(
+      concat(manifold()->tiledb_path(), {"coordinatesystems", name()}),
+      tiledb_path());
+  w.add_group("coordinatefields", coordinatefields());
+  w.create_group("directions");
+  for (const auto &kv : directions()) {
+    const auto &dir = kv.first;
+    const auto &direction = kv.second;
+    string dir_string = to_string(dir);
+    w.add_symlink(concat(tiledb_path(), {"directions", dir_string}),
+                  direction->tiledb_path());
+  }
+}
+#endif
+
 shared_ptr<CoordinateField>
 CoordinateSystem::createCoordinateField(const string &name, int direction,
                                         const shared_ptr<Field> &field) {

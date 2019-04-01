@@ -162,6 +162,26 @@ ASDF::writer &Manifold::write(ASDF::writer &w) const {
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_TILEDB
+vector<string> Manifold ::tiledb_path() const {
+  return concat(project()->tiledb_path(), {"manifolds", name()});
+}
+
+void Manifold::write(const tiledb::Context &ctx, const string &loc) const {
+  assert(invariant());
+  const tiledb_writer w(*this, ctx, loc);
+  w.add_symlink(concat(tiledb_path(), {"configuration"}),
+                configuration()->tiledb_path());
+  w.add_symlink(concat(configuration()->tiledb_path(), {"manifolds", name()}),
+                tiledb_path());
+  w.add_attribute("dimension", dimension());
+  w.add_group("discretizations", discretizations());
+  w.add_group("subdiscretizations", subdiscretizations());
+  w.create_group("fields");
+  w.create_group("coordinatesystems");
+}
+#endif
+
 shared_ptr<Discretization>
 Manifold::createDiscretization(const string &name,
                                const shared_ptr<Configuration> &configuration) {

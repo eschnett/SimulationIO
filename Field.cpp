@@ -168,6 +168,31 @@ ASDF::writer &Field::write(ASDF::writer &w) const {
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_TILEDB
+vector<string> Field::tiledb_path() const {
+  return concat(project()->tiledb_path(), {"fields", name()});
+}
+
+void Field::write(const tiledb::Context &ctx, const string &loc) const {
+  assert(invariant());
+  const tiledb_writer w(*this, ctx, loc);
+  w.add_symlink(concat(tiledb_path(), {"configuration"}),
+                configuration()->tiledb_path());
+  w.add_symlink(concat(configuration()->tiledb_path(), {"fields", name()}),
+                tiledb_path());
+  w.add_symlink(concat(tiledb_path(), {"manifold"}), manifold()->tiledb_path());
+  w.add_symlink(concat(manifold()->tiledb_path(), {"fields", name()}),
+                tiledb_path());
+  w.add_symlink(concat(tiledb_path(), {"tangentspace"}),
+                tangentspace()->tiledb_path());
+  w.add_symlink(concat(tangentspace()->tiledb_path(), {"fields", name()}),
+                tiledb_path());
+  w.add_symlink(concat(tiledb_path(), {"tensortype"}),
+                tensortype()->tiledb_path());
+  w.add_group("discretefields", discretefields());
+}
+#endif
+
 shared_ptr<DiscreteField>
 Field::createDiscreteField(const string &name,
                            const shared_ptr<Configuration> &configuration,

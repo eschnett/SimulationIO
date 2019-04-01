@@ -168,4 +168,22 @@ ASDF::writer &SubDiscretization::write(ASDF::writer &w) const {
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_TILEDB
+vector<string> SubDiscretization::tiledb_path() const {
+  return concat(manifold()->tiledb_path(), {"subdiscretizations", name()});
+}
+
+void SubDiscretization::write(const tiledb::Context &ctx,
+                              const string &loc) const {
+  assert(invariant());
+  const tiledb_writer w(*this, ctx, loc);
+  w.add_symlink(concat(tiledb_path(), {"parent_discretization"}),
+                parent_discretization()->tiledb_path());
+  w.add_symlink(concat(tiledb_path(), {"child_discretization"}),
+                child_discretization()->tiledb_path());
+  w.add_attribute("factor", factor());
+  w.add_attribute("offset", offset());
+}
+#endif
+
 } // namespace SimulationIO

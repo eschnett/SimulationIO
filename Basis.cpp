@@ -117,6 +117,30 @@ ASDF::writer &Basis::write(ASDF::writer &w) const {
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_TILEDB
+vector<string> Basis::tiledb_path() const {
+  return concat(tangentspace()->tiledb_path(), {"bases", name()});
+}
+
+void Basis::write(const tiledb::Context &ctx, const string &loc) const {
+  assert(invariant());
+  const tiledb_writer w(*this, ctx, loc);
+  w.add_symlink(concat(tiledb_path(), {"configuration"}),
+                configuration()->tiledb_path());
+  w.add_symlink(concat(configuration()->tiledb_path(), {"bases", name()}),
+                tiledb_path());
+  w.add_group("basisvectors", basisvectors());
+  w.create_group("directions");
+  for (const auto &kv : directions()) {
+    const auto &dir = kv.first;
+    const auto &direction = kv.second;
+    string dir_string = to_string(dir);
+    w.add_symlink(concat(tiledb_path(), {"directions", dir_string}),
+                  direction->tiledb_path());
+  }
+}
+#endif
+
 shared_ptr<BasisVector> Basis::createBasisVector(const string &name,
                                                  int direction) {
   auto basisvector = BasisVector::create(name, shared_from_this(), direction);

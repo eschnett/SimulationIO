@@ -564,6 +564,31 @@ void Project::writeASDF(const string &filename) const {
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_TILEDB
+vector<string> Project::tiledb_path() const { return {m_tiledb_filename}; }
+
+void Project::write(const tiledb::Context &ctx, const string &loc) const {
+  assert(invariant());
+  const tiledb_writer w(*this, ctx, loc);
+  w.add_group("parameters", parameters());
+  w.add_group("configurations", configurations());
+  w.add_group("tensortypes", tensortypes());
+  w.add_group("manifolds", manifolds());
+  w.add_group("tangentspaces", tangentspaces());
+  w.add_group("fields", fields());
+  w.add_group("coordinatesystems", coordinatesystems());
+}
+
+void Project::writeTileDB(const string &filename) const {
+  tiledb::Config config;
+  config.set("vfs.num_threads", "1"); // TODO: let the caller choose this
+
+  tiledb::Context ctx(config);
+  m_tiledb_filename = filename;
+  write(ctx, filename);
+}
+#endif
+
 shared_ptr<Parameter> Project::createParameter(const string &name) {
   auto parameter = Parameter::create(name, shared_from_this());
   checked_emplace(m_parameters, parameter->name(), parameter, "Project",

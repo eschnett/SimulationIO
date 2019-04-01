@@ -164,6 +164,37 @@ ASDF::writer &Configuration::write(ASDF::writer &w) const {
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_TILEDB
+vector<string> Configuration::tiledb_path() const {
+  return concat(project()->tiledb_path(), {"configurations", name()});
+}
+
+void Configuration::write(const tiledb::Context &ctx, const string &loc) const {
+  assert(invariant());
+  const tiledb_writer w(*this, ctx, loc);
+  w.create_group("parametervalues");
+  for (const auto &kv : parametervalues()) {
+    const auto &parametervalue = kv.second;
+    const auto &parameter = parametervalue->parameter();
+    // Point to parameter value
+    w.add_symlink(
+        concat(tiledb_path(), {"parametervalues", parametervalue->name()}),
+        parametervalue->tiledb_path());
+    // Back pointer
+    w.add_symlink(
+        concat(parametervalue->tiledb_path(), {"configurations", name()}),
+        tiledb_path());
+  }
+  w.create_group("bases");
+  w.create_group("coordinatesystems");
+  w.create_group("discretefields");
+  w.create_group("discretizations");
+  w.create_group("fields");
+  w.create_group("manifolds");
+  w.create_group("tangentspaces");
+}
+#endif
+
 void Configuration::insertParameterValue(
     const shared_ptr<ParameterValue> &parametervalue) {
   assert(parametervalue->parameter()->project().get() == project().get());

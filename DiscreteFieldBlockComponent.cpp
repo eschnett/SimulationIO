@@ -149,6 +149,23 @@ ASDF::writer &DiscreteFieldBlockComponent::write(ASDF::writer &w) const {
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_TILEDB
+vector<string> DiscreteFieldBlockComponent::tiledb_path() const {
+  return concat(discretefieldblock()->tiledb_path(),
+                {"discretefieldblockcomponents", name()});
+}
+
+void DiscreteFieldBlockComponent::write(const tiledb::Context &ctx,
+                                        const string &loc) const {
+  assert(invariant());
+  const tiledb_writer w(*this, ctx, loc);
+  w.add_symlink(concat(tiledb_path(), {"tensorcomponent"}),
+                tensorcomponent()->tiledb_path());
+  if (bool(datablock()))
+    datablock()->write(w, dataname());
+}
+#endif
+
 void DiscreteFieldBlockComponent::unsetDataBlock() { m_datablock = nullptr; }
 
 #ifdef SIMULATIONIO_HAVE_HDF5
@@ -267,6 +284,17 @@ DiscreteFieldBlockComponent::createASDFRef(const WriteOptions &write_options,
   auto res = make_shared<ASDFRef>(
       write_options, discretefieldblock()->discretizationblock()->box(),
       make_shared<ASDF::reference>(filename, path));
+  m_datablock = res;
+  return res;
+}
+#endif
+
+#ifdef SIMULATIONIO_HAVE_TILEDB
+shared_ptr<TileDBData> DiscreteFieldBlockComponent::createTileDBData(
+    const WriteOptions &write_options) {
+  assert(!m_datablock);
+  auto res = make_shared<TileDBData>(
+      write_options, discretefieldblock()->discretizationblock()->box());
   m_datablock = res;
   return res;
 }

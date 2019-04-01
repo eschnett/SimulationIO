@@ -277,6 +277,35 @@ ASDF::writer &ParameterValue::write(ASDF::writer &w) const {
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_TILEDB
+vector<string> ParameterValue::tiledb_path() const {
+  return concat(parameter()->tiledb_path(), {"parametervalues", name()});
+}
+
+void ParameterValue::write(const tiledb::Context &ctx,
+                           const string &loc) const {
+  assert(invariant());
+  const tiledb_writer w(*this, ctx, loc);
+  switch (value_type) {
+  case type_empty:
+    // do nothing
+    break;
+  case type_int:
+    w.add_attribute("data", value_int);
+    break;
+  case type_double:
+    w.add_attribute("data", value_double);
+    break;
+  case type_string:
+    w.add_attribute("data", value_string);
+    break;
+  default:
+    assert(0);
+  }
+  w.create_group("configurations");
+}
+#endif
+
 void ParameterValue::insert(const shared_ptr<Configuration> &configuration) {
   assert(parameter()->project().get() == configuration->project().get());
   checked_emplace(m_configurations, configuration->name(), configuration,

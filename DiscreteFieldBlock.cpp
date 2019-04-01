@@ -142,6 +142,30 @@ ASDF::writer &DiscreteFieldBlock::write(ASDF::writer &w) const {
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_TILEDB
+vector<string> DiscreteFieldBlock::tiledb_path() const {
+  return concat(discretefield()->tiledb_path(),
+                {"discretefieldblocks", name()});
+}
+
+void DiscreteFieldBlock::write(const tiledb::Context &ctx,
+                               const string &loc) const {
+  assert(invariant());
+  const tiledb_writer w(*this, ctx, loc);
+  w.add_symlink(concat(tiledb_path(), {"discretizationblock"}),
+                discretizationblock()->tiledb_path());
+  w.add_group("discretefieldblockcomponents", discretefieldblockcomponents());
+  w.create_group("storage_indices");
+  for (const auto &kv : storage_indices()) {
+    const auto &idx = kv.first;
+    const auto &storage_index = kv.second;
+    string idx_string = to_string(idx);
+    w.add_symlink(concat(tiledb_path(), {"storage_indices", idx_string}),
+                  storage_index->tiledb_path());
+  }
+}
+#endif
+
 shared_ptr<DiscreteFieldBlockComponent>
 DiscreteFieldBlock::createDiscreteFieldBlockComponent(
     const string &name, const shared_ptr<TensorComponent> &tensorcomponent) {

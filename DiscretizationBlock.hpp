@@ -14,6 +14,10 @@
 #include <H5Cpp.h>
 #endif
 
+#ifdef SIMULATIONIO_HAVE_TILEDB
+#include <tiledb/tiledb>
+#endif
+
 #include <cassert>
 #include <iostream>
 #include <memory>
@@ -138,6 +142,10 @@ public:
   operator<<(ASDF::writer &w, const DiscretizationBlock &discretizationblock) {
     return discretizationblock.write(w);
   }
+#endif
+#ifdef SIMULATIONIO_HAVE_TILEDB
+  virtual vector<string> tiledb_path() const;
+  virtual void write(const tiledb::Context &ctx, const string &loc) const;
 #endif
 
 private:

@@ -5,6 +5,7 @@
 #endif
 
 #include <algorithm>
+#include <array>
 
 namespace SimulationIO {
 
@@ -243,6 +244,89 @@ ASDF::writer &DiscretizationBlock::write(ASDF::writer &w) const {
   if (active().valid())
     aw.value("active", active());
   return w;
+}
+#endif
+
+#ifdef SIMULATIONIO_HAVE_TILEDB
+vector<string> DiscretizationBlock::tiledb_path() const {
+  return concat(discretization()->tiledb_path(),
+                {"discretizationblocks", name()});
+}
+
+namespace {
+template <int D>
+void write_region(const tiledb_writer &w,
+                  const DiscretizationBlock &discretizationblock,
+                  const string &name, const region_t &region) {
+  assert(region.valid() && region.rank() == D);
+
+  typedef RegionCalculus::region<long long, D> regionD_t;
+  regionD_t regionD(region);
+  typedef RegionCalculus::box<long long, D> boxD_t;
+  vector<boxD_t> boxesD(regionD);
+
+  typedef array<long long, D> ipoint_t;
+  typedef array<ipoint_t, 2> ibox_t;
+  vector<ibox_t> iboxes;
+  for (const auto &box : boxesD) {
+    ipoint_t ilo(box.lower());
+    ipoint_t ihi(box.upper());
+    ibox_t ibox{ilo, ihi};
+    iboxes.push_back(ibox);
+  }
+
+  w.add_attribute(name, iboxes);
+}
+template <>
+void write_region<0>(const tiledb_writer &w,
+                     const DiscretizationBlock &discretizationblock,
+                     const string &name, const region_t &region) {
+  assert(region.valid() && region.rank() == 0);
+
+  vector<box_t> boxes(region);
+
+  vector<unsigned char> bboxes;
+  for (const auto &box : boxes)
+    bboxes.push_back(!box.empty());
+
+  w.add_attribute(name, bboxes);
+}
+} // namespace
+
+void DiscretizationBlock::write(const tiledb::Context &ctx,
+                                const string &loc) const {
+  assert(invariant());
+  const tiledb_writer w(*this, ctx, loc);
+
+  auto b = box();
+  if (b.valid()) {
+    if (b.rank() == 0)
+      assert(!b.empty()); // we cannot write empty boxes
+    w.add_attribute("offset", vector<long long>(b.lower()));
+    w.add_attribute("shape", vector<long long>(b.shape()));
+  }
+  auto a = active();
+  if (a.valid()) {
+    switch (a.rank()) {
+    case 0:
+      write_region<0>(w, *this, "active", a);
+      break;
+    case 1:
+      write_region<1>(w, *this, "active", a);
+      break;
+    case 2:
+      write_region<2>(w, *this, "active", a);
+      break;
+    case 3:
+      write_region<3>(w, *this, "active", a);
+      break;
+    case 4:
+      write_region<4>(w, *this, "active", a);
+      break;
+    default:
+      assert(0);
+    }
+  }
 }
 #endif
 
