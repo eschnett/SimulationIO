@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 
+from __future__ import print_function
 from math import *
 import sys
 
@@ -37,7 +38,7 @@ for discretefieldblockname in discretefield['discretefieldblocks']:
 
 ravg = rsum / rcount
 rnorm2 = sqrt(rsum2 / rcount)
-print """\
+print("""\
 rho:
     ngrids=%d
     npoints=%g
@@ -45,4 +46,4 @@ rho:
     max=%g
     avg=%g
     norm2=%g
-""" % (ngrids, rcount, rmin, rmax, ravg, rnorm2)
+""" % (ngrids, rcount, rmin, rmax, ravg, rnorm2))

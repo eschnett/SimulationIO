@@ -1,5 +1,6 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
+from __future__ import print_function
 from math import *
 import os
 import re
@@ -16,10 +17,10 @@ import SimulationIO as SIO
 
 include_parameters = {}
 
-print sys.argv
+print(sys.argv)
 if len(sys.argv) not in {3, 4}:
-    print "Synopsis:"
-    print "    %s [--iteration=<iter>] <inputfile> <outputfile>" % sys.argv[0]
+    print("Synopsis:")
+    print("    %s [--iteration=<iter>] <inputfile> <outputfile>" % sys.argv[0])
     sys.exit(1)
 
 argc = 1
@@ -36,10 +37,10 @@ output_filename = sys.argv[argc]
 argc += 1
 
 if not os.access(input_filename, os.R_OK):
-    print "Error: Input file \"%s\" does not exist" % input_filename
+    print("Error: Input file \"%s\" does not exist" % input_filename)
     sys.exit(2)
 if os.path.exists(output_filename):
-    print "Error: Output file \"%s\" exists already" % output_filename
+    print("Error: Output file \"%s\" exists already" % output_filename)
     sys.exit(3)
 
 
