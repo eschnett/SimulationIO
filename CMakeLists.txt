@@ -6,7 +6,7 @@ cmake_policy(SET CMP0048 NEW)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 
-project(SimulationIO VERSION 8.2.0 LANGUAGES C CXX)
+project(SimulationIO VERSION 9.0.0 LANGUAGES C CXX)
 set(PROJECT_DESCRIPTION
   "SimulationIO: Efficient and convenient I/O for large PDE simulations")
 set(PROJECT_URL "https://github.com/eschnett/SimulationIO")
@@ -110,7 +110,7 @@ else()
 endif()
 # set(HAVE_TILEDB 0)
 
-set(Python_ADDITIONAL_VERSIONS 2.7)
+set(Python_ADDITIONAL_VERSIONS 3.0)
 # This sets PYTHONINTERP_FOUND
 find_package(PythonInterp)
 # This sets PYTHONLIBS_FOUND
