@@ -79,6 +79,7 @@ RUN ( \
 RUN cat /sio/silo-4.10.2-bsd/include/silo.h
 
 # Install SimulationIO
+RUN echo 1
 RUN mkdir -p src/simulationio-git && \
     cd src/simulationio-git && \
     git clone -b eschnett/silo https://github.com/eschnett/SimulationIO.git
