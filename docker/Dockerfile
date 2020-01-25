@@ -76,6 +76,8 @@ RUN ( \
     true ) && \
     rm -rf src/silo-4.10.2-bsd
 
+RUN cat /sio/silo-4.10.2-bsd/include/silo.h
+
 # Install SimulationIO
 RUN mkdir -p src/simulationio-git && \
     cd src/simulationio-git && \
