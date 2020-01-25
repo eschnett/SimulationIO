@@ -21,6 +21,7 @@ RUN apt-get update && \
         libyaml-cpp-dev \
         openssl \
         pkg-config \
+        python-h5py \
         python-numpy \
         swig \
         wget \
