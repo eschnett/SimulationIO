@@ -1,0 +1,30 @@
+Redshift:
+
+mkdir build && cd build
+env "PATH=$HOME/src/spack-view/bin:$PATH" cmake -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_PREFIX_PATH="$HOME/rnpletal" -DPYTHON_EXECUTABLE="$HOME/src/spack-view/bin/python" -G Ninja ..
+
+env "PATH=$HOME/src/spack-view/bin:$PATH" cmake --build .
+for file in ./*.so ./sio-*; do install_name_tool -change '@rpath/libtiledb.dylib' "$HOME/src/spack-view/lib/libtiledb.dylib" $file; done
+for file in ./*.so ./sio-*; do install_name_tool -change '@rpath/libyaml-cpp.0.6.dylib' "$HOME/src/spack-view/lib/libyaml-cpp.0.6.2.dylib" $file; done
+
+env "PATH=$HOME/src/spack-view/bin:$PATH" "DYLD_LIBRARY_PATH=$HOME/src/spack-view/lib:$DYLD_LIBRARY_PATH" ./test_RegionCalculus
+env "PATH=$HOME/src/spack-view/bin:$PATH" "DYLD_LIBRARY_PATH=$HOME/src/spack-view/lib:$DYLD_LIBRARY_PATH" ./test_SimulationIO
+
+# This fails -- why?
+env "PATH=$HOME/src/spack-view/bin:$PATH" "DYLD_LIBRARY_PATH=$HOME/src/spack-view/lib:$DYLD_LIBRARY_PATH" "PYTHONHOME=$HOME/src/spack-view" "PYTHONPATH=$(pwd)" $HOME/src/spack-view/bin/python ../python-example.py
+
+
+
+################################################################################
+
+Redshift, with newer version of asdf-cxx:
+
+mkdir build && cd build
+env "PATH=$HOME/asdf-cxx:$HOME/src/spack-view/bin:$PATH" cmake -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_PREFIX_PATH="$HOME/asdf-cxx;$HOME/rnpletal" -G Ninja ..
+
+env "PATH=$HOME/asdf-cxx:$HOME/src/spack-view/bin:$PATH" cmake --build .
+for lib in *.so; do install_name_tool -change '@rpath/libyaml-cpp.0.6.dylib' "$HOME/src/spack-view/lib/libyaml-cpp.0.6.2.dylib" $lib; done
+for exe in ./sio-*; do install_name_tool -change '@rpath/libyaml-cpp.0.6.dylib' "$HOME/src/spack-view/lib/libyaml-cpp.0.6.2.dylib" $exe; done
+
+env "PATH=$HOME/asdf-cxx:$HOME/src/spack-view/bin:$PATH" "DYLD_LIBRARY_PATH=$HOME/src/spack-view/lib:$DYLD_LIBRARY_PATH" ./test_RegionCalculus
+env "PATH=$HOME/asdf-cxx:$HOME/src/spack-view/bin:$PATH" "DYLD_LIBRARY_PATH=$HOME/src/spack-view/lib:$DYLD_LIBRARY_PATH" ./test_SimulationIO

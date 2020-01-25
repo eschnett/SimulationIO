@@ -89,6 +89,7 @@ RUN export PATH="/sio/asdf-cxx-7.0.0/bin:/sio/hdf5-1.10.6/bin:/sio/silo-4.10.2-b
         -DCMAKE_BUILD_TYPE=RelWithDebInfo \
         -DENABLE_ASDF_CXX=ON \
         -DENABLE_HDF5=ON \
+        -DENABLE_MPI=OFF \
         -DENABLE_RNPL=OFF \
         -DENABLE_SILO=ON \
         -DENABLE_TILEDB=OFF \
