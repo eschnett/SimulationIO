@@ -1,4 +1,9 @@
-- FindH5Py.cmake was closely modelled after FindNumPy.cmake
-- FindNumPy.cmake was taken from <https://github.com/BVLC>
-- Findasdf-cxx.cmake was closely modelled after FindHwloc.cmake from
-- <https://github.com/STEllAR-GROUP/hpx>
+FindH5Py.cmake was closely modelled after FindNumPy.cmake (see below)
+
+FindNumPy.cmake was taken from <https://github.com/BVLC>
+
+FindSilo.cmake was closely modelled after Findasdf-cxx.cmake (see
+below)
+
+Findasdf-cxx.cmake was closely modelled after FindHwloc.cmake from
+<https://github.com/STEllAR-GROUP/hpx>

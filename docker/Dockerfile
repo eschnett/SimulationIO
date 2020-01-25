@@ -76,15 +76,12 @@ RUN ( \
     true ) && \
     rm -rf src/silo-4.10.2-bsd
 
-RUN cat /sio/silo-4.10.2-bsd/include/silo.h
-
 # Install SimulationIO
-RUN echo 1
-RUN mkdir -p src/simulationio-git && \
-    cd src/simulationio-git && \
-    git clone -b eschnett/silo https://github.com/eschnett/SimulationIO.git
 RUN export PATH="/sio/asdf-cxx-7.0.0/bin:/sio/hdf5-1.10.6/bin:/sio/silo-4.10.2-bsd/bin:$PATH" && \
-    cd src/simulationio-git/SimulationIO && \
+    mkdir -p src/simulationio-git && \
+    cd src/simulationio-git && \
+    git clone -b eschnett/silo https://github.com/eschnett/SimulationIO.git && \
+    cd SimulationIO && \
     mkdir build && \
     cd build && \
     cmake \
@@ -95,14 +92,9 @@ RUN export PATH="/sio/asdf-cxx-7.0.0/bin:/sio/hdf5-1.10.6/bin:/sio/silo-4.10.2-b
         -DENABLE_SILO=ON \
         -DENABLE_TILEDB=OFF \
         -DCMAKE_PREFIX_PATH='/sio/asdf-cxx-7.0.0;/sio/hdf5-1.10.6;/sio/silo-4.10.2-bsd' \
+        -DHDF5_ROOT='/sio/hdf5-1.10.6' \
         -DCMAKE_INSTALL_PREFIX=/sio/simulationio-git \
-        ..
-RUN export PATH="/sio/asdf-cxx-7.0.0/bin:/sio/hdf5-1.10.6/bin:/sio/silo-4.10.2-bsd/bin:$PATH" && \
-    cd src/simulationio-git/SimulationIO/build && \
-    make -j$(nproc)
-RUN export PATH="/sio/asdf-cxx-7.0.0/bin:/sio/hdf5-1.10.6/bin:/sio/silo-4.10.2-bsd/bin:$PATH" && \
-    cd src/simulationio-git/SimulationIO/build && \
-    make -j$(nproc) test CTEST_OUTPUT_ON_FAILURE=1
-RUN export PATH="/sio/asdf-cxx-7.0.0/bin:/sio/hdf5-1.10.6/bin:/sio/silo-4.10.2-bsd/bin:$PATH" && \
-    cd src/simulationio-git/SimulationIO/build && \
+        .. && \
+    make -j$(nproc) && \
+    make -j$(nproc) test CTEST_OUTPUT_ON_FAILURE=1 && \
     make -j$(nproc) install
