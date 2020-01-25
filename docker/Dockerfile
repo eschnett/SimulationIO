@@ -55,7 +55,7 @@ RUN ( \
         cd hdf5-1.10.6 && \
         mkdir build && \
         cd build && \
-        ../configure --prefix=/sio/hdf5-1.10.6 && \
+        ../configure --enable-cxx --enable-hl --prefix=/sio/hdf5-1.10.6 && \
         make -j$(nproc) && \
         make -j$(nproc) install && \
     true ) && \
@@ -92,7 +92,6 @@ RUN export PATH="/sio/asdf-cxx-7.0.0/bin:/sio/hdf5-1.10.6/bin:/sio/silo-4.10.2-b
         -DENABLE_SILO=ON \
         -DENABLE_TILEDB=OFF \
         -DCMAKE_PREFIX_PATH='/sio/asdf-cxx-7.0.0;/sio/hdf5-1.10.6;/sio/silo-4.10.2-bsd' \
-        -DHDF5_ROOT='/sio/hdf5-1.10.6' \
         -DCMAKE_INSTALL_PREFIX=/sio/simulationio-git \
         .. && \
     make -j$(nproc) && \
