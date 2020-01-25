@@ -75,7 +75,8 @@ else()
   set(HAVE_HDF5 0)
 endif()
 
-if(HDF5_FOUND)
+OPTION(ENABLE_MPI "Enable MPI library (if the HDF5 library needs MPI)" ON)
+if(ENABLE_MPI)
   # Note: We only look for MPI since HDF5 might require MPI
   find_package(MPI)
   # It seems that MPI_INCLUDE_DIRS and MPI_LIBRARIES are old names, and
