@@ -12,6 +12,10 @@
 #include <H5Cpp.h>
 #endif
 
+#ifdef SIMULATIONIO_HAVE_SILO
+#include <silo.h>
+#endif
+
 #ifdef SIMULATIONIO_HAVE_TILEDB
 #include <tiledb/tiledb>
 #endif

@@ -36,6 +36,12 @@ void checkVersion(const char *header_version);
 #undef SIMULATIONIO_HAVE_HDF5
 #endif
 
+#if @HAVE_SILO@
+#define SIMULATIONIO_HAVE_SILO 1
+#else
+#undef SIMULATIONIO_HAVE_SILO
+#endif
+
 #if @HAVE_TILEDB@
 #define SIMULATIONIO_HAVE_TILEDB 1
 #else
