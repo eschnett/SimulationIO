@@ -15,6 +15,10 @@
 #endif
 
 #ifdef SIMULATIONIO_HAVE_TILEDB
+#include <silo.h>
+#endif
+
+#ifdef SIMULATIONIO_HAVE_TILEDB
 #include <tiledb/tiledb>
 #endif
 

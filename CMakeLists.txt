@@ -249,6 +249,11 @@ if(HDF5_FOUND AND ASDF_CXX_FOUND)
     sio-convert-hdf5-to-asdf
     )
 endif()
+if(SILO_FOUND)
+  list(APPEND EXES 
+    sio-example-silo
+    )
+endif()
 if(TILEDB_FOUND)
   list(APPEND EXES 
     sio-example-attach-tiledb
@@ -303,6 +308,11 @@ endif()
 if(HDF5_FOUND AND ASDF_CXX_FOUND)
   add_executable(sio-convert-hdf5-to-asdf convert-hdf5-to-asdf.cpp)
   target_link_libraries(sio-convert-hdf5-to-asdf SimulationIO)
+endif()
+
+if(SILO_FOUND)
+  add_executable(sio-example-silo example-silo.cpp)
+  target_link_libraries(sio-example-silo SimulationIO)
 endif()
 
 if(TILEDB_FOUND)
