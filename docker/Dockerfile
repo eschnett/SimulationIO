@@ -17,6 +17,7 @@ RUN apt-get update && \
         git \
         libbz2-dev \
         libpython-dev \
+        libssl-dev \
         libyaml-cpp-dev \
         openssl \
         pkg-config \
