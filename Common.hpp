@@ -331,7 +331,7 @@ void write_group(DBfile *const file, const string &loc, const string &name,
               << "newloc=" << newloc << "\n";
     const DBtoc *const toc = DBGetToc(file);
     for (int n = 0; n < toc->ndir; ++n)
-      cerr << "dir[" << n << "]=" << toc->dir_names[n] << "\n";
+      std::cerr << "dir[" << n << "]=" << toc->dir_names[n] << "\n";
   }
   assert(!ierr);
   for (const auto &name_eltptr : group) {
