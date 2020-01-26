@@ -569,7 +569,7 @@ vector<string> Project::silo_path() const { return {m_silo_filename}; }
 
 void Project::write(DBfile *const file, const string &loc) const {
   assert(invariant());
-  int ierr = DBMkDir(file, loc + "/parameters");
+  int ierr = DBMkDir(file, (loc + "/parameters").c_str());
   assert(!ierr);
 #warning "TODO: Silo"
 #if 0
