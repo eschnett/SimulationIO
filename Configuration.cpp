@@ -164,6 +164,12 @@ ASDF::writer &Configuration::write(ASDF::writer &w) const {
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_SILO
+void write(DBfile *const file, const string &loc) const {
+  // write_alias_group(file, loc, "parametervalues", parametervalues());
+}
+#endif
+
 #ifdef SIMULATIONIO_HAVE_TILEDB
 vector<string> Configuration::tiledb_path() const {
   return concat(project()->tiledb_path(), {"configurations", name()});

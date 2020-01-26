@@ -42,6 +42,41 @@ asdf_writer_::asdf_writer_(const Common &common, ASDF::writer &w)
 asdf_writer_::~asdf_writer_() { m_writer << YAML::EndMap; }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_SILO
+void write_attribute(DBfile *const file, const string &loc, const string &name,
+                     int value) {
+  DBobject *const attr =
+      DBMakeObject((loc + "/" + name).c_str(), DB_USERDEF, 0);
+  assert(attr);
+  int ierr = DBAddIntComponent(attr, "value", value);
+  assert(!ierr);
+  ierr = DBWriteObject(file, attr, 1);
+  assert(!ierr);
+}
+
+void write_attribute(DBfile *const file, const string &loc, const string &name,
+                     double value) {
+  DBobject *const attr =
+      DBMakeObject((loc + "/" + name).c_str(), DB_USERDEF, 0);
+  assert(attr);
+  int ierr = DBAddDblComponent(attr, "value", value);
+  assert(!ierr);
+  ierr = DBWriteObject(file, attr, 1);
+  assert(!ierr);
+}
+
+void write_attribute(DBfile *const file, const string &loc, const string &name,
+                     const string &value) {
+  DBobject *const attr =
+      DBMakeObject((loc + "/" + name).c_str(), DB_USERDEF, 0);
+  assert(attr);
+  int ierr = DBAddStrComponent(attr, "value", value.c_str());
+  assert(!ierr);
+  ierr = DBWriteObject(file, attr, 1);
+  assert(!ierr);
+}
+#endif
+
 #ifdef SIMULATIONIO_HAVE_TILEDB
 tiledb_writer::tiledb_writer(const Common &common, const tiledb::Context &ctx,
                              const string &loc)

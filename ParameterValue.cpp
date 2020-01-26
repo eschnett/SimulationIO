@@ -280,31 +280,23 @@ ASDF::writer &ParameterValue::write(ASDF::writer &w) const {
 #ifdef SIMULATIONIO_HAVE_SILO
 void ParameterValue::write(DBfile *const file, const string &loc) const {
   assert(invariant());
-  DBobject *const data = DBMakeObject((loc + "/data").c_str(), DB_USERDEF, 0);
-  assert(data);
-  int ierr;
   switch (value_type) {
   case type_empty:
     // do nothing
     break;
   case type_int:
-    ierr = DBAddIntComponent(data, "data", value_int);
-    assert(!ierr);
+    write_attribute(file, loc, "data", value_int);
   case type_double:
-    ierr = DBAddDblComponent(data, "data", value_double);
-    assert(!ierr);
+    write_attribute(file, loc, "data", value_double);
     break;
   case type_string:
-    ierr = DBAddStrComponent(data, "data", value_string.c_str());
-    assert(!ierr);
+    write_attribute(file, loc, "data", value_string);
     break;
   default:
     assert(0);
   }
-  ierr = DBWriteObject(file, data, 1);
-  assert(!ierr);
-  ierr = DBMkDir(file, (loc + "/configurations").c_str());
-  assert(!ierr);
+  // ierr = DBMkDir(file, (loc + "/configurations").c_str());
+  // assert(!ierr);
 }
 #endif
 

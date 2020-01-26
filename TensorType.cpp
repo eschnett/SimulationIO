@@ -114,6 +114,17 @@ ASDF::writer &TensorType::write(ASDF::writer &w) const {
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_SILO
+void TensorType::write(DBfile *const file, const string &loc) const {
+  assert(invariant());
+  write_attribute(file, loc, "dimension", dimension());
+  write_attribute(file, loc, "rank", rank());
+  write_group(file, loc, "tensorcomponents", tensorcomponents());
+  // int ierr = DBMkDir(file, (loc + "/storage_indices").c_str());
+  // assert(!ierr);
+}
+#endif
+
 #ifdef SIMULATIONIO_HAVE_TILEDB
 vector<string> TensorType::tiledb_path() const {
   return concat(project()->tiledb_path(), {"tensortypes", name()});

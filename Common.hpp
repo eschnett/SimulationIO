@@ -329,6 +329,13 @@ void write_group(DBfile *const file, const string &loc, const string &name,
     eltptr->write(file, newloc);
   }
 }
+
+void write_attribute(DBfile *file, const string &loc, const string &name,
+                     int value);
+void write_attribute(DBfile *file, const string &loc, const string &name,
+                     double value);
+void write_attribute(DBfile *file, const string &loc, const string &name,
+                     const string &value);
 #endif
 
 #ifdef SIMULATIONIO_HAVE_TILEDB

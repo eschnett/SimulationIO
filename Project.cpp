@@ -568,10 +568,10 @@ void Project::writeASDF(const string &filename) const {
 void Project::write(DBfile *const file, const string &loc) const {
   assert(invariant());
   write_group(file, loc, "parameters", parameters());
+  write_group(file, loc, "configurations", configurations());
+  write_group(file, loc, "tensortypes", tensortypes());
 #warning "TODO: Silo"
 #if 0
-   w.add_group("configurations", configurations());
-   w.add_group("tensortypes", tensortypes());
    w.add_group("manifolds", manifolds());
    w.add_group("tangentspaces", tangentspaces());
    w.add_group("fields", fields());
