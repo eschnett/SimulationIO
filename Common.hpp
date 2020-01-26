@@ -337,7 +337,7 @@ void write_group(DBfile *const file, const string &loc, const string &name,
       std::cerr << "dir[" << n << "]=" << toc->dir_names[n] << "\n";
   }
   assert(!ierr);
-  int ierr = DBSetDir(file, "/");
+  ierr = DBSetDir(file, "/");
   assert(!ierr);
   for (const auto &name_eltptr : group) {
     const auto &name = name_eltptr.first;
