@@ -594,7 +594,7 @@ void Project::writeSilo(const string &filename) const {
   ierr = DBSetAllowEmptyObjects(file, 1);
   assert(!ierr);
   write(file, "/");
-  const int ierr = DBClose(file);
+  ierr = DBClose(file);
   assert(!ierr);
 }
 #endif
