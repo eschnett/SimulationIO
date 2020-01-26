@@ -165,7 +165,7 @@ ASDF::writer &Configuration::write(ASDF::writer &w) const {
 #endif
 
 #ifdef SIMULATIONIO_HAVE_SILO
-void write(DBfile *const file, const string &loc) const {
+void Configuration::write(DBfile *const file, const string &loc) const {
   // write_alias_group(file, loc, "parametervalues", parametervalues());
 }
 #endif
