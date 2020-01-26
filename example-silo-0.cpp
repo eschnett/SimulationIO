@@ -67,15 +67,17 @@ int main(int argc, char **argv) {
   ierr = DBWriteObject(file, obj, 1);
   assert(!ierr);
 
+  const int vardims = 1;
   const int intval = 42;
-  ierr = DBWrite(file, "directory/intvar", &intval, nullptr, 0, DB_INT);
+  ierr = DBWrite(file, "directory/intvar", &intval, &vardims, 1, DB_INT);
   assert(!ierr);
   const vector<int> intvals{43, 44, 45, 46};
   const int arrdims = intvals.size();
   ierr = DBWrite(file, "directory/intarr", intvals.data(), &arrdims, 1, DB_INT);
   assert(!ierr);
   const string strval = "Hello, World!";
-  ierr = DBWrite(file, "directory/strvar", strval.c_str(), nullptr, 0, DB_CHAR);
+  ierr =
+      DBWrite(file, "directory/strvar", strval.c_str(), &vardims, 1, DB_CHAR);
   assert(!ierr);
 
   ierr = DBClose(file);

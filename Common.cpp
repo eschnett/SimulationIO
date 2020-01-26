@@ -53,8 +53,9 @@ void write_attribute(DBfile *const file, const string &loc, const string &name,
   // assert(!ierr);
   // ierr = DBWriteObject(file, attr, 1);
   // assert(!ierr);
+  const int dims = 1;
   int ierr =
-      DBWrite(file, (loc + "/" + name).c_str(), &value, nullptr, 0, DB_INT);
+      DBWrite(file, (loc + "/" + name).c_str(), &value, &dims, 1, DB_INT);
   assert(!ierr);
 }
 
@@ -73,8 +74,9 @@ void write_attribute(DBfile *const file, const string &loc, const string &name,
   // assert(!ierr);
   // ierr = DBWriteObject(file, attr, 1);
   // assert(!ierr);
+  const int dims = 1;
   int ierr =
-      DBWrite(file, (loc + "/" + name).c_str(), &value, nullptr, 0, DB_DOUBLE);
+      DBWrite(file, (loc + "/" + name).c_str(), &value, &dims, 1, DB_DOUBLE);
   assert(!ierr);
 }
 
@@ -87,8 +89,9 @@ void write_attribute(DBfile *const file, const string &loc, const string &name,
   // assert(!ierr);
   // ierr = DBWriteObject(file, attr, 1);
   // assert(!ierr);
-  int ierr = DBWrite(file, (loc + "/" + name).c_str(), value.c_str(), nullptr,
-                     0, DB_CHAR);
+  const int dims = 1;
+  int ierr = DBWrite(file, (loc + "/" + name).c_str(), value.c_str(), &dims,
+                     1 DB_CHAR);
   assert(!ierr);
 }
 
