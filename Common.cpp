@@ -103,7 +103,7 @@ void write_attribute(DBfile *const file, const string &loc, const string &name,
   assert(values.size() <= INT_MAX);
   if (values.empty()) {
     DBobject *const obj =
-        DBMakeObject(file, (loc + "/" + name).c_str(), DB_USERDEF, 0);
+        DBMakeObject((loc + "/" + name).c_str(), DB_USERDEF, 0);
     assert(obj);
     int ierr = DBWriteObject(file, obj, 1);
     assert(!ierr);
