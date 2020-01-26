@@ -281,7 +281,7 @@ ASDF::writer &ParameterValue::write(ASDF::writer &w) const {
 void ParameterValue::write(DBfile *const file, const string &loc) const {
   assert(invariant());
   DBobject *const data = DBMakeObject((loc + "/data").c_str(), DB_USERDEF, 0);
-  assert(obj);
+  assert(data);
   int ierr;
   switch (value_type) {
   case type_empty:
