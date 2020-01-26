@@ -588,11 +588,11 @@ void Project::writeSilo(const string &filename) const {
   assert(min == SILO_VERS_MIN);
   assert(pat == SILO_VERS_PAT);
   assert(pre == SILO_VERS_PRE);
+  ierr = DBSetAllowEmptyObjects(1);
+  assert(!ierr);
   DBfile *const file =
       DBCreate(filename.c_str(), DB_CLOBBER, DB_LOCAL, name().c_str(), DB_HDF5);
   assert(file);
-  ierr = DBSetAllowEmptyObjects(file, 1);
-  assert(!ierr);
   write(file, "/");
   ierr = DBClose(file);
   assert(!ierr);
