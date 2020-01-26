@@ -564,6 +564,39 @@ void Project::writeASDF(const string &filename) const {
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_SILO
+vector<string> Project::silo_path() const { return {m_silo_filename}; }
+
+void Project::write(DBFile *const file, const string &loc) const {
+  assert(invariant());
+  int ierr = DBMkDir(file, loc + "/parameters");
+  assert(!ierr);
+#warning "TODO: Silo"
+#if 0
+  for (const auto &name_par : parameters()) {
+    const auto &name = name_par.first;
+    const auto &par = name_par.second;
+    par.write(file, loc + "/parameters");
+  }
+   w.add_group("configurations", configurations());
+   w.add_group("tensortypes", tensortypes());
+   w.add_group("manifolds", manifolds());
+   w.add_group("tangentspaces", tangentspaces());
+   w.add_group("fields", fields());
+   w.add_group("coordinatesystems", coordinatesystems());
+#endif
+}
+
+void Project::writeTileDB(const string &filename) const {
+  tiledb::Config config;
+  config.set("vfs.num_threads", "1"); // TODO: let the caller choose this
+
+  tiledb::Context ctx(config);
+  m_tiledb_filename = filename;
+  write(ctx, filename);
+}
+#endif
+
 #ifdef SIMULATIONIO_HAVE_TILEDB
 vector<string> Project::tiledb_path() const { return {m_tiledb_filename}; }
 

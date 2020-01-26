@@ -98,7 +98,6 @@ RUN export PATH="/sio/asdf-cxx-7.0.0/bin:/sio/hdf5-1.10.6/bin:/sio/silo-4.10.2-b
         -DCMAKE_INSTALL_PREFIX=/sio/simulationio-git \
         .. && \
     make -j$(nproc) && \
-    { ./example-silo || true; } && \
-    { ./sio-example-silo || true; } && \
+    ./sio-example-silo && \
     make -j$(nproc) test CTEST_OUTPUT_ON_FAILURE=1 && \
     make -j$(nproc) install
