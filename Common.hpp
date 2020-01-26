@@ -318,14 +318,15 @@ public:
 
 #ifdef SIMULATIONIO_HAVE_SILO
 template <typename T>
-void write_group(DBfile *const file, const string &loc,
+void write_group(DBfile *const file, const string &loc, const string &name,
                  const map<string, shared_ptr<T>> &group) {
-  const int ierr = DBMkDir(file, loc.c_str());
+  const string newloc = loc + "/" + name;
+  const int ierr = DBMkDir(file, newloc.c_str());
   assert(!ierr);
   for (const auto &name_eltptr : group) {
     const auto &name = name_eltptr.first;
     const auto &eltptr = name_eltptr.second;
-    eltptr->write(file, loc);
+    eltptr->write(file, newloc);
   }
 }
 #endif

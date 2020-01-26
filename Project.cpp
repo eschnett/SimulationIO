@@ -567,7 +567,7 @@ void Project::writeASDF(const string &filename) const {
 #ifdef SIMULATIONIO_HAVE_SILO
 void Project::write(DBfile *const file, const string &loc) const {
   assert(invariant());
-  write_group(file, loc + "/parameters");
+  write_group(file, loc, "parameters", parameters());
 #warning "TODO: Silo"
 #if 0
    w.add_group("configurations", configurations());
