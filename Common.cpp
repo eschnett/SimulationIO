@@ -90,8 +90,8 @@ void write_attribute(DBfile *const file, const string &loc, const string &name,
   // ierr = DBWriteObject(file, attr, 1);
   // assert(!ierr);
   const int dims = 1;
-  int ierr = DBWrite(file, (loc + "/" + name).c_str(), value.c_str(), &dims,
-                     1 DB_CHAR);
+  int ierr = DBWrite(file, (loc + "/" + name).c_str(), value.c_str(), &dims, 1,
+                     DB_CHAR);
   assert(!ierr);
 }
 
