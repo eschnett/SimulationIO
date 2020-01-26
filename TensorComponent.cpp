@@ -112,8 +112,8 @@ ASDF::writer &TensorComponent::write(ASDF::writer &w) const {
 #ifdef SIMULATIONIO_HAVE_SILO
 void TensorComponent::write(DBfile *const file, const string &loc) const {
   assert(invariant());
-  write_attribute("storage_index", storage_index());
-  write_attribute("indexvalues", indexvalues());
+  write_attribute(file, loc, "storage_index", storage_index());
+  write_attribute(file, loc, "indexvalues", indexvalues());
 }
 #endif
 
