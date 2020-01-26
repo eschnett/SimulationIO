@@ -11,6 +11,7 @@ int main(int argc, char **argv) {
   // DB_NOCLOBBER does not work
   DBfile *const file = DBCreate("example.silo", DB_CLOBBER, DB_LOCAL,
                                 "Example Silo file for SimulationIO", DB_HDF5);
+  assert(file);
 
   int ierr = DBMkDir(file, "directory");
   assert(!ierr);

@@ -201,9 +201,7 @@ public:
   void writeASDF(const string &filename) const;
 #endif
 #ifdef SIMULATIONIO_HAVE_SILO
-  mutable string m_silo_filename;
-  virtual vector<string> silo_path() const;
-  virtual void write(DBfile* file, const string &loc) const;
+  virtual void write(DBfile *file, const string &loc) const;
   void writeSilo(const string &filename) const;
 #endif
 #ifdef SIMULATIONIO_HAVE_TILEDB

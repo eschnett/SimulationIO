@@ -587,13 +587,13 @@ void Project::write(DBfile *const file, const string &loc) const {
 #endif
 }
 
-void Project::writeTileDB(const string &filename) const {
-  tiledb::Config config;
-  config.set("vfs.num_threads", "1"); // TODO: let the caller choose this
-
-  tiledb::Context ctx(config);
-  m_tiledb_filename = filename;
-  write(ctx, filename);
+void Project::writeSilo(const string &filename) const {
+  DBfile *const file =
+      DBCreate(filename.c_str(), DB_CLOBBER, DB_LOCAL, name().c_str(), DB_HDF5);
+  assert(file);
+  write(file, "/");
+  const int ierr = DBClose(file);
+  assert(!ierr);
 }
 #endif
 
