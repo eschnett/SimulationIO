@@ -567,7 +567,7 @@ void Project::writeASDF(const string &filename) const {
 #ifdef SIMULATIONIO_HAVE_SILO
 vector<string> Project::silo_path() const { return {m_silo_filename}; }
 
-void Project::write(DBFile *const file, const string &loc) const {
+void Project::write(DBfile *const file, const string &loc) const {
   assert(invariant());
   int ierr = DBMkDir(file, loc + "/parameters");
   assert(!ierr);
