@@ -104,8 +104,8 @@ void write_attribute(DBfile *const file, const string &loc, const string &name,
   const int dims = values.size();
 #warning "TODO"
   if (!(dims >= 1))
-    cerr << "loc=" << loc << "\n"
-         << "name=" << name << "\n";
+    std::cerr << "loc=" << loc << "\n"
+              << "name=" << name << "\n";
   assert(dims >= 1);
   int ierr = DBWrite(file, (loc + "/" + name).c_str(), values.data(), &dims, 1,
                      DB_INT);
