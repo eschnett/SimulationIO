@@ -325,10 +325,14 @@ void write_group(DBfile *const file, const string &loc, const string &name,
                  const map<string, shared_ptr<T>> &group) {
   const string newloc = loc + "/" + name;
   const int ierr = DBMkDir(file, newloc.c_str());
-  if (ierr)
+  if (ierr) {
     std::cerr << "loc=" << loc << "\n"
               << "name=" << name << "\n"
               << "newloc=" << newloc << "\n";
+    const DBtoc *const toc = DBGetToc(file);
+    for (int n = 0; n < toc->ndir; ++n)
+      cerr << "dir[" << n << "]=" << toc->dir_names[n] << "\n";
+  }
   assert(!ierr);
   for (const auto &name_eltptr : group) {
     const auto &name = name_eltptr.first;
