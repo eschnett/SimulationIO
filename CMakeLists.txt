@@ -254,6 +254,7 @@ if(HDF5_FOUND AND ASDF_CXX_FOUND)
 endif()
 if(SILO_FOUND)
   list(APPEND EXES 
+    sio-example-silo-0
     sio-example-silo
     )
 endif()
@@ -314,6 +315,9 @@ if(HDF5_FOUND AND ASDF_CXX_FOUND)
 endif()
 
 if(SILO_FOUND)
+  add_executable(sio-example-silo-0 example-silo-0.cpp)
+  target_link_libraries(sio-example-silo-0 SimulationIO)
+
   add_executable(sio-example-silo example-silo.cpp)
   target_link_libraries(sio-example-silo SimulationIO)
 endif()

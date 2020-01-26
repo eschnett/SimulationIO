@@ -338,6 +338,10 @@ void write_attribute(DBfile *file, const string &loc, const string &name,
                      double value);
 void write_attribute(DBfile *file, const string &loc, const string &name,
                      const string &value);
+void write_attribute(DBfile *file, const string &loc, const string &name,
+                     const vector<int> &values);
+void write_attribute(DBfile *file, const string &loc, const string &name,
+                     const vector<double> &values);
 #endif
 
 #ifdef SIMULATIONIO_HAVE_TILEDB
