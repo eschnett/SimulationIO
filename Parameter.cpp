@@ -87,6 +87,16 @@ ASDF::writer &Parameter::write(ASDF::writer &w) const {
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_SILO
+void Parameter::write(DBfile *const file, const string &loc) const {
+  assert(invariant());
+#warning "TODO: Silo"
+#if 0
+  write_group(file, loc, "parametervalues", parametervalues());
+#endif
+}
+#endif
+
 #ifdef SIMULATIONIO_HAVE_TILEDB
 vector<string> Parameter::tiledb_path() const {
   return concat(project()->tiledb_path(), {"parameters", name()});
