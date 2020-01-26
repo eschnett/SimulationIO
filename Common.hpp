@@ -326,6 +326,9 @@ void write_group(DBfile *const file, const string &loc, const string &name,
   const string newloc = loc + "/" + name;
   // const int ierr = DBMkDir(file, newloc.c_str());
   int ierr = DBSetDir(file, loc.c_str());
+  if (ierr) {
+    std::cerr << "loc=" << loc << "\n";
+  }
   assert(!ierr);
   ierr = DBMkDir(file, name.c_str());
   if (ierr) {

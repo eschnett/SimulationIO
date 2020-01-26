@@ -567,6 +567,16 @@ void Project::writeASDF(const string &filename) const {
 #ifdef SIMULATIONIO_HAVE_SILO
 void Project::write(DBfile *const file, const string &loc) const {
   assert(invariant());
+  // Check version
+  {
+    int maj, min, pat, pre;
+    int ierr = DBVersionDigits(&maj, &min, &pat, &pre);
+    assert(!ierr);
+    assert(maj == SILO_VERS_MAJ);
+    assert(min == SILO_VERS_MIN);
+    assert(pat == SILO_VERS_PAT);
+    assert(pre == SILO_VERS_PRE);
+  }
   write_group(file, loc, "parameters", parameters());
   write_group(file, loc, "configurations", configurations());
   write_group(file, loc, "tensortypes", tensortypes());
