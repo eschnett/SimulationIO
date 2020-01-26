@@ -120,7 +120,7 @@ void TensorType::write(DBfile *const file, const string &loc) const {
   write_attribute(file, loc, "dimension", dimension());
   write_attribute(file, loc, "rank", rank());
   write_group(file, loc, "tensorcomponents", tensorcomponents());
-  // int ierr = DBMkDir(file, (loc + "/storage_indices").c_str());
+  // int ierr = DBMkDir(file, (loc + "storage_indices").c_str());
   // assert(!ierr);
 }
 #endif

@@ -323,7 +323,7 @@ public:
 template <typename T>
 void write_group(DBfile *const file, const string &loc, const string &name,
                  const map<string, shared_ptr<T>> &group) {
-  const string newloc = loc + "/" + name;
+  // const string newloc = loc + name;
   // const int ierr = DBMkDir(file, newloc.c_str());
   int ierr = DBSetDir(file, loc.c_str());
   if (ierr) {
@@ -342,6 +342,7 @@ void write_group(DBfile *const file, const string &loc, const string &name,
   assert(!ierr);
   ierr = DBSetDir(file, "/");
   assert(!ierr);
+  const string newloc = loc + name + "/";
   for (const auto &name_eltptr : group) {
     const auto &name = name_eltptr.first;
     const auto &eltptr = name_eltptr.second;

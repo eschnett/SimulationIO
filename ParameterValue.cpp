@@ -295,7 +295,7 @@ void ParameterValue::write(DBfile *const file, const string &loc) const {
   default:
     assert(0);
   }
-  // ierr = DBMkDir(file, (loc + "/configurations").c_str());
+  // ierr = DBMkDir(file, (loc + "configurations").c_str());
   // assert(!ierr);
 }
 #endif
