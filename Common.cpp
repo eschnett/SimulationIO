@@ -99,6 +99,10 @@ void write_attribute(DBfile *const file, const string &loc, const string &name,
                      const vector<int> &values) {
   assert(values.size() <= INT_MAX);
   const int dims = values.size();
+  if (!(dims >= 1))
+    cerr << "loc=" << loc << "\n"
+         << "name=" << name << "\n";
+  assert(dims >= 1);
   int ierr = DBWrite(file, (loc + "/" + name).c_str(), values.data(), &dims, 1,
                      DB_INT);
   assert(!ierr);
@@ -108,6 +112,7 @@ void write_attribute(DBfile *const file, const string &loc, const string &name,
                      const vector<double> &values) {
   assert(values.size() <= INT_MAX);
   const int dims = values.size();
+  assert(dims >= 1);
   int ierr = DBWrite(file, (loc + "/" + name).c_str(), values.data(), &dims, 1,
                      DB_DOUBLE);
   assert(!ierr);
