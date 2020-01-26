@@ -1,3 +1,6 @@
+#warning "TODO"
+#include <iostream>
+
 #include "Common.hpp"
 
 #include "Helpers.hpp"
@@ -99,6 +102,7 @@ void write_attribute(DBfile *const file, const string &loc, const string &name,
                      const vector<int> &values) {
   assert(values.size() <= INT_MAX);
   const int dims = values.size();
+#warning "TODO"
   if (!(dims >= 1))
     cerr << "loc=" << loc << "\n"
          << "name=" << name << "\n";
