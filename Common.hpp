@@ -1,6 +1,9 @@
 #ifndef COMMON_HPP
 #define COMMON_HPP
 
+#warning "TODO"
+#include <iostream>
+
 #include "Config.hpp"
 #include "Helpers.hpp"
 
@@ -322,6 +325,10 @@ void write_group(DBfile *const file, const string &loc, const string &name,
                  const map<string, shared_ptr<T>> &group) {
   const string newloc = loc + "/" + name;
   const int ierr = DBMkDir(file, newloc.c_str());
+  if (ierr)
+    std::cerr << "loc=" << loc << "\n"
+              << "name=" << name << "\n"
+              << "newloc=" << newloc << "\n";
   assert(!ierr);
   for (const auto &name_eltptr : group) {
     const auto &name = name_eltptr.first;
