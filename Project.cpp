@@ -567,15 +567,9 @@ void Project::writeASDF(const string &filename) const {
 #ifdef SIMULATIONIO_HAVE_SILO
 void Project::write(DBfile *const file, const string &loc) const {
   assert(invariant());
-  int ierr = DBMkDir(file, (loc + "/parameters").c_str());
-  assert(!ierr);
+  write_group(file, loc + "/parameters");
 #warning "TODO: Silo"
 #if 0
-  for (const auto &name_par : parameters()) {
-    const auto &name = name_par.first;
-    const auto &par = name_par.second;
-    par.write(file, loc + "/parameters");
-  }
    w.add_group("configurations", configurations());
    w.add_group("tensortypes", tensortypes());
    w.add_group("manifolds", manifolds());

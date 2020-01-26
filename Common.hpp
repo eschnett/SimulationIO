@@ -316,6 +316,20 @@ public:
 };
 #endif
 
+#ifdef SIMULATIONIO_HAVE_SILO
+template <typename T>
+void write_group(DBfile *const file, const string &loc,
+                 const map<string, shared_ptr<T>> &group) {
+  const int ierr = DBMkDir(file, loc.c_str());
+  assert(!ierr);
+  for (const auto &name_eltptr : group) {
+    const auto &name = name_eltptr.first;
+    const auto &eltptr = name_eltptr.second;
+    eltptr->write(file, loc);
+  }
+}
+#endif
+
 #ifdef SIMULATIONIO_HAVE_TILEDB
 class tiledb_writer {
   const Common &m_common;
