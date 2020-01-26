@@ -324,7 +324,10 @@ template <typename T>
 void write_group(DBfile *const file, const string &loc, const string &name,
                  const map<string, shared_ptr<T>> &group) {
   const string newloc = loc + "/" + name;
-  const int ierr = DBMkDir(file, newloc.c_str());
+  // const int ierr = DBMkDir(file, newloc.c_str());
+  int ierr = DBSetDir(file, loc.c_str());
+  assert(!ierr);
+  ierr = DBMkDir(file, name.c_str());
   if (ierr) {
     std::cerr << "loc=" << loc << "\n"
               << "name=" << name << "\n"
@@ -333,6 +336,8 @@ void write_group(DBfile *const file, const string &loc, const string &name,
     for (int n = 0; n < toc->ndir; ++n)
       std::cerr << "dir[" << n << "]=" << toc->dir_names[n] << "\n";
   }
+  assert(!ierr);
+  int ierr = DBSetDir(file, "/");
   assert(!ierr);
   for (const auto &name_eltptr : group) {
     const auto &name = name_eltptr.first;
