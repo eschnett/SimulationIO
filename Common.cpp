@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cctype>
+#include <cstdint>
 #include <iomanip>
 #include <sstream>
 #include <string>
@@ -52,6 +53,12 @@ void write_attribute(DBfile *const file, const string &loc, const string &name,
   assert(!ierr);
   ierr = DBWriteObject(file, attr, 1);
   assert(!ierr);
+}
+
+void write_attribute(DBfile *const file, const string &loc, const string &name,
+                     long long value) {
+  assert(value >= INT_MIN && value <= INT_MAX);
+  write_attribute(file, loc, name, int(value));
 }
 
 void write_attribute(DBfile *const file, const string &loc, const string &name,

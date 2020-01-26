@@ -333,6 +333,8 @@ void write_group(DBfile *const file, const string &loc, const string &name,
 void write_attribute(DBfile *file, const string &loc, const string &name,
                      int value);
 void write_attribute(DBfile *file, const string &loc, const string &name,
+                     long long value);
+void write_attribute(DBfile *file, const string &loc, const string &name,
                      double value);
 void write_attribute(DBfile *file, const string &loc, const string &name,
                      const string &value);
