@@ -90,10 +90,7 @@ ASDF::writer &Parameter::write(ASDF::writer &w) const {
 #ifdef SIMULATIONIO_HAVE_SILO
 void Parameter::write(DBfile *const file, const string &loc) const {
   assert(invariant());
-#warning "TODO: Silo"
-#if 0
   write_group(file, loc, "parametervalues", parametervalues());
-#endif
 }
 #endif
 

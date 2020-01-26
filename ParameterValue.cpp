@@ -277,6 +277,37 @@ ASDF::writer &ParameterValue::write(ASDF::writer &w) const {
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_SILO
+void ParameterValue::write(DBfile *const file, const string &loc) const {
+  assert(invariant());
+  DBobject *const data = DBMakeObject((loc + "/data").c_str(), DB_USERDEF, 0);
+  assert(obj);
+  int ierr;
+  switch (value_type) {
+  case type_empty:
+    // do nothing
+    break;
+  case type_int:
+    ierr = DBAddIntComponent(data, "data", value_int);
+    assert(!ierr);
+  case type_double:
+    ierr = DBAddDblComponent(data, "data", value_double);
+    assert(!ierr);
+    break;
+  case type_string:
+    ierr = DBAddStrComponent(data, "data", value_string.c_str());
+    assert(!ierr);
+    break;
+  default:
+    assert(0);
+  }
+  ierr = DBWriteObject(file, data, 1);
+  assert(!ierr);
+  ierr = DBMkDir(file, (loc + "/configurations").c_str());
+  assert(!ierr);
+}
+#endif
+
 #ifdef SIMULATIONIO_HAVE_TILEDB
 vector<string> ParameterValue::tiledb_path() const {
   return concat(parameter()->tiledb_path(), {"parametervalues", name()});

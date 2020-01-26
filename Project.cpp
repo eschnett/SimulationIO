@@ -583,7 +583,7 @@ void Project::writeSilo(const string &filename) const {
   DBfile *const file =
       DBCreate(filename.c_str(), DB_CLOBBER, DB_LOCAL, name().c_str(), DB_HDF5);
   assert(file);
-  write(file, "/");
+  write(file, "");
   const int ierr = DBClose(file);
   assert(!ierr);
 }
