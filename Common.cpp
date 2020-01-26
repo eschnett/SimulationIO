@@ -101,15 +101,19 @@ void write_attribute(DBfile *const file, const string &loc, const string &name,
 void write_attribute(DBfile *const file, const string &loc, const string &name,
                      const vector<int> &values) {
   assert(values.size() <= INT_MAX);
-  const int dims = values.size();
-#warning "TODO"
-  if (!(dims >= 1))
-    std::cerr << "loc=" << loc << "\n"
-              << "name=" << name << "\n";
-  assert(dims >= 1);
-  int ierr = DBWrite(file, (loc + "/" + name).c_str(), values.data(), &dims, 1,
-                     DB_INT);
-  assert(!ierr);
+  if (values.empty()) {
+    DBobject *const obj =
+        DBMakeObject(file, (loc + "/" + name).c_str(), DB_USERDEF, 0);
+    assert(obj);
+    int ierr = DBWriteObject(file, obj, 1);
+    assert(!ierr);
+  } else {
+    const int dims = values.size();
+    assert(dims >= 1);
+    int ierr = DBWrite(file, (loc + "/" + name).c_str(), values.data(), &dims,
+                       1, DB_INT);
+    assert(!ierr);
+  }
 }
 
 void write_attribute(DBfile *const file, const string &loc, const string &name,
