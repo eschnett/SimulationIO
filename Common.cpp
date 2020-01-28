@@ -1,6 +1,3 @@
-#warning "TODO"
-#include <iostream>
-
 #include "Common.hpp"
 
 #include "Helpers.hpp"
@@ -47,18 +44,62 @@ asdf_writer_::~asdf_writer_() { m_writer << YAML::EndMap; }
 #endif
 
 #ifdef SIMULATIONIO_HAVE_SILO
+#if 0
+vector<string> ls(DBfile *const file, const string &loc) {
+  int ierr = DBSetDir(file, loc.c_str());
+  assert(!ierr);
+  const DBtoc *const toc = DBGetToc(file);
+  vector<string> filenames;
+  for (int n = 0; n < toc->ndir; ++n)
+    filenames.push_back(toc->dir_names[n]);
+  ierr = DBSetDir(file, "/");
+  assert(!ierr);
+  return filenames;
+}
+
+void mkdirp(DBfile *const file, const string &loc, const string &name) {
+  int ierr = DBSetDir(file, loc.c_str());
+  assert(!ierr);
+  const DBtoc *const toc = DBGetToc(file);
+  bool dir_exists = false;
+  for (int n = 0; n < toc->ndir; ++n) {
+    if (toc->dir_names[n] == name) {
+      dir_exists = true;
+      break;
+    }
+  }
+  if (!dir_exists) {
+    ierr = DBMkDir(file, name.c_str());
+    assert(!ierr);
+  }
+  ierr = DBSetDir(file, "/");
+  assert(!ierr);
+}
+#endif
+
+string legalize_silo_name(const string &name) {
+  ostringstream buf;
+  for (const char c : name) {
+    if (isalnum(c) || c == '_')
+      buf << c;
+    else
+      buf << '_';
+  }
+  return buf.str();
+}
+
+void write_symlink(DBfile *const file, const string &loc, const string &name,
+                   const string &value) {
+  const int dims = value.size();
+  int ierr =
+      DBWrite(file, (loc + name).c_str(), value.c_str(), &dims, 1, DB_CHAR);
+  assert(!ierr);
+}
+
 void write_attribute(DBfile *const file, const string &loc, const string &name,
                      const int value) {
-  // DBobject *const attr =
-  //     DBMakeObject((loc + "/" + name).c_str(), DB_USERDEF, 0);
-  // assert(attr);
-  // int ierr = DBAddIntComponent(attr, "value", value);
-  // assert(!ierr);
-  // ierr = DBWriteObject(file, attr, 1);
-  // assert(!ierr);
   const int dims = 1;
-  int ierr =
-      DBWrite(file, (loc + "/" + name).c_str(), &value, &dims, 1, DB_INT);
+  int ierr = DBWrite(file, (loc + name).c_str(), &value, &dims, 1, DB_INT);
   assert(!ierr);
 }
 
@@ -70,31 +111,16 @@ void write_attribute(DBfile *const file, const string &loc, const string &name,
 
 void write_attribute(DBfile *const file, const string &loc, const string &name,
                      const double value) {
-  // DBobject *const attr =
-  //     DBMakeObject((loc + "/" + name).c_str(), DB_USERDEF, 0);
-  // assert(attr);
-  // int ierr = DBAddDblComponent(attr, "value", value);
-  // assert(!ierr);
-  // ierr = DBWriteObject(file, attr, 1);
-  // assert(!ierr);
   const int dims = 1;
-  int ierr =
-      DBWrite(file, (loc + "/" + name).c_str(), &value, &dims, 1, DB_DOUBLE);
+  int ierr = DBWrite(file, (loc + name).c_str(), &value, &dims, 1, DB_DOUBLE);
   assert(!ierr);
 }
 
 void write_attribute(DBfile *const file, const string &loc, const string &name,
                      const string &value) {
-  // DBobject *const attr =
-  //     DBMakeObject((loc + "/" + name).c_str(), DB_USERDEF, 0);
-  // assert(attr);
-  // int ierr = DBAddStrComponent(attr, "value", value.c_str());
-  // assert(!ierr);
-  // ierr = DBWriteObject(file, attr, 1);
-  // assert(!ierr);
-  const int dims = 1;
-  int ierr = DBWrite(file, (loc + "/" + name).c_str(), value.c_str(), &dims, 1,
-                     DB_CHAR);
+  const int dims = value.size();
+  int ierr =
+      DBWrite(file, (loc + name).c_str(), value.c_str(), &dims, 1, DB_CHAR);
   assert(!ierr);
 }
 
@@ -102,8 +128,7 @@ void write_attribute(DBfile *const file, const string &loc, const string &name,
                      const vector<int> &values) {
   assert(values.size() <= INT_MAX);
   if (values.empty()) {
-    DBobject *const obj =
-        DBMakeObject((loc + "/" + name).c_str(), DB_USERDEF, 0);
+    DBobject *const obj = DBMakeObject((loc + name).c_str(), DB_USERDEF, 0);
     assert(obj);
     int ierr = DBAddIntComponent(obj, "dummy", 0);
     assert(!ierr);
@@ -112,8 +137,27 @@ void write_attribute(DBfile *const file, const string &loc, const string &name,
   } else {
     const int dims = values.size();
     assert(dims >= 1);
-    int ierr = DBWrite(file, (loc + "/" + name).c_str(), values.data(), &dims,
-                       1, DB_INT);
+    int ierr =
+        DBWrite(file, (loc + name).c_str(), values.data(), &dims, 1, DB_INT);
+    assert(!ierr);
+  }
+}
+
+void write_attribute(DBfile *const file, const string &loc, const string &name,
+                     const vector<long long> &values) {
+  assert(values.size() <= INT_MAX);
+  if (values.empty()) {
+    DBobject *const obj = DBMakeObject((loc + name).c_str(), DB_USERDEF, 0);
+    assert(obj);
+    int ierr = DBAddIntComponent(obj, "dummy", 0);
+    assert(!ierr);
+    ierr = DBWriteObject(file, obj, 1);
+    assert(!ierr);
+  } else {
+    const int dims = values.size();
+    assert(dims >= 1);
+    int ierr = DBWrite(file, (loc + name).c_str(), values.data(), &dims, 1,
+                       DB_LONG_LONG);
     assert(!ierr);
   }
 }
@@ -123,8 +167,8 @@ void write_attribute(DBfile *const file, const string &loc, const string &name,
   assert(values.size() <= INT_MAX);
   const int dims = values.size();
   assert(dims >= 1);
-  int ierr = DBWrite(file, (loc + "/" + name).c_str(), values.data(), &dims, 1,
-                     DB_DOUBLE);
+  int ierr =
+      DBWrite(file, (loc + name).c_str(), values.data(), &dims, 1, DB_DOUBLE);
   assert(!ierr);
 }
 #endif

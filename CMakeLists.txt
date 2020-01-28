@@ -7,7 +7,7 @@ cmake_policy(SET CMP0078 OLD)   # requires cmake 3.13
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 
-project(SimulationIO VERSION 9.0.0 LANGUAGES C CXX)
+project(SimulationIO VERSION 9.1.0 LANGUAGES C CXX)
 set(PROJECT_DESCRIPTION
   "SimulationIO: Efficient and convenient I/O for large PDE simulations")
 set(PROJECT_URL "https://github.com/eschnett/SimulationIO")
@@ -202,9 +202,53 @@ set(SIO_SRCS
   TensorType.cpp
   )
 
-add_library(SimulationIO ${SIO_SRCS})
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+
+# add the automatically determined parts of the RPATH
+# which point to directories outside the build tree to the install RPATH
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
+# the RPATH to be used when installing, but only if it's not a system directory
+list(FIND
+  CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/lib"
+  isSystemDir)
+if("${isSystemDir}" STREQUAL "-1")
+  set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+endif()
+
+# list(FIND
+#   CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${ASDF_CXX_INCLUDE_DIRS}/../lib"
+#   isSystemDir)
+# if("${isSystemDir}" STREQUAL "-1")
+#   set(CMAKE_INSTALL_RPATH "${ASDF_CXX_INCLUDE_DIRS}/../lib")
+# endif()
+# 
+# list(FIND
+#   CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${HDF5_INCLUDE_DIRS}/../lib"
+#   isSystemDir)
+# if("${isSystemDir}" STREQUAL "-1")
+#   set(CMAKE_INSTALL_RPATH "${HDF5_INCLUDE_DIRS}/../lib")
+# endif()
+# 
+# list(FIND
+#   CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${SILO_INCLUDE_DIRS}/../lib"
+#   isSystemDir)
+# if("${isSystemDir}" STREQUAL "-1")
+#   set(CMAKE_INSTALL_RPATH "${SILO_INCLUDE_DIRS}/../lib")
+# endif()
+# 
+# list(FIND
+#   CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${TILEDB_INCLUDE_DIRS}/../lib"
+#   isSystemDir)
+# if("${isSystemDir}" STREQUAL "-1")
+#   set(CMAKE_INSTALL_RPATH "${TILEDB_INCLUDE_DIRS}/../lib")
+# endif()
+
+# add_library(SimulationIO ${SIO_SRCS})
+add_library(SimulationIO SHARED ${SIO_SRCS})
 target_link_libraries(SimulationIO ${LIBS})
-set_property(TARGET SimulationIO PROPERTY POSITION_INDEPENDENT_CODE TRUE)
+set_target_properties(SimulationIO PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
+set_target_properties(SimulationIO PROPERTIES VERSION ${PROJECT_VERSION})
 
 # SWIG bindings
 
@@ -254,8 +298,7 @@ if(HDF5_FOUND AND ASDF_CXX_FOUND)
 endif()
 if(SILO_FOUND)
   list(APPEND EXES 
-    sio-example-silo-0
-    sio-example-silo
+    sio-example-attach-silo
     )
 endif()
 if(TILEDB_FOUND)
@@ -315,11 +358,8 @@ if(HDF5_FOUND AND ASDF_CXX_FOUND)
 endif()
 
 if(SILO_FOUND)
-  add_executable(sio-example-silo-0 example-silo-0.cpp)
-  target_link_libraries(sio-example-silo-0 SimulationIO)
-
-  add_executable(sio-example-silo example-silo.cpp)
-  target_link_libraries(sio-example-silo SimulationIO)
+  add_executable(sio-example-attach-silo example-attach-silo.cpp)
+  target_link_libraries(sio-example-attach-silo SimulationIO)
 endif()
 
 if(TILEDB_FOUND)
@@ -367,6 +407,9 @@ if(HDF5_FOUND AND ASDF_CXX_FOUND)
   add_test(NAME compare-hdf5-asdf
     COMMAND ${CMAKE_SOURCE_DIR}/diff-commands.sh
               "./sio-list-asdf example.asdf" "./sio-list-asdf example3.asdf")
+endif()
+if(SILO_FOUND)
+  add_test(NAME example-attach-silo COMMAND ./sio-example-attach-silo)
 endif()
 if(TILEDB_FOUND)
   add_test(NAME example-attach-tiledb COMMAND ./sio-example-attach-tiledb)

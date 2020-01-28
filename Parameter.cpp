@@ -88,6 +88,11 @@ ASDF::writer &Parameter::write(ASDF::writer &w) const {
 #endif
 
 #ifdef SIMULATIONIO_HAVE_SILO
+string Parameter::silo_path() const {
+  return project()->silo_path() + "parameters/" + legalize_silo_name(name()) +
+         "/";
+}
+
 void Parameter::write(DBfile *const file, const string &loc) const {
   assert(invariant());
   write_group(file, loc, "parametervalues", parametervalues());

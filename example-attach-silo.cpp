@@ -1,21 +1,17 @@
 #include "SimulationIO.hpp"
 
-#include <algorithm>
+#include <silo.h>
+
+#include <array>
 #include <cmath>
+#include <fstream>
 #include <iostream>
-#include <limits>
 #include <memory>
 #include <sstream>
-#include <string>
 #include <vector>
 
 using namespace SimulationIO;
-
-using std::cout;
-using std::ostringstream;
-using std::shared_ptr;
-using std::string;
-using std::vector;
+using namespace std;
 
 const int dim = 3;
 const char *const dirnames[] = {"x", "y", "z"};
@@ -35,7 +31,7 @@ inline void getcoords(int i, int j, int k, double &x, double &y, double &z) {
 }
 
 int main(int argc, char **argv) {
-  cout << "example-attach-tiledb: Create a simple TileDB file\n";
+  cout << "example-attach-silo: Create a simple SimulationIO file\n";
 
   // Project
   auto project = createProject("simulation");
@@ -64,13 +60,8 @@ int main(int argc, char **argv) {
         ostringstream name;
         name << "grid." << p;
         auto block = discretization->createDiscretizationBlock(name.str());
-        vector<long long> offset(dim), shape(dim);
-        offset.at(0) = nli * pi;
-        offset.at(1) = nlj * pj;
-        offset.at(2) = nlk * pk;
-        shape.at(0) = nli;
-        shape.at(1) = nlj;
-        shape.at(2) = nlk;
+        vector<long long> offset{nli * pi, nlj * pj, nlk * pk};
+        vector<long long> shape{nli, nlj, nlk};
         block->setBox(box_t(offset, point_t(offset) + shape));
         block->setActive(region_t(box_t(offset, point_t(offset) + shape)));
         blocks.push_back(block);
@@ -98,7 +89,7 @@ int main(int argc, char **argv) {
       auto scalar3d_component = scalar3d->storage_indices().at(0);
       auto component = block->createDiscreteFieldBlockComponent(
           "scalar", scalar3d_component);
-      component->createTileDBData(WriteOptions());
+      component->createSiloVar(WriteOptions());
     }
     coordinates.push_back(
         coordinatesystem->createCoordinateField(dirnames[d], d, field));
@@ -114,9 +105,9 @@ int main(int argc, char **argv) {
   auto discretized_vel = vel->createDiscreteField(vel->name(), configuration,
                                                   discretization, basis);
   for (int i = 0; i < ngrids; ++i) {
-    const hsize_t dims[dim] = {nlk, nlj, nli};
-    auto dataspace = H5::DataSpace(dim, dims);
-    auto datatype = H5::getType(double{});
+    // const hsize_t dims[dim] = {nlk, nlj, nli};
+    // auto dataspace = H5::DataSpace(dim, dims);
+    // auto datatype = H5::getType(double{});
     // Create discrete region
     auto rho_block = discretized_rho->createDiscreteFieldBlock(
         rho->name() + "-" + blocks.at(i)->name(), blocks.at(i));
@@ -126,17 +117,17 @@ int main(int argc, char **argv) {
     auto scalar3d_component = scalar3d->storage_indices().at(0);
     auto rho_component = rho_block->createDiscreteFieldBlockComponent(
         "scalar", scalar3d_component);
-    rho_component->createTileDBData(WriteOptions());
+    rho_component->createSiloVar(WriteOptions());
     for (int d = 0; d < dim; ++d) {
       auto vector3d_component = vector3d->storage_indices().at(d);
       auto vel_component = vel_block->createDiscreteFieldBlockComponent(
           dirnames[d], vector3d_component);
-      vel_component->createTileDBData(WriteOptions());
+      vel_component->createSiloVar(WriteOptions());
     }
   }
 
   // output
-  cout << *project;
+  // cout << *project;
 
   // Attach data
   for (int pk = 0; pk < npk; ++pk)
@@ -146,9 +137,13 @@ int main(int argc, char **argv) {
         // const auto lo = point_t(nli * pi, nlj * pj, nlk * pk);
         // const auto hi = lo + point_t(nli, nlj, nlk);
         // const auto box = box_t(lo, hi);
-        vector<double> coordx(npoints), coordy(npoints), coordz(npoints),
-            datarho(npoints), datavelx(npoints), datavely(npoints),
-            datavelz(npoints);
+        const auto coordx = make_shared<vector<double>>(npoints);
+        const auto coordy = make_shared<vector<double>>(npoints);
+        const auto coordz = make_shared<vector<double>>(npoints);
+        const auto datarho = make_shared<vector<double>>(npoints);
+        const auto datavelx = make_shared<vector<double>>(npoints);
+        const auto datavely = make_shared<vector<double>>(npoints);
+        const auto datavelz = make_shared<vector<double>>(npoints);
         for (int lk = 0; lk < nlk; ++lk)
           for (int lj = 0; lj < nlj; ++lj)
             for (int li = 0; li < nli; ++li) {
@@ -159,13 +154,13 @@ int main(int argc, char **argv) {
               double x, y, z;
               getcoords(i, j, k, x, y, z);
               const double r = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
-              coordx.at(idx) = x;
-              coordy.at(idx) = y;
-              coordz.at(idx) = z;
-              datarho.at(idx) = exp(-0.5 * pow(r, 2));
-              datavelx.at(idx) = -y * r * exp(-0.5 * pow(r, 2));
-              datavely.at(idx) = +x * r * exp(-0.5 * pow(r, 2));
-              datavelz.at(idx) = 0.0;
+              coordx->at(idx) = x;
+              coordy->at(idx) = y;
+              coordz->at(idx) = z;
+              datarho->at(idx) = exp(-0.5 * pow(r, 2));
+              datavelx->at(idx) = -y * r * exp(-0.5 * pow(r, 2));
+              datavely->at(idx) = +x * r * exp(-0.5 * pow(r, 2));
+              datavelz->at(idx) = 0.0;
             }
         // Write coordinates
         for (int d = 0; d < dim; ++d) {
@@ -175,8 +170,10 @@ int main(int argc, char **argv) {
               discretefield->name() + "-" + blocks.at(p)->name());
           auto component = block->discretefieldblockcomponents().at("scalar");
           auto box = block->discretizationblock()->box();
-          component->tiledbdata()->attachData(
-              d == 0 ? coordx : d == 1 ? coordy : coordz, box);
+          const auto &coord = d == 0 ? coordx : d == 1 ? coordy : coordz;
+          component->silovar()->attachData(
+              block->discretizationblock()->siloMeshname(),
+              [=] { return coord->data(); });
         }
         // Write rho
         {
@@ -186,7 +183,9 @@ int main(int argc, char **argv) {
               discretefield->name() + "-" + blocks.at(p)->name());
           auto component = block->discretefieldblockcomponents().at("scalar");
           auto box = block->discretizationblock()->box();
-          component->tiledbdata()->attachData(datarho, box);
+          component->silovar()->attachData(
+              block->discretizationblock()->siloMeshname(),
+              [=] { return datarho->data(); });
         }
         // Write velocity
         for (int d = 0; d < dim; ++d) {
@@ -197,14 +196,17 @@ int main(int argc, char **argv) {
           auto component =
               block->discretefieldblockcomponents().at(dirnames[d]);
           auto box = block->discretizationblock()->box();
-          component->tiledbdata()->attachData(
-              d == 0 ? datavelx : d == 1 ? datavely : datavelz, box);
+          const auto &datavel =
+              d == 0 ? datavelx : d == 1 ? datavely : datavelz;
+          component->silovar()->attachData(
+              block->discretizationblock()->siloMeshname(),
+              [=] { return datavel->data(); });
         }
       }
 
-  // Write file
-  auto filename = "example-attach-tiledb.tdb";
-  project->writeTileDB(filename);
+  auto filename = "example-silo.silo";
+  project->writeSilo(filename);
 
+  cout << "Done.\n";
   return 0;
 }

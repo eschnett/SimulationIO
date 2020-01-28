@@ -95,7 +95,7 @@ void DiscreteFieldBlockComponent::merge(
     // Cannot copy DataSet (yet)
     assert(!discretefieldblockcomponent->dataset());
 #endif
-#warning "TODO: Handle ASDF types"
+    // TODO: Handle ASDF types
     m_datablock = discretefieldblockcomponent->datablock();
   }
 }
@@ -146,6 +146,21 @@ ASDF::writer &DiscreteFieldBlockComponent::write(ASDF::writer &w) const {
   if (bool(datablock()))
     datablock()->write(w, dataname());
   return w;
+}
+#endif
+
+#ifdef SIMULATIONIO_HAVE_SILO
+string DiscreteFieldBlockComponent::silo_path() const {
+  return discretefieldblock()->silo_path() + "discretefieldblockcomponents/" +
+         legalize_silo_name(name()) + "/";
+}
+
+void DiscreteFieldBlockComponent::write(DBfile *const file,
+                                        const string &loc) const {
+  assert(invariant());
+  write_symlink(file, loc, "tensorcomponent", tensorcomponent()->silo_path());
+  if (bool(datablock()))
+    datablock()->write(file, loc, dataname());
 }
 #endif
 
@@ -284,6 +299,17 @@ DiscreteFieldBlockComponent::createASDFRef(const WriteOptions &write_options,
   auto res = make_shared<ASDFRef>(
       write_options, discretefieldblock()->discretizationblock()->box(),
       make_shared<ASDF::reference>(filename, path));
+  m_datablock = res;
+  return res;
+}
+#endif
+
+#ifdef SIMULATIONIO_HAVE_SILO
+shared_ptr<SiloVar>
+DiscreteFieldBlockComponent::createSiloVar(const WriteOptions &write_options) {
+  assert(!m_datablock);
+  auto res = make_shared<SiloVar>(
+      write_options, discretefieldblock()->discretizationblock()->box());
   m_datablock = res;
   return res;
 }

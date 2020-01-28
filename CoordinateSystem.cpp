@@ -137,6 +137,20 @@ ASDF::writer &CoordinateSystem::write(ASDF::writer &w) const {
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_SILO
+string CoordinateSystem::silo_path() const {
+  return project()->silo_path() + "coordinatesystems/" +
+         legalize_silo_name(name()) + "/";
+}
+
+void CoordinateSystem::write(DBfile *const file, const string &loc) const {
+  assert(invariant());
+  write_symlink(file, loc, "configuration", configuration()->silo_path());
+  write_symlink(file, loc, "manifold", manifold()->silo_path());
+  write_group(file, loc, "coordinatefields", coordinatefields());
+}
+#endif
+
 #ifdef SIMULATIONIO_HAVE_TILEDB
 vector<string> CoordinateSystem::tiledb_path() const {
   return concat(project()->tiledb_path(), {"coordinatesystems", name()});

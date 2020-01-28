@@ -115,6 +115,11 @@ ASDF::writer &TensorType::write(ASDF::writer &w) const {
 #endif
 
 #ifdef SIMULATIONIO_HAVE_SILO
+string TensorType::silo_path() const {
+  return project()->silo_path() + "tensortypes/" + legalize_silo_name(name()) +
+         "/";
+}
+
 void TensorType::write(DBfile *const file, const string &loc) const {
   assert(invariant());
   write_attribute(file, loc, "dimension", dimension());

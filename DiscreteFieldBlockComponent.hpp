@@ -19,6 +19,10 @@
 #include <H5Cpp.h>
 #endif
 
+#ifdef SIMULATIONIO_HAVE_SILO
+#include <silo.h>
+#endif
+
 #ifdef SIMULATIONIO_HAVE_TILEDB
 #include <tiledb/tiledb>
 #endif
@@ -79,6 +83,11 @@ public:
   }
   shared_ptr<ASDFRef> asdfref() const {
     return dynamic_pointer_cast<ASDFRef>(m_datablock);
+  }
+#endif
+#ifdef SIMULATIONIO_HAVE_SILO
+  shared_ptr<SiloVar> silovar() const {
+    return dynamic_pointer_cast<SiloVar>(m_datablock);
   }
 #endif
 #ifdef SIMULATIONIO_HAVE_TILEDB
@@ -166,6 +175,10 @@ public:
     return discretefieldblockcomponent.write(w);
   }
 #endif
+#ifdef SIMULATIONIO_HAVE_SILO
+  virtual string silo_path() const;
+  virtual void write(DBfile *file, const string &loc) const;
+#endif
 #ifdef SIMULATIONIO_HAVE_TILEDB
   virtual vector<string> tiledb_path() const;
   virtual void write(const tiledb::Context &ctx, const string &loc) const;
@@ -225,6 +238,9 @@ public:
   shared_ptr<ASDFRef> createASDFRef(const WriteOptions &write_options,
                                     const string &filename,
                                     const vector<string> &path);
+#endif
+#ifdef SIMULATIONIO_HAVE_SILO
+  shared_ptr<SiloVar> createSiloVar(const WriteOptions &write_options);
 #endif
 #ifdef SIMULATIONIO_HAVE_TILEDB
   shared_ptr<TileDBData> createTileDBData(const WriteOptions &write_options);

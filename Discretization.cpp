@@ -116,6 +116,19 @@ ASDF::writer &Discretization::write(ASDF::writer &w) const {
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_SILO
+string Discretization::silo_path() const {
+  return manifold()->silo_path() + "discretizations/" +
+         legalize_silo_name(name()) + "/";
+}
+
+void Discretization::write(DBfile *const file, const string &loc) const {
+  assert(invariant());
+  write_symlink(file, loc, "configuration", configuration()->silo_path());
+  write_group(file, loc, "discretizationblocks", discretizationblocks());
+}
+#endif
+
 #ifdef SIMULATIONIO_HAVE_TILEDB
 vector<string> Discretization::tiledb_path() const {
   return concat(manifold()->tiledb_path(), {"discretizations", name()});

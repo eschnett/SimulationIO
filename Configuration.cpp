@@ -165,8 +165,22 @@ ASDF::writer &Configuration::write(ASDF::writer &w) const {
 #endif
 
 #ifdef SIMULATIONIO_HAVE_SILO
+string Configuration::silo_path() const {
+  return project()->silo_path() + "configurations/" +
+         legalize_silo_name(name()) + "/";
+}
+
 void Configuration::write(DBfile *const file, const string &loc) const {
-  // write_alias_group(file, loc, "parametervalues", parametervalues());
+  int ierr = DBMkDir(file, (loc + "parametervalues").c_str());
+  assert(!ierr);
+  for (const auto &kv : parametervalues()) {
+    const auto &parametervalue = kv.second;
+    const auto &parameter = parametervalue->parameter();
+    // Point to parameter value
+    write_symlink(file, loc + "parametervalues/",
+                  legalize_silo_name(parametervalue->name()),
+                  parametervalue->silo_path());
+  }
 }
 #endif
 

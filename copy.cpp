@@ -23,6 +23,9 @@ enum format_t {
 #ifdef SIMULATIONIO_HAVE_HDF5
   format_hdf5,
 #endif
+#ifdef SIMULATIONIO_HAVE_SILO
+  format_silo,
+#endif
 #ifdef SIMULATIONIO_HAVE_TILEDB
   format_tiledb,
 #endif
@@ -34,6 +37,10 @@ format_t classify_filename(const string &filename) {
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   if (endswith(filename, ".asdf"))
     return format_asdf;
+#endif
+#ifdef SIMULATIONIO_HAVE_SILO
+  if (endswith(filename, ".silo"))
+    return format_silo;
 #endif
 #ifdef SIMULATIONIO_HAVE_TILEDB
   if (endswith(filename, ".tdb"))
@@ -63,6 +70,12 @@ shared_ptr<Project> read(const string &filename) {
     }
     break;
 #endif
+#ifdef SIMULATIONIO_HAVE_SILO
+  case format_silo:
+    cerr << "Reading Silo files is not yet implemented\n";
+    exit(1);
+    break;
+#endif
 #ifdef SIMULATIONIO_HAVE_TILEDB
   case format_tiledb:
     cerr << "Reading TileDB files is not yet implemented\n";
@@ -84,6 +97,12 @@ void write(const shared_ptr<Project> &project, const string &filename) {
 #ifdef SIMULATIONIO_HAVE_HDF5
   case format_hdf5: {
     project->writeHDF5(filename);
+    break;
+  }
+#endif
+#ifdef SIMULATIONIO_HAVE_SILO
+  case format_silo: {
+    project->writeSilo(filename);
     break;
   }
 #endif

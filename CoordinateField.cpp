@@ -106,6 +106,18 @@ ASDF::writer &CoordinateField::write(ASDF::writer &w) const {
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_SILO
+string CoordinateField::silo_path() const {
+  return coordinatesystem()->silo_path() + "coordinatefields/" +
+         legalize_silo_name(name()) + "/";
+}
+
+void CoordinateField::write(DBfile *const file, const string &loc) const {
+  write_attribute(file, loc, "direction", direction());
+  write_symlink(file, loc, "field", field()->silo_path());
+}
+#endif
+
 #ifdef SIMULATIONIO_HAVE_TILEDB
 vector<string> CoordinateField::tiledb_path() const {
   return concat(coordinatesystem()->tiledb_path(),

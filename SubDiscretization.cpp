@@ -168,6 +168,23 @@ ASDF::writer &SubDiscretization::write(ASDF::writer &w) const {
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_SILO
+string SubDiscretization::silo_path() const {
+  return manifold()->silo_path() + "subdiscretizations/" +
+         legalize_silo_name(name()) + "/";
+}
+
+void SubDiscretization::write(DBfile *const file, const string &loc) const {
+  assert(invariant());
+  write_symlink(file, loc, "parent_discretization",
+                parent_discretization()->silo_path());
+  write_symlink(file, loc, "child_discretization",
+                child_discretization()->silo_path());
+  write_attribute(file, loc, "factor", factor());
+  write_attribute(file, loc, "offset", offset());
+}
+#endif
+
 #ifdef SIMULATIONIO_HAVE_TILEDB
 vector<string> SubDiscretization::tiledb_path() const {
   return concat(manifold()->tiledb_path(), {"subdiscretizations", name()});

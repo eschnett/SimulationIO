@@ -149,6 +149,21 @@ ASDF::writer &DiscreteField::write(ASDF::writer &w) const {
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_SILO
+string DiscreteField::silo_path() const {
+  return field()->silo_path() + "discretefields/" + legalize_silo_name(name()) +
+         "/";
+}
+
+void DiscreteField::write(DBfile *const file, const string &loc) const {
+  assert(invariant());
+  write_symlink(file, loc, "configuration", configuration()->silo_path());
+  write_symlink(file, loc, "discretization", discretization()->silo_path());
+  write_symlink(file, loc, "basis", basis()->silo_path());
+  write_group(file, loc, "discretefieldblocks", discretefieldblocks());
+}
+#endif
+
 #ifdef SIMULATIONIO_HAVE_TILEDB
 vector<string> DiscreteField::tiledb_path() const {
   return concat(field()->tiledb_path(), {"discretefields", name()});

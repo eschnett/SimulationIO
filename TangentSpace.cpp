@@ -125,6 +125,20 @@ ASDF::writer &TangentSpace::write(ASDF::writer &w) const {
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_SILO
+string TangentSpace::silo_path() const {
+  return project()->silo_path() + "tangentspaces/" +
+         legalize_silo_name(name()) + "/";
+}
+
+void TangentSpace::write(DBfile *const file, const string &loc) const {
+  assert(invariant());
+  write_symlink(file, loc, "configuration", configuration()->silo_path());
+  write_attribute(file, loc, "dimension", dimension());
+  write_group(file, loc, "bases", bases());
+}
+#endif
+
 #ifdef SIMULATIONIO_HAVE_TILEDB
 vector<string> TangentSpace::tiledb_path() const {
   return concat(project()->tiledb_path(), {"tangentspaces", name()});

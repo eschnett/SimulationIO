@@ -14,6 +14,10 @@
 #include <H5Cpp.h>
 #endif
 
+#ifdef SIMULATIONIO_HAVE_SILO
+#include <silo.h>
+#endif
+
 #ifdef SIMULATIONIO_HAVE_TILEDB
 #include <tiledb/tiledb>
 #endif
@@ -129,6 +133,10 @@ public:
   operator<<(ASDF::writer &w, const DiscreteFieldBlock &discretefieldblock) {
     return discretefieldblock.write(w);
   }
+#endif
+#ifdef SIMULATIONIO_HAVE_SILO
+  virtual string silo_path() const;
+  virtual void write(DBfile *file, const string &loc) const;
 #endif
 #ifdef SIMULATIONIO_HAVE_TILEDB
   virtual vector<string> tiledb_path() const;

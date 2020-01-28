@@ -545,6 +545,14 @@ void DataRange::write(ASDF::writer &w, const string &entry) const {
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_SILO
+void DataRange::write(DBfile *const file, const string &loc,
+                      const string &entry) const {
+  write_attribute(file, loc, entry + "_origin", origin());
+  write_attribute(file, loc, entry + "_delta", delta());
+}
+#endif
+
 #ifdef SIMULATIONIO_HAVE_TILEDB
 void DataRange::write(const tiledb_writer &w, const string &entry) const {
   w.add_attribute(entry + "_origin", origin());
@@ -1216,6 +1224,62 @@ void ASDFRef::write(ASDF::writer &w, const string &entry) const {
 }
 
 #endif // #ifdef SIMULATIONIO_HAVE_ASDF_CXX
+
+#ifdef SIMULATIONIO_HAVE_SILO
+
+bool is_valid_Silo_datatype(const int datatype) {
+  switch (datatype) {
+  case DB_INT:
+  case DB_SHORT:
+  case DB_LONG:
+  case DB_FLOAT:
+  case DB_DOUBLE:
+  case DB_CHAR:
+  case DB_LONG_LONG:
+    return true;
+  default:
+    return false;
+  }
+}
+
+SiloVar::SiloVar(const WriteOptions &write_options, const box_t &box)
+    : DataBlock(write_options, box) {}
+
+void SiloVar::attachData(string meshname, function<const void *()> get_data,
+                         const int datatype) {
+  assert(!m_get_data);
+  m_meshname = move(meshname);
+  m_get_data = move(get_data);
+  m_datatype = datatype;
+}
+
+void SiloVar::attachData(string meshname,
+                         const shared_ptr<const void> &shared_data,
+                         const int datatype) {
+  attachData(
+      move(meshname), [shared_data] { return shared_data.get(); }, datatype);
+}
+
+void SiloVar::write(DBfile *const file, const string &loc,
+                    const string &entry) const {
+  vector<int> dims(rank());
+  for (size_t d = 0; d < dims.size(); ++d) {
+    assert(shape()[d] <= INT_MAX);
+    dims.at(d) = shape()[d];
+  }
+  int ierr = DBPutQuadvar1(file, (loc + entry).c_str(), m_meshname.c_str(),
+                           m_get_data(), dims.data(), dims.size(), nullptr, 0,
+                           m_datatype, DB_NODECENT, nullptr);
+  assert(!ierr);
+}
+
+ostream &SiloVar::output(ostream &os) const {
+  return os << "SiloVar:"
+            << " box=" << box() << " meshname=" << m_meshname
+            << " datatype=" << m_datatype;
+}
+
+#endif // #ifdef SIMULATIONIO_HAVE_SILO
 
 #ifdef SIMULATIONIO_HAVE_TILEDB
 

@@ -80,6 +80,18 @@ ASDF::writer &BasisVector::write(ASDF::writer &w) const {
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_SILO
+string BasisVector::silo_path() const {
+  return basis()->silo_path() + "basisvectors/" + legalize_silo_name(name()) +
+         "/";
+}
+
+void BasisVector::write(DBfile *const file, const string &loc) const {
+  assert(invariant());
+  write_attribute(file, loc, "direction", direction());
+}
+#endif
+
 #ifdef SIMULATIONIO_HAVE_TILEDB
 vector<string> BasisVector::tiledb_path() const {
   return concat(basis()->tiledb_path(), {"basisvectors", name()});

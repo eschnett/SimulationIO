@@ -142,6 +142,21 @@ ASDF::writer &DiscreteFieldBlock::write(ASDF::writer &w) const {
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_SILO
+string DiscreteFieldBlock::silo_path() const {
+  return discretefield()->silo_path() + "discretefieldblocks/" +
+         legalize_silo_name(name()) + "/";
+}
+
+void DiscreteFieldBlock::write(DBfile *const file, const string &loc) const {
+  assert(invariant());
+  write_symlink(file, loc, "discretizationblock",
+                discretizationblock()->silo_path());
+  write_group(file, loc, "discretefieldblockcomponents",
+              discretefieldblockcomponents());
+}
+#endif
+
 #ifdef SIMULATIONIO_HAVE_TILEDB
 vector<string> DiscreteFieldBlock::tiledb_path() const {
   return concat(discretefield()->tiledb_path(),
@@ -228,7 +243,7 @@ DiscreteFieldBlock::copyDiscreteFieldBlockComponent(
               WriteOptions(), datarange->origin(), datarange->delta());
       }
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
-#warning "TODO: handle ASDF types"
+      // TODO: handle ASDF types
       assert(0);
 #endif
     }

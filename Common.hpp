@@ -1,9 +1,6 @@
 #ifndef COMMON_HPP
 #define COMMON_HPP
 
-#warning "TODO"
-#include <iostream>
-
 #include "Config.hpp"
 #include "Helpers.hpp"
 
@@ -241,6 +238,10 @@ public:
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   virtual vector<string> yaml_path() const = 0;
 #endif
+#ifdef SIMULATIONIO_HAVE_SILO
+  virtual string silo_path() const = 0;
+  virtual void write(DBfile *file, const string &loc) const = 0;
+#endif
 #ifdef SIMULATIONIO_HAVE_TILEDB
   virtual vector<string> tiledb_path() const = 0;
   virtual void write(const tiledb::Context &ctx, const string &loc) const = 0;
@@ -320,35 +321,25 @@ public:
 #endif
 
 #ifdef SIMULATIONIO_HAVE_SILO
+string legalize_silo_name(const string &name);
+
 template <typename T>
 void write_group(DBfile *const file, const string &loc, const string &name,
                  const map<string, shared_ptr<T>> &group) {
-  // const string newloc = loc + name;
-  // const int ierr = DBMkDir(file, newloc.c_str());
-  int ierr = DBSetDir(file, loc.c_str());
-  if (ierr) {
-    std::cerr << "loc=" << loc << "\n";
-  }
+  int ierr = DBMkDir(file, (loc + name).c_str());
   assert(!ierr);
-  ierr = DBMkDir(file, name.c_str());
-  if (ierr) {
-    std::cerr << "loc=" << loc << "\n"
-              << "name=" << name << "\n"
-              << "newloc=" << newloc << "\n";
-    const DBtoc *const toc = DBGetToc(file);
-    for (int n = 0; n < toc->ndir; ++n)
-      std::cerr << "dir[" << n << "]=" << toc->dir_names[n] << "\n";
-  }
-  assert(!ierr);
-  ierr = DBSetDir(file, "/");
-  assert(!ierr);
-  const string newloc = loc + name + "/";
-  for (const auto &name_eltptr : group) {
-    const auto &name = name_eltptr.first;
-    const auto &eltptr = name_eltptr.second;
-    eltptr->write(file, newloc);
+  const string grouploc = loc + name + "/";
+  for (const auto &kv : group) {
+    const auto &eltname = legalize_silo_name(kv.first);
+    const auto &eltptr = kv.second;
+    int ierr = DBMkDir(file, (grouploc + eltname).c_str());
+    assert(!ierr);
+    eltptr->write(file, grouploc + eltname + "/");
   }
 }
+
+void write_symlink(DBfile *file, const string &loc, const string &name,
+                   const string &value);
 
 void write_attribute(DBfile *file, const string &loc, const string &name,
                      int value);
@@ -360,6 +351,8 @@ void write_attribute(DBfile *file, const string &loc, const string &name,
                      const string &value);
 void write_attribute(DBfile *file, const string &loc, const string &name,
                      const vector<int> &values);
+void write_attribute(DBfile *file, const string &loc, const string &name,
+                     const vector<long long> &values);
 void write_attribute(DBfile *file, const string &loc, const string &name,
                      const vector<double> &values);
 #endif

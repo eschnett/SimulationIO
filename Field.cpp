@@ -168,6 +168,21 @@ ASDF::writer &Field::write(ASDF::writer &w) const {
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_SILO
+string Field::silo_path() const {
+  return project()->silo_path() + "fields/" + legalize_silo_name(name()) + "/";
+}
+
+void Field::write(DBfile *const file, const string &loc) const {
+  assert(invariant());
+  write_symlink(file, loc, "configuration", configuration()->silo_path());
+  write_symlink(file, loc, "manifold", manifold()->silo_path());
+  write_symlink(file, loc, "tangentspace", tangentspace()->silo_path());
+  write_symlink(file, loc, "tensortype", tensortype()->silo_path());
+  write_group(file, loc, "discretefields", discretefields());
+}
+#endif
+
 #ifdef SIMULATIONIO_HAVE_TILEDB
 vector<string> Field::tiledb_path() const {
   return concat(project()->tiledb_path(), {"fields", name()});

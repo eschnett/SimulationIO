@@ -565,18 +565,17 @@ void Project::writeASDF(const string &filename) const {
 #endif
 
 #ifdef SIMULATIONIO_HAVE_SILO
+string Project::silo_path() const { return "/"; }
+
 void Project::write(DBfile *const file, const string &loc) const {
   assert(invariant());
   write_group(file, loc, "parameters", parameters());
   write_group(file, loc, "configurations", configurations());
   write_group(file, loc, "tensortypes", tensortypes());
-#warning "TODO: Silo"
-#if 0
-   w.add_group("manifolds", manifolds());
-   w.add_group("tangentspaces", tangentspaces());
-   w.add_group("fields", fields());
-   w.add_group("coordinatesystems", coordinatesystems());
-#endif
+  write_group(file, loc, "manifolds", manifolds());
+  write_group(file, loc, "tangentspaces", tangentspaces());
+  write_group(file, loc, "fields", fields());
+  write_group(file, loc, "coordinatesystems", coordinatesystems());
 }
 
 void Project::writeSilo(const string &filename) const {
@@ -588,8 +587,11 @@ void Project::writeSilo(const string &filename) const {
   assert(min == SILO_VERS_MIN);
   assert(pat == SILO_VERS_PAT);
   assert(pre == SILO_VERS_PRE);
-  ierr = DBSetAllowEmptyObjects(1);
-  assert(!ierr);
+  // DBSetAllowEmptyObjects(1);
+  DBSetCompression("METHOD=GZIP");
+  DBSetEnableChecksums(1);
+  DBShowErrors(DB_ALL_AND_DRVR, nullptr);
+  // DBShowErrors(DB_ABORT, nullptr);
   DBfile *const file =
       DBCreate(filename.c_str(), DB_CLOBBER, DB_LOCAL, name().c_str(), DB_HDF5);
   assert(file);

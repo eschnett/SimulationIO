@@ -162,6 +162,21 @@ ASDF::writer &Manifold::write(ASDF::writer &w) const {
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_SILO
+string Manifold::silo_path() const {
+  return project()->silo_path() + "manifolds/" + legalize_silo_name(name()) +
+         "/";
+}
+
+void Manifold::write(DBfile *const file, const string &loc) const {
+  assert(invariant());
+  write_symlink(file, loc, "configuration", configuration()->silo_path());
+  write_attribute(file, loc, "dimension", dimension());
+  write_group(file, loc, "discretizations", discretizations());
+  write_group(file, loc, "subdiscretizations", subdiscretizations());
+}
+#endif
+
 #ifdef SIMULATIONIO_HAVE_TILEDB
 vector<string> Manifold ::tiledb_path() const {
   return concat(project()->tiledb_path(), {"manifolds", name()});
