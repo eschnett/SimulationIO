@@ -171,9 +171,7 @@ int main(int argc, char **argv) {
           auto component = block->discretefieldblockcomponents().at("scalar");
           auto box = block->discretizationblock()->box();
           const auto &coord = d == 0 ? coordx : d == 1 ? coordy : coordz;
-          component->silovar()->attachData(
-              block->discretizationblock()->siloMeshname(),
-              [=] { return coord->data(); });
+          component->silovar()->attachData([=] { return coord->data(); });
         }
         // Write rho
         {
@@ -183,9 +181,7 @@ int main(int argc, char **argv) {
               discretefield->name() + "-" + blocks.at(p)->name());
           auto component = block->discretefieldblockcomponents().at("scalar");
           auto box = block->discretizationblock()->box();
-          component->silovar()->attachData(
-              block->discretizationblock()->siloMeshname(),
-              [=] { return datarho->data(); });
+          component->silovar()->attachData([=] { return datarho->data(); });
         }
         // Write velocity
         for (int d = 0; d < dim; ++d) {
@@ -198,9 +194,7 @@ int main(int argc, char **argv) {
           auto box = block->discretizationblock()->box();
           const auto &datavel =
               d == 0 ? datavelx : d == 1 ? datavely : datavelz;
-          component->silovar()->attachData(
-              block->discretizationblock()->siloMeshname(),
-              [=] { return datavel->data(); });
+          component->silovar()->attachData([=] { return datavel->data(); });
         }
       }
 

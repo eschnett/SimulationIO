@@ -547,7 +547,7 @@ void DataRange::write(ASDF::writer &w, const string &entry) const {
 
 #ifdef SIMULATIONIO_HAVE_SILO
 void DataRange::write(DBfile *const file, const string &loc,
-                      const string &entry) const {
+                      const string &meshname, const string &entry) const {
   write_attribute(file, loc, entry + "_origin", origin());
   write_attribute(file, loc, entry + "_delta", delta());
 }
@@ -945,6 +945,44 @@ void CopyObj::write(ASDF::writer &w, const string &entry) const {
 
 #endif // #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 
+#ifdef SIMULATIONIO_HAVE_SILO
+
+namespace {
+int type_hdf5_to_silo(const H5::DataType &h5type) {
+  if (h5type == H5::getType('a'))
+    return DB_CHAR;
+  if (h5type == H5::getType(0.0))
+    return DB_DOUBLE;
+  if (h5type == H5::getType(0.0f))
+    return DB_FLOAT;
+  if (h5type == H5::getType(0))
+    return DB_INT;
+  if (h5type == H5::getType(0LL))
+    return DB_LONG_LONG;
+  if (h5type == H5::getType(0L))
+    return DB_LONG;
+  if (h5type == H5::getType(short()))
+    return DB_SHORT;
+  assert(0);
+}
+} // namespace
+
+void CopyObj::write(DBfile *const file, const string &loc,
+                    const string &meshname, const string &entry) const {
+  auto dataset = group().openDataSet(name());
+  auto type = dataset.getDataType();
+  auto type_size = type.getSize();
+  vector<char> data(size() * type_size);
+  readData(data.data(), type, box(), box());
+
+  SiloVar silovar(WriteOptions(), box());
+  const int datatype = type_hdf5_to_silo(type);
+  silovar.attachData(data.data(), datatype);
+  silovar.write(file, loc, meshname, entry);
+}
+
+#endif // #ifdef SIMULATIONIO_HAVE_SILO
+
 #ifdef SIMULATIONIO_HAVE_TILEDB
 
 namespace {
@@ -1245,29 +1283,30 @@ bool is_valid_Silo_datatype(const int datatype) {
 SiloVar::SiloVar(const WriteOptions &write_options, const box_t &box)
     : DataBlock(write_options, box) {}
 
-void SiloVar::attachData(string meshname, function<const void *()> get_data,
+void SiloVar::attachData(function<const void *()> get_data,
                          const int datatype) {
   assert(!m_get_data);
-  m_meshname = move(meshname);
   m_get_data = move(get_data);
   m_datatype = datatype;
 }
 
-void SiloVar::attachData(string meshname,
-                         const shared_ptr<const void> &shared_data,
+void SiloVar::attachData(const shared_ptr<const void> &shared_data,
                          const int datatype) {
-  attachData(
-      move(meshname), [shared_data] { return shared_data.get(); }, datatype);
+  attachData([shared_data] { return shared_data.get(); }, datatype);
+}
+
+void SiloVar::attachData(const void *const data, const int datatype) {
+  attachData([data] { return data; }, datatype);
 }
 
 void SiloVar::write(DBfile *const file, const string &loc,
-                    const string &entry) const {
+                    const string &meshname, const string &entry) const {
   vector<int> dims(rank());
   for (size_t d = 0; d < dims.size(); ++d) {
     assert(shape()[d] <= INT_MAX);
     dims.at(d) = shape()[d];
   }
-  int ierr = DBPutQuadvar1(file, (loc + entry).c_str(), m_meshname.c_str(),
+  int ierr = DBPutQuadvar1(file, (loc + entry).c_str(), meshname.c_str(),
                            m_get_data(), dims.data(), dims.size(), nullptr, 0,
                            m_datatype, DB_NODECENT, nullptr);
   assert(!ierr);
@@ -1275,8 +1314,7 @@ void SiloVar::write(DBfile *const file, const string &loc,
 
 ostream &SiloVar::output(ostream &os) const {
   return os << "SiloVar:"
-            << " box=" << box() << " meshname=" << m_meshname
-            << " datatype=" << m_datatype;
+            << " box=" << box() << " datatype=" << m_datatype;
 }
 
 #endif // #ifdef SIMULATIONIO_HAVE_SILO

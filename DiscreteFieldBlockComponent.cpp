@@ -160,7 +160,9 @@ void DiscreteFieldBlockComponent::write(DBfile *const file,
   assert(invariant());
   write_symlink(file, loc, "tensorcomponent", tensorcomponent()->silo_path());
   if (bool(datablock()))
-    datablock()->write(file, loc, dataname());
+    datablock()->write(
+        file, loc, discretefieldblock()->discretizationblock()->silo_meshname(),
+        dataname());
 }
 #endif
 

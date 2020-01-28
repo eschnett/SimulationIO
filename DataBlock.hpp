@@ -282,7 +282,7 @@ public:
   virtual void write(ASDF::writer &w, const string &entry) const = 0;
 #endif
 #ifdef SIMULATIONIO_HAVE_SILO
-  virtual void write(DBfile *file, const string &loc,
+  virtual void write(DBfile *file, const string &loc, const string &meshname,
                      const string &entry) const = 0;
 #endif
 #ifdef SIMULATIONIO_HAVE_TILEDB
@@ -326,7 +326,7 @@ public:
   virtual void write(ASDF::writer &w, const string &entry) const;
 #endif
 #ifdef SIMULATIONIO_HAVE_SILO
-  virtual void write(DBfile *file, const string &loc,
+  virtual void write(DBfile *file, const string &loc, const string &meshname,
                      const string &entry) const;
 #endif
 #ifdef SIMULATIONIO_HAVE_TILEDB
@@ -394,7 +394,7 @@ public:
   virtual void write(ASDF::writer &w, const string &entry) const;
 #endif
 #ifdef SIMULATIONIO_HAVE_SILO
-  virtual void write(DBfile *file, const string &loc,
+  virtual void write(DBfile *file, const string &loc, const string &meshname,
                      const string &entry) const {
     assert(0);
   }
@@ -502,7 +502,7 @@ public:
   virtual void write(ASDF::writer &w, const string &entry) const;
 #endif
 #ifdef SIMULATIONIO_HAVE_SILO
-  virtual void write(DBfile *file, const string &loc,
+  virtual void write(DBfile *file, const string &loc, const string &meshname,
                      const string &entry) const {
     assert(0);
   }
@@ -544,7 +544,7 @@ public:
   virtual void write(ASDF::writer &w, const string &entry) const;
 #endif
 #ifdef SIMULATIONIO_HAVE_SILO
-  virtual void write(DBfile *file, const string &loc,
+  virtual void write(DBfile *file, const string &loc, const string &meshname,
                      const string &entry) const {
     assert(0);
   }
@@ -591,10 +591,8 @@ public:
   virtual void write(ASDF::writer &w, const string &entry) const;
 #endif
 #ifdef SIMULATIONIO_HAVE_SILO
-  virtual void write(DBfile *file, const string &loc,
-                     const string &entry) const {
-    assert(0);
-  }
+  virtual void write(DBfile *file, const string &loc, const string &meshname,
+                     const string &entry) const;
 #endif
 #ifdef SIMULATIONIO_HAVE_TILEDB
   virtual void write(const tiledb_writer &w, const string &entry) const;
@@ -649,7 +647,7 @@ public:
   virtual void write(ASDF::writer &w, const string &entry) const;
 #endif
 #ifdef SIMULATIONIO_HAVE_SILO
-  virtual void write(DBfile *file, const string &loc,
+  virtual void write(DBfile *file, const string &loc, const string &meshname,
                      const string &entry) const {
     assert(0);
   }
@@ -721,7 +719,7 @@ public:
 #endif
   virtual void write(ASDF::writer &w, const string &entry) const;
 #ifdef SIMULATIONIO_HAVE_SILO
-  virtual void write(DBfile *file, const string &loc,
+  virtual void write(DBfile *file, const string &loc, const string &meshname,
                      const string &entry) const {
     assert(0);
   }
@@ -764,7 +762,7 @@ public:
 #endif
   virtual void write(ASDF::writer &w, const string &entry) const;
 #ifdef SIMULATIONIO_HAVE_SILO
-  virtual void write(DBfile *file, const string &loc,
+  virtual void write(DBfile *file, const string &loc, const string &meshname,
                      const string &entry) const {
     assert(0);
   }
@@ -795,7 +793,7 @@ template <> struct silo_datatype<short> : integral_constant<int, DB_SHORT> {};
 
 // A Silo variable
 class SiloVar : public DataBlock {
-  string m_meshname;
+#warning "TODO"
   function<const void *()> m_get_data;
   int m_datatype;
 
@@ -812,16 +810,13 @@ public:
   // Construct directly
   SiloVar(const WriteOptions &write_options, const box_t &box);
 
-  void attachData(string meshname, function<const void *()> get_data,
-                  int datatype);
-  void attachData(string meshname, const shared_ptr<const void> &shared_data,
-                  int datatype);
+  void attachData(function<const void *()> get_data, int datatype);
+  void attachData(const void *data, int datatype);
+  void attachData(const shared_ptr<const void> &shared_data, int datatype);
   template <typename F, typename T = typename remove_pointer<
                             typename result_of<F()>::type>::type>
-  void attachData(string meshname, const F &get_data) {
-    attachData(
-        move(meshname), [get_data] { return get_data(); },
-        silo_datatype<T>::value);
+  void attachData(const F &get_data) {
+    attachData([get_data] { return get_data(); }, silo_datatype<T>::value);
   }
 
 #ifdef SIMULATIONIO_HAVE_HDF5
@@ -832,7 +827,7 @@ public:
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   virtual void write(ASDF::writer &w, const string &entry) const { assert(0); }
 #endif
-  virtual void write(DBfile *file, const string &loc,
+  virtual void write(DBfile *file, const string &loc, const string &meshname,
                      const string &entry) const;
 #ifdef SIMULATIONIO_HAVE_TILEDB
   virtual void write(const tiledb_writer &w, const string &entry) const {
@@ -909,7 +904,7 @@ public:
   virtual void write(ASDF::writer &w, const string &entry) const;
 #endif
 #ifdef SIMULATIONIO_HAVE_SILO
-  virtual void write(DBfile *file, const string &loc,
+  virtual void write(DBfile *file, const string &loc, const string &meshname,
                      const string &entry) const {
     assert(0);
   }

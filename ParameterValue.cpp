@@ -291,6 +291,7 @@ void ParameterValue::write(DBfile *const file, const string &loc) const {
     break;
   case type_int:
     write_attribute(file, loc, "data", value_int);
+    break;
   case type_double:
     write_attribute(file, loc, "data", value_double);
     break;

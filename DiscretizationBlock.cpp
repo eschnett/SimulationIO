@@ -325,7 +325,9 @@ void DiscretizationBlock::write(DBfile *const file, const string &loc) const {
   }
 }
 
-string DiscretizationBlock::siloMeshname() const { return silo_path() + "box"; }
+string DiscretizationBlock::silo_meshname() const {
+  return silo_path() + "box";
+}
 #endif
 
 #ifdef SIMULATIONIO_HAVE_TILEDB
