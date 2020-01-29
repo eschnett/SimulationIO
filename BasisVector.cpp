@@ -88,6 +88,7 @@ string BasisVector::silo_path() const {
 
 void BasisVector::write(DBfile *const file, const string &loc) const {
   assert(invariant());
+  write_attribute(file, loc, "name", name());
   write_attribute(file, loc, "direction", direction());
 }
 #endif

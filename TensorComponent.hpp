@@ -100,6 +100,17 @@ private:
   void read(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node,
             const shared_ptr<TensorType> &tensortype);
 #endif
+#ifdef SIMULATIONIO_HAVE_SILO
+  static shared_ptr<TensorComponent>
+  create(DBfile *const file, const string &loc,
+         const shared_ptr<TensorType> &tensortype) {
+    auto tensorcomponent = make_shared<TensorComponent>(hidden());
+    tensorcomponent->read(file, loc, tensortype);
+    return tensorcomponent;
+  }
+  void read(DBfile *file, const string &loc,
+            const shared_ptr<TensorType> &tensortype);
+#endif
 
 public:
   virtual ~TensorComponent() {}

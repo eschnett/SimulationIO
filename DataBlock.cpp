@@ -1306,9 +1306,16 @@ void SiloVar::write(DBfile *const file, const string &loc,
     assert(shape()[d] <= INT_MAX);
     dims.at(d) = shape()[d];
   }
-  int ierr = DBPutQuadvar1(file, (loc + entry).c_str(), meshname.c_str(),
-                           m_get_data(), dims.data(), dims.size(), nullptr, 0,
-                           m_datatype, DB_NODECENT, nullptr);
+  DBoptlist *const optlist = DBMakeOptlist(10);
+  assert(optlist);
+  int ione = 1;
+  int ierr = DBAddOption(optlist, DBOPT_HIDE_FROM_GUI, &ione);
+  assert(!ierr);
+  ierr = DBPutQuadvar1(file, (loc + entry).c_str(), meshname.c_str(),
+                       m_get_data(), dims.data(), dims.size(), nullptr, 0,
+                       m_datatype, DB_NODECENT, optlist);
+  assert(!ierr);
+  ierr = DBFreeOptlist(optlist);
   assert(!ierr);
 }
 

@@ -1,12 +1,17 @@
 #include "DiscreteField.hpp"
 
 #include "DiscreteFieldBlock.hpp"
+#include "DiscreteFieldBlockComponent.hpp"
 
 #ifdef SIMULATIONIO_HAVE_HDF5
 #include "H5Helpers.hpp"
 #endif
 
+#include <sstream>
+
 namespace SimulationIO {
+
+using std::ostringstream;
 
 bool DiscreteField::invariant() const {
   return Common::invariant() && bool(field()) &&
@@ -157,10 +162,61 @@ string DiscreteField::silo_path() const {
 
 void DiscreteField::write(DBfile *const file, const string &loc) const {
   assert(invariant());
+  write_attribute(file, loc, "name", name());
   write_symlink(file, loc, "configuration", configuration()->silo_path());
   write_symlink(file, loc, "discretization", discretization()->silo_path());
   write_symlink(file, loc, "basis", basis()->silo_path());
   write_group(file, loc, "discretefieldblocks", discretefieldblocks());
+  const auto &tensortype = field()->tensortype();
+  const auto &storage_indices = tensortype->storage_indices();
+  for (const auto &kv : storage_indices) {
+    const int storage_index = kv.first;
+    const auto &tensorcomponent = kv.second;
+    vector<string> varnames;
+    for (const auto &kv : discretefieldblocks()) {
+      const auto &discretefieldblock = kv.second;
+      const auto &discretefieldblockcomponent =
+          discretefieldblock->storage_indices().at(storage_index);
+      const shared_ptr<DiscreteFieldBlockComponent> x =
+          discretefieldblock->storage_indices().at(storage_index);
+      x->silo_varname();
+      discretefieldblockcomponent;
+      discretefieldblockcomponent->silo_varname();
+      varnames.push_back(discretefieldblockcomponent->silo_varname());
+    }
+    vector<const char *> varnames_c;
+    for (const auto &varname : varnames)
+      varnames_c.push_back(varname.c_str());
+    DBoptlist *const optlist = DBMakeOptlist(10);
+    assert(optlist);
+    // DBOPT_CYCLE;
+    // DBOPT_TIME;
+    // DBOPT_DTIME;
+    // DBOPT_HIDE_FROM_GUI;
+    string meshname = discretization()->silo_multimeshname();
+    int ierr = DBAddOption(optlist, DBOPT_MMESH_NAME,
+                           const_cast<char *>(meshname.c_str()));
+    assert(!ierr);
+    int vartype_scalar = DB_VARTYPE_SCALAR;
+    ierr = DBAddOption(optlist, DBOPT_TENSOR_RANK, &vartype_scalar);
+    assert(!ierr);
+    int quadvar = DB_QUADVAR;
+    ierr = DBAddOption(optlist, DBOPT_MB_BLOCK_TYPE, &quadvar);
+    assert(!ierr);
+    ostringstream buf;
+    buf << loc + legalize_silo_name(name());
+    if (!tensorcomponent->indexvalues().empty()) {
+      buf << "_";
+      for (const int indexvalue : tensorcomponent->indexvalues())
+        buf << indexvalue;
+    }
+    const string varname = buf.str();
+    ierr = DBPutMultivar(file, varname.c_str(), varnames_c.size(),
+                         varnames_c.data(), nullptr, optlist);
+    assert(!ierr);
+    ierr = DBFreeOptlist(optlist);
+    assert(!ierr);
+  }
 }
 #endif
 

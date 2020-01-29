@@ -121,6 +121,16 @@ private:
   void read(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node,
             const shared_ptr<Project> &project);
 #endif
+#ifdef SIMULATIONIO_HAVE_SILO
+  static shared_ptr<Configuration> create(DBfile *const file, const string &loc,
+                                          const shared_ptr<Project> &project) {
+    auto configuration = make_shared<Configuration>(hidden());
+    configuration->read(file, loc, project);
+    return configuration;
+  }
+  void read(DBfile *file, const string &loc,
+            const shared_ptr<Project> &project);
+#endif
 
 public:
   virtual ~Configuration() {}

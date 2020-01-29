@@ -145,6 +145,7 @@ string CoordinateSystem::silo_path() const {
 
 void CoordinateSystem::write(DBfile *const file, const string &loc) const {
   assert(invariant());
+  write_attribute(file, loc, "name", name());
   write_symlink(file, loc, "configuration", configuration()->silo_path());
   write_symlink(file, loc, "manifold", manifold()->silo_path());
   write_group(file, loc, "coordinatefields", coordinatefields());

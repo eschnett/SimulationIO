@@ -176,6 +176,7 @@ string SubDiscretization::silo_path() const {
 
 void SubDiscretization::write(DBfile *const file, const string &loc) const {
   assert(invariant());
+  write_attribute(file, loc, "name", name());
   write_symlink(file, loc, "parent_discretization",
                 parent_discretization()->silo_path());
   write_symlink(file, loc, "child_discretization",

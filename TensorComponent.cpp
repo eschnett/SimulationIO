@@ -65,6 +65,16 @@ void TensorComponent::read(const shared_ptr<ASDF::reader_state> &rs,
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_SILO
+void TensorComponent::read(DBfile *const file, const string &loc,
+                           const shared_ptr<TensorType> &tensortype) {
+  read_attribute(m_name, file, loc, "name");
+  m_tensortype = tensortype;
+  read_attribute(m_storage_index, file, loc, "storage_index");
+  read_attribute(m_indexvalues, file, loc, "indexvalues");
+}
+#endif
+
 void TensorComponent::merge(
     const shared_ptr<TensorComponent> &tensorcomponent) {
   assert(tensortype()->name() == tensorcomponent->tensortype()->name());
@@ -117,6 +127,7 @@ string TensorComponent::silo_path() const {
 
 void TensorComponent::write(DBfile *const file, const string &loc) const {
   assert(invariant());
+  write_attribute(file, loc, "name", name());
   write_attribute(file, loc, "storage_index", storage_index());
   write_attribute(file, loc, "indexvalues", indexvalues());
 }

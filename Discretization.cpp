@@ -124,8 +124,30 @@ string Discretization::silo_path() const {
 
 void Discretization::write(DBfile *const file, const string &loc) const {
   assert(invariant());
+  write_attribute(file, loc, "name", name());
   write_symlink(file, loc, "configuration", configuration()->silo_path());
   write_group(file, loc, "discretizationblocks", discretizationblocks());
+  vector<string> meshnames;
+  for (const auto &kv : discretizationblocks()) {
+    const auto &discretizationblock = kv.second;
+    meshnames.push_back(discretizationblock->silo_meshname());
+  }
+  vector<const char *> meshnames_c;
+  for (const auto &meshname : meshnames)
+    meshnames_c.push_back(meshname.c_str());
+  DBoptlist *const optlist = DBMakeOptlist(1);
+  assert(optlist);
+  int quad_rect = DB_QUAD_RECT;
+  int ierr = DBAddOption(optlist, DBOPT_MB_BLOCK_TYPE, &quad_rect);
+  assert(!ierr);
+  ierr = DBPutMultimesh(file, (loc + "multimesh").c_str(), meshnames_c.size(),
+                        meshnames_c.data(), nullptr, optlist);
+  ierr = DBFreeOptlist(optlist);
+  assert(!ierr);
+}
+
+string Discretization::silo_multimeshname() const {
+  return silo_path() + "multimesh";
 }
 #endif
 

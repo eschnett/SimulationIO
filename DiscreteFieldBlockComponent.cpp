@@ -158,11 +158,16 @@ string DiscreteFieldBlockComponent::silo_path() const {
 void DiscreteFieldBlockComponent::write(DBfile *const file,
                                         const string &loc) const {
   assert(invariant());
+  write_attribute(file, loc, "name", name());
   write_symlink(file, loc, "tensorcomponent", tensorcomponent()->silo_path());
   if (bool(datablock()))
     datablock()->write(
         file, loc, discretefieldblock()->discretizationblock()->silo_meshname(),
         dataname());
+}
+
+string DiscreteFieldBlockComponent::silo_varname() const {
+  return silo_path() + dataname();
 }
 #endif
 

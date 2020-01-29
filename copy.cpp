@@ -72,8 +72,7 @@ shared_ptr<Project> read(const string &filename) {
 #endif
 #ifdef SIMULATIONIO_HAVE_SILO
   case format_silo:
-    cerr << "Reading Silo files is not yet implemented\n";
-    exit(1);
+    return readProjectSilo(filename);
     break;
 #endif
 #ifdef SIMULATIONIO_HAVE_TILEDB

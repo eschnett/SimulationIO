@@ -106,6 +106,16 @@ private:
   void read(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node,
             const shared_ptr<Project> &project);
 #endif
+#ifdef SIMULATIONIO_HAVE_SILO
+  static shared_ptr<TensorType> create(DBfile *const file, const string &loc,
+                                       const shared_ptr<Project> &project) {
+    auto tensortype = make_shared<TensorType>(hidden());
+    tensortype->read(file, loc, project);
+    return tensortype;
+  }
+  void read(DBfile *file, const string &loc,
+            const shared_ptr<Project> &project);
+#endif
 
 public:
   virtual ~TensorType() {}
@@ -157,6 +167,10 @@ public:
   shared_ptr<TensorComponent>
   getTensorComponent(const shared_ptr<ASDF::reader_state> &rs,
                      const YAML::Node &node);
+#endif
+#ifdef SIMULATIONIO_HAVE_SILO
+  shared_ptr<TensorComponent> readTensorComponent(DBfile *file,
+                                                  const string &loc);
 #endif
 
 private:

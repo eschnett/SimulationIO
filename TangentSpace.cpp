@@ -133,6 +133,7 @@ string TangentSpace::silo_path() const {
 
 void TangentSpace::write(DBfile *const file, const string &loc) const {
   assert(invariant());
+  write_attribute(file, loc, "name", name());
   write_symlink(file, loc, "configuration", configuration()->silo_path());
   write_attribute(file, loc, "dimension", dimension());
   write_group(file, loc, "bases", bases());

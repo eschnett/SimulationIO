@@ -298,6 +298,7 @@ if(HDF5_FOUND AND ASDF_CXX_FOUND)
 endif()
 if(SILO_FOUND)
   list(APPEND EXES 
+    sio-list-silo
     sio-example-attach-silo
     )
 endif()
@@ -360,6 +361,9 @@ endif()
 if(SILO_FOUND)
   add_executable(sio-example-attach-silo example-attach-silo.cpp)
   target_link_libraries(sio-example-attach-silo SimulationIO)
+
+  add_executable(sio-list-silo list-silo.cpp)
+  target_link_libraries(sio-list-silo SimulationIO)
 endif()
 
 if(TILEDB_FOUND)
@@ -410,6 +414,8 @@ if(HDF5_FOUND AND ASDF_CXX_FOUND)
 endif()
 if(SILO_FOUND)
   add_test(NAME example-attach-silo COMMAND ./sio-example-attach-silo)
+  add_test(NAME list-silo COMMAND h5ls example-silo.silo)
+  add_test(NAME list-silo2 COMMAND ./sio-list-silo example-silo.silo)
 endif()
 if(TILEDB_FOUND)
   add_test(NAME example-attach-tiledb COMMAND ./sio-example-attach-tiledb)

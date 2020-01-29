@@ -113,6 +113,8 @@ string CoordinateField::silo_path() const {
 }
 
 void CoordinateField::write(DBfile *const file, const string &loc) const {
+  assert(invariant());
+  write_attribute(file, loc, "name", name());
   write_attribute(file, loc, "direction", direction());
   write_symlink(file, loc, "field", field()->silo_path());
 }

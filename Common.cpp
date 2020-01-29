@@ -1,3 +1,6 @@
+#warning "TODO"
+#include <iostream>
+
 #include "Common.hpp"
 
 #include "Helpers.hpp"
@@ -96,6 +99,17 @@ void write_symlink(DBfile *const file, const string &loc, const string &name,
   assert(!ierr);
 }
 
+string read_symlink(DBfile *const file, const string &loc, const string &name) {
+  const string varname = loc + name;
+  const int datatype = DBGetVarType(file, varname.c_str());
+  assert(datatype == DB_CHAR);
+  const int length = DBGetVarLength(file, varname.c_str());
+  const void *const vardata = DBGetVar(file, varname.c_str());
+  assert(vardata);
+  const string symlink(static_cast<const char *>(vardata), length);
+  return symlink;
+}
+
 void write_attribute(DBfile *const file, const string &loc, const string &name,
                      const int value) {
   const int dims = 1;
@@ -105,8 +119,17 @@ void write_attribute(DBfile *const file, const string &loc, const string &name,
 
 void write_attribute(DBfile *const file, const string &loc, const string &name,
                      const long long value) {
-  assert(value >= INT_MIN && value <= INT_MAX);
-  write_attribute(file, loc, name, int(value));
+  const int dims = 1;
+  int ierr =
+      DBWrite(file, (loc + name).c_str(), &value, &dims, 1, DB_LONG_LONG);
+  assert(!ierr);
+}
+
+void write_attribute(DBfile *const file, const string &loc, const string &name,
+                     const long value) {
+  const int dims = 1;
+  int ierr = DBWrite(file, (loc + name).c_str(), &value, &dims, 1, DB_LONG);
+  assert(!ierr);
 }
 
 void write_attribute(DBfile *const file, const string &loc, const string &name,
@@ -171,6 +194,146 @@ void write_attribute(DBfile *const file, const string &loc, const string &name,
       DBWrite(file, (loc + name).c_str(), values.data(), &dims, 1, DB_DOUBLE);
   assert(!ierr);
 }
+
+bool has_attribute(DBfile *const file, const string &loc, const string &name) {
+  const int iexists = DBInqVarExists(file, (loc + name).c_str());
+  return iexists;
+}
+
+int attribute_type(DBfile *const file, const string &loc, const string &name) {
+  const int datatype = DBGetVarType(file, (loc + name).c_str());
+  return datatype;
+}
+
+void read_attribute(int &value, DBfile *const file, const string &loc,
+                    const string &name) {
+  const string varname = loc + name;
+  const int datatype = DBGetVarType(file, varname.c_str());
+  assert(datatype == DB_INT ||
+         (sizeof(int) == sizeof(long) && datatype == DB_LONG));
+  const int length = DBGetVarLength(file, varname.c_str());
+  assert(length == 1);
+  const void *const vardata = DBGetVar(file, varname.c_str());
+  assert(vardata);
+  value = *static_cast<const int *>(vardata);
+}
+
+void read_attribute(long &value, DBfile *const file, const string &loc,
+                    const string &name) {
+  const string varname = loc + name;
+  const int datatype = DBGetVarType(file, varname.c_str());
+  assert(datatype == DB_LONG ||
+         (sizeof(long) == sizeof(int) && datatype == DB_INT) ||
+         (sizeof(long) == sizeof(long long) && datatype == DB_LONG_LONG));
+  const int length = DBGetVarLength(file, varname.c_str());
+  assert(length == 1);
+  const void *const vardata = DBGetVar(file, varname.c_str());
+  assert(vardata);
+  value = *static_cast<const long long *>(vardata);
+}
+
+void read_attribute(long long &value, DBfile *const file, const string &loc,
+                    const string &name) {
+  const string varname = loc + name;
+  const int datatype = DBGetVarType(file, varname.c_str());
+  assert(datatype == DB_LONG_LONG ||
+         (sizeof(long long) == sizeof(long) && datatype == DB_LONG));
+  const int length = DBGetVarLength(file, varname.c_str());
+  assert(length == 1);
+  const void *const vardata = DBGetVar(file, varname.c_str());
+  assert(vardata);
+  value = *static_cast<const long long *>(vardata);
+}
+
+void read_attribute(double &value, DBfile *const file, const string &loc,
+                    const string &name) {
+  const string varname = loc + name;
+  const int datatype = DBGetVarType(file, varname.c_str());
+  assert(datatype == DB_DOUBLE);
+  const int length = DBGetVarLength(file, varname.c_str());
+  assert(length == 1);
+  const void *const vardata = DBGetVar(file, varname.c_str());
+  assert(vardata);
+  value = *static_cast<const double *>(vardata);
+}
+
+void read_attribute(string &value, DBfile *const file, const string &loc,
+                    const string &name) {
+  const string varname = loc + name;
+  const int datatype = DBGetVarType(file, varname.c_str());
+  assert(datatype == DB_CHAR);
+  const int length = DBGetVarLength(file, varname.c_str());
+  const void *const vardata = DBGetVar(file, varname.c_str());
+  assert(vardata);
+  value = string(static_cast<const char *>(vardata), length);
+}
+
+void read_attribute(vector<int> &value, DBfile *const file, const string &loc,
+                    const string &name) {
+  const string varname = loc + name;
+  const int vartype = DBInqVarType(file, varname.c_str());
+  if (vartype == DB_USERDEF) {
+    // empty array
+    const int datatype = DBGetComponentType(file, varname.c_str(), "dummy");
+    assert(datatype >= 0);
+    if (!(datatype == DB_INT ||
+          (sizeof(int) == sizeof(long) && datatype == DB_LONG)))
+      std::cerr << "read_attribute<vector<int>>: varname=" << varname
+                << " datatype=" << datatype << "\n";
+    assert(datatype == DB_INT ||
+           (sizeof(int) == sizeof(long) && datatype == DB_LONG));
+    value.resize(0);
+  } else {
+    assert(vartype == DB_VARIABLE);
+    const int datatype = DBGetVarType(file, varname.c_str());
+    assert(datatype >= 0);
+    if (!(datatype == DB_INT ||
+          (sizeof(int) == sizeof(long) && datatype == DB_LONG)))
+      std::cerr << "read_attribute<vector<int>>: varname=" << varname
+                << " datatype=" << datatype << "\n";
+    assert(datatype == DB_INT ||
+           (sizeof(int) == sizeof(long) && datatype == DB_LONG));
+    const int length = DBGetVarLength(file, varname.c_str());
+    value.resize(length);
+    int ierr = DBReadVar(file, varname.c_str(), value.data());
+    assert(!ierr);
+  }
+}
+
+void read_group(DBfile *const file, const string &loc, const string &name,
+                const function<void(const string &loc)> &process_entry) {
+  int ierr = DBSetDir(file, (loc + name).c_str());
+  assert(!ierr);
+  const DBtoc *const toc = DBGetToc(file);
+  assert(toc);
+  vector<string> dirs;
+  for (int n = 0; n < toc->ndir; ++n)
+    dirs.push_back(toc->dir_names[n]);
+  ierr = DBSetDir(file, "/");
+  assert(!ierr);
+  for (const auto &dir : dirs)
+    process_entry(loc + name + "/" + dir + "/");
+}
+
+void read_symlink_group(
+    DBfile *const file, const string &loc, const string &name,
+    const function<void(const string &loc)> &process_entry) {
+  int ierr = DBSetDir(file, (loc + name).c_str());
+  assert(!ierr);
+  const DBtoc *const toc = DBGetToc(file);
+  assert(toc);
+  vector<string> vars;
+  for (int n = 0; n < toc->nvar; ++n)
+    vars.push_back(toc->var_names[n]);
+  ierr = DBSetDir(file, "/");
+  assert(!ierr);
+  const string grouploc = loc + name + "/";
+  for (const auto &var : vars) {
+    const auto symlink = read_symlink(file, grouploc, var);
+    process_entry(symlink);
+  }
+}
+
 #endif
 
 #ifdef SIMULATIONIO_HAVE_TILEDB

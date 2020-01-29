@@ -255,6 +255,7 @@ string DiscretizationBlock::silo_path() const {
 
 void DiscretizationBlock::write(DBfile *const file, const string &loc) const {
   assert(invariant());
+  write_attribute(file, loc, "name", name());
 
   const auto b = box();
   if (b.valid()) {
@@ -318,9 +319,18 @@ void DiscretizationBlock::write(DBfile *const file, const string &loc) const {
     vector<const char *> meshnames_c;
     for (const auto &meshname : meshnames)
       meshnames_c.push_back(meshname.c_str());
-    vector<int> meshtypes(nboxes, DB_QUAD_RECT);
-    int ierr = DBPutMultimesh(file, (loc + "active").c_str(), nboxes,
-                              meshnames_c.data(), meshtypes.data(), nullptr);
+    DBoptlist *const optlist = DBMakeOptlist(10);
+    assert(optlist);
+    int quad_rect = DB_QUAD_RECT;
+    int ierr = DBAddOption(optlist, DBOPT_MB_BLOCK_TYPE, &quad_rect);
+    assert(!ierr);
+    int ione = 1;
+    ierr = DBAddOption(optlist, DBOPT_HIDE_FROM_GUI, &ione);
+    assert(!ierr);
+    ierr = DBPutMultimesh(file, (loc + "active").c_str(), nboxes,
+                          meshnames_c.data(), nullptr, optlist);
+    assert(!ierr);
+    ierr = DBFreeOptlist(optlist);
     assert(!ierr);
   }
 }

@@ -1,3 +1,6 @@
+#warning "TODO"
+#include <iostream>
+
 #include "ParameterValue.hpp"
 
 #include "Configuration.hpp"
@@ -95,6 +98,37 @@ void ParameterValue::read(const shared_ptr<ASDF::reader_state> &rs,
       value_type = type_string;
       value_string = data.as<string>();
     } else {
+      assert(0);
+    }
+  } else {
+    value_type = type_empty;
+  }
+}
+#endif
+
+#ifdef SIMULATIONIO_HAVE_SILO
+void ParameterValue::read(DBfile *const file, const string &loc,
+                          const shared_ptr<Parameter> &parameter) {
+  read_attribute(m_name, file, loc, "name");
+  m_parameter = parameter;
+  if (has_attribute(file, loc, "data")) {
+    const auto datatype = attribute_type(file, loc, "data");
+    switch (datatype) {
+    case DB_LONG:
+    case DB_LONG_LONG:
+      value_type = type_int;
+      read_attribute(value_int, file, loc, "data");
+      break;
+    case DB_DOUBLE:
+      value_type = type_double;
+      read_attribute(value_double, file, loc, "data");
+      break;
+    case DB_CHAR:
+      value_type = type_string;
+      read_attribute(value_string, file, loc, "data");
+      break;
+    default:
+      std::cerr << "datatype=" << datatype << "\n";
       assert(0);
     }
   } else {
@@ -285,6 +319,7 @@ string ParameterValue::silo_path() const {
 
 void ParameterValue::write(DBfile *const file, const string &loc) const {
   assert(invariant());
+  write_attribute(file, loc, "name", name());
   switch (value_type) {
   case type_empty:
     // do nothing
@@ -301,8 +336,6 @@ void ParameterValue::write(DBfile *const file, const string &loc) const {
   default:
     assert(0);
   }
-  // ierr = DBMkDir(file, (loc + "configurations").c_str());
-  // assert(!ierr);
 }
 #endif
 

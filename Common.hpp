@@ -323,23 +323,10 @@ public:
 #ifdef SIMULATIONIO_HAVE_SILO
 string legalize_silo_name(const string &name);
 
-template <typename T>
-void write_group(DBfile *const file, const string &loc, const string &name,
-                 const map<string, shared_ptr<T>> &group) {
-  int ierr = DBMkDir(file, (loc + name).c_str());
-  assert(!ierr);
-  const string grouploc = loc + name + "/";
-  for (const auto &kv : group) {
-    const auto &eltname = legalize_silo_name(kv.first);
-    const auto &eltptr = kv.second;
-    int ierr = DBMkDir(file, (grouploc + eltname).c_str());
-    assert(!ierr);
-    eltptr->write(file, grouploc + eltname + "/");
-  }
-}
-
 void write_symlink(DBfile *file, const string &loc, const string &name,
                    const string &value);
+
+string read_symlink(DBfile *file, const string &loc, const string &name);
 
 void write_attribute(DBfile *file, const string &loc, const string &name,
                      int value);
@@ -355,6 +342,54 @@ void write_attribute(DBfile *file, const string &loc, const string &name,
                      const vector<long long> &values);
 void write_attribute(DBfile *file, const string &loc, const string &name,
                      const vector<double> &values);
+
+bool has_attribute(DBfile *file, const string &loc, const string &name);
+int attribute_type(DBfile *file, const string &loc, const string &name);
+void read_attribute(int &result, DBfile *file, const string &loc,
+                    const string &name);
+void read_attribute(long long &result, DBfile *file, const string &loc,
+                    const string &name);
+void read_attribute(double &result, DBfile *file, const string &loc,
+                    const string &name);
+void read_attribute(string &result, DBfile *file, const string &loc,
+                    const string &name);
+void read_attribute(vector<int> &result, DBfile *file, const string &loc,
+                    const string &name);
+
+template <typename T>
+void write_group(DBfile *const file, const string &loc, const string &name,
+                 const map<string, shared_ptr<T>> &group) {
+  int ierr = DBMkDir(file, (loc + name).c_str());
+  assert(!ierr);
+  const string grouploc = loc + name + "/";
+  for (const auto &kv : group) {
+    const auto &eltname = legalize_silo_name(kv.first);
+    const auto &eltptr = kv.second;
+    int ierr = DBMkDir(file, (grouploc + eltname).c_str());
+    assert(!ierr);
+    eltptr->write(file, grouploc + eltname + "/");
+  }
+}
+
+void read_group(DBfile *file, const string &loc, const string &name,
+                const function<void(const string &loc)> &process_entry);
+
+template <typename T>
+void write_symlink_group(DBfile *const file, const string &loc,
+                         const string &name,
+                         const map<string, shared_ptr<T>> &group) {
+  int ierr = DBMkDir(file, (loc + name).c_str());
+  assert(!ierr);
+  const string grouploc = loc + name + "/";
+  for (const auto &kv : group) {
+    const auto &eltname = legalize_silo_name(kv.first);
+    const auto &eltptr = kv.second;
+    write_symlink(file, grouploc, eltname, eltptr->silo_path());
+  }
+}
+
+void read_symlink_group(DBfile *file, const string &loc, const string &name,
+                        const function<void(const string &loc)> &process_entry);
 #endif
 
 #ifdef SIMULATIONIO_HAVE_TILEDB

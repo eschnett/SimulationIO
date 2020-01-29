@@ -150,6 +150,7 @@ string DiscreteFieldBlock::silo_path() const {
 
 void DiscreteFieldBlock::write(DBfile *const file, const string &loc) const {
   assert(invariant());
+  write_attribute(file, loc, "name", name());
   write_symlink(file, loc, "discretizationblock",
                 discretizationblock()->silo_path());
   write_group(file, loc, "discretefieldblockcomponents",

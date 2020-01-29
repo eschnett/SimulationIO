@@ -63,6 +63,11 @@ shared_ptr<Project> readProjectASDF(const shared_ptr<istream> &pis,
 shared_ptr<Project> readProjectASDF(const string &filename);
 #endif
 
+#ifdef SIMULATIONIO_HAVE_SILO
+shared_ptr<Project> readProject(DBfile *file, const string &loc);
+shared_ptr<Project> readProjectSilo(const string &filename);
+#endif
+
 class Parameter;
 class Configuration;
 class CoordinateSystem;
@@ -133,6 +138,9 @@ public:
   friend shared_ptr<Project>
   readProject(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node);
 #endif
+#ifdef SIMULATIONIO_HAVE_SILO
+  friend shared_ptr<Project> readProject(DBfile *file, const string &loc);
+#endif
   Project(hidden, const string &name) : Common(name) {
     SIMULATIONIO_CHECK_VERSION;
     createTypes();
@@ -162,6 +170,14 @@ private:
     return project;
   }
   void read(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node);
+#endif
+#ifdef SIMULATIONIO_HAVE_SILO
+  static shared_ptr<Project> create(DBfile *const file, const string &loc) {
+    auto project = make_shared<Project>(hidden());
+    project->read(file, loc);
+    return project;
+  }
+  void read(DBfile *file, const string &loc);
 #endif
 
 public:
@@ -226,6 +242,9 @@ public:
   shared_ptr<Parameter> getParameter(const shared_ptr<ASDF::reader_state> &rs,
                                      const YAML::Node &node);
 #endif
+#ifdef SIMULATIONIO_HAVE_SILO
+  shared_ptr<Parameter> readParameter(DBfile *file, const string &loc);
+#endif
   shared_ptr<Configuration> createConfiguration(const string &name);
   shared_ptr<Configuration> getConfiguration(const string &name);
   shared_ptr<Configuration>
@@ -242,6 +261,9 @@ public:
   shared_ptr<Configuration>
   getConfiguration(const shared_ptr<ASDF::reader_state> &rs,
                    const YAML::Node &node);
+#endif
+#ifdef SIMULATIONIO_HAVE_SILO
+  shared_ptr<Configuration> readConfiguration(DBfile *file, const string &loc);
 #endif
   shared_ptr<TensorType> createTensorType(const string &name, int dimension,
                                           int rank);
@@ -260,6 +282,9 @@ public:
                  const YAML::Node &node);
   shared_ptr<TensorType> getTensorType(const shared_ptr<ASDF::reader_state> &rs,
                                        const YAML::Node &node);
+#endif
+#ifdef SIMULATIONIO_HAVE_SILO
+  shared_ptr<TensorType> readTensorType(DBfile *file, const string &loc);
 #endif
   shared_ptr<Manifold>
   createManifold(const string &name,

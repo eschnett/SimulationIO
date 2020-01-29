@@ -76,6 +76,24 @@ void Configuration::read(const shared_ptr<ASDF::reader_state> &rs,
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_SILO
+void Configuration::read(DBfile *const file, const string &loc,
+                         const shared_ptr<Project> &project) {
+  read_attribute(m_name, file, loc, "name");
+  m_project = project;
+  read_symlink_group(file, loc, "parametervalues", [&](const string &loc) {
+    string parameter_name;
+    read_attribute(parameter_name, file, loc + "../../", "name");
+    const auto &parameter = project->parameters().at(parameter_name);
+    string parametervalue_name;
+    read_attribute(parametervalue_name, file, loc, "name");
+    const auto &parametervalue =
+        parameter->parametervalues().at(parametervalue_name);
+    insertParameterValue(parametervalue);
+  });
+}
+#endif
+
 void Configuration::merge(const shared_ptr<Configuration> &configuration) {
   assert(project()->name() == configuration->project()->name());
   for (const auto &iter : configuration->parametervalues()) {
@@ -171,16 +189,9 @@ string Configuration::silo_path() const {
 }
 
 void Configuration::write(DBfile *const file, const string &loc) const {
-  int ierr = DBMkDir(file, (loc + "parametervalues").c_str());
-  assert(!ierr);
-  for (const auto &kv : parametervalues()) {
-    const auto &parametervalue = kv.second;
-    const auto &parameter = parametervalue->parameter();
-    // Point to parameter value
-    write_symlink(file, loc + "parametervalues/",
-                  legalize_silo_name(parametervalue->name()),
-                  parametervalue->silo_path());
-  }
+  assert(invariant());
+  write_attribute(file, loc, "name", name());
+  write_symlink_group(file, loc, "parametervalues", parametervalues());
 }
 #endif
 

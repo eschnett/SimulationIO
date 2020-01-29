@@ -91,6 +91,16 @@ private:
   void read(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node,
             const shared_ptr<Project> &project);
 #endif
+#ifdef SIMULATIONIO_HAVE_SILO
+  static shared_ptr<Parameter> create(DBfile *file, const string &loc,
+                                      const shared_ptr<Project> &project) {
+    auto parameter = make_shared<Parameter>(hidden());
+    parameter->read(file, loc, project);
+    return parameter;
+  }
+  void read(DBfile *file, const string &loc,
+            const shared_ptr<Project> &project);
+#endif
 
 public:
   virtual ~Parameter() {}
@@ -137,6 +147,10 @@ public:
   shared_ptr<ParameterValue>
   getParameterValue(const shared_ptr<ASDF::reader_state> &rs,
                     const YAML::Node &node);
+#endif
+#ifdef SIMULATIONIO_HAVE_SILO
+  shared_ptr<ParameterValue> readParameterValue(DBfile *file,
+                                                const string &loc);
 #endif
 };
 

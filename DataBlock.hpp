@@ -793,7 +793,6 @@ template <> struct silo_datatype<short> : integral_constant<int, DB_SHORT> {};
 
 // A Silo variable
 class SiloVar : public DataBlock {
-#warning "TODO"
   function<const void *()> m_get_data;
   int m_datatype;
 
