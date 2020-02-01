@@ -58,6 +58,21 @@ void Basis::read(const shared_ptr<ASDF::reader_state> &rs,
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_SILO
+void Basis::read(const Silo<DBfile> &file, const string &loc,
+                 const shared_ptr<TangentSpace> &tangentspace) {
+  read_attribute(m_name, file, loc, "name");
+  m_tangentspace = tangentspace;
+  const auto &configuration_name =
+      read_symlinked_name(file, loc, "configuration");
+  m_configuration =
+      tangentspace->project()->configurations().at(configuration_name);
+  read_group(file, loc, "basisvectors",
+             [&](const string &loc) { readBasisVector(file, loc); });
+  m_configuration->insert(name(), shared_from_this());
+}
+#endif
+
 void Basis::merge(const shared_ptr<Basis> &basis) {
   assert(tangentspace()->name() == basis->tangentspace()->name());
   assert(m_configuration->name() == basis->configuration()->name());
@@ -123,7 +138,7 @@ string Basis::silo_path() const {
          "/";
 }
 
-void Basis::write(DBfile *const file, const string &loc) const {
+void Basis::write(const Silo<DBfile> &file, const string &loc) const {
   assert(invariant());
   write_attribute(file, loc, "name", name());
   write_symlink(file, loc, "configuration", configuration()->silo_path());
@@ -203,6 +218,19 @@ shared_ptr<BasisVector>
 Basis::readBasisVector(const shared_ptr<ASDF::reader_state> &rs,
                        const YAML::Node &node) {
   auto basisvector = BasisVector::create(rs, node, shared_from_this());
+  checked_emplace(m_basisvectors, basisvector->name(), basisvector, "Basis",
+                  "basisvectors");
+  checked_emplace(m_directions, basisvector->direction(), basisvector, "Basis",
+                  "directions");
+  assert(basisvector->invariant());
+  return basisvector;
+}
+#endif
+
+#ifdef SIMULATIONIO_HAVE_SILO
+shared_ptr<BasisVector> Basis::readBasisVector(const Silo<DBfile> &file,
+                                               const string &loc) {
+  auto basisvector = BasisVector::create(file, loc, shared_from_this());
   checked_emplace(m_basisvectors, basisvector->name(), basisvector, "Basis",
                   "basisvectors");
   checked_emplace(m_directions, basisvector->direction(), basisvector, "Basis",

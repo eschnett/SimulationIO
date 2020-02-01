@@ -64,6 +64,23 @@ void DiscreteFieldBlock::read(const shared_ptr<ASDF::reader_state> &rs,
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_SILO
+void DiscreteFieldBlock::read(const Silo<DBfile> &file, const string &loc,
+                              const shared_ptr<DiscreteField> &discretefield) {
+  read_attribute(m_name, file, loc, "name");
+  m_discretefield = discretefield;
+  const auto &discretizationblock_name =
+      read_symlinked_name(file, loc, "discretizationblock");
+  m_discretizationblock =
+      discretefield->discretization()->discretizationblocks().at(
+          discretizationblock_name);
+  read_group(file, loc, "discretefieldblockcomponents", [&](const string &loc) {
+    readDiscreteFieldBlockComponent(file, loc);
+  });
+  m_discretizationblock->noinsert(shared_from_this());
+}
+#endif
+
 void DiscreteFieldBlock::merge(
     const shared_ptr<DiscreteFieldBlock> &discretefieldblock) {
   assert(discretefield()->name() ==
@@ -148,7 +165,8 @@ string DiscreteFieldBlock::silo_path() const {
          legalize_silo_name(name()) + "/";
 }
 
-void DiscreteFieldBlock::write(DBfile *const file, const string &loc) const {
+void DiscreteFieldBlock::write(const Silo<DBfile> &file,
+                               const string &loc) const {
   assert(invariant());
   write_attribute(file, loc, "name", name());
   write_symlink(file, loc, "discretizationblock",
@@ -277,6 +295,25 @@ DiscreteFieldBlock::readDiscreteFieldBlockComponent(
     const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node) {
   auto discretefieldblockcomponent =
       DiscreteFieldBlockComponent::create(rs, node, shared_from_this());
+  checked_emplace(m_discretefieldblockcomponents,
+                  discretefieldblockcomponent->name(),
+                  discretefieldblockcomponent, "DiscreteFieldBlock",
+                  "discretefieldblockcomponents");
+  checked_emplace(
+      m_storage_indices,
+      discretefieldblockcomponent->tensorcomponent()->storage_index(),
+      discretefieldblockcomponent, "DiscreteFieldBlock", "storage_indices");
+  assert(discretefieldblockcomponent->invariant());
+  return discretefieldblockcomponent;
+}
+#endif
+
+#ifdef SIMULATIONIO_HAVE_SILO
+shared_ptr<DiscreteFieldBlockComponent>
+DiscreteFieldBlock::readDiscreteFieldBlockComponent(const Silo<DBfile> &file,
+                                                    const string &loc) {
+  auto discretefieldblockcomponent =
+      DiscreteFieldBlockComponent::create(file, loc, shared_from_this());
   checked_emplace(m_discretefieldblockcomponents,
                   discretefieldblockcomponent->name(),
                   discretefieldblockcomponent, "DiscreteFieldBlock",

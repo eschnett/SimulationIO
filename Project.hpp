@@ -64,7 +64,7 @@ shared_ptr<Project> readProjectASDF(const string &filename);
 #endif
 
 #ifdef SIMULATIONIO_HAVE_SILO
-shared_ptr<Project> readProject(DBfile *file, const string &loc);
+shared_ptr<Project> readProject(const Silo<DBfile> &file, const string &loc);
 shared_ptr<Project> readProjectSilo(const string &filename);
 #endif
 
@@ -139,7 +139,8 @@ public:
   readProject(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node);
 #endif
 #ifdef SIMULATIONIO_HAVE_SILO
-  friend shared_ptr<Project> readProject(DBfile *file, const string &loc);
+  friend shared_ptr<Project> readProject(const Silo<DBfile> &file,
+                                         const string &loc);
 #endif
   Project(hidden, const string &name) : Common(name) {
     SIMULATIONIO_CHECK_VERSION;
@@ -172,12 +173,13 @@ private:
   void read(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node);
 #endif
 #ifdef SIMULATIONIO_HAVE_SILO
-  static shared_ptr<Project> create(DBfile *const file, const string &loc) {
+  static shared_ptr<Project> create(const Silo<DBfile> &file,
+                                    const string &loc) {
     auto project = make_shared<Project>(hidden());
     project->read(file, loc);
     return project;
   }
-  void read(DBfile *file, const string &loc);
+  void read(const Silo<DBfile> &file, const string &loc);
 #endif
 
 public:
@@ -218,7 +220,7 @@ public:
 #endif
 #ifdef SIMULATIONIO_HAVE_SILO
   virtual string silo_path() const;
-  virtual void write(DBfile *file, const string &loc) const;
+  virtual void write(const Silo<DBfile> &file, const string &loc) const;
   void writeSilo(const string &filename) const;
 #endif
 #ifdef SIMULATIONIO_HAVE_TILEDB
@@ -243,7 +245,8 @@ public:
                                      const YAML::Node &node);
 #endif
 #ifdef SIMULATIONIO_HAVE_SILO
-  shared_ptr<Parameter> readParameter(DBfile *file, const string &loc);
+  shared_ptr<Parameter> readParameter(const Silo<DBfile> &file,
+                                      const string &loc);
 #endif
   shared_ptr<Configuration> createConfiguration(const string &name);
   shared_ptr<Configuration> getConfiguration(const string &name);
@@ -263,7 +266,8 @@ public:
                    const YAML::Node &node);
 #endif
 #ifdef SIMULATIONIO_HAVE_SILO
-  shared_ptr<Configuration> readConfiguration(DBfile *file, const string &loc);
+  shared_ptr<Configuration> readConfiguration(const Silo<DBfile> &file,
+                                              const string &loc);
 #endif
   shared_ptr<TensorType> createTensorType(const string &name, int dimension,
                                           int rank);
@@ -284,7 +288,8 @@ public:
                                        const YAML::Node &node);
 #endif
 #ifdef SIMULATIONIO_HAVE_SILO
-  shared_ptr<TensorType> readTensorType(DBfile *file, const string &loc);
+  shared_ptr<TensorType> readTensorType(const Silo<DBfile> &file,
+                                        const string &loc);
 #endif
   shared_ptr<Manifold>
   createManifold(const string &name,
@@ -303,6 +308,10 @@ public:
                                     const YAML::Node &node);
   shared_ptr<Manifold> getManifold(const shared_ptr<ASDF::reader_state> &rs,
                                    const YAML::Node &node);
+#endif
+#ifdef SIMULATIONIO_HAVE_SILO
+  shared_ptr<Manifold> readManifold(const Silo<DBfile> &file,
+                                    const string &loc);
 #endif
   shared_ptr<TangentSpace>
   createTangentSpace(const string &name,
@@ -327,6 +336,10 @@ public:
   getTangentSpace(const shared_ptr<ASDF::reader_state> &rs,
                   const YAML::Node &node);
 #endif
+#ifdef SIMULATIONIO_HAVE_SILO
+  shared_ptr<TangentSpace> readTangentSpace(const Silo<DBfile> &file,
+                                            const string &loc);
+#endif
   shared_ptr<Field> createField(const string &name,
                                 const shared_ptr<Configuration> &configuration,
                                 const shared_ptr<Manifold> &manifold,
@@ -348,6 +361,9 @@ public:
   shared_ptr<Field> getField(const shared_ptr<ASDF::reader_state> &rs,
                              const YAML::Node &node);
 #endif
+#ifdef SIMULATIONIO_HAVE_SILO
+  shared_ptr<Field> readField(const Silo<DBfile> &file, const string &loc);
+#endif
   shared_ptr<CoordinateSystem>
   createCoordinateSystem(const string &name,
                          const shared_ptr<Configuration> &configuration,
@@ -367,6 +383,10 @@ public:
   shared_ptr<CoordinateSystem>
   readCoordinateSystem(const shared_ptr<ASDF::reader_state> &rs,
                        const YAML::Node &node);
+#endif
+#ifdef SIMULATIONIO_HAVE_SILO
+  shared_ptr<CoordinateSystem> readCoordinateSystem(const Silo<DBfile> &file,
+                                                    const string &loc);
 #endif
 };
 

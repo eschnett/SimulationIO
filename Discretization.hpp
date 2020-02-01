@@ -118,6 +118,17 @@ private:
   void read(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node,
             const shared_ptr<Manifold> &manifold);
 #endif
+#ifdef SIMULATIONIO_HAVE_SILO
+  static shared_ptr<Discretization>
+  create(const Silo<DBfile> &file, const string &loc,
+         const shared_ptr<Manifold> &manifold) {
+    auto discretization = make_shared<Discretization>(hidden());
+    discretization->read(file, loc, manifold);
+    return discretization;
+  }
+  void read(const Silo<DBfile> &file, const string &loc,
+            const shared_ptr<Manifold> &manifold);
+#endif
 
 public:
   virtual ~Discretization() {}
@@ -143,7 +154,7 @@ public:
 #endif
 #ifdef SIMULATIONIO_HAVE_SILO
   virtual string silo_path() const;
-  virtual void write(DBfile *file, const string &loc) const;
+  virtual void write(const Silo<DBfile> &file, const string &loc) const;
   string silo_multimeshname() const;
 #endif
 #ifdef SIMULATIONIO_HAVE_TILEDB
@@ -167,6 +178,10 @@ public:
   shared_ptr<DiscretizationBlock>
   getDiscretizationBlock(const shared_ptr<ASDF::reader_state> &rs,
                          const YAML::Node &node);
+#endif
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+  shared_ptr<DiscretizationBlock>
+  readDiscretizationBlock(const Silo<DBfile> &file, const string &loc);
 #endif
 
 private:

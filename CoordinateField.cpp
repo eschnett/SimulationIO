@@ -58,6 +58,19 @@ void CoordinateField::read(
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_SILO
+void CoordinateField::read(
+    const Silo<DBfile> &file, const string &loc,
+    const shared_ptr<CoordinateSystem> &coordinatesystem) {
+  read_attribute(m_name, file, loc, "name");
+  m_coordinatesystem = coordinatesystem;
+  read_attribute(m_direction, file, loc, "direction");
+  const auto &field_name = read_symlinked_name(file, loc, "field");
+  m_field = coordinatesystem->manifold()->project()->fields().at(field_name);
+  m_field->noinsert(shared_from_this());
+}
+#endif
+
 void CoordinateField::merge(
     const shared_ptr<CoordinateField> &coordinatefield) {
   assert(coordinatesystem()->name() ==
@@ -112,7 +125,7 @@ string CoordinateField::silo_path() const {
          legalize_silo_name(name()) + "/";
 }
 
-void CoordinateField::write(DBfile *const file, const string &loc) const {
+void CoordinateField::write(const Silo<DBfile> &file, const string &loc) const {
   assert(invariant());
   write_attribute(file, loc, "name", name());
   write_attribute(file, loc, "direction", direction());

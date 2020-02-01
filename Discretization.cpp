@@ -56,6 +56,21 @@ void Discretization::read(const shared_ptr<ASDF::reader_state> &rs,
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_SILO
+void Discretization::read(const Silo<DBfile> &file, const string &loc,
+                          const shared_ptr<Manifold> &manifold) {
+  read_attribute(m_name, file, loc, "name");
+  m_manifold = manifold;
+  const auto &configuration_name =
+      read_symlinked_name(file, loc, "configuration");
+  m_configuration =
+      manifold->project()->configurations().at(configuration_name);
+  read_group(file, loc, "discretizationblocks",
+             [&](const string &loc) { readDiscretizationBlock(file, loc); });
+  m_configuration->insert(name(), shared_from_this());
+}
+#endif
+
 void Discretization::merge(const shared_ptr<Discretization> &discretization) {
   assert(manifold()->name() == discretization->manifold()->name());
   assert(m_configuration->name() == discretization->configuration()->name());
@@ -122,7 +137,7 @@ string Discretization::silo_path() const {
          legalize_silo_name(name()) + "/";
 }
 
-void Discretization::write(DBfile *const file, const string &loc) const {
+void Discretization::write(const Silo<DBfile> &file, const string &loc) const {
   assert(invariant());
   write_attribute(file, loc, "name", name());
   write_symlink(file, loc, "configuration", configuration()->silo_path());
@@ -140,8 +155,9 @@ void Discretization::write(DBfile *const file, const string &loc) const {
   int quad_rect = DB_QUAD_RECT;
   int ierr = DBAddOption(optlist, DBOPT_MB_BLOCK_TYPE, &quad_rect);
   assert(!ierr);
-  ierr = DBPutMultimesh(file, (loc + "multimesh").c_str(), meshnames_c.size(),
-                        meshnames_c.data(), nullptr, optlist);
+  ierr =
+      DBPutMultimesh(file.get(), (loc + "multimesh").c_str(),
+                     meshnames_c.size(), meshnames_c.data(), nullptr, optlist);
   ierr = DBFreeOptlist(optlist);
   assert(!ierr);
 }
@@ -252,6 +268,20 @@ Discretization::getDiscretizationBlock(const shared_ptr<ASDF::reader_state> &rs,
   assert(path.at(5) == "discretizationblocks");
   const auto &discretizationblock_name = path.at(6);
   return discretizationblocks().at(discretizationblock_name);
+}
+#endif
+
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+shared_ptr<DiscretizationBlock>
+Discretization::readDiscretizationBlock(const Silo<DBfile> &file,
+                                        const string &loc) {
+  auto discretizationblock =
+      DiscretizationBlock::create(file, loc, shared_from_this());
+  checked_emplace(m_discretizationblocks, discretizationblock->name(),
+                  discretizationblock, "Discretization",
+                  "discretizationblocks");
+  assert(discretizationblock->invariant());
+  return discretizationblock;
 }
 #endif
 

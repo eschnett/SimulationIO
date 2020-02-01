@@ -102,13 +102,13 @@ private:
 #endif
 #ifdef SIMULATIONIO_HAVE_SILO
   static shared_ptr<TensorComponent>
-  create(DBfile *const file, const string &loc,
+  create(const Silo<DBfile> &file, const string &loc,
          const shared_ptr<TensorType> &tensortype) {
     auto tensorcomponent = make_shared<TensorComponent>(hidden());
     tensorcomponent->read(file, loc, tensortype);
     return tensorcomponent;
   }
-  void read(DBfile *file, const string &loc,
+  void read(const Silo<DBfile> &file, const string &loc,
             const shared_ptr<TensorType> &tensortype);
 #endif
 
@@ -136,7 +136,7 @@ public:
 #endif
 #ifdef SIMULATIONIO_HAVE_SILO
   virtual string silo_path() const;
-  virtual void write(DBfile *file, const string &loc) const;
+  virtual void write(const Silo<DBfile> &file, const string &loc) const;
 #endif
 #ifdef SIMULATIONIO_HAVE_TILEDB
   virtual vector<string> tiledb_path() const;

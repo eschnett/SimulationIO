@@ -101,18 +101,17 @@ shared_ptr<Project> readProjectASDF(const string &filename) {
 #endif
 
 #ifdef SIMULATIONIO_HAVE_SILO
-shared_ptr<Project> readProject(DBfile *const file, const string &loc) {
+shared_ptr<Project> readProject(const Silo<DBfile> &file, const string &loc) {
   const auto project = Project::create(file, loc);
   assert(project->invariant());
   return project;
 }
 
 shared_ptr<Project> readProjectSilo(const string &filename) {
-  DBfile *const file = DBOpen(filename.c_str(), DB_UNKNOWN, DB_READ);
+  const Silo<DBfile> file =
+      MakeSilo(DBOpen(filename.c_str(), DB_UNKNOWN, DB_READ));
   assert(file);
   const auto project = readProject(file, "/");
-  int ierr = DBClose(file);
-  assert(!ierr);
   return project;
 }
 #endif
@@ -183,7 +182,7 @@ void Project::read(const shared_ptr<ASDF::reader_state> &rs,
 #endif
 
 #ifdef SIMULATIONIO_HAVE_SILO
-void Project::read(DBfile *const file, const string &loc) {
+void Project::read(const Silo<DBfile> &file, const string &loc) {
   createTypes(); // TODO: read from file instead to ensure integer constants are
                  // consistent
   read_attribute(m_name, file, loc, "name");
@@ -193,13 +192,14 @@ void Project::read(DBfile *const file, const string &loc) {
              [&](const string &loc) { readConfiguration(file, loc); });
   read_group(file, loc, "tensortypes",
              [&](const string &loc) { readTensorType(file, loc); });
-#warning "TODO: Silo"
-#if 0
-  manifolds;
-  tangentspaces;
-  fields;
-  coordinatesystems;
-#endif
+  read_group(file, loc, "manifolds",
+             [&](const string &loc) { readManifold(file, loc); });
+  read_group(file, loc, "tangentspaces",
+             [&](const string &loc) { readTangentSpace(file, loc); });
+  read_group(file, loc, "fields",
+             [&](const string &loc) { readField(file, loc); });
+  read_group(file, loc, "coordinatesystems",
+             [&](const string &loc) { readCoordinateSystem(file, loc); });
 }
 #endif
 
@@ -605,7 +605,7 @@ void Project::writeASDF(const string &filename) const {
 #ifdef SIMULATIONIO_HAVE_SILO
 string Project::silo_path() const { return "/"; }
 
-void Project::write(DBfile *const file, const string &loc) const {
+void Project::write(const Silo<DBfile> &file, const string &loc) const {
   assert(invariant());
   write_attribute(file, loc, "name", name());
   write_group(file, loc, "parameters", parameters());
@@ -631,12 +631,10 @@ void Project::writeSilo(const string &filename) const {
   DBSetEnableChecksums(1);
   DBShowErrors(DB_ALL_AND_DRVR, nullptr);
   // DBShowErrors(DB_ABORT, nullptr);
-  DBfile *const file =
-      DBCreate(filename.c_str(), DB_CLOBBER, DB_LOCAL, name().c_str(), DB_HDF5);
+  const Silo<DBfile> file = MakeSilo(DBCreate(
+      filename.c_str(), DB_CLOBBER, DB_LOCAL, name().c_str(), DB_HDF5));
   assert(file);
   write(file, "/");
-  ierr = DBClose(file);
-  assert(!ierr);
 }
 #endif
 
@@ -734,7 +732,7 @@ Project::getParameter(const shared_ptr<ASDF::reader_state> &rs,
 #endif
 
 #ifdef SIMULATIONIO_HAVE_SILO
-shared_ptr<Parameter> Project::readParameter(DBfile *const file,
+shared_ptr<Parameter> Project::readParameter(const Silo<DBfile> &file,
                                              const string &loc) {
   auto parameter = Parameter::create(file, loc, shared_from_this());
   checked_emplace(m_parameters, parameter->name(), parameter, "Project",
@@ -813,7 +811,7 @@ Project::getConfiguration(const shared_ptr<ASDF::reader_state> &rs,
 #endif
 
 #ifdef SIMULATIONIO_HAVE_SILO
-shared_ptr<Configuration> Project::readConfiguration(DBfile *const file,
+shared_ptr<Configuration> Project::readConfiguration(const Silo<DBfile> &file,
                                                      const string &loc) {
   auto configuration = Configuration::create(file, loc, shared_from_this());
   checked_emplace(m_configurations, configuration->name(), configuration,
@@ -898,7 +896,7 @@ Project::getTensorType(const shared_ptr<ASDF::reader_state> &rs,
 #endif
 
 #ifdef SIMULATIONIO_HAVE_SILO
-shared_ptr<TensorType> Project::readTensorType(DBfile *const file,
+shared_ptr<TensorType> Project::readTensorType(const Silo<DBfile> &file,
                                                const string &loc) {
   auto tensortype = TensorType::create(file, loc, shared_from_this());
   checked_emplace(m_tensortypes, tensortype->name(), tensortype, "Project",
@@ -987,6 +985,17 @@ Project::getManifold(const shared_ptr<ASDF::reader_state> &rs,
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_SILO
+shared_ptr<Manifold> Project::readManifold(const Silo<DBfile> &file,
+                                           const string &loc) {
+  auto manifold = Manifold::create(file, loc, shared_from_this());
+  checked_emplace(m_manifolds, manifold->name(), manifold, "Project",
+                  "manifolds");
+  assert(manifold->invariant());
+  return manifold;
+}
+#endif
+
 shared_ptr<TangentSpace>
 Project::createTangentSpace(const string &name,
                             const shared_ptr<Configuration> &configuration,
@@ -1063,6 +1072,17 @@ Project::getTangentSpace(const shared_ptr<ASDF::reader_state> &rs,
   assert(path.at(1) == "tangentspaces");
   const auto &tangentspace_name = path.at(2);
   return tangentspaces().at(tangentspace_name);
+}
+#endif
+
+#ifdef SIMULATIONIO_HAVE_SILO
+shared_ptr<TangentSpace> Project::readTangentSpace(const Silo<DBfile> &file,
+                                                   const string &loc) {
+  auto tangentspace = TangentSpace::create(file, loc, shared_from_this());
+  checked_emplace(m_tangentspaces, tangentspace->name(), tangentspace,
+                  "Project", "tangentspaces");
+  assert(tangentspace->invariant());
+  return tangentspace;
 }
 #endif
 
@@ -1152,6 +1172,16 @@ shared_ptr<Field> Project::getField(const shared_ptr<ASDF::reader_state> &rs,
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_SILO
+shared_ptr<Field> Project::readField(const Silo<DBfile> &file,
+                                     const string &loc) {
+  auto field = Field::create(file, loc, shared_from_this());
+  checked_emplace(m_fields, field->name(), field, "Project", "fields");
+  assert(field->invariant());
+  return field;
+}
+#endif
+
 shared_ptr<CoordinateSystem>
 Project::createCoordinateSystem(const string &name,
                                 const shared_ptr<Configuration> &configuration,
@@ -1213,6 +1243,18 @@ Project::readCoordinateSystem(const shared_ptr<ASDF::reader_state> &rs,
                               const YAML::Node &node) {
   auto coordinatesystem =
       CoordinateSystem::create(rs, node, shared_from_this());
+  checked_emplace(m_coordinatesystems, coordinatesystem->name(),
+                  coordinatesystem, "Project", "coordinatesystems");
+  assert(coordinatesystem->invariant());
+  return coordinatesystem;
+}
+#endif
+
+#ifdef SIMULATIONIO_HAVE_SILO
+shared_ptr<CoordinateSystem>
+Project::readCoordinateSystem(const Silo<DBfile> &file, const string &loc) {
+  auto coordinatesystem =
+      CoordinateSystem::create(file, loc, shared_from_this());
   checked_emplace(m_coordinatesystems, coordinatesystem->name(),
                   coordinatesystem, "Project", "coordinatesystems");
   assert(coordinatesystem->invariant());

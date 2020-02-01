@@ -41,6 +41,15 @@ void BasisVector::read(const shared_ptr<ASDF::reader_state> &rs,
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_SILO
+void BasisVector::read(const Silo<DBfile> &file, const string &loc,
+                       const shared_ptr<Basis> &basis) {
+  read_attribute(m_name, file, loc, "name");
+  m_basis = basis;
+  read_attribute(m_direction, file, loc, "direction");
+}
+#endif
+
 void BasisVector::merge(const shared_ptr<BasisVector> &basisvector) {
   assert(basis()->name() == basisvector->basis()->name());
   assert(m_direction == basisvector->direction());
@@ -86,7 +95,7 @@ string BasisVector::silo_path() const {
          "/";
 }
 
-void BasisVector::write(DBfile *const file, const string &loc) const {
+void BasisVector::write(const Silo<DBfile> &file, const string &loc) const {
   assert(invariant());
   write_attribute(file, loc, "name", name());
   write_attribute(file, loc, "direction", direction());

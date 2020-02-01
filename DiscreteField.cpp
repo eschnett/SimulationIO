@@ -79,6 +79,28 @@ void DiscreteField::read(const shared_ptr<ASDF::reader_state> &rs,
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_SILO
+void DiscreteField::read(const Silo<DBfile> &file, const string &loc,
+                         const shared_ptr<Field> &field) {
+  read_attribute(m_name, file, loc, "name");
+  m_field = field;
+  const auto &configuration_name =
+      read_symlinked_name(file, loc, "configuration");
+  m_configuration = field->project()->configurations().at(configuration_name);
+  const auto &discretization_name =
+      read_symlinked_name(file, loc, "discretization");
+  m_discretization =
+      field->manifold()->discretizations().at(discretization_name);
+  const auto &basis_name = read_symlinked_name(file, loc, "basis");
+  m_basis = field->tangentspace()->bases().at(basis_name);
+  read_group(file, loc, "discretefieldblocks",
+             [&](const string &loc) { readDiscreteFieldBlock(file, loc); });
+  m_configuration->insert(name(), shared_from_this());
+  m_discretization->noinsert(shared_from_this());
+  m_basis->noinsert(shared_from_this());
+}
+#endif
+
 void DiscreteField::merge(const shared_ptr<DiscreteField> &discretefield) {
   assert(field()->name() == discretefield->field()->name());
   assert(m_configuration->name() == discretefield->configuration()->name());
@@ -160,7 +182,7 @@ string DiscreteField::silo_path() const {
          "/";
 }
 
-void DiscreteField::write(DBfile *const file, const string &loc) const {
+void DiscreteField::write(const Silo<DBfile> &file, const string &loc) const {
   assert(invariant());
   write_attribute(file, loc, "name", name());
   write_symlink(file, loc, "configuration", configuration()->silo_path());
@@ -175,46 +197,42 @@ void DiscreteField::write(DBfile *const file, const string &loc) const {
     vector<string> varnames;
     for (const auto &kv : discretefieldblocks()) {
       const auto &discretefieldblock = kv.second;
-      const auto &discretefieldblockcomponent =
-          discretefieldblock->storage_indices().at(storage_index);
-      const shared_ptr<DiscreteFieldBlockComponent> x =
-          discretefieldblock->storage_indices().at(storage_index);
-      x->silo_varname();
-      discretefieldblockcomponent;
-      discretefieldblockcomponent->silo_varname();
-      varnames.push_back(discretefieldblockcomponent->silo_varname());
+      if (discretefieldblock->storage_indices().count(storage_index)) {
+        const auto &discretefieldblockcomponent =
+            discretefieldblock->storage_indices().at(storage_index);
+        varnames.push_back(discretefieldblockcomponent->silo_varname());
+      }
     }
     vector<const char *> varnames_c;
     for (const auto &varname : varnames)
       varnames_c.push_back(varname.c_str());
-    DBoptlist *const optlist = DBMakeOptlist(10);
+    const auto &optlist = MakeSilo(DBMakeOptlist(10));
     assert(optlist);
     // DBOPT_CYCLE;
     // DBOPT_TIME;
     // DBOPT_DTIME;
     // DBOPT_HIDE_FROM_GUI;
     string meshname = discretization()->silo_multimeshname();
-    int ierr = DBAddOption(optlist, DBOPT_MMESH_NAME,
+    int ierr = DBAddOption(optlist.get(), DBOPT_MMESH_NAME,
                            const_cast<char *>(meshname.c_str()));
     assert(!ierr);
     int vartype_scalar = DB_VARTYPE_SCALAR;
-    ierr = DBAddOption(optlist, DBOPT_TENSOR_RANK, &vartype_scalar);
+    ierr = DBAddOption(optlist.get(), DBOPT_TENSOR_RANK, &vartype_scalar);
     assert(!ierr);
     int quadvar = DB_QUADVAR;
-    ierr = DBAddOption(optlist, DBOPT_MB_BLOCK_TYPE, &quadvar);
+    ierr = DBAddOption(optlist.get(), DBOPT_MB_BLOCK_TYPE, &quadvar);
     assert(!ierr);
     ostringstream buf;
-    buf << loc + legalize_silo_name(name());
-    if (!tensorcomponent->indexvalues().empty()) {
-      buf << "_";
-      for (const int indexvalue : tensorcomponent->indexvalues())
-        buf << indexvalue;
-    }
+    buf << loc + legalize_silo_name(name()) << "_"
+        << legalize_silo_name(tensorcomponent->name());
+    // if (!tensorcomponent->indexvalues().empty()) {
+    //   buf << "_";
+    //   for (const int indexvalue : tensorcomponent->indexvalues())
+    //     buf << indexvalue;
+    // }
     const string varname = buf.str();
-    ierr = DBPutMultivar(file, varname.c_str(), varnames_c.size(),
-                         varnames_c.data(), nullptr, optlist);
-    assert(!ierr);
-    ierr = DBFreeOptlist(optlist);
+    ierr = DBPutMultivar(file.get(), varname.c_str(), varnames_c.size(),
+                         varnames_c.data(), nullptr, optlist.get());
     assert(!ierr);
   }
 }
@@ -304,6 +322,19 @@ DiscreteField::readDiscreteFieldBlock(const shared_ptr<ASDF::reader_state> &rs,
                                       const YAML::Node &node) {
   auto discretefieldblock =
       DiscreteFieldBlock::create(rs, node, shared_from_this());
+  checked_emplace(m_discretefieldblocks, discretefieldblock->name(),
+                  discretefieldblock, "DiscreteField", "discretefieldblocks");
+  assert(discretefieldblock->invariant());
+  return discretefieldblock;
+}
+#endif
+
+#ifdef SIMULATIONIO_HAVE_SILO
+shared_ptr<DiscreteFieldBlock>
+DiscreteField::readDiscreteFieldBlock(const Silo<DBfile> &file,
+                                      const string &loc) {
+  auto discretefieldblock =
+      DiscreteFieldBlock::create(file, loc, shared_from_this());
   checked_emplace(m_discretefieldblocks, discretefieldblock->name(),
                   discretefieldblock, "DiscreteField", "discretefieldblocks");
   assert(discretefieldblock->invariant());

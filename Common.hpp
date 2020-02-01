@@ -204,6 +204,19 @@ template <typename T> struct NoBackLink {
 class asdf_writer_;
 #endif
 
+#ifdef SIMULATIONIO_HAVE_SILO
+void SiloFree(DBfile *obj);
+void SiloFree(DBmultimesh *obj);
+void SiloFree(DBoptlist *obj);
+void SiloFree(DBquadmesh *obj);
+void SiloFree(DBquadvar *obj);
+
+template <typename T> using Silo = shared_ptr<T>;
+template <typename T> Silo<T> MakeSilo(T *const obj) {
+  return shared_ptr<T>(obj, static_cast<void (*)(T *)>(SiloFree));
+}
+#endif
+
 #ifdef SIMULATIONIO_HAVE_TILEDB
 class tiledb_writer;
 #endif
@@ -240,7 +253,7 @@ public:
 #endif
 #ifdef SIMULATIONIO_HAVE_SILO
   virtual string silo_path() const = 0;
-  virtual void write(DBfile *file, const string &loc) const = 0;
+  virtual void write(const Silo<DBfile> &file, const string &loc) const = 0;
 #endif
 #ifdef SIMULATIONIO_HAVE_TILEDB
   virtual vector<string> tiledb_path() const = 0;
@@ -323,62 +336,69 @@ public:
 #ifdef SIMULATIONIO_HAVE_SILO
 string legalize_silo_name(const string &name);
 
-void write_symlink(DBfile *file, const string &loc, const string &name,
-                   const string &value);
+void write_symlink(const Silo<DBfile> &file, const string &loc,
+                   const string &name, const string &value);
 
-string read_symlink(DBfile *file, const string &loc, const string &name);
+string read_symlink(const Silo<DBfile> &file, const string &loc,
+                    const string &name);
+string read_symlinked_name(const Silo<DBfile> &file, const string &loc,
+                           const string &name);
 
-void write_attribute(DBfile *file, const string &loc, const string &name,
-                     int value);
-void write_attribute(DBfile *file, const string &loc, const string &name,
-                     long long value);
-void write_attribute(DBfile *file, const string &loc, const string &name,
-                     double value);
-void write_attribute(DBfile *file, const string &loc, const string &name,
-                     const string &value);
-void write_attribute(DBfile *file, const string &loc, const string &name,
-                     const vector<int> &values);
-void write_attribute(DBfile *file, const string &loc, const string &name,
-                     const vector<long long> &values);
-void write_attribute(DBfile *file, const string &loc, const string &name,
-                     const vector<double> &values);
+void write_attribute(const Silo<DBfile> &file, const string &loc,
+                     const string &name, int value);
+void write_attribute(const Silo<DBfile> &file, const string &loc,
+                     const string &name, long long value);
+void write_attribute(const Silo<DBfile> &file, const string &loc,
+                     const string &name, double value);
+void write_attribute(const Silo<DBfile> &file, const string &loc,
+                     const string &name, const string &value);
+void write_attribute(const Silo<DBfile> &file, const string &loc,
+                     const string &name, const vector<int> &values);
+void write_attribute(const Silo<DBfile> &file, const string &loc,
+                     const string &name, const vector<long long> &values);
+void write_attribute(const Silo<DBfile> &file, const string &loc,
+                     const string &name, const vector<double> &values);
 
-bool has_attribute(DBfile *file, const string &loc, const string &name);
-int attribute_type(DBfile *file, const string &loc, const string &name);
-void read_attribute(int &result, DBfile *file, const string &loc,
+bool has_attribute(const Silo<DBfile> &file, const string &loc,
+                   const string &name);
+int attribute_type(const Silo<DBfile> &file, const string &loc,
+                   const string &name);
+void read_attribute(int &result, const Silo<DBfile> &file, const string &loc,
                     const string &name);
-void read_attribute(long long &result, DBfile *file, const string &loc,
+void read_attribute(long long &result, const Silo<DBfile> &file,
+                    const string &loc, const string &name);
+void read_attribute(double &result, const Silo<DBfile> &file, const string &loc,
                     const string &name);
-void read_attribute(double &result, DBfile *file, const string &loc,
+void read_attribute(string &result, const Silo<DBfile> &file, const string &loc,
                     const string &name);
-void read_attribute(string &result, DBfile *file, const string &loc,
-                    const string &name);
-void read_attribute(vector<int> &result, DBfile *file, const string &loc,
-                    const string &name);
+void read_attribute(vector<int> &result, const Silo<DBfile> &file,
+                    const string &loc, const string &name);
+void read_attribute(vector<double> &result, const Silo<DBfile> &file,
+                    const string &loc, const string &name);
 
 template <typename T>
-void write_group(DBfile *const file, const string &loc, const string &name,
-                 const map<string, shared_ptr<T>> &group) {
-  int ierr = DBMkDir(file, (loc + name).c_str());
+void write_group(const Silo<DBfile> &file, const string &loc,
+                 const string &name, const map<string, shared_ptr<T>> &group) {
+  int ierr = DBMkDir(file.get(), (loc + name).c_str());
   assert(!ierr);
   const string grouploc = loc + name + "/";
   for (const auto &kv : group) {
     const auto &eltname = legalize_silo_name(kv.first);
     const auto &eltptr = kv.second;
-    int ierr = DBMkDir(file, (grouploc + eltname).c_str());
+    int ierr = DBMkDir(file.get(), (grouploc + eltname).c_str());
     assert(!ierr);
     eltptr->write(file, grouploc + eltname + "/");
   }
 }
 
-void read_group(DBfile *file, const string &loc, const string &name,
+void read_group(const Silo<DBfile> &file, const string &loc, const string &name,
                 const function<void(const string &loc)> &process_entry);
 
 template <typename T>
-void write_symlink_group(DBfile *const file, const string &loc,
+void write_symlink_group(const Silo<DBfile> &file, const string &loc,
                          const string &name,
                          const map<string, shared_ptr<T>> &group) {
-  int ierr = DBMkDir(file, (loc + name).c_str());
+  int ierr = DBMkDir(file.get(), (loc + name).c_str());
   assert(!ierr);
   const string grouploc = loc + name + "/";
   for (const auto &kv : group) {
@@ -388,7 +408,8 @@ void write_symlink_group(DBfile *const file, const string &loc,
   }
 }
 
-void read_symlink_group(DBfile *file, const string &loc, const string &name,
+void read_symlink_group(const Silo<DBfile> &file, const string &loc,
+                        const string &name,
                         const function<void(const string &loc)> &process_entry);
 #endif
 

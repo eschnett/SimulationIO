@@ -45,7 +45,7 @@ void Parameter::read(const shared_ptr<ASDF::reader_state> &rs,
 #endif
 
 #ifdef SIMULATIONIO_HAVE_SILO
-void Parameter::read(DBfile *const file, const string &loc,
+void Parameter::read(const Silo<DBfile> &file, const string &loc,
                      const shared_ptr<Project> &project) {
   read_attribute(m_name, file, loc, "name");
   m_project = project;
@@ -103,7 +103,7 @@ string Parameter::silo_path() const {
          "/";
 }
 
-void Parameter::write(DBfile *const file, const string &loc) const {
+void Parameter::write(const Silo<DBfile> &file, const string &loc) const {
   assert(invariant());
   write_attribute(file, loc, "name", name());
   write_group(file, loc, "parametervalues", parametervalues());
@@ -208,8 +208,8 @@ Parameter::getParameterValue(const shared_ptr<ASDF::reader_state> &rs,
 #endif
 
 #ifdef SIMULATIONIO_HAVE_SILO
-shared_ptr<ParameterValue> Parameter::readParameterValue(DBfile *const file,
-                                                         const string &loc) {
+shared_ptr<ParameterValue>
+Parameter::readParameterValue(const Silo<DBfile> &file, const string &loc) {
   auto parametervalue = ParameterValue::create(file, loc, shared_from_this());
   checked_emplace(m_parametervalues, parametervalue->name(), parametervalue,
                   "Parameter", "parametervalues");

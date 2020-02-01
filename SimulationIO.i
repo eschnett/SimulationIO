@@ -511,6 +511,8 @@ struct DiscreteFieldBlockComponent {
     createDataRange(const WriteOptions& write_options,
                     double origin, const std::vector<double>& delta);
 #ifdef SIMULATIONIO_HAVE_HDF5
+  std::shared_ptr<DataSet>
+    createDataSet(const WriteOptions& write_options);
   %extend {
     std::shared_ptr<DataSet>
       createDataSet_int(const WriteOptions& write_options)

@@ -134,6 +134,17 @@ private:
   void read(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node,
             const shared_ptr<Manifold> &manifold);
 #endif
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+  static shared_ptr<SubDiscretization>
+  create(const Silo<DBfile> &file, const string &loc,
+         const shared_ptr<Manifold> &manifold) {
+    auto subdiscretization = make_shared<SubDiscretization>(hidden());
+    subdiscretization->read(file, loc, manifold);
+    return subdiscretization;
+  }
+  void read(const Silo<DBfile> &file, const string &loc,
+            const shared_ptr<Manifold> &manifold);
+#endif
 
 public:
   virtual ~SubDiscretization() {}
@@ -159,7 +170,7 @@ public:
 #endif
 #ifdef SIMULATIONIO_HAVE_SILO
   virtual string silo_path() const;
-  virtual void write(DBfile *file, const string &loc) const;
+  virtual void write(const Silo<DBfile> &file, const string &loc) const;
 #endif
 #ifdef SIMULATIONIO_HAVE_TILEDB
   virtual vector<string> tiledb_path() const;

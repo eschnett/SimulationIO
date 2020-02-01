@@ -132,6 +132,54 @@ void DiscretizationBlock::read(
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_SILO
+void DiscretizationBlock::read(
+    const Silo<DBfile> &file, const string &loc,
+    const shared_ptr<Discretization> &discretization) {
+  read_attribute(m_name, file, loc, "name");
+  m_discretization = discretization;
+  const int box_exists = DBInqVarExists(file.get(), (loc + "box").c_str());
+  if (box_exists) {
+    const DBObjectType objtype =
+        DBInqVarType(file.get(), (loc + "box").c_str());
+    if (objtype == DB_USERDEF) {
+      m_box = box_t(point_t(0), point_t(0));
+      assert(!m_box.empty());
+    } else {
+      // assert(objtype == DB_QUADMESH);
+      assert(objtype == DB_QUAD_RECT); // why?
+      const auto &box =
+          MakeSilo(DBGetQuadmesh(file.get(), (loc + "box").c_str()));
+      if (box) {
+        const int dims = box->ndims;
+        assert(dims <= 3);
+        const vector<int> base(&box->base_index[0], &box->base_index[dims]),
+            size(&box->size_index[0], &box->size_index[dims]);
+        m_box = box_t(point_t(base), point_t(base) + point_t(size));
+      }
+    }
+  }
+  const int active_exists =
+      DBInqVarExists(file.get(), (loc + "active").c_str());
+  if (active_exists) {
+    const auto &active =
+        MakeSilo(DBGetMultimesh(file.get(), (loc + "active").c_str()));
+    if (active) {
+      vector<box_t> boxes;
+      for (int n = 0; n < active->nblocks; ++n) {
+        const char *const meshname = active->meshnames[n];
+        const auto &box = MakeSilo(DBGetQuadmesh(file.get(), meshname));
+        const int dims = box->ndims;
+        const vector<int> base(&box->base_index[0], &box->base_index[dims]),
+            size(&box->size_index[0], &box->size_index[dims]);
+        boxes.emplace_back(point_t(base), point_t(base) + point_t(size));
+      }
+      m_active = region_t(move(boxes));
+    }
+  }
+}
+#endif
+
 void DiscretizationBlock::merge(
     const shared_ptr<DiscretizationBlock> &discretizationblock) {
   assert(discretization()->name() ==
@@ -253,39 +301,56 @@ string DiscretizationBlock::silo_path() const {
          legalize_silo_name(name()) + "/";
 }
 
-void DiscretizationBlock::write(DBfile *const file, const string &loc) const {
+void DiscretizationBlock::write(const Silo<DBfile> &file,
+                                const string &loc) const {
   assert(invariant());
   write_attribute(file, loc, "name", name());
 
   const auto b = box();
   if (b.valid()) {
-    if (b.rank() == 0)
+    if (b.rank() == 0) {
       assert(!b.empty()); // we cannot write empty boxes
-    // write_attribute(file, loc, "offset", vector<long long>(b.lower()));
-    // write_attribute(file, loc, "shape", vector<long long>(b.shape()));
-    vector<vector<double>> coords(b.rank());
-    for (size_t d = 0; d < coords.size(); ++d) {
-      auto &coordsd = coords.at(d);
-      coordsd.resize(b.shape()[d]);
-      const auto lo = b.lower()[d];
-      for (size_t i = 0; i < coordsd.size(); ++i)
-        coordsd.at(i) = lo + i;
+      DBobject *const obj = DBMakeObject((loc + "box").c_str(), DB_USERDEF, 0);
+      assert(obj);
+      int ierr = DBAddIntComponent(obj, "dummy", 0);
+      assert(!ierr);
+      ierr = DBWriteObject(file.get(), obj, 1);
+      assert(!ierr);
+    } else {
+      vector<vector<double>> coords(b.rank());
+      for (size_t d = 0; d < coords.size(); ++d) {
+        auto &coordsd = coords.at(d);
+        coordsd.resize(b.shape()[d]);
+        const auto lo = b.lower()[d];
+        for (size_t i = 0; i < coordsd.size(); ++i)
+          coordsd.at(i) = lo + i;
+      }
+      assert(b.rank() <= 3);
+      vector<int> dims(3, 0);
+      for (size_t d = 0; d < dims.size(); ++d) {
+        const auto sh = b.shape()[d];
+        assert(sh >= INT_MIN && sh <= INT_MAX);
+        dims.at(d) = sh;
+      }
+      const auto &optlist = MakeSilo(DBMakeOptlist(10));
+      assert(optlist);
+      int ione = 1;
+      int ierr = DBAddOption(optlist.get(), DBOPT_MAJORORDER, &ione);
+      assert(!ierr);
+      assert(b.rank() <= 3);
+      vector<int> base(3, 0);
+      for (size_t d = 0; d < dims.size(); ++d) {
+        const auto lo = b.lower()[d];
+        assert(lo >= INT_MIN && lo <= INT_MAX);
+        base.at(d) = lo;
+      }
+      ierr = DBAddOption(optlist.get(), DBOPT_BASEINDEX, base.data());
+      assert(!ierr);
+      ierr = DBPutQuadmesh(file.get(), (loc + "box").c_str(), nullptr,
+                           coords.data(), dims.data(), b.rank(), DB_DOUBLE,
+                           DB_COLLINEAR, optlist.get());
+      assert(!ierr);
     }
-    vector<int> dims(b.rank());
-    for (size_t d = 0; d < dims.size(); ++d) {
-      const auto sh = b.shape()[d];
-      assert(sh >= INT_MIN && sh <= INT_MAX);
-      dims.at(d) = sh;
-    }
-    // DBoptlist *const optlist = DBMakeOptlist(0);
-    // int ierr = DBAddOption(optlist, DBOPT_MAJORORDER, 1);
-    // assert(!ierr);
-    int ierr =
-        DBPutQuadmesh(file, (loc + "box").c_str(), nullptr, coords.data(),
-                      dims.data(), b.rank(), DB_DOUBLE, DB_COLLINEAR, nullptr);
-    assert(!ierr);
-    // ierr = DBFreeOptlist(optlist);
-    // assert(!ierr);
   }
   const auto a = active();
   if (a.valid()) {
@@ -309,9 +374,16 @@ void DiscretizationBlock::write(DBfile *const file, const string &loc) const {
         assert(sh >= INT_MIN && sh <= INT_MAX);
         dims.at(d) = sh;
       }
-      int ierr = DBPutQuadmesh(file, meshname.c_str(), nullptr, coords.data(),
-                               dims.data(), b.rank(), DB_DOUBLE, DB_COLLINEAR,
-                               nullptr);
+      const auto &optlist = MakeSilo(DBMakeOptlist(10));
+      assert(optlist);
+      int ione = 1;
+      int ierr = DBAddOption(optlist.get(), DBOPT_MAJORORDER, &ione);
+      assert(!ierr);
+      ierr = DBAddOption(optlist.get(), DBOPT_HIDE_FROM_GUI, &ione);
+      assert(!ierr);
+      ierr = DBPutQuadmesh(file.get(), meshname.c_str(), nullptr, coords.data(),
+                           dims.data(), b.rank(), DB_DOUBLE, DB_COLLINEAR,
+                           optlist.get());
       assert(!ierr);
       meshnames.push_back(meshname);
     }
@@ -319,18 +391,16 @@ void DiscretizationBlock::write(DBfile *const file, const string &loc) const {
     vector<const char *> meshnames_c;
     for (const auto &meshname : meshnames)
       meshnames_c.push_back(meshname.c_str());
-    DBoptlist *const optlist = DBMakeOptlist(10);
+    const auto &optlist = MakeSilo(DBMakeOptlist(10));
     assert(optlist);
     int quad_rect = DB_QUAD_RECT;
-    int ierr = DBAddOption(optlist, DBOPT_MB_BLOCK_TYPE, &quad_rect);
+    int ierr = DBAddOption(optlist.get(), DBOPT_MB_BLOCK_TYPE, &quad_rect);
     assert(!ierr);
-    int ione = 1;
-    ierr = DBAddOption(optlist, DBOPT_HIDE_FROM_GUI, &ione);
-    assert(!ierr);
-    ierr = DBPutMultimesh(file, (loc + "active").c_str(), nboxes,
-                          meshnames_c.data(), nullptr, optlist);
-    assert(!ierr);
-    ierr = DBFreeOptlist(optlist);
+    // const int ione = 1;
+    // ierr = DBAddOption(optlist, DBOPT_HIDE_FROM_GUI, &ione);
+    // assert(!ierr);
+    ierr = DBPutMultimesh(file.get(), (loc + "active").c_str(), nboxes,
+                          meshnames_c.data(), nullptr, optlist.get());
     assert(!ierr);
   }
 }

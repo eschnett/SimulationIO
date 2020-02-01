@@ -80,6 +80,29 @@ void DiscreteFieldBlockComponent::read(
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_SILO
+void DiscreteFieldBlockComponent::read(
+    const Silo<DBfile> &file, const string &loc,
+    const shared_ptr<DiscreteFieldBlock> &discretefieldblock) {
+  read_attribute(m_name, file, loc, "name");
+  m_discretefieldblock = discretefieldblock;
+  const auto &tensorcomponent_name =
+      read_symlinked_name(file, loc, "tensorcomponent");
+  m_tensorcomponent = discretefieldblock->discretefield()
+                          ->field()
+                          ->tensortype()
+                          ->tensorcomponents()
+                          .at(tensorcomponent_name);
+  const int silovar_exists =
+      DBInqVarExists(file.get(), (loc + dataname()).c_str());
+  if (silovar_exists)
+    m_datablock =
+        SiloVar::read_silo(file, loc, dataname(),
+                           discretefieldblock->discretizationblock()->box());
+  m_tensorcomponent->noinsert(shared_from_this());
+}
+#endif
+
 void DiscreteFieldBlockComponent::merge(
     const shared_ptr<DiscreteFieldBlockComponent>
         &discretefieldblockcomponent) {
@@ -155,7 +178,7 @@ string DiscreteFieldBlockComponent::silo_path() const {
          legalize_silo_name(name()) + "/";
 }
 
-void DiscreteFieldBlockComponent::write(DBfile *const file,
+void DiscreteFieldBlockComponent::write(const Silo<DBfile> &file,
                                         const string &loc) const {
   assert(invariant());
   write_attribute(file, loc, "name", name());
@@ -191,6 +214,15 @@ void DiscreteFieldBlockComponent::write(const tiledb::Context &ctx,
 void DiscreteFieldBlockComponent::unsetDataBlock() { m_datablock = nullptr; }
 
 #ifdef SIMULATIONIO_HAVE_HDF5
+shared_ptr<DataSet>
+DiscreteFieldBlockComponent::createDataSet(const WriteOptions &write_options) {
+  assert(!m_datablock);
+  auto res = make_shared<DataSet>(
+      write_options, discretefieldblock()->discretizationblock()->box());
+  m_datablock = res;
+  return res;
+}
+
 shared_ptr<DataSet>
 DiscreteFieldBlockComponent::createDataSet(const WriteOptions &write_options,
                                            const H5::DataType &type) {

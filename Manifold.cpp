@@ -79,6 +79,23 @@ void Manifold::read(const shared_ptr<ASDF::reader_state> &rs,
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_SILO
+void Manifold::read(const Silo<DBfile> &file, const string &loc,
+                    const shared_ptr<Project> &project) {
+  read_attribute(m_name, file, loc, "name");
+  m_project = project;
+  const auto &configuration_name =
+      read_symlinked_name(file, loc, "configuration");
+  m_configuration = project->configurations().at(configuration_name);
+  read_attribute(m_dimension, file, loc, "dimension");
+  read_group(file, loc, "discretizations",
+             [&](const string &loc) { readDiscretization(file, loc); });
+  read_group(file, loc, "subdiscretizations",
+             [&](const string &loc) { readSubDiscretization(file, loc); });
+  m_configuration->insert(name(), shared_from_this());
+}
+#endif
+
 void Manifold::merge(const shared_ptr<Manifold> &manifold) {
   assert(project()->name() == manifold->project()->name());
   assert(m_configuration->name() == manifold->configuration()->name());
@@ -168,7 +185,7 @@ string Manifold::silo_path() const {
          "/";
 }
 
-void Manifold::write(DBfile *const file, const string &loc) const {
+void Manifold::write(const Silo<DBfile> &file, const string &loc) const {
   assert(invariant());
   write_attribute(file, loc, "name", name());
   write_symlink(file, loc, "configuration", configuration()->silo_path());
@@ -279,6 +296,17 @@ Manifold::getDiscretization(const shared_ptr<ASDF::reader_state> &rs,
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_SILO
+shared_ptr<Discretization>
+Manifold::readDiscretization(const Silo<DBfile> &file, const string &loc) {
+  auto discretization = Discretization::create(file, loc, shared_from_this());
+  checked_emplace(m_discretizations, discretization->name(), discretization,
+                  "Manifold", "discretizations");
+  assert(discretization->invariant());
+  return discretization;
+}
+#endif
+
 shared_ptr<SubDiscretization> Manifold::createSubDiscretization(
     const string &name, const shared_ptr<Discretization> &parent_discretization,
     const shared_ptr<Discretization> &child_discretization,
@@ -343,6 +371,18 @@ Manifold::readSubDiscretization(const shared_ptr<ASDF::reader_state> &rs,
                                 const YAML::Node &node) {
   auto subdiscretization =
       SubDiscretization::create(rs, node, shared_from_this());
+  checked_emplace(m_subdiscretizations, subdiscretization->name(),
+                  subdiscretization, "Manifold", "subdiscretizations");
+  assert(subdiscretization->invariant());
+  return subdiscretization;
+}
+#endif
+
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+shared_ptr<SubDiscretization>
+Manifold::readSubDiscretization(const Silo<DBfile> &file, const string &loc) {
+  auto subdiscretization =
+      SubDiscretization::create(file, loc, shared_from_this());
   checked_emplace(m_subdiscretizations, subdiscretization->name(),
                   subdiscretization, "Manifold", "subdiscretizations");
   assert(subdiscretization->invariant());

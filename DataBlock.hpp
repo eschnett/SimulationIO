@@ -224,6 +224,13 @@ class DataBlock {
       asdf_reader_t;
   static const vector<asdf_reader_t> asdf_readers;
 #endif
+#ifdef SIMULATIONIO_HAVE_SILO
+  typedef function<shared_ptr<DataBlock>(const Silo<DBfile> &file,
+                                         const string &loc, const string &entry,
+                                         const box_t &box)>
+      silo_reader_t;
+  static const vector<silo_reader_t> silo_readers;
+#endif
   // #ifdef SIMULATIONIO_HAVE_TILEDB
   //   typedef function<shared_ptr<DataBlock>(const tiledb::Context &ctx,
   //                                          const string &loc, const box_t
@@ -253,6 +260,11 @@ public:
   read_asdf(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node,
             const box_t &box);
 #endif
+#ifdef SIMULATIONIO_HAVE_SILO
+  static shared_ptr<DataBlock> read_silo(const Silo<DBfile> &file,
+                                         const string &loc, const string &name,
+                                         const box_t &box);
+#endif
 
   virtual bool invariant() const;
 
@@ -275,6 +287,7 @@ public:
   friend ostream &operator<<(ostream &os, const DataBlock &datablock) {
     return datablock.output(os);
   }
+
 #ifdef SIMULATIONIO_HAVE_HDF5
   virtual void write(const H5::Group &group, const string &entry) const = 0;
 #endif
@@ -282,8 +295,8 @@ public:
   virtual void write(ASDF::writer &w, const string &entry) const = 0;
 #endif
 #ifdef SIMULATIONIO_HAVE_SILO
-  virtual void write(DBfile *file, const string &loc, const string &meshname,
-                     const string &entry) const = 0;
+  virtual void write(const Silo<DBfile> &file, const string &loc,
+                     const string &meshname, const string &entry) const = 0;
 #endif
 #ifdef SIMULATIONIO_HAVE_TILEDB
   virtual void write(const tiledb_writer &w, const string &entry) const = 0;
@@ -318,6 +331,13 @@ public:
   read_asdf(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node,
             const box_t &box);
 #endif
+#ifdef SIMULATIONIO_HAVE_SILO
+  static shared_ptr<DataRange> read_silo(const Silo<DBfile> &file,
+                                         const string &loc, const string &name,
+                                         const box_t &box) {
+    return nullptr;
+  }
+#endif
   virtual ostream &output(ostream &os) const;
 #ifdef SIMULATIONIO_HAVE_HDF5
   virtual void write(const H5::Group &group, const string &entry) const;
@@ -326,8 +346,8 @@ public:
   virtual void write(ASDF::writer &w, const string &entry) const;
 #endif
 #ifdef SIMULATIONIO_HAVE_SILO
-  virtual void write(DBfile *file, const string &loc, const string &meshname,
-                     const string &entry) const;
+  virtual void write(const Silo<DBfile> &file, const string &loc,
+                     const string &meshname, const string &entry) const;
 #endif
 #ifdef SIMULATIONIO_HAVE_TILEDB
   virtual void write(const tiledb_writer &w, const string &entry) const;
@@ -339,10 +359,14 @@ public:
 // An HDF5 dataset
 class DataSet : public DataBlock {
   H5::DataSpace m_dataspace;
-  H5::DataType m_datatype;
+
   mutable bool m_have_location;
   mutable H5::Group m_location_group;
   mutable string m_location_name;
+
+  mutable bool m_have_datatype;
+  mutable H5::DataType m_datatype;
+
   mutable bool m_have_dataset;
   mutable H5::DataSet m_dataset;
 
@@ -354,19 +378,34 @@ class DataSet : public DataBlock {
 
 public:
   H5::DataSpace dataspace() const { return m_dataspace; }
-  H5::DataType datatype() const { return m_datatype; }
+  bool have_datatype() const { return m_have_datatype; }
+  H5::DataType datatype() const {
+    assert(have_datatype());
+    return m_datatype;
+  }
   bool have_dataset() const { return m_have_dataset; }
-  H5::DataSet dataset() const { return m_dataset; }
+  H5::DataSet dataset() const {
+    assert(have_dataset());
+    return m_dataset;
+  }
 
   virtual bool invariant() const;
 
+  DataSet(const WriteOptions &write_options, const box_t &box)
+      : DataBlock(write_options, box),
+        m_dataspace(
+            H5::DataSpace(rank(), reversed(vector<hsize_t>(shape())).data())),
+        m_have_location(false), m_have_datatype(false), m_have_dataset(false),
+        m_have_attached_data(false) {
+    assert(invariant());
+  }
   DataSet(const WriteOptions &write_options, const box_t &box,
           const H5::DataType &datatype)
       : DataBlock(write_options, box),
         m_dataspace(
             H5::DataSpace(rank(), reversed(vector<hsize_t>(shape())).data())),
-        m_datatype(datatype), m_have_location(false), m_have_dataset(false),
-        m_have_attached_data(false) {
+        m_have_location(false), m_have_datatype(true), m_datatype(datatype),
+        m_have_dataset(false), m_have_attached_data(false) {
     assert(invariant());
   }
   template <typename T>
@@ -388,14 +427,21 @@ public:
                                        const YAML::Node &node,
                                        const box_t &box);
 #endif
+#ifdef SIMULATIONIO_HAVE_SILO
+  static shared_ptr<DataSet> read_silo(const Silo<DBfile> &file,
+                                       const string &loc, const string &name,
+                                       const box_t &box) {
+    return nullptr;
+  }
+#endif
   virtual ostream &output(ostream &os) const;
   virtual void write(const H5::Group &group, const string &entry) const;
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   virtual void write(ASDF::writer &w, const string &entry) const;
 #endif
 #ifdef SIMULATIONIO_HAVE_SILO
-  virtual void write(DBfile *file, const string &loc, const string &meshname,
-                     const string &entry) const {
+  virtual void write(const Silo<DBfile> &file, const string &loc,
+                     const string &meshname, const string &entry) const {
     assert(0);
   }
 #endif
@@ -411,11 +457,12 @@ private:
 
 public:
   void writeData(const void *data, const H5::DataType &datatype,
-                 const box_t &datalayout, const box_t &databox) const;
+                 const H5::DataType &memtype, const box_t &datalayout,
+                 const box_t &databox) const;
   template <typename T>
   void writeData(const T *data, const box_t &datalayout,
                  const box_t &databox) const {
-    writeData(data, H5::getType(T{}), datalayout, databox);
+    writeData(data, H5::getType(T{}), H5::getType(T{}), datalayout, databox);
   }
   template <typename T>
   void writeData(const T *data, const box_t &databox) const {
@@ -450,15 +497,18 @@ public:
   }
 
   void attachData(const vector<char> &data, const H5::DataType &datatype,
-                  const box_t &datalayout, const box_t &databox) const;
+                  const H5::DataType &memtype, const box_t &datalayout,
+                  const box_t &databox) const;
   void attachData(vector<char> &&data, const H5::DataType &datatype,
-                  const box_t &datalayout, const box_t &databox) const;
+                  const H5::DataType &memtype, const box_t &datalayout,
+                  const box_t &databox) const;
   void attachData(const void *data, const H5::DataType &datatype,
-                  const box_t &datalayout, const box_t &databox) const;
+                  const H5::DataType &memtype, const box_t &datalayout,
+                  const box_t &databox) const;
   template <typename T>
   void attachData(const T *data, const box_t &datalayout,
                   const box_t &databox) const {
-    attachData(data, H5::getType(T{}), datalayout, databox);
+    attachData(data, H5::getType(T{}), H5::getType(T{}), datalayout, databox);
   }
   template <typename T>
   void attachData(const T *data, const box_t &databox) const {
@@ -502,8 +552,8 @@ public:
   virtual void write(ASDF::writer &w, const string &entry) const;
 #endif
 #ifdef SIMULATIONIO_HAVE_SILO
-  virtual void write(DBfile *file, const string &loc, const string &meshname,
-                     const string &entry) const {
+  virtual void write(const Silo<DBfile> &file, const string &loc,
+                     const string &meshname, const string &entry) const {
     assert(0);
   }
 #endif
@@ -538,14 +588,22 @@ public:
   read_asdf(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node,
             const box_t &box);
 #endif
+#ifdef SIMULATIONIO_HAVE_SILO
+  static shared_ptr<DataBufferEntry> read_silo(const Silo<DBfile> &file,
+                                               const string &loc,
+                                               const string &name,
+                                               const box_t &box) {
+    return nullptr;
+  }
+#endif
   virtual ostream &output(ostream &os) const;
   virtual void write(const H5::Group &group, const string &entry) const;
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   virtual void write(ASDF::writer &w, const string &entry) const;
 #endif
 #ifdef SIMULATIONIO_HAVE_SILO
-  virtual void write(DBfile *file, const string &loc, const string &meshname,
-                     const string &entry) const {
+  virtual void write(const Silo<DBfile> &file, const string &loc,
+                     const string &meshname, const string &entry) const {
     assert(0);
   }
 #endif
@@ -585,14 +643,21 @@ public:
                                        const YAML::Node &node,
                                        const box_t &box);
 #endif
+#ifdef SIMULATIONIO_HAVE_SILO
+  static shared_ptr<CopyObj> read_silo(const Silo<DBfile> &file,
+                                       const string &loc, const string &name,
+                                       const box_t &box) {
+    return nullptr;
+  }
+#endif
   virtual ostream &output(ostream &os) const;
   virtual void write(const H5::Group &group, const string &entry) const;
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   virtual void write(ASDF::writer &w, const string &entry) const;
 #endif
 #ifdef SIMULATIONIO_HAVE_SILO
-  virtual void write(DBfile *file, const string &loc, const string &meshname,
-                     const string &entry) const;
+  virtual void write(const Silo<DBfile> &file, const string &loc,
+                     const string &meshname, const string &entry) const;
 #endif
 #ifdef SIMULATIONIO_HAVE_TILEDB
   virtual void write(const tiledb_writer &w, const string &entry) const;
@@ -641,14 +706,21 @@ public:
                                        const YAML::Node &node,
                                        const box_t &box);
 #endif
+#ifdef SIMULATIONIO_HAVE_SILO
+  static shared_ptr<ExtLink> read_silo(const Silo<DBfile> &file,
+                                       const string &loc, const string &name,
+                                       const box_t &box) {
+    return nullptr;
+  }
+#endif
   virtual ostream &output(ostream &os) const;
   virtual void write(const H5::Group &group, const string &entry) const;
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   virtual void write(ASDF::writer &w, const string &entry) const;
 #endif
 #ifdef SIMULATIONIO_HAVE_SILO
-  virtual void write(DBfile *file, const string &loc, const string &meshname,
-                     const string &entry) const {
+  virtual void write(const Silo<DBfile> &file, const string &loc,
+                     const string &meshname, const string &entry) const {
     assert(0);
   }
 #endif
@@ -713,14 +785,21 @@ public:
   static shared_ptr<ASDFData>
   read_asdf(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node,
             const box_t &box);
+#ifdef SIMULATIONIO_HAVE_SILO
+  static shared_ptr<ASDFData> read_silo(const Silo<DBfile> &file,
+                                        const string &loc, const string &name,
+                                        const box_t &box) {
+    return nullptr;
+  }
+#endif
   virtual ostream &output(ostream &os) const;
 #ifdef SIMULATIONIO_HAVE_HDF5
   virtual void write(const H5::Group &group, const string &entry) const;
 #endif
   virtual void write(ASDF::writer &w, const string &entry) const;
 #ifdef SIMULATIONIO_HAVE_SILO
-  virtual void write(DBfile *file, const string &loc, const string &meshname,
-                     const string &entry) const {
+  virtual void write(const Silo<DBfile> &file, const string &loc,
+                     const string &meshname, const string &entry) const {
     assert(0);
   }
 #endif
@@ -756,14 +835,21 @@ public:
   static shared_ptr<ASDFRef> read_asdf(const shared_ptr<ASDF::reader_state> &rs,
                                        const YAML::Node &node,
                                        const box_t &box);
+#ifdef SIMULATIONIO_HAVE_SILO
+  static shared_ptr<ASDFRef> read_silo(const Silo<DBfile> &file,
+                                       const string &loc, const string &name,
+                                       const box_t &box) {
+    return nullptr;
+  }
+#endif
   virtual ostream &output(ostream &os) const;
 #ifdef SIMULATIONIO_HAVE_HDF5
   virtual void write(const H5::Group &group, const string &entry) const;
 #endif
   virtual void write(ASDF::writer &w, const string &entry) const;
 #ifdef SIMULATIONIO_HAVE_SILO
-  virtual void write(DBfile *file, const string &loc, const string &meshname,
-                     const string &entry) const {
+  virtual void write(const Silo<DBfile> &file, const string &loc,
+                     const string &meshname, const string &entry) const {
     assert(0);
   }
 #endif
@@ -809,6 +895,10 @@ public:
   // Construct directly
   SiloVar(const WriteOptions &write_options, const box_t &box);
 
+  bool hasData() const noexcept;
+  const void *getData() const;
+  int getDatatype() const noexcept;
+
   void attachData(function<const void *()> get_data, int datatype);
   void attachData(const void *data, int datatype);
   void attachData(const shared_ptr<const void> &shared_data, int datatype);
@@ -818,23 +908,40 @@ public:
     attachData([get_data] { return get_data(); }, silo_datatype<T>::value);
   }
 
+  void discardData();
+
 #ifdef SIMULATIONIO_HAVE_HDF5
-  virtual void write(const H5::Group &group, const string &entry) const {
-    assert(0);
+  static shared_ptr<SiloVar> read(const H5::Group &group, const string &entry,
+                                  const box_t &box) {
+    return nullptr;
   }
+#endif
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+  static shared_ptr<SiloVar> read_asdf(const shared_ptr<ASDF::reader_state> &rs,
+                                       const YAML::Node &node,
+                                       const box_t &box) {
+    return nullptr;
+  }
+#endif
+  static shared_ptr<SiloVar> read_silo(const Silo<DBfile> &file,
+                                       const string &loc, const string &name,
+                                       const box_t &box);
+
+  virtual ostream &output(ostream &os) const;
+
+#ifdef SIMULATIONIO_HAVE_HDF5
+  virtual void write(const H5::Group &group, const string &entry) const;
 #endif
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
   virtual void write(ASDF::writer &w, const string &entry) const { assert(0); }
 #endif
-  virtual void write(DBfile *file, const string &loc, const string &meshname,
-                     const string &entry) const;
+  virtual void write(const Silo<DBfile> &file, const string &loc,
+                     const string &meshname, const string &entry) const;
 #ifdef SIMULATIONIO_HAVE_TILEDB
   virtual void write(const tiledb_writer &w, const string &entry) const {
     assert(0);
   }
 #endif
-
-  virtual ostream &output(ostream &os) const;
 };
 
 #endif // #ifdef SIMULATIONIO_HAVE_SILO
@@ -869,7 +976,7 @@ class TileDBData : public DataBlock {
 
 public:
   virtual bool invariant() const {
-#warning "TODO"
+    // TODO: implement this
     return DataBlock::invariant();
   }
 
@@ -903,8 +1010,8 @@ public:
   virtual void write(ASDF::writer &w, const string &entry) const;
 #endif
 #ifdef SIMULATIONIO_HAVE_SILO
-  virtual void write(DBfile *file, const string &loc, const string &meshname,
-                     const string &entry) const {
+  virtual void write(const Silo<DBfile> &file, const string &loc,
+                     const string &meshname, const string &entry) const {
     assert(0);
   }
 #endif

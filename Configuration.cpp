@@ -77,7 +77,7 @@ void Configuration::read(const shared_ptr<ASDF::reader_state> &rs,
 #endif
 
 #ifdef SIMULATIONIO_HAVE_SILO
-void Configuration::read(DBfile *const file, const string &loc,
+void Configuration::read(const Silo<DBfile> &file, const string &loc,
                          const shared_ptr<Project> &project) {
   read_attribute(m_name, file, loc, "name");
   m_project = project;
@@ -188,7 +188,7 @@ string Configuration::silo_path() const {
          legalize_silo_name(name()) + "/";
 }
 
-void Configuration::write(DBfile *const file, const string &loc) const {
+void Configuration::write(const Silo<DBfile> &file, const string &loc) const {
   assert(invariant());
   write_attribute(file, loc, "name", name());
   write_symlink_group(file, loc, "parametervalues", parametervalues());

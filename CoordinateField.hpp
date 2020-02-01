@@ -95,6 +95,17 @@ private:
   void read(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node,
             const shared_ptr<CoordinateSystem> &coordinatesystem);
 #endif
+#ifdef SIMULATIONIO_HAVE_SILO
+  static shared_ptr<CoordinateField>
+  create(const Silo<DBfile> &file, const string &loc,
+         const shared_ptr<CoordinateSystem> &coordinatesystem) {
+    auto coordinatefield = make_shared<CoordinateField>(hidden());
+    coordinatefield->read(file, loc, coordinatesystem);
+    return coordinatefield;
+  }
+  void read(const Silo<DBfile> &file, const string &loc,
+            const shared_ptr<CoordinateSystem> &coordinatesystem);
+#endif
 
 public:
   virtual ~CoordinateField() {}
@@ -120,7 +131,7 @@ public:
 #endif
 #ifdef SIMULATIONIO_HAVE_SILO
   virtual string silo_path() const;
-  virtual void write(DBfile *file, const string &loc) const;
+  virtual void write(const Silo<DBfile> &file, const string &loc) const;
 #endif
 #ifdef SIMULATIONIO_HAVE_TILEDB
   virtual vector<string> tiledb_path() const;

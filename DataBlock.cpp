@@ -409,12 +409,17 @@ void copy(void *const outptr0, const ptrdiff_t outnpoints,
 
 bool DataBlock::invariant() const { return !m_box.empty(); }
 
+// TODO: Remove readers (and their implementation) that always return nullptr
+
 #ifdef SIMULATIONIO_HAVE_HDF5
 const vector<DataBlock::reader_t> DataBlock::readers = {
     DataRange::read, DataSet::read, DataBufferEntry::read,
     CopyObj::read,   ExtLink::read,
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
     ASDFData::read,  ASDFRef::read,
+#endif
+#ifdef SIMULATIONIO_HAVE_SILO
+    SiloVar::read,
 #endif
 };
 #endif // #ifdef SIMULATIONIO_HAVE_HDF5
@@ -427,8 +432,25 @@ const vector<DataBlock::asdf_reader_t> DataBlock::asdf_readers = {
     CopyObj::read_asdf,   ExtLink::read_asdf,
 #endif
     ASDFData::read_asdf,  ASDFRef::read_asdf,
+#ifdef SIMULATIONIO_HAVE_SILO
+    SiloVar::read_asdf,
+#endif
 };
 #endif // #ifdef SIMULATIONIO_HAVE_ASDF_CXX
+
+#ifdef SIMULATIONIO_HAVE_SILO
+const vector<DataBlock::silo_reader_t> DataBlock::silo_readers = {
+    DataRange::read_silo,
+#ifdef SIMULATIONIO_HAVE_HDF5
+    DataSet::read_silo,   DataBufferEntry::read_silo,
+    CopyObj::read_silo,   ExtLink::read_silo,
+#endif
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+    ASDFData::read_silo,  ASDFRef::read_silo,
+#endif
+    SiloVar::read_silo,
+};
+#endif // #ifdef SIMULATIONIO_HAVE_SILO
 
 #ifdef SIMULATIONIO_HAVE_HDF5
 shared_ptr<DataBlock> DataBlock::read(const H5::Group &group,
@@ -448,6 +470,20 @@ DataBlock::read_asdf(const shared_ptr<ASDF::reader_state> &rs,
                      const YAML::Node &node, const box_t &box) {
   for (const auto &asdf_reader : asdf_readers) {
     auto datablock = asdf_reader(rs, node, box);
+    if (datablock)
+      return datablock;
+  }
+  return nullptr;
+}
+#endif
+
+#ifdef SIMULATIONIO_HAVE_SILO
+shared_ptr<DataBlock> DataBlock::read_silo(const Silo<DBfile> &file,
+                                           const string &loc,
+                                           const string &name,
+                                           const box_t &box) {
+  for (const auto &silo_reader : silo_readers) {
+    auto datablock = silo_reader(file, loc, name, box);
     if (datablock)
       return datablock;
   }
@@ -546,7 +582,7 @@ void DataRange::write(ASDF::writer &w, const string &entry) const {
 #endif
 
 #ifdef SIMULATIONIO_HAVE_SILO
-void DataRange::write(DBfile *const file, const string &loc,
+void DataRange::write(const Silo<DBfile> &file, const string &loc,
                       const string &meshname, const string &entry) const {
   write_attribute(file, loc, entry + "_origin", origin());
   write_attribute(file, loc, entry + "_delta", delta());
@@ -618,14 +654,15 @@ ostream &DataSet::output(ostream &os) const {
   using namespace Output;
   auto cls = datatype().getClass();
   auto clsname = H5::className(cls);
-  auto typesize = datatype().getSize();
+  // auto typesize = datatype().getSize();
   assert(dataspace().isSimple());
   int dim = dataspace().getSimpleExtentNdims();
   vector<hsize_t> size(dim);
   dataspace().getSimpleExtentDims(size.data());
   reverse(size);
-  os << "DataSet: type=" << clsname << "(" << (8 * typesize)
-     << " bit) shape=" << size;
+  // os << "DataSet: type=" << clsname << "(" << (8 * typesize)
+  //    << " bit) shape=" << size;
+  os << "DataSet: shape=" << size;
   return os;
 }
 
@@ -636,7 +673,9 @@ void DataSet::write(const H5::Group &group, const string &entry) const {
   m_have_location = true;
   create_dataset();
   if (m_have_attached_data) {
-    writeData(m_attached_data.data(), m_memtype, m_memlayout, m_membox);
+    assert(m_have_datatype);
+    writeData(m_attached_data.data(), m_datatype, m_memtype, m_memlayout,
+              m_membox);
     m_attached_data.clear();
     m_have_attached_data = false;
   }
@@ -650,6 +689,7 @@ void DataSet::create_dataset() const {
   if (m_have_dataset)
     return;
   assert(m_have_location);
+  assert(m_have_datatype);
   auto proplist = H5::DSetCreatPropList();
   assert(dataspace().isSimple());
   const int dim = dataspace().getSimpleExtentNdims();
@@ -682,20 +722,32 @@ void DataSet::create_dataset() const {
 }
 
 void DataSet::writeData(const void *data, const H5::DataType &datatype,
-                        const box_t &datalayout, const box_t &databox) const {
+                        const H5::DataType &memtype, const box_t &datalayout,
+                        const box_t &databox) const {
+  if (m_have_datatype) {
+    assert(m_datatype == datatype);
+  } else {
+    m_datatype = datatype;
+    m_have_datatype = true;
+  }
   // create_dataset();
   H5::DataSpace memspace, filespace;
   construct_spaces(datalayout, databox, m_dataspace, memspace, filespace);
-  m_dataset.write(data, datatype, memspace, filespace);
+  m_dataset.write(data, memtype, memspace, filespace);
 }
 
 void DataSet::attachData(const vector<char> &data, const H5::DataType &datatype,
-                         const box_t &datalayout, const box_t &databox) const {
+                         const H5::DataType &memtype, const box_t &datalayout,
+                         const box_t &databox) const {
+  assert(not m_have_datatype);
   assert(not m_have_dataset);
   assert(not m_have_location);
   assert(not m_have_attached_data);
 
-  m_memtype = datatype;
+  m_datatype = datatype;
+  m_have_datatype = true;
+
+  m_memtype = memtype;
   m_memlayout = datalayout;
   m_membox = databox;
   auto count = m_membox.size();
@@ -708,12 +760,17 @@ void DataSet::attachData(const vector<char> &data, const H5::DataType &datatype,
 }
 
 void DataSet::attachData(vector<char> &&data, const H5::DataType &datatype,
-                         const box_t &datalayout, const box_t &databox) const {
+                         const H5::DataType &memtype, const box_t &datalayout,
+                         const box_t &databox) const {
+  assert(not m_have_datatype);
   assert(not m_have_dataset);
   assert(not m_have_location);
   assert(not m_have_attached_data);
 
-  m_memtype = datatype;
+  m_datatype = datatype;
+  m_have_datatype = true;
+
+  m_memtype = memtype;
   m_memlayout = datalayout;
   m_membox = databox;
   auto count = m_membox.size();
@@ -726,13 +783,18 @@ void DataSet::attachData(vector<char> &&data, const H5::DataType &datatype,
 }
 
 void DataSet::attachData(const void *data, const H5::DataType &datatype,
-                         const box_t &datalayout, const box_t &databox) const {
+                         const H5::DataType &memtype, const box_t &datalayout,
+                         const box_t &databox) const {
+  assert(not m_have_datatype);
   assert(not m_have_dataset);
   assert(not m_have_location);
   assert(not m_have_attached_data);
   assert(data);
 
-  m_memtype = datatype;
+  m_datatype = datatype;
+  m_have_datatype = true;
+
+  m_memtype = memtype;
   // m_memlayout = datalayout;
   m_memlayout = databox; // since we copy
   m_membox = databox;
@@ -938,7 +1000,7 @@ void CopyObj::write(ASDF::writer &w, const string &entry) const {
   auto type_size = type.getSize();
   vector<unsigned char> data(size() * type_size);
   readData(data.data(), type, box(), box());
-  auto arr = ASDFData(WriteOptions(), box(), move(data),
+  auto arr = ASDFData(write_options, box(), move(data),
                       make_shared<ASDF::datatype_t>(asdf_type(type)));
   arr.write(w, entry);
 }
@@ -947,6 +1009,7 @@ void CopyObj::write(ASDF::writer &w, const string &entry) const {
 
 #ifdef SIMULATIONIO_HAVE_SILO
 
+#ifdef SIMULATIONIO_HAVE_HDF5
 namespace {
 int type_hdf5_to_silo(const H5::DataType &h5type) {
   if (h5type == H5::getType('a'))
@@ -957,17 +1020,39 @@ int type_hdf5_to_silo(const H5::DataType &h5type) {
     return DB_FLOAT;
   if (h5type == H5::getType(0))
     return DB_INT;
-  if (h5type == H5::getType(0LL))
-    return DB_LONG_LONG;
   if (h5type == H5::getType(0L))
     return DB_LONG;
+  if (h5type == H5::getType(0LL))
+    return DB_LONG_LONG;
   if (h5type == H5::getType(short()))
     return DB_SHORT;
   assert(0);
 }
-} // namespace
 
-void CopyObj::write(DBfile *const file, const string &loc,
+H5::DataType type_silo_to_hdf5(const int datatype) {
+  switch (datatype) {
+  case DB_CHAR:
+    return H5::getType('a');
+  case DB_DOUBLE:
+    return H5::getType(0.0);
+  case DB_FLOAT:
+    return H5::getType(0.0f);
+  case DB_INT:
+    return H5::getType(0);
+  case DB_LONG:
+    return H5::getType(0L);
+  case DB_LONG_LONG:
+    return H5::getType(0LL);
+  case DB_SHORT:
+    return H5::getType(short());
+  default:
+    assert(0);
+  }
+}
+} // namespace
+#endif
+
+void CopyObj::write(const Silo<DBfile> &file, const string &loc,
                     const string &meshname, const string &entry) const {
   auto dataset = group().openDataSet(name());
   auto type = dataset.getDataType();
@@ -1018,7 +1103,7 @@ void CopyObj::write(const tiledb_writer &w, const string &entry) const {
   vector<unsigned char> data(size() * type_size);
   readData(data.data(), type, box(), box());
 
-#warning "TODO: create TileDBData object instead"
+  // TODO: create TileDBData object instead
   tiledb_datatype_t datatype = type_hdf5_to_tiledb(type);
   tiledb::Domain domain(w.ctx());
   if (rank() == 0)
@@ -1283,6 +1368,12 @@ bool is_valid_Silo_datatype(const int datatype) {
 SiloVar::SiloVar(const WriteOptions &write_options, const box_t &box)
     : DataBlock(write_options, box) {}
 
+bool SiloVar::hasData() const noexcept { return bool(m_get_data); }
+
+const void *SiloVar::getData() const { return m_get_data(); }
+
+int SiloVar::getDatatype() const noexcept { return m_datatype; }
+
 void SiloVar::attachData(function<const void *()> get_data,
                          const int datatype) {
   assert(!m_get_data);
@@ -1299,29 +1390,75 @@ void SiloVar::attachData(const void *const data, const int datatype) {
   attachData([data] { return data; }, datatype);
 }
 
-void SiloVar::write(DBfile *const file, const string &loc,
-                    const string &meshname, const string &entry) const {
-  vector<int> dims(rank());
-  for (size_t d = 0; d < dims.size(); ++d) {
-    assert(shape()[d] <= INT_MAX);
-    dims.at(d) = shape()[d];
+void SiloVar::discardData() { m_get_data = nullptr; }
+
+struct silo_reader {
+  const Silo<DBfile> file;
+  const string varname;
+  const int datatype;
+  mutable Silo<DBquadvar> quadvar;
+  const void *operator()() const;
+};
+
+const void *silo_reader::operator()() const {
+  if (!quadvar) {
+    quadvar = MakeSilo(DBGetQuadvar(file.get(), varname.c_str()));
+    assert(quadvar);
   }
-  DBoptlist *const optlist = DBMakeOptlist(10);
-  assert(optlist);
-  int ione = 1;
-  int ierr = DBAddOption(optlist, DBOPT_HIDE_FROM_GUI, &ione);
-  assert(!ierr);
-  ierr = DBPutQuadvar1(file, (loc + entry).c_str(), meshname.c_str(),
-                       m_get_data(), dims.data(), dims.size(), nullptr, 0,
-                       m_datatype, DB_NODECENT, optlist);
-  assert(!ierr);
-  ierr = DBFreeOptlist(optlist);
-  assert(!ierr);
+  assert(quadvar->datatype == datatype);
+  assert(quadvar->nvals == 1);
+  return quadvar->vals[0];
+}
+
+shared_ptr<SiloVar> SiloVar::read_silo(const Silo<DBfile> &file,
+                                       const string &loc, const string &entry,
+                                       const box_t &box) {
+  auto silovar = make_shared<SiloVar>(WriteOptions(), box);
+  const string varname = loc + entry;
+  const int vartype = DBInqVarType(file.get(), varname.c_str());
+  assert(vartype == DB_QUADVAR);
+  int datatype;
+  read_attribute(datatype, file, loc, "datatype");
+  silovar->attachData(silo_reader{file, varname, datatype, nullptr}, datatype);
+  return silovar;
 }
 
 ostream &SiloVar::output(ostream &os) const {
   return os << "SiloVar:"
             << " box=" << box() << " datatype=" << m_datatype;
+}
+
+#ifdef SIMULATIONIO_HAVE_HDF5
+void SiloVar::write(const H5::Group &group, const string &entry) const {
+  const auto dataset = DataSet(write_options, box());
+  if (bool(m_get_data)) {
+    const H5::DataType hdf5_datatype = type_silo_to_hdf5(m_datatype);
+    dataset.attachData(m_get_data(), hdf5_datatype, hdf5_datatype, box(),
+                       box());
+  }
+  dataset.write(group, entry);
+}
+#endif
+
+void SiloVar::write(const Silo<DBfile> &file, const string &loc,
+                    const string &meshname, const string &entry) const {
+  if (!m_get_data)
+    return;
+  vector<int> dims(rank());
+  for (size_t d = 0; d < dims.size(); ++d) {
+    assert(shape()[d] <= INT_MAX);
+    dims.at(d) = shape()[d];
+  }
+  const auto &optlist = MakeSilo(DBMakeOptlist(10));
+  assert(optlist);
+  int ione = 1;
+  int ierr = DBAddOption(optlist.get(), DBOPT_HIDE_FROM_GUI, &ione);
+  assert(!ierr);
+  ierr = DBPutQuadvar1(file.get(), (loc + entry).c_str(), meshname.c_str(),
+                       m_get_data(), dims.data(), dims.size(), nullptr, 0,
+                       m_datatype, DB_NODECENT, optlist.get());
+  assert(!ierr);
+  write_attribute(file, loc, "datatype", m_datatype);
 }
 
 #endif // #ifdef SIMULATIONIO_HAVE_SILO
@@ -1414,8 +1551,7 @@ void TileDBData::writeData(const tiledb_writer &w, const string &entry,
   tiledb::Array array(w.ctx(), arrayloc, TILEDB_WRITE);
   array.uri(); // Check whether URI is valid
   tiledb::Query query(w.ctx(), array, TILEDB_WRITE);
-#warning                                                                       \
-    "TODO: copy only the requested hyperslab. (or can a subarray be larger than the destination array?)"
+  // TODO: copy only the requested hyperslab. (or can a subarray be larger than the destination array?)
   assert(datalayout == box());
   assert(databox == box());
   // vector<array<long long, 2>> subarray(max(1, rank()));
@@ -1442,7 +1578,7 @@ void TileDBData::writeData(const tiledb_writer &w, const string &entry,
 }
 
 ostream &TileDBData::output(ostream &os) const {
-#warning "TODO: output more detail"
+  // TODO: output more detail
   return os << "TileDBData";
 }
 
@@ -1459,7 +1595,7 @@ void TileDBData::write(ASDF::writer &w, const string &entry) const {
 #endif
 
 void TileDBData::write(const tiledb_writer &w, const string &entry) const {
-#warning "TODO"
+  // TODO: finish this
 
   m_ctx = w.ctx();
   m_loc = w.loc();

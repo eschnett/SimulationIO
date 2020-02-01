@@ -1,6 +1,3 @@
-#warning "TODO"
-#include <iostream>
-
 #include "Common.hpp"
 
 #include "Helpers.hpp"
@@ -48,7 +45,7 @@ asdf_writer_::~asdf_writer_() { m_writer << YAML::EndMap; }
 
 #ifdef SIMULATIONIO_HAVE_SILO
 #if 0
-vector<string> ls(DBfile *const file, const string &loc) {
+vector<string> ls(const Silo<DBfile>&file, const string &loc) {
   int ierr = DBSetDir(file, loc.c_str());
   assert(!ierr);
   const DBtoc *const toc = DBGetToc(file);
@@ -60,7 +57,7 @@ vector<string> ls(DBfile *const file, const string &loc) {
   return filenames;
 }
 
-void mkdirp(DBfile *const file, const string &loc, const string &name) {
+void mkdirp(const Silo<DBfile>&file, const string &loc, const string &name) {
   int ierr = DBSetDir(file, loc.c_str());
   assert(!ierr);
   const DBtoc *const toc = DBGetToc(file);
@@ -80,6 +77,12 @@ void mkdirp(DBfile *const file, const string &loc, const string &name) {
 }
 #endif
 
+void SiloFree(DBfile *const obj) { DBClose(obj); }
+void SiloFree(DBmultimesh *const obj) { DBFreeMultimesh(obj); }
+void SiloFree(DBoptlist *const obj) { DBFreeOptlist(obj); }
+void SiloFree(DBquadmesh *const obj) { DBFreeQuadmesh(obj); }
+void SiloFree(DBquadvar *const obj) { DBFreeQuadvar(obj); }
+
 string legalize_silo_name(const string &name) {
   ostringstream buf;
   for (const char c : name) {
@@ -91,241 +94,279 @@ string legalize_silo_name(const string &name) {
   return buf.str();
 }
 
-void write_symlink(DBfile *const file, const string &loc, const string &name,
-                   const string &value) {
+void write_symlink(const Silo<DBfile> &file, const string &loc,
+                   const string &name, const string &value) {
   const int dims = value.size();
-  int ierr =
-      DBWrite(file, (loc + name).c_str(), value.c_str(), &dims, 1, DB_CHAR);
+  int ierr = DBWrite(file.get(), (loc + name).c_str(), value.c_str(), &dims, 1,
+                     DB_CHAR);
   assert(!ierr);
 }
 
-string read_symlink(DBfile *const file, const string &loc, const string &name) {
+string read_symlink(const Silo<DBfile> &file, const string &loc,
+                    const string &name) {
   const string varname = loc + name;
-  const int datatype = DBGetVarType(file, varname.c_str());
+  const int datatype = DBGetVarType(file.get(), varname.c_str());
+  assert(datatype >= 0);
   assert(datatype == DB_CHAR);
-  const int length = DBGetVarLength(file, varname.c_str());
-  const void *const vardata = DBGetVar(file, varname.c_str());
+  const int length = DBGetVarLength(file.get(), varname.c_str());
+  const void *const vardata = DBGetVar(file.get(), varname.c_str());
   assert(vardata);
   const string symlink(static_cast<const char *>(vardata), length);
   return symlink;
 }
 
-void write_attribute(DBfile *const file, const string &loc, const string &name,
-                     const int value) {
-  const int dims = 1;
-  int ierr = DBWrite(file, (loc + name).c_str(), &value, &dims, 1, DB_INT);
-  assert(!ierr);
+string read_symlinked_name(const Silo<DBfile> &file, const string &loc,
+                           const string &name) {
+  const auto &symlink = read_symlink(file, loc, name);
+  string target_name;
+  read_attribute(target_name, file, symlink, "name");
+  return target_name;
 }
 
-void write_attribute(DBfile *const file, const string &loc, const string &name,
-                     const long long value) {
+void write_attribute(const Silo<DBfile> &file, const string &loc,
+                     const string &name, const int value) {
   const int dims = 1;
   int ierr =
-      DBWrite(file, (loc + name).c_str(), &value, &dims, 1, DB_LONG_LONG);
+      DBWrite(file.get(), (loc + name).c_str(), &value, &dims, 1, DB_INT);
   assert(!ierr);
 }
 
-void write_attribute(DBfile *const file, const string &loc, const string &name,
-                     const long value) {
+void write_attribute(const Silo<DBfile> &file, const string &loc,
+                     const string &name, const long long value) {
   const int dims = 1;
-  int ierr = DBWrite(file, (loc + name).c_str(), &value, &dims, 1, DB_LONG);
+  int ierr =
+      DBWrite(file.get(), (loc + name).c_str(), &value, &dims, 1, DB_LONG_LONG);
   assert(!ierr);
 }
 
-void write_attribute(DBfile *const file, const string &loc, const string &name,
-                     const double value) {
+void write_attribute(const Silo<DBfile> &file, const string &loc,
+                     const string &name, const long value) {
   const int dims = 1;
-  int ierr = DBWrite(file, (loc + name).c_str(), &value, &dims, 1, DB_DOUBLE);
+  int ierr =
+      DBWrite(file.get(), (loc + name).c_str(), &value, &dims, 1, DB_LONG);
   assert(!ierr);
 }
 
-void write_attribute(DBfile *const file, const string &loc, const string &name,
-                     const string &value) {
+void write_attribute(const Silo<DBfile> &file, const string &loc,
+                     const string &name, const double value) {
+  const int dims = 1;
+  int ierr =
+      DBWrite(file.get(), (loc + name).c_str(), &value, &dims, 1, DB_DOUBLE);
+  assert(!ierr);
+}
+
+void write_attribute(const Silo<DBfile> &file, const string &loc,
+                     const string &name, const string &value) {
   const int dims = value.size();
-  int ierr =
-      DBWrite(file, (loc + name).c_str(), value.c_str(), &dims, 1, DB_CHAR);
+  int ierr = DBWrite(file.get(), (loc + name).c_str(), value.c_str(), &dims, 1,
+                     DB_CHAR);
   assert(!ierr);
 }
 
-void write_attribute(DBfile *const file, const string &loc, const string &name,
-                     const vector<int> &values) {
+void write_attribute(const Silo<DBfile> &file, const string &loc,
+                     const string &name, const vector<int> &values) {
   assert(values.size() <= INT_MAX);
   if (values.empty()) {
     DBobject *const obj = DBMakeObject((loc + name).c_str(), DB_USERDEF, 0);
     assert(obj);
     int ierr = DBAddIntComponent(obj, "dummy", 0);
     assert(!ierr);
-    ierr = DBWriteObject(file, obj, 1);
+    ierr = DBWriteObject(file.get(), obj, 1);
     assert(!ierr);
   } else {
     const int dims = values.size();
     assert(dims >= 1);
-    int ierr =
-        DBWrite(file, (loc + name).c_str(), values.data(), &dims, 1, DB_INT);
+    int ierr = DBWrite(file.get(), (loc + name).c_str(), values.data(), &dims,
+                       1, DB_INT);
     assert(!ierr);
   }
 }
 
-void write_attribute(DBfile *const file, const string &loc, const string &name,
-                     const vector<long long> &values) {
+void write_attribute(const Silo<DBfile> &file, const string &loc,
+                     const string &name, const vector<long long> &values) {
   assert(values.size() <= INT_MAX);
   if (values.empty()) {
     DBobject *const obj = DBMakeObject((loc + name).c_str(), DB_USERDEF, 0);
     assert(obj);
     int ierr = DBAddIntComponent(obj, "dummy", 0);
     assert(!ierr);
-    ierr = DBWriteObject(file, obj, 1);
+    ierr = DBWriteObject(file.get(), obj, 1);
     assert(!ierr);
   } else {
     const int dims = values.size();
     assert(dims >= 1);
-    int ierr = DBWrite(file, (loc + name).c_str(), values.data(), &dims, 1,
-                       DB_LONG_LONG);
+    int ierr = DBWrite(file.get(), (loc + name).c_str(), values.data(), &dims,
+                       1, DB_LONG_LONG);
     assert(!ierr);
   }
 }
 
-void write_attribute(DBfile *const file, const string &loc, const string &name,
-                     const vector<double> &values) {
+void write_attribute(const Silo<DBfile> &file, const string &loc,
+                     const string &name, const vector<double> &values) {
   assert(values.size() <= INT_MAX);
   const int dims = values.size();
   assert(dims >= 1);
-  int ierr =
-      DBWrite(file, (loc + name).c_str(), values.data(), &dims, 1, DB_DOUBLE);
+  int ierr = DBWrite(file.get(), (loc + name).c_str(), values.data(), &dims, 1,
+                     DB_DOUBLE);
   assert(!ierr);
 }
 
-bool has_attribute(DBfile *const file, const string &loc, const string &name) {
-  const int iexists = DBInqVarExists(file, (loc + name).c_str());
+bool has_attribute(const Silo<DBfile> &file, const string &loc,
+                   const string &name) {
+  const int iexists = DBInqVarExists(file.get(), (loc + name).c_str());
   return iexists;
 }
 
-int attribute_type(DBfile *const file, const string &loc, const string &name) {
-  const int datatype = DBGetVarType(file, (loc + name).c_str());
+int attribute_type(const Silo<DBfile> &file, const string &loc,
+                   const string &name) {
+  const int datatype = DBGetVarType(file.get(), (loc + name).c_str());
   return datatype;
 }
 
-void read_attribute(int &value, DBfile *const file, const string &loc,
+void read_attribute(int &value, const Silo<DBfile> &file, const string &loc,
                     const string &name) {
   const string varname = loc + name;
-  const int datatype = DBGetVarType(file, varname.c_str());
+  const int datatype = DBGetVarType(file.get(), varname.c_str());
+  assert(datatype >= 0);
   assert(datatype == DB_INT ||
          (sizeof(int) == sizeof(long) && datatype == DB_LONG));
-  const int length = DBGetVarLength(file, varname.c_str());
+  const int length = DBGetVarLength(file.get(), varname.c_str());
   assert(length == 1);
-  const void *const vardata = DBGetVar(file, varname.c_str());
+  const void *const vardata = DBGetVar(file.get(), varname.c_str());
   assert(vardata);
   value = *static_cast<const int *>(vardata);
 }
 
-void read_attribute(long &value, DBfile *const file, const string &loc,
+void read_attribute(long &value, const Silo<DBfile> &file, const string &loc,
                     const string &name) {
   const string varname = loc + name;
-  const int datatype = DBGetVarType(file, varname.c_str());
+  const int datatype = DBGetVarType(file.get(), varname.c_str());
+  assert(datatype >= 0);
   assert(datatype == DB_LONG ||
          (sizeof(long) == sizeof(int) && datatype == DB_INT) ||
          (sizeof(long) == sizeof(long long) && datatype == DB_LONG_LONG));
-  const int length = DBGetVarLength(file, varname.c_str());
+  const int length = DBGetVarLength(file.get(), varname.c_str());
   assert(length == 1);
-  const void *const vardata = DBGetVar(file, varname.c_str());
+  const void *const vardata = DBGetVar(file.get(), varname.c_str());
   assert(vardata);
   value = *static_cast<const long long *>(vardata);
 }
 
-void read_attribute(long long &value, DBfile *const file, const string &loc,
-                    const string &name) {
+void read_attribute(long long &value, const Silo<DBfile> &file,
+                    const string &loc, const string &name) {
   const string varname = loc + name;
-  const int datatype = DBGetVarType(file, varname.c_str());
+  const int datatype = DBGetVarType(file.get(), varname.c_str());
+  assert(datatype >= 0);
   assert(datatype == DB_LONG_LONG ||
          (sizeof(long long) == sizeof(long) && datatype == DB_LONG));
-  const int length = DBGetVarLength(file, varname.c_str());
+  const int length = DBGetVarLength(file.get(), varname.c_str());
   assert(length == 1);
-  const void *const vardata = DBGetVar(file, varname.c_str());
+  const void *const vardata = DBGetVar(file.get(), varname.c_str());
   assert(vardata);
   value = *static_cast<const long long *>(vardata);
 }
 
-void read_attribute(double &value, DBfile *const file, const string &loc,
+void read_attribute(double &value, const Silo<DBfile> &file, const string &loc,
                     const string &name) {
   const string varname = loc + name;
-  const int datatype = DBGetVarType(file, varname.c_str());
+  const int datatype = DBGetVarType(file.get(), varname.c_str());
+  assert(datatype >= 0);
   assert(datatype == DB_DOUBLE);
-  const int length = DBGetVarLength(file, varname.c_str());
+  const int length = DBGetVarLength(file.get(), varname.c_str());
   assert(length == 1);
-  const void *const vardata = DBGetVar(file, varname.c_str());
+  const void *const vardata = DBGetVar(file.get(), varname.c_str());
   assert(vardata);
   value = *static_cast<const double *>(vardata);
 }
 
-void read_attribute(string &value, DBfile *const file, const string &loc,
+void read_attribute(string &value, const Silo<DBfile> &file, const string &loc,
                     const string &name) {
   const string varname = loc + name;
-  const int datatype = DBGetVarType(file, varname.c_str());
+  const int datatype = DBGetVarType(file.get(), varname.c_str());
+  assert(datatype >= 0);
   assert(datatype == DB_CHAR);
-  const int length = DBGetVarLength(file, varname.c_str());
-  const void *const vardata = DBGetVar(file, varname.c_str());
+  const int length = DBGetVarLength(file.get(), varname.c_str());
+  const void *const vardata = DBGetVar(file.get(), varname.c_str());
   assert(vardata);
   value = string(static_cast<const char *>(vardata), length);
 }
 
-void read_attribute(vector<int> &value, DBfile *const file, const string &loc,
-                    const string &name) {
+void read_attribute(vector<int> &value, const Silo<DBfile> &file,
+                    const string &loc, const string &name) {
   const string varname = loc + name;
-  const int vartype = DBInqVarType(file, varname.c_str());
+  const int vartype = DBInqVarType(file.get(), varname.c_str());
+  assert(vartype >= 0);
   if (vartype == DB_USERDEF) {
     // empty array
-    const int datatype = DBGetComponentType(file, varname.c_str(), "dummy");
+    const int datatype =
+        DBGetComponentType(file.get(), varname.c_str(), "dummy");
     assert(datatype >= 0);
-    if (!(datatype == DB_INT ||
-          (sizeof(int) == sizeof(long) && datatype == DB_LONG)))
-      std::cerr << "read_attribute<vector<int>>: varname=" << varname
-                << " datatype=" << datatype << "\n";
     assert(datatype == DB_INT ||
            (sizeof(int) == sizeof(long) && datatype == DB_LONG));
     value.resize(0);
   } else {
     assert(vartype == DB_VARIABLE);
-    const int datatype = DBGetVarType(file, varname.c_str());
+    const int datatype = DBGetVarType(file.get(), varname.c_str());
     assert(datatype >= 0);
-    if (!(datatype == DB_INT ||
-          (sizeof(int) == sizeof(long) && datatype == DB_LONG)))
-      std::cerr << "read_attribute<vector<int>>: varname=" << varname
-                << " datatype=" << datatype << "\n";
     assert(datatype == DB_INT ||
            (sizeof(int) == sizeof(long) && datatype == DB_LONG));
-    const int length = DBGetVarLength(file, varname.c_str());
+    const int length = DBGetVarLength(file.get(), varname.c_str());
     value.resize(length);
-    int ierr = DBReadVar(file, varname.c_str(), value.data());
+    int ierr = DBReadVar(file.get(), varname.c_str(), value.data());
     assert(!ierr);
   }
 }
 
-void read_group(DBfile *const file, const string &loc, const string &name,
+void read_attribute(vector<double> &value, const Silo<DBfile> &file,
+                    const string &loc, const string &name) {
+  const string varname = loc + name;
+  const int vartype = DBInqVarType(file.get(), varname.c_str());
+  assert(vartype >= 0);
+  if (vartype == DB_USERDEF) {
+    // empty array
+    const int datatype =
+        DBGetComponentType(file.get(), varname.c_str(), "dummy");
+    assert(datatype >= 0);
+    assert(datatype == DB_DOUBLE);
+    value.resize(0);
+  } else {
+    assert(vartype == DB_VARIABLE);
+    const int datatype = DBGetVarType(file.get(), varname.c_str());
+    assert(datatype >= 0);
+    assert(datatype == DB_DOUBLE);
+    const int length = DBGetVarLength(file.get(), varname.c_str());
+    value.resize(length);
+    int ierr = DBReadVar(file.get(), varname.c_str(), value.data());
+    assert(!ierr);
+  }
+}
+
+void read_group(const Silo<DBfile> &file, const string &loc, const string &name,
                 const function<void(const string &loc)> &process_entry) {
-  int ierr = DBSetDir(file, (loc + name).c_str());
+  int ierr = DBSetDir(file.get(), (loc + name).c_str());
   assert(!ierr);
-  const DBtoc *const toc = DBGetToc(file);
+  const DBtoc *const toc = DBGetToc(file.get());
   assert(toc);
   vector<string> dirs;
   for (int n = 0; n < toc->ndir; ++n)
     dirs.push_back(toc->dir_names[n]);
-  ierr = DBSetDir(file, "/");
+  ierr = DBSetDir(file.get(), "/");
   assert(!ierr);
   for (const auto &dir : dirs)
     process_entry(loc + name + "/" + dir + "/");
 }
 
 void read_symlink_group(
-    DBfile *const file, const string &loc, const string &name,
+    const Silo<DBfile> &file, const string &loc, const string &name,
     const function<void(const string &loc)> &process_entry) {
-  int ierr = DBSetDir(file, (loc + name).c_str());
+  int ierr = DBSetDir(file.get(), (loc + name).c_str());
   assert(!ierr);
-  const DBtoc *const toc = DBGetToc(file);
+  const DBtoc *const toc = DBGetToc(file.get());
   assert(toc);
   vector<string> vars;
   for (int n = 0; n < toc->nvar; ++n)
     vars.push_back(toc->var_names[n]);
-  ierr = DBSetDir(file, "/");
+  ierr = DBSetDir(file.get(), "/");
   assert(!ierr);
   const string grouploc = loc + name + "/";
   for (const auto &var : vars) {

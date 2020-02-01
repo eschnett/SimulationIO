@@ -122,13 +122,14 @@ private:
             const shared_ptr<Project> &project);
 #endif
 #ifdef SIMULATIONIO_HAVE_SILO
-  static shared_ptr<Configuration> create(DBfile *const file, const string &loc,
+  static shared_ptr<Configuration> create(const Silo<DBfile> &file,
+                                          const string &loc,
                                           const shared_ptr<Project> &project) {
     auto configuration = make_shared<Configuration>(hidden());
     configuration->read(file, loc, project);
     return configuration;
   }
-  void read(DBfile *file, const string &loc,
+  void read(const Silo<DBfile> &file, const string &loc,
             const shared_ptr<Project> &project);
 #endif
 
@@ -155,7 +156,7 @@ public:
 #endif
 #ifdef SIMULATIONIO_HAVE_SILO
   virtual string silo_path() const;
-  virtual void write(DBfile *file, const string &loc) const;
+  virtual void write(const Silo<DBfile> &file, const string &loc) const;
 #endif
 #ifdef SIMULATIONIO_HAVE_TILEDB
   virtual vector<string> tiledb_path() const;

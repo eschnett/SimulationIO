@@ -102,6 +102,17 @@ private:
   void read(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node,
             const shared_ptr<Project> &project);
 #endif
+#ifdef SIMULATIONIO_HAVE_SILO
+  static shared_ptr<TangentSpace> create(const Silo<DBfile> &file,
+                                         const string &loc,
+                                         const shared_ptr<Project> &project) {
+    auto tangentspace = make_shared<TangentSpace>(hidden());
+    tangentspace->read(file, loc, project);
+    return tangentspace;
+  }
+  void read(const Silo<DBfile> &file, const string &loc,
+            const shared_ptr<Project> &project);
+#endif
 
 public:
   virtual ~TangentSpace() {}
@@ -126,7 +137,7 @@ public:
 #endif
 #ifdef SIMULATIONIO_HAVE_SILO
   virtual string silo_path() const;
-  virtual void write(DBfile *file, const string &loc) const;
+  virtual void write(const Silo<DBfile> &file, const string &loc) const;
 #endif
 #ifdef SIMULATIONIO_HAVE_TILEDB
   virtual vector<string> tiledb_path() const;
@@ -147,6 +158,9 @@ public:
                               const YAML::Node &node);
   shared_ptr<Basis> getBasis(const shared_ptr<ASDF::reader_state> &rs,
                              const YAML::Node &node);
+#endif
+#ifdef SIMULATIONIO_HAVE_ASDF_CXX
+  shared_ptr<Basis> readBasis(const Silo<DBfile> &file, const string &loc);
 #endif
 
 private:

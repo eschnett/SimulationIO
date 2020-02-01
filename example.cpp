@@ -140,7 +140,7 @@ int main(int argc, char **argv) {
     auto rho_component = rho_block->createDiscreteFieldBlockComponent(
         "scalar", scalar3d_component);
 #if 1
-    auto rho_dataset = rho_component->createDataSet<double>(write_options);
+    auto rho_dataset = rho_component->createDataSet(write_options);
 #else
     auto rho_dataset = rho_component->createDataBufferEntry(
         write_options, H5::getType(double{}), databuffer);
@@ -149,7 +149,7 @@ int main(int argc, char **argv) {
       auto vector3d_component = vector3d->storage_indices().at(d);
       auto vel_component = vel_block->createDiscreteFieldBlockComponent(
           dirnames[d], vector3d_component);
-      auto vel_dataset = vel_component->createDataSet<double>(write_options);
+      auto vel_dataset = vel_component->createDataSet(write_options);
     }
   }
 

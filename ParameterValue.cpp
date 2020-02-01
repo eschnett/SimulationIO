@@ -1,6 +1,3 @@
-#warning "TODO"
-#include <iostream>
-
 #include "ParameterValue.hpp"
 
 #include "Configuration.hpp"
@@ -107,7 +104,7 @@ void ParameterValue::read(const shared_ptr<ASDF::reader_state> &rs,
 #endif
 
 #ifdef SIMULATIONIO_HAVE_SILO
-void ParameterValue::read(DBfile *const file, const string &loc,
+void ParameterValue::read(const Silo<DBfile> &file, const string &loc,
                           const shared_ptr<Parameter> &parameter) {
   read_attribute(m_name, file, loc, "name");
   m_parameter = parameter;
@@ -128,7 +125,6 @@ void ParameterValue::read(DBfile *const file, const string &loc,
       read_attribute(value_string, file, loc, "data");
       break;
     default:
-      std::cerr << "datatype=" << datatype << "\n";
       assert(0);
     }
   } else {
@@ -317,7 +313,7 @@ string ParameterValue::silo_path() const {
          legalize_silo_name(name()) + "/";
 }
 
-void ParameterValue::write(DBfile *const file, const string &loc) const {
+void ParameterValue::write(const Silo<DBfile> &file, const string &loc) const {
   assert(invariant());
   write_attribute(file, loc, "name", name());
   switch (value_type) {

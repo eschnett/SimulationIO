@@ -85,6 +85,17 @@ private:
   void read(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node,
             const shared_ptr<Basis> &basis);
 #endif
+#ifdef SIMULATIONIO_HAVE_SILO
+  static shared_ptr<BasisVector> create(const Silo<DBfile> &file,
+                                        const string &loc,
+                                        const shared_ptr<Basis> &basis) {
+    auto basisvector = make_shared<BasisVector>(hidden());
+    basisvector->read(file, loc, basis);
+    return basisvector;
+  }
+  void read(const Silo<DBfile> &file, const string &loc,
+            const shared_ptr<Basis> &basis);
+#endif
 
 public:
   virtual ~BasisVector() {}
@@ -113,7 +124,7 @@ public:
 #endif
 #ifdef SIMULATIONIO_HAVE_SILO
   virtual string silo_path() const;
-  virtual void write(DBfile *file, const string &loc) const;
+  virtual void write(const Silo<DBfile> &file, const string &loc) const;
 #endif
 };
 

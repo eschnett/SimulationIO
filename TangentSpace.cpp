@@ -63,6 +63,21 @@ void TangentSpace::read(const shared_ptr<ASDF::reader_state> &rs,
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_SILO
+void TangentSpace::read(const Silo<DBfile> &file, const string &loc,
+                        const shared_ptr<Project> &project) {
+  read_attribute(m_name, file, loc, "name");
+  m_project = project;
+  const auto &configuration_name =
+      read_symlinked_name(file, loc, "configuration");
+  m_configuration = project->configurations().at(configuration_name);
+  read_attribute(m_dimension, file, loc, "dimension");
+  read_group(file, loc, "bases",
+             [&](const string &loc) { readBasis(file, loc); });
+  m_configuration->insert(name(), shared_from_this());
+}
+#endif
+
 void TangentSpace::merge(const shared_ptr<TangentSpace> &tangentspace) {
   assert(project()->name() == tangentspace->project()->name());
   assert(m_configuration->name() == tangentspace->configuration()->name());
@@ -131,7 +146,7 @@ string TangentSpace::silo_path() const {
          legalize_silo_name(name()) + "/";
 }
 
-void TangentSpace::write(DBfile *const file, const string &loc) const {
+void TangentSpace::write(const Silo<DBfile> &file, const string &loc) const {
   assert(invariant());
   write_attribute(file, loc, "name", name());
   write_symlink(file, loc, "configuration", configuration()->silo_path());
@@ -228,6 +243,16 @@ TangentSpace::getBasis(const shared_ptr<ASDF::reader_state> &rs,
   assert(path.at(3) == "bases");
   const auto &basis_name = path.at(4);
   return bases().at(basis_name);
+}
+#endif
+
+#ifdef SIMULATIONIO_HAVE_SILO
+shared_ptr<Basis> TangentSpace::readBasis(const Silo<DBfile> &file,
+                                          const string &loc) {
+  auto basis = Basis::create(file, loc, shared_from_this());
+  checked_emplace(m_bases, basis->name(), basis, "TangentSpace", "bases");
+  assert(basis->invariant());
+  return basis;
 }
 #endif
 

@@ -107,13 +107,14 @@ private:
             const shared_ptr<Project> &project);
 #endif
 #ifdef SIMULATIONIO_HAVE_SILO
-  static shared_ptr<TensorType> create(DBfile *const file, const string &loc,
+  static shared_ptr<TensorType> create(const Silo<DBfile> &file,
+                                       const string &loc,
                                        const shared_ptr<Project> &project) {
     auto tensortype = make_shared<TensorType>(hidden());
     tensortype->read(file, loc, project);
     return tensortype;
   }
-  void read(DBfile *file, const string &loc,
+  void read(const Silo<DBfile> &file, const string &loc,
             const shared_ptr<Project> &project);
 #endif
 
@@ -140,7 +141,7 @@ public:
 #endif
 #ifdef SIMULATIONIO_HAVE_SILO
   virtual string silo_path() const;
-  virtual void write(DBfile *file, const string &loc) const;
+  virtual void write(const Silo<DBfile> &file, const string &loc) const;
 #endif
 #ifdef SIMULATIONIO_HAVE_TILEDB
   virtual vector<string> tiledb_path() const;
@@ -169,7 +170,7 @@ public:
                      const YAML::Node &node);
 #endif
 #ifdef SIMULATIONIO_HAVE_SILO
-  shared_ptr<TensorComponent> readTensorComponent(DBfile *file,
+  shared_ptr<TensorComponent> readTensorComponent(const Silo<DBfile> &file,
                                                   const string &loc);
 #endif
 

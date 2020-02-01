@@ -111,6 +111,17 @@ private:
   void read(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node,
             const shared_ptr<DiscreteField> &discretefield);
 #endif
+#ifdef SIMULATIONIO_HAVE_SILO
+  static shared_ptr<DiscreteFieldBlock>
+  create(const Silo<DBfile> &file, const string &loc,
+         const shared_ptr<DiscreteField> &discretefield) {
+    auto discretefieldblock = make_shared<DiscreteFieldBlock>(hidden());
+    discretefieldblock->read(file, loc, discretefield);
+    return discretefieldblock;
+  }
+  void read(const Silo<DBfile> &file, const string &loc,
+            const shared_ptr<DiscreteField> &discretefield);
+#endif
 
 public:
   virtual ~DiscreteFieldBlock() {}
@@ -136,7 +147,7 @@ public:
 #endif
 #ifdef SIMULATIONIO_HAVE_SILO
   virtual string silo_path() const;
-  virtual void write(DBfile *file, const string &loc) const;
+  virtual void write(const Silo<DBfile> &file, const string &loc) const;
 #endif
 #ifdef SIMULATIONIO_HAVE_TILEDB
   virtual vector<string> tiledb_path() const;
@@ -160,6 +171,10 @@ public:
   shared_ptr<DiscreteFieldBlockComponent>
   readDiscreteFieldBlockComponent(const shared_ptr<ASDF::reader_state> &rs,
                                   const YAML::Node &node);
+#endif
+#ifdef SIMULATIONIO_HAVE_SILO
+  shared_ptr<DiscreteFieldBlockComponent>
+  readDiscreteFieldBlockComponent(const Silo<DBfile> &file, const string &loc);
 #endif
 };
 

@@ -64,6 +64,23 @@ void CoordinateSystem::read(const shared_ptr<ASDF::reader_state> &rs,
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_SILO
+void CoordinateSystem::read(const Silo<DBfile> &file, const string &loc,
+                            const shared_ptr<Project> &project) {
+  read_attribute(m_name, file, loc, "name");
+  m_project = project;
+  const auto &configuration_name =
+      read_symlinked_name(file, loc, "configuration");
+  m_configuration = project->configurations().at(configuration_name);
+  const auto &manifold_name = read_symlinked_name(file, loc, "manifold");
+  m_manifold = project->manifolds().at(manifold_name);
+  read_group(file, loc, "coordinatefields",
+             [&](const string &loc) { readCoordinateField(file, loc); });
+  m_configuration->insert(name(), shared_from_this());
+  m_manifold->insert(name(), shared_from_this());
+}
+#endif
+
 void CoordinateSystem::merge(
     const shared_ptr<CoordinateSystem> &coordinatesystem) {
   assert(project()->name() == coordinatesystem->project()->name());
@@ -143,7 +160,8 @@ string CoordinateSystem::silo_path() const {
          legalize_silo_name(name()) + "/";
 }
 
-void CoordinateSystem::write(DBfile *const file, const string &loc) const {
+void CoordinateSystem::write(const Silo<DBfile> &file,
+                             const string &loc) const {
   assert(invariant());
   write_attribute(file, loc, "name", name());
   write_symlink(file, loc, "configuration", configuration()->silo_path());
@@ -237,6 +255,20 @@ shared_ptr<CoordinateField>
 CoordinateSystem::readCoordinateField(const shared_ptr<ASDF::reader_state> &rs,
                                       const YAML::Node &node) {
   auto coordinatefield = CoordinateField::create(rs, node, shared_from_this());
+  checked_emplace(m_coordinatefields, coordinatefield->name(), coordinatefield,
+                  "CoordinateSystem", "coordinatefields");
+  checked_emplace(m_directions, coordinatefield->direction(), coordinatefield,
+                  "CoordinateSystem", "directions");
+  assert(coordinatefield->invariant());
+  return coordinatefield;
+}
+#endif
+
+#ifdef SIMULATIONIO_HAVE_SILO
+shared_ptr<CoordinateField>
+CoordinateSystem::readCoordinateField(const Silo<DBfile> &file,
+                                      const string &loc) {
+  auto coordinatefield = CoordinateField::create(file, loc, shared_from_this());
   checked_emplace(m_coordinatefields, coordinatefield->name(), coordinatefield,
                   "CoordinateSystem", "coordinatefields");
   checked_emplace(m_directions, coordinatefield->direction(), coordinatefield,

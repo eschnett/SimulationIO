@@ -56,7 +56,7 @@ void TensorType::read(const shared_ptr<ASDF::reader_state> &rs,
 #endif
 
 #ifdef SIMULATIONIO_HAVE_SILO
-void TensorType::read(DBfile *const file, const string &loc,
+void TensorType::read(const Silo<DBfile> &file, const string &loc,
                       const shared_ptr<Project> &project) {
   read_attribute(m_name, file, loc, "name");
   m_project = project;
@@ -132,7 +132,7 @@ string TensorType::silo_path() const {
          "/";
 }
 
-void TensorType::write(DBfile *const file, const string &loc) const {
+void TensorType::write(const Silo<DBfile> &file, const string &loc) const {
   assert(invariant());
   write_attribute(file, loc, "name", name());
   write_attribute(file, loc, "dimension", dimension());
@@ -245,8 +245,8 @@ TensorType::getTensorComponent(const shared_ptr<ASDF::reader_state> &rs,
 #endif
 
 #ifdef SIMULATIONIO_HAVE_SILO
-shared_ptr<TensorComponent> TensorType::readTensorComponent(DBfile *const file,
-                                                            const string &loc) {
+shared_ptr<TensorComponent>
+TensorType::readTensorComponent(const Silo<DBfile> &file, const string &loc) {
   auto tensorcomponent = TensorComponent::create(file, loc, shared_from_this());
   checked_emplace(m_tensorcomponents, tensorcomponent->name(), tensorcomponent,
                   "TensorType", "tensorcomponents");

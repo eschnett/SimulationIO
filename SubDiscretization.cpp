@@ -92,6 +92,26 @@ void SubDiscretization::read(const shared_ptr<ASDF::reader_state> &rs,
 }
 #endif
 
+#ifdef SIMULATIONIO_HAVE_SILO
+void SubDiscretization::read(const Silo<DBfile> &file, const string &loc,
+                             const shared_ptr<Manifold> &manifold) {
+  read_attribute(m_name, file, loc, "name");
+  m_manifold = manifold;
+  const auto &parent_discretization_name =
+      read_symlinked_name(file, loc, "parent_discretization");
+  m_parent_discretization =
+      manifold->discretizations().at(parent_discretization_name);
+  const auto &child_discretization_name =
+      read_symlinked_name(file, loc, "child_discretization");
+  m_child_discretization =
+      manifold->discretizations().at(child_discretization_name);
+  read_attribute(m_factor, file, loc, "factor");
+  read_attribute(m_offset, file, loc, "offset");
+  m_parent_discretization->insertChild(name(), shared_from_this());
+  m_child_discretization->insertParent(name(), shared_from_this());
+}
+#endif
+
 void SubDiscretization::merge(
     const shared_ptr<SubDiscretization> &subdiscretization) {
   assert(manifold()->name() == subdiscretization->manifold()->name());
@@ -174,7 +194,8 @@ string SubDiscretization::silo_path() const {
          legalize_silo_name(name()) + "/";
 }
 
-void SubDiscretization::write(DBfile *const file, const string &loc) const {
+void SubDiscretization::write(const Silo<DBfile> &file,
+                              const string &loc) const {
   assert(invariant());
   write_attribute(file, loc, "name", name());
   write_symlink(file, loc, "parent_discretization",
