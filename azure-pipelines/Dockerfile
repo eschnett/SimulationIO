@@ -34,7 +34,7 @@ RUN apt-get update && \
 
 # Install asdf-cxx
 RUN mkdir src && \
-    ( cd src && \
+    (cd src && \
     wget https://github.com/eschnett/asdf-cxx/archive/version/7.2.1.tar.gz && \
     tar xzf 7.2.1.tar.gz && \
     cd asdf-cxx-version-7.2.1 && \
@@ -43,12 +43,12 @@ RUN mkdir src && \
     cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo .. && \
     make -j$(nproc) && \
     make -j$(nproc) install && \
-    true ) && \
+    true) && \
     rm -rf src
 
 # Install silo
 RUN mkdir src && \
-    ( cd src && \
+    (cd src && \
     wget https://wci.llnl.gov/content/assets/docs/simulation/computer-codes/silo/silo-4.10.2/silo-4.10.2-bsd.tar.gz && \
     tar xzf silo-4.10.2-bsd.tar.gz && \
     cd silo-4.10.2-bsd && \
@@ -57,7 +57,7 @@ RUN mkdir src && \
     ../configure --with-hdf5=/usr/lib/x86_64-linux-gnu/hdf5/serial/include,/usr/lib/x86_64-linux-gnu/hdf5/serial/lib --prefix=/usr/local && \
     make -j$(nproc) && \
     make -j$(nproc) install && \
-    true ) && \
+    true) && \
     rm -rf src
 
 # As documentation
