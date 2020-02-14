@@ -3,6 +3,8 @@ SimulationIO
 
 |Build Status| |Coverage Status| |codecov.io| |Dependency Status| |Zenodo|
 
+|Azure Status|
+
 Efficient and convenient I/O for large PDE simulations
 
 Current state
@@ -80,3 +82,6 @@ Sub-Manifolds
    :target: https://dependencyci.com/github/eschnett/SimulationIO
 .. |Zenodo| image:: https://zenodo.org/badge/43850770.svg
    :target: https://zenodo.org/badge/latestdoi/43850770
+
+.. |Azure Status| image:: https://dev.azure.com/schnetter/SimulationIO/_apis/build/status/eschnett.SimulationIO?branchName=master
+   :target: https://dev.azure.com/schnetter/SimulationIO/_build

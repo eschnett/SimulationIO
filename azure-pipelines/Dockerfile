@@ -15,8 +15,10 @@ RUN apt-get update && \
         ca-certificates \
         cmake \
         g++ \
+        gfortran \
         libbz2-dev \
         libgtest-dev \
+        libhdf5-dev \
         libpython3-dev \
         libssl-dev \
         libyaml-cpp-dev \
@@ -47,12 +49,12 @@ RUN mkdir src && \
 # Install silo
 RUN mkdir src && \
     ( cd src && \
-    wget https://wci.llnl.gov/content/assets/docs/simulation/computer-codes/silo/silo-4.10.2/silo-4.10.2.tar.gz && \
-    tar xzf silo-4.10.2.tar.gz && \
-    cd silo-4.10.2 && \
+    wget https://wci.llnl.gov/content/assets/docs/simulation/computer-codes/silo/silo-4.10.2/silo-4.10.2-bsd.tar.gz && \
+    tar xzf silo-4.10.2-bsd.tar.gz && \
+    cd silo-4.10.2-bsd && \
     mkdir build && \
     cd build && \
-    ../configure && \
+    ../configure --with-hdf5=/usr/lib/x86_64-linux-gnu/hdf5/serial/include,/usr/lib/x86_64-linux-gnu/hdf5/serial/lib --prefix=/usr/local && \
     make -j$(nproc) && \
     make -j$(nproc) install && \
     true ) && \
