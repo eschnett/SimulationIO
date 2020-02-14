@@ -368,6 +368,8 @@ void DiscretizationBlock::write(const Silo<DBfile> &file,
           const auto &discretefieldblockcomponents =
               discretefieldblock->discretefieldblockcomponents();
           // Coordinate fields are scalars
+          if (discretefieldblockcomponents.empty())
+            break;
           assert(discretefieldblockcomponents.size() == 1);
           const auto &discretefieldblockcomponent =
               discretefieldblockcomponents.begin()->second;

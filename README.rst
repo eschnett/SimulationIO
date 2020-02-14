@@ -1,9 +1,7 @@
 SimulationIO
 ============
 
-|Build Status| |Coverage Status| |codecov.io| |Dependency Status| |Zenodo|
-
-|Azure Status|
+|Build Status| |Coverage Status| |codecov.io| |Zenodo|
 
 Efficient and convenient I/O for large PDE simulations
 
@@ -72,16 +70,14 @@ Sub-Manifolds
 -  Grid spacing ratio (rational)
 -  Offset (rational)
 
-.. |Build Status| image:: https://travis-ci.org/eschnett/SimulationIO.svg?branch=master
-   :target: https://travis-ci.org/eschnett/SimulationIO
+.. |Build Status| image:: https://dev.azure.com/schnetter/SimulationIO/_apis/build/status/eschnett.SimulationIO?branchName=master
+   :target: https://dev.azure.com/schnetter/SimulationIO/_build
 .. |Coverage Status| image:: https://coveralls.io/repos/eschnett/SimulationIO/badge.svg?branch=master
    :target: https://coveralls.io/github/eschnett/SimulationIO?branch=master
 .. |codecov.io| image:: https://codecov.io/github/eschnett/SimulationIO/coverage.svg?branch=master
    :target: https://codecov.io/github/eschnett/SimulationIO?branch=master
-.. |Dependency Status| image:: https://dependencyci.com/github/eschnett/SimulationIO/badge
-   :target: https://dependencyci.com/github/eschnett/SimulationIO
 .. |Zenodo| image:: https://zenodo.org/badge/43850770.svg
    :target: https://zenodo.org/badge/latestdoi/43850770
 
-.. |Azure Status| image:: https://dev.azure.com/schnetter/SimulationIO/_apis/build/status/eschnett.SimulationIO?branchName=master
-   :target: https://dev.azure.com/schnetter/SimulationIO/_build
+.. |Travis Status| image:: https://travis-ci.org/eschnett/SimulationIO.svg?branch=master
+   :target: https://travis-ci.org/eschnett/SimulationIO
