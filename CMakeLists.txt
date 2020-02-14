@@ -59,6 +59,17 @@ if(ENABLE_ASDF_CXX)
   endif()
 endif()
 
+OPTION(ENABLE_GTEST "Enable GoogleTest infrastructure" ON)
+if(ENABLE_GTEST)
+  find_package(GTest)
+endif()
+if(GTEST_FOUND)
+  include_directories(${GTEST_INCLUDE_DIRS})
+  set(HAVE_GTEST 1)
+else()
+  set(HAVE_GTEST 0)
+endif()
+
 OPTION(ENABLE_HDF5 "Enable HDF5 backend" ON)
 if(ENABLE_HDF5)
   find_package(HDF5 1.10.1 COMPONENTS C CXX)
@@ -110,9 +121,9 @@ if(SILO_FOUND)
   endif()
   include_directories(${SILO_INCLUDE_DIRS})
   set(LIBS ${LIBS} ${SILO_LIBRARIES})
-  if(HDF5_FOUND)
-    set(LIBS ${LIBS} ${HDF5_LIBRARIES})
-  endif()
+  # if(HDF5_FOUND)
+  #   set(LIBS ${LIBS} ${HDF5_LIBRARIES})
+  # endif()
   set(HAVE_SILO 1)
 else()
   set(HAVE_SILO 0)
@@ -129,7 +140,6 @@ if(TILEDB_FOUND)
 else()
   set(HAVE_TILEDB 0)
 endif()
-# set(HAVE_TILEDB 0)
 
 set(Python_ADDITIONAL_VERSIONS 3.0)
 # This sets PYTHONINTERP_FOUND
@@ -359,6 +369,9 @@ if(HDF5_FOUND AND ASDF_CXX_FOUND)
 endif()
 
 if(SILO_FOUND)
+  add_executable(silo-list silo-list.cpp)
+  target_link_libraries(silo-list ${SILO_LIBRARIES})
+
   add_executable(sio-example-attach-silo example-attach-silo.cpp)
   target_link_libraries(sio-example-attach-silo SimulationIO)
 
@@ -373,16 +386,13 @@ endif()
 
 # Tests
 
-set(GOOGLETEST_DIR "googletest-release-1.8.0/googletest")
-include_directories("${GOOGLETEST_DIR}/include" "${GOOGLETEST_DIR}")
+add_executable(test_RegionCalculus test_RegionCalculus.cpp)
+target_link_libraries(test_RegionCalculus
+  ${LIBS} GTest::GTest GTest::Main Threads::Threads)
 
-add_executable(test_RegionCalculus
-  test_RegionCalculus.cpp "${GOOGLETEST_DIR}/src/gtest-all.cc")
-target_link_libraries(test_RegionCalculus ${LIBS} Threads::Threads)
-
-add_executable(test_SimulationIO
-  test_SimulationIO.cpp "${GOOGLETEST_DIR}/src/gtest-all.cc")
-target_link_libraries(test_SimulationIO SimulationIO Threads::Threads)
+add_executable(test_SimulationIO test_SimulationIO.cpp)
+target_link_libraries(test_SimulationIO
+  SimulationIO GTest::GTest GTest::Main Threads::Threads)
 
 enable_testing()
 add_test(NAME test_RegionCalculus COMMAND ./test_RegionCalculus)

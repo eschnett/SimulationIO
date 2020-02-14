@@ -422,18 +422,6 @@ public:
 
   static shared_ptr<DataSet> read(const H5::Group &group, const string &entry,
                                   const box_t &box);
-#ifdef SIMULATIONIO_HAVE_ASDF_CXX
-  static shared_ptr<DataSet> read_asdf(const shared_ptr<ASDF::reader_state> &rs,
-                                       const YAML::Node &node,
-                                       const box_t &box);
-#endif
-#ifdef SIMULATIONIO_HAVE_SILO
-  static shared_ptr<DataSet> read_silo(const Silo<DBfile> &file,
-                                       const string &loc, const string &name,
-                                       const box_t &box) {
-    return nullptr;
-  }
-#endif
   virtual ostream &output(ostream &os) const;
   virtual void write(const H5::Group &group, const string &entry) const;
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
@@ -583,19 +571,6 @@ public:
 
   static shared_ptr<DataBufferEntry>
   read(const H5::Group &group, const string &entry, const box_t &box);
-#ifdef SIMULATIONIO_HAVE_ASDF_CXX
-  static shared_ptr<DataBufferEntry>
-  read_asdf(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node,
-            const box_t &box);
-#endif
-#ifdef SIMULATIONIO_HAVE_SILO
-  static shared_ptr<DataBufferEntry> read_silo(const Silo<DBfile> &file,
-                                               const string &loc,
-                                               const string &name,
-                                               const box_t &box) {
-    return nullptr;
-  }
-#endif
   virtual ostream &output(ostream &os) const;
   virtual void write(const H5::Group &group, const string &entry) const;
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
@@ -638,18 +613,6 @@ public:
 
   static shared_ptr<CopyObj> read(const H5::Group &group, const string &entry,
                                   const box_t &box);
-#ifdef SIMULATIONIO_HAVE_ASDF_CXX
-  static shared_ptr<CopyObj> read_asdf(const shared_ptr<ASDF::reader_state> &rs,
-                                       const YAML::Node &node,
-                                       const box_t &box);
-#endif
-#ifdef SIMULATIONIO_HAVE_SILO
-  static shared_ptr<CopyObj> read_silo(const Silo<DBfile> &file,
-                                       const string &loc, const string &name,
-                                       const box_t &box) {
-    return nullptr;
-  }
-#endif
   virtual ostream &output(ostream &os) const;
   virtual void write(const H5::Group &group, const string &entry) const;
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
@@ -701,18 +664,6 @@ public:
 
   static shared_ptr<ExtLink> read(const H5::Group &group, const string &entry,
                                   const box_t &box);
-#ifdef SIMULATIONIO_HAVE_ASDF_CXX
-  static shared_ptr<ExtLink> read_asdf(const shared_ptr<ASDF::reader_state> &rs,
-                                       const YAML::Node &node,
-                                       const box_t &box);
-#endif
-#ifdef SIMULATIONIO_HAVE_SILO
-  static shared_ptr<ExtLink> read_silo(const Silo<DBfile> &file,
-                                       const string &loc, const string &name,
-                                       const box_t &box) {
-    return nullptr;
-  }
-#endif
   virtual ostream &output(ostream &os) const;
   virtual void write(const H5::Group &group, const string &entry) const;
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
@@ -778,20 +729,9 @@ public:
 
   virtual ~ASDFData() {}
 
-#ifdef SIMULATIONIO_HAVE_HDF5
-  static shared_ptr<ASDFData> read(const H5::Group &group, const string &entry,
-                                   const box_t &box);
-#endif
   static shared_ptr<ASDFData>
   read_asdf(const shared_ptr<ASDF::reader_state> &rs, const YAML::Node &node,
             const box_t &box);
-#ifdef SIMULATIONIO_HAVE_SILO
-  static shared_ptr<ASDFData> read_silo(const Silo<DBfile> &file,
-                                        const string &loc, const string &name,
-                                        const box_t &box) {
-    return nullptr;
-  }
-#endif
   virtual ostream &output(ostream &os) const;
 #ifdef SIMULATIONIO_HAVE_HDF5
   virtual void write(const H5::Group &group, const string &entry) const;
@@ -828,20 +768,9 @@ public:
 
   virtual ~ASDFRef() {}
 
-#ifdef SIMULATIONIO_HAVE_HDF5
-  static shared_ptr<ASDFRef> read(const H5::Group &group, const string &entry,
-                                  const box_t &box);
-#endif
   static shared_ptr<ASDFRef> read_asdf(const shared_ptr<ASDF::reader_state> &rs,
                                        const YAML::Node &node,
                                        const box_t &box);
-#ifdef SIMULATIONIO_HAVE_SILO
-  static shared_ptr<ASDFRef> read_silo(const Silo<DBfile> &file,
-                                       const string &loc, const string &name,
-                                       const box_t &box) {
-    return nullptr;
-  }
-#endif
   virtual ostream &output(ostream &os) const;
 #ifdef SIMULATIONIO_HAVE_HDF5
   virtual void write(const H5::Group &group, const string &entry) const;
@@ -910,19 +839,6 @@ public:
 
   void discardData();
 
-#ifdef SIMULATIONIO_HAVE_HDF5
-  static shared_ptr<SiloVar> read(const H5::Group &group, const string &entry,
-                                  const box_t &box) {
-    return nullptr;
-  }
-#endif
-#ifdef SIMULATIONIO_HAVE_ASDF_CXX
-  static shared_ptr<SiloVar> read_asdf(const shared_ptr<ASDF::reader_state> &rs,
-                                       const YAML::Node &node,
-                                       const box_t &box) {
-    return nullptr;
-  }
-#endif
   static shared_ptr<SiloVar> read_silo(const Silo<DBfile> &file,
                                        const string &loc, const string &name,
                                        const box_t &box);

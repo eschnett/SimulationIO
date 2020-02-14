@@ -223,13 +223,8 @@ void DiscreteField::write(const Silo<DBfile> &file, const string &loc) const {
     ierr = DBAddOption(optlist.get(), DBOPT_MB_BLOCK_TYPE, &quadvar);
     assert(!ierr);
     ostringstream buf;
-    buf << loc + legalize_silo_name(name()) << "_"
+    buf << loc + legalize_silo_name(name()) << "_tensorcomponent_"
         << legalize_silo_name(tensorcomponent->name());
-    // if (!tensorcomponent->indexvalues().empty()) {
-    //   buf << "_";
-    //   for (const int indexvalue : tensorcomponent->indexvalues())
-    //     buf << indexvalue;
-    // }
     const string varname = buf.str();
     ierr = DBPutMultivar(file.get(), varname.c_str(), varnames_c.size(),
                          varnames_c.data(), nullptr, optlist.get());

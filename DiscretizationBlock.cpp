@@ -1,5 +1,12 @@
 #include "DiscretizationBlock.hpp"
 
+#include "CoordinateField.hpp"
+#include "CoordinateSystem.hpp"
+#include "DataBlock.hpp"
+#include "DiscreteField.hpp"
+#include "DiscreteFieldBlock.hpp"
+#include "DiscreteFieldBlockComponent.hpp"
+
 #ifdef SIMULATIONIO_HAVE_HDF5
 #include "H5Helpers.hpp"
 #endif
@@ -305,7 +312,6 @@ void DiscretizationBlock::write(const Silo<DBfile> &file,
                                 const string &loc) const {
   assert(invariant());
   write_attribute(file, loc, "name", name());
-
   const auto b = box();
   if (b.valid()) {
     if (b.rank() == 0) {
@@ -321,9 +327,79 @@ void DiscretizationBlock::write(const Silo<DBfile> &file,
       for (size_t d = 0; d < coords.size(); ++d) {
         auto &coordsd = coords.at(d);
         coordsd.resize(b.shape()[d]);
-        const auto lo = b.lower()[d];
-        for (size_t i = 0; i < coordsd.size(); ++i)
-          coordsd.at(i) = lo + i;
+      }
+      // Look for a coordinate system
+      const auto &manifold = discretization()->manifold();
+      const auto &coordinatesystems = manifold->coordinatesystems();
+      // Use first coordinate system that has DataRange objects
+      bool found_coordinates = false;
+      vector<shared_ptr<DataRange>> dataranges(coords.size());
+      for (const auto &kv : coordinatesystems) {
+        const auto &coordinatesystem = kv.second.lock();
+        dataranges.assign(dataranges.size(), nullptr);
+        for (size_t d = 0; d < dataranges.size(); ++d) {
+          // Assume the coordinate field exists
+          if (!coordinatesystem->directions().count(d))
+            break;
+          const auto &coordinatefield = coordinatesystem->directions().at(d);
+          const auto &field = coordinatefield->field();
+          // Assume the coordinate field has the same discretization
+          shared_ptr<DiscreteField> discretefield;
+          for (const auto &kv : field->discretefields()) {
+            const auto &df = kv.second;
+            if (df->discretization() == discretization()) {
+              discretefield = df;
+              break;
+            }
+          }
+          if (!discretefield)
+            break;
+          // Assume the discretization block exists
+          shared_ptr<DiscreteFieldBlock> discretefieldblock;
+          for (const auto &kv : discretefield->discretefieldblocks()) {
+            const auto &dfb = kv.second;
+            if (dfb->discretizationblock().get() == this) {
+              discretefieldblock = dfb;
+              break;
+            }
+          }
+          if (!discretefieldblock)
+            break;
+          const auto &discretefieldblockcomponents =
+              discretefieldblock->discretefieldblockcomponents();
+          // Coordinate fields are scalars
+          assert(discretefieldblockcomponents.size() == 1);
+          const auto &discretefieldblockcomponent =
+              discretefieldblockcomponents.begin()->second;
+          // Assume the discrete field block component is a datarange
+          const auto &datarange = discretefieldblockcomponent->datarange();
+          if (!datarange)
+            break;
+          dataranges.at(d) = datarange;
+        }
+        found_coordinates = true;
+        for (size_t d = 0; d < dataranges.size(); ++d)
+          found_coordinates &= bool(dataranges.at(d));
+        if (found_coordinates)
+          break;
+      } // for coordinatesystem
+      if (found_coordinates) {
+        for (size_t d = 0; d < coords.size(); ++d) {
+          auto &coordsd = coords.at(d);
+          const auto &datarange = dataranges.at(d);
+          const double origin = datarange->origin();
+          const double delta = datarange->delta().at(d);
+          for (size_t i = 0; i < coordsd.size(); ++i)
+            coordsd.at(i) = origin + i * delta;
+        }
+      } else {
+        // Invent a coordinate system
+        for (size_t d = 0; d < coords.size(); ++d) {
+          auto &coordsd = coords.at(d);
+          const auto lo = b.lower()[d];
+          for (size_t i = 0; i < coordsd.size(); ++i)
+            coordsd.at(i) = lo + i;
+        }
       }
       assert(b.rank() <= 3);
       vector<int> dims(3, 0);
@@ -334,8 +410,11 @@ void DiscretizationBlock::write(const Silo<DBfile> &file,
       }
       const auto &optlist = MakeSilo(DBMakeOptlist(10));
       assert(optlist);
+      int cartesian = DB_CARTESIAN;
+      int ierr = DBAddOption(optlist.get(), DBOPT_COORDSYS, &cartesian);
+      assert(!ierr);
       int ione = 1;
-      int ierr = DBAddOption(optlist.get(), DBOPT_MAJORORDER, &ione);
+      ierr = DBAddOption(optlist.get(), DBOPT_MAJORORDER, &ione);
       assert(!ierr);
       assert(b.rank() <= 3);
       vector<int> base(3, 0);
@@ -376,10 +455,22 @@ void DiscretizationBlock::write(const Silo<DBfile> &file,
       }
       const auto &optlist = MakeSilo(DBMakeOptlist(10));
       assert(optlist);
+      int cartesian = DB_CARTESIAN;
+      int ierr = DBAddOption(optlist.get(), DBOPT_COORDSYS, &cartesian);
+      assert(!ierr);
       int ione = 1;
-      int ierr = DBAddOption(optlist.get(), DBOPT_MAJORORDER, &ione);
+      ierr = DBAddOption(optlist.get(), DBOPT_MAJORORDER, &ione);
       assert(!ierr);
       ierr = DBAddOption(optlist.get(), DBOPT_HIDE_FROM_GUI, &ione);
+      assert(!ierr);
+      assert(b.rank() <= 3);
+      vector<int> base(3, 0);
+      for (size_t d = 0; d < dims.size(); ++d) {
+        const auto lo = b.lower()[d];
+        assert(lo >= INT_MIN && lo <= INT_MAX);
+        base.at(d) = lo;
+      }
+      ierr = DBAddOption(optlist.get(), DBOPT_BASEINDEX, base.data());
       assert(!ierr);
       ierr = DBPutQuadmesh(file.get(), meshname.c_str(), nullptr, coords.data(),
                            dims.data(), b.rank(), DB_DOUBLE, DB_COLLINEAR,

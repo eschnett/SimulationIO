@@ -1,0 +1,24 @@
+# Choose an agent virtual image
+pool:
+  vmImage: ubuntu-16.04
+container:
+  image: eschnett/simulationio
+
+steps:
+- script: |
+    set -euxo pipefail
+    mkdir build
+    cd build
+    cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH=/work/asdf-cxx-7.2.1 -DCMAKE_INSTALL_PREFIX=/work/simulationio ..
+    make -j$(nproc)
+  displayName: Build
+- script: |
+    set -euxo pipefail
+    cd build
+    make -j$(nproc) test CTEST_OUTPUT_ON_FAILURE=1
+  displayName: Test
+- script: |
+    set -euxo pipefail
+    cd build
+    make -j$(nproc) install
+  displayName: Install

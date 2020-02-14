@@ -415,39 +415,20 @@ bool DataBlock::invariant() const { return !m_box.empty(); }
 const vector<DataBlock::reader_t> DataBlock::readers = {
     DataRange::read, DataSet::read, DataBufferEntry::read,
     CopyObj::read,   ExtLink::read,
-#ifdef SIMULATIONIO_HAVE_ASDF_CXX
-    ASDFData::read,  ASDFRef::read,
-#endif
-#ifdef SIMULATIONIO_HAVE_SILO
-    SiloVar::read,
-#endif
 };
 #endif // #ifdef SIMULATIONIO_HAVE_HDF5
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 const vector<DataBlock::asdf_reader_t> DataBlock::asdf_readers = {
     DataRange::read_asdf,
-#ifdef SIMULATIONIO_HAVE_HDF5
-    DataSet::read_asdf,   DataBufferEntry::read_asdf,
-    CopyObj::read_asdf,   ExtLink::read_asdf,
-#endif
-    ASDFData::read_asdf,  ASDFRef::read_asdf,
-#ifdef SIMULATIONIO_HAVE_SILO
-    SiloVar::read_asdf,
-#endif
+    ASDFData::read_asdf,
+    ASDFRef::read_asdf,
 };
 #endif // #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 
 #ifdef SIMULATIONIO_HAVE_SILO
 const vector<DataBlock::silo_reader_t> DataBlock::silo_readers = {
     DataRange::read_silo,
-#ifdef SIMULATIONIO_HAVE_HDF5
-    DataSet::read_silo,   DataBufferEntry::read_silo,
-    CopyObj::read_silo,   ExtLink::read_silo,
-#endif
-#ifdef SIMULATIONIO_HAVE_ASDF_CXX
-    ASDFData::read_silo,  ASDFRef::read_silo,
-#endif
     SiloVar::read_silo,
 };
 #endif // #ifdef SIMULATIONIO_HAVE_SILO
@@ -642,14 +623,6 @@ shared_ptr<DataSet> DataSet::read(const H5::Group &group, const string &entry,
   return nullptr;
 }
 
-#ifdef SIMULATIONIO_HAVE_ASDF_CXX
-shared_ptr<DataSet> DataSet::read_asdf(const shared_ptr<ASDF::reader_state> &rs,
-                                       const YAML::Node &node,
-                                       const box_t &box) {
-  return nullptr;
-}
-#endif
-
 ostream &DataSet::output(ostream &os) const {
   using namespace Output;
   auto cls = datatype().getClass();
@@ -671,8 +644,9 @@ void DataSet::write(const H5::Group &group, const string &entry) const {
   m_location_group = group;
   m_location_name = entry;
   m_have_location = true;
-  create_dataset();
+  // create_dataset();
   if (m_have_attached_data) {
+    create_dataset();
     assert(m_have_datatype);
     writeData(m_attached_data.data(), m_datatype, m_memtype, m_memlayout,
               m_membox);
@@ -730,7 +704,7 @@ void DataSet::writeData(const void *data, const H5::DataType &datatype,
     m_datatype = datatype;
     m_have_datatype = true;
   }
-  // create_dataset();
+  create_dataset();
   H5::DataSpace memspace, filespace;
   construct_spaces(datalayout, databox, m_dataspace, memspace, filespace);
   m_dataset.write(data, memtype, memspace, filespace);
@@ -862,14 +836,6 @@ shared_ptr<DataBufferEntry> DataBufferEntry::read(const H5::Group &group,
   return nullptr;
 }
 
-#ifdef SIMULATIONIO_HAVE_ASDF_CXX
-shared_ptr<DataBufferEntry>
-DataBufferEntry::read_asdf(const shared_ptr<ASDF::reader_state> &rs,
-                           const YAML::Node &node, const box_t &box) {
-  return nullptr;
-}
-#endif
-
 ostream &DataBufferEntry::output(ostream &os) const {
   using namespace Output;
   auto cls = datatype().getClass();
@@ -932,14 +898,6 @@ shared_ptr<CopyObj> CopyObj::read(const H5::Group &group, const string &entry,
   }
   return nullptr;
 }
-
-#ifdef SIMULATIONIO_HAVE_ASDF_CXX
-shared_ptr<CopyObj> CopyObj::read_asdf(const shared_ptr<ASDF::reader_state> &rs,
-                                       const YAML::Node &node,
-                                       const box_t &box) {
-  return nullptr;
-}
-#endif
 
 ostream &CopyObj::output(ostream &os) const {
   return os << "CopyObj: "
@@ -1180,14 +1138,6 @@ shared_ptr<ExtLink> ExtLink::read(const H5::Group &group, const string &entry,
   return nullptr;
 }
 
-#ifdef SIMULATIONIO_HAVE_ASDF_CXX
-shared_ptr<ExtLink> ExtLink::read_asdf(const shared_ptr<ASDF::reader_state> &rs,
-                                       const YAML::Node &node,
-                                       const box_t &box) {
-  return nullptr;
-}
-#endif
-
 ostream &ExtLink::output(ostream &os) const {
   return os << "ExtLink: " << quote(filename()) << ":" << quote(objname());
 }
@@ -1281,13 +1231,6 @@ ASDFData::ASDFData(const WriteOptions &write_options, const box_t &box,
       fortran_strides(*datatype, vector<int64_t>(shape())));
 }
 
-#ifdef SIMULATIONIO_HAVE_HDF5
-shared_ptr<ASDFData> ASDFData::read(const H5::Group &group, const string &entry,
-                                    const box_t &box) {
-  return nullptr;
-}
-#endif
-
 shared_ptr<ASDFData>
 ASDFData::read_asdf(const shared_ptr<ASDF::reader_state> &rs,
                     const YAML::Node &node, const box_t &box) {
@@ -1314,13 +1257,6 @@ void ASDFData::write(ASDF::writer &w, const string &entry) const {
 }
 
 // ASDFRef
-
-#ifdef SIMULATIONIO_HAVE_HDF5
-shared_ptr<ASDFRef> ASDFRef::read(const H5::Group &group, const string &entry,
-                                  const box_t &box) {
-  return nullptr;
-}
-#endif
 
 shared_ptr<ASDFRef> ASDFRef::read_asdf(const shared_ptr<ASDF::reader_state> &rs,
                                        const YAML::Node &node,
@@ -1551,7 +1487,8 @@ void TileDBData::writeData(const tiledb_writer &w, const string &entry,
   tiledb::Array array(w.ctx(), arrayloc, TILEDB_WRITE);
   array.uri(); // Check whether URI is valid
   tiledb::Query query(w.ctx(), array, TILEDB_WRITE);
-  // TODO: copy only the requested hyperslab. (or can a subarray be larger than the destination array?)
+  // TODO: copy only the requested hyperslab. (or can a subarray be larger than
+  // the destination array?)
   assert(datalayout == box());
   assert(databox == box());
   // vector<array<long long, 2>> subarray(max(1, rank()));

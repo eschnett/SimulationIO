@@ -705,18 +705,21 @@ int main(int argc, char **argv) {
                 return buf.str();
               }();
               auto coordinatefieldname = fieldname;
-              auto discretefieldname = fieldname;
               if (!project->fields().count(fieldname)) {
                 auto field = project->createField(
                     coordinatefieldname, global_configuration, manifold,
                     tangentspace, tensortype);
-                coordinatesystem->createCoordinateField(fieldname, direction,
-                                                        field);
+                coordinatesystem->createCoordinateField(coordinatefieldname,
+                                                        direction, field);
+              }
+              auto field = project->fields().at(fieldname);
+              auto discretefieldname =
+                  field->name() + "_" + discretization->name();
+              if (!field->discretefields().count(discretefieldname)) {
                 field->createDiscreteField(discretefieldname,
                                            global_configuration, discretization,
                                            basis);
               }
-              auto field = project->fields().at(fieldname);
               auto discretefield =
                   field->discretefields().at(discretefieldname);
 

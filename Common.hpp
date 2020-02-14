@@ -14,6 +14,7 @@
 
 #ifdef SIMULATIONIO_HAVE_SILO
 #include <silo.h>
+#include "SiloHelpers.hpp"
 #endif
 
 #ifdef SIMULATIONIO_HAVE_TILEDB
@@ -33,6 +34,7 @@ namespace SimulationIO {
 using std::function;
 using std::map;
 using std::ostream;
+using std::remove_cv;
 using std::shared_ptr;
 using std::string;
 using std::unique_ptr;
@@ -202,19 +204,6 @@ template <typename T> struct NoBackLink {
 
 #ifdef SIMULATIONIO_HAVE_ASDF_CXX
 class asdf_writer_;
-#endif
-
-#ifdef SIMULATIONIO_HAVE_SILO
-void SiloFree(DBfile *obj);
-void SiloFree(DBmultimesh *obj);
-void SiloFree(DBoptlist *obj);
-void SiloFree(DBquadmesh *obj);
-void SiloFree(DBquadvar *obj);
-
-template <typename T> using Silo = shared_ptr<T>;
-template <typename T> Silo<T> MakeSilo(T *const obj) {
-  return shared_ptr<T>(obj, static_cast<void (*)(T *)>(SiloFree));
-}
 #endif
 
 #ifdef SIMULATIONIO_HAVE_TILEDB

@@ -4,7 +4,7 @@ notifications:
 
 sudo: false
 
-dist: xenial
+dist: bionic
 
 # Build matrix
 os:
@@ -18,10 +18,12 @@ env:
   global:
     - ENABLE_ASDF_CXX=ON
     - ENABLE_HDF5=ON
+    - ENABLE_SILO=ON
   matrix:
     - DEFAULT=ON                # dummy setting
     - ENABLE_ASDF_CXX=OFF
     - ENABLE_HDF5=OFF
+    - ENABLE_SILO=OFF
 matrix:
   exclude:
     - os: osx
@@ -30,16 +32,21 @@ matrix:
       env: ENABLE_ASDF_CXX=OFF
     - os: osx
       env: ENABLE_HDF5=OFF
+    - os: osx
+      env: ENABLE_SILO=OFF
     - compiler: gcc
       env: ENABLE_ASDF_CXX=OFF
     - compiler: gcc
       env: ENABLE_HDF5=OFF
+    - compiler: gcc
+      env: ENABLE_SILO=OFF
 
 # Install, build, and test
 addons:
   apt:
     packages:
       - lcov
+      - libgtest-dev
       - libopenmpi-dev
       - openmpi-bin
       - python-numpy

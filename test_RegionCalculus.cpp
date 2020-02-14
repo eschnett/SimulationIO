@@ -1632,5 +1632,3 @@ TEST(RegionCalculus, benchmark_region_strict_subset) {
   using namespace benchmark;
   auto rlt = regs[0] < regs[1];
 }
-
-#include "src/gtest_main.cc"

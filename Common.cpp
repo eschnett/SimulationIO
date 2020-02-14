@@ -77,12 +77,6 @@ void mkdirp(const Silo<DBfile>&file, const string &loc, const string &name) {
 }
 #endif
 
-void SiloFree(DBfile *const obj) { DBClose(obj); }
-void SiloFree(DBmultimesh *const obj) { DBFreeMultimesh(obj); }
-void SiloFree(DBoptlist *const obj) { DBFreeOptlist(obj); }
-void SiloFree(DBquadmesh *const obj) { DBFreeQuadmesh(obj); }
-void SiloFree(DBquadvar *const obj) { DBFreeQuadvar(obj); }
-
 string legalize_silo_name(const string &name) {
   ostringstream buf;
   for (const char c : name) {

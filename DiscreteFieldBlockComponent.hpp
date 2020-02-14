@@ -203,12 +203,6 @@ public:
                                         const vector<double> &delta);
 #ifdef SIMULATIONIO_HAVE_HDF5
   shared_ptr<DataSet> createDataSet(const WriteOptions &write_options);
-  shared_ptr<DataSet> createDataSet(const WriteOptions &write_options,
-                                    const H5::DataType &type);
-  template <typename T>
-  shared_ptr<DataSet> createDataSet(const WriteOptions &write_options) {
-    return createDataSet(write_options, H5::getType(T{}));
-  }
   shared_ptr<DataBufferEntry>
   createDataBufferEntry(const WriteOptions &write_options,
                         const H5::DataType &type,

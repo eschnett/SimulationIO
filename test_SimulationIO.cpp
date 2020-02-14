@@ -2305,7 +2305,7 @@ TEST(DataBlock, create) {
   dfbd1->unsetDataBlock();
   dfbd2->createExtLink(WriteOptions(), "discretizationfieldblockcomponent.s5",
                        project->name() + "/tensortypes/Scalar3D");
-  dfbd3->createDataSet<double>(WriteOptions());
+  dfbd3->createDataSet(WriteOptions());
   int rank =
       dfb1->discretizationblock()->discretization()->manifold()->dimension();
   auto dims = dfb1->discretizationblock()->box().shape();
@@ -2332,7 +2332,7 @@ TEST(DataBlock, create) {
   EXPECT_TRUE(bool(dfbd0->datarange()));
   dfbd0->unsetDataBlock();
   EXPECT_FALSE(bool(dfbd0->datarange()));
-  dfbd0->createDataSet<int>(WriteOptions());
+  dfbd0->createDataSet(WriteOptions());
   EXPECT_TRUE(bool(dfbd0->dataset()));
 }
 
@@ -2387,8 +2387,7 @@ TEST(DataBlock, HDF5) {
     EXPECT_EQ("DiscreteFieldBlock \"dfb0\": DiscreteField \"df0\" "
               "DiscretizationBlock \"db0\"\n"
               "  DiscreteFieldBlockComponent \"dfbd0\": DiscreteFieldBlock "
-              "\"dfb0\" TensorComponent \"scalar\"\n"
-              "    CopyObj: ???:\"data\"\n",
+              "\"dfb0\" TensorComponent \"scalar\"\n",
               buf0.str());
     auto ds = p1->fields()
                   .at("f1")
@@ -2835,5 +2834,3 @@ TEST(ProjectMerge, merge) {
   remove(filename);
 }
 #endif
-
-#include "src/gtest_main.cc"

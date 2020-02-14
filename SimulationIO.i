@@ -513,18 +513,6 @@ struct DiscreteFieldBlockComponent {
 #ifdef SIMULATIONIO_HAVE_HDF5
   std::shared_ptr<DataSet>
     createDataSet(const WriteOptions& write_options);
-  %extend {
-    std::shared_ptr<DataSet>
-      createDataSet_int(const WriteOptions& write_options)
-    {
-      return self->createDataSet<int>(write_options);
-    }
-    std::shared_ptr<DataSet>
-      createDataSet_double(const WriteOptions& write_options)
-    {
-      return self->createDataSet<double>(write_options);
-    }
-  }
   std::shared_ptr<CopyObj>
     createCopyObj(const WriteOptions& write_options,
                   const H5::Group& group, const string& name);

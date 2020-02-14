@@ -222,27 +222,6 @@ DiscreteFieldBlockComponent::createDataSet(const WriteOptions &write_options) {
   m_datablock = res;
   return res;
 }
-
-shared_ptr<DataSet>
-DiscreteFieldBlockComponent::createDataSet(const WriteOptions &write_options,
-                                           const H5::DataType &type) {
-  assert(!m_datablock);
-  auto res = make_shared<DataSet>(
-      write_options, discretefieldblock()->discretizationblock()->box(), type);
-  m_datablock = res;
-  return res;
-}
-
-shared_ptr<DataBufferEntry> DiscreteFieldBlockComponent::createDataBufferEntry(
-    const WriteOptions &write_options, const H5::DataType &type,
-    const shared_ptr<DataBuffer> &databuffer) {
-  assert(!m_datablock);
-  auto res = make_shared<DataBufferEntry>(
-      write_options, discretefieldblock()->discretizationblock()->box(), type,
-      databuffer);
-  m_datablock = res;
-  return res;
-}
 #endif
 
 shared_ptr<DataRange>

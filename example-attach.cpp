@@ -117,9 +117,6 @@ int main(int argc, char **argv) {
   auto discretized_vel = vel->createDiscreteField(vel->name(), configuration,
                                                   discretization, basis);
   for (int i = 0; i < ngrids; ++i) {
-    const hsize_t dims[dim] = {nlk, nlj, nli};
-    auto dataspace = H5::DataSpace(dim, dims);
-    auto datatype = H5::getType(double{});
     // Create discrete region
     auto rho_block = discretized_rho->createDiscreteFieldBlock(
         rho->name() + "-" + blocks.at(i)->name(), blocks.at(i));
@@ -144,7 +141,7 @@ int main(int argc, char **argv) {
   }
 
   // output
-  cout << *project;
+  // cout << *project;
 
   // Attach data
   for (int pk = 0; pk < npk; ++pk)
