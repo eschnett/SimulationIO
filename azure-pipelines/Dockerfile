@@ -15,8 +15,10 @@ RUN apt-get update && \
         ca-certificates \
         cmake \
         g++ \
+        libbz2-dev \
         libgtest-dev \
         libpython3-dev \
+        libssl-dev \
         libyaml-cpp-dev \
         pkg-config \
         python3 \
@@ -24,6 +26,7 @@ RUN apt-get update && \
         python3-numpy \
         swig \
         wget \
+        zlib1g-dev \
         && \
     rm -rf /var/lib/apt/lists/*
 
@@ -35,7 +38,21 @@ RUN mkdir src && \
     cd asdf-cxx-version-7.2.1 && \
     mkdir build && \
     cd build && \
-    cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=/work/asdf-cxx-7.2.1 .. && \
+    cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo .. && \
+    make -j$(nproc) && \
+    make -j$(nproc) install && \
+    true ) && \
+    rm -rf src
+
+# Install silo
+RUN mkdir src && \
+    ( cd src && \
+    wget https://wci.llnl.gov/content/assets/docs/simulation/computer-codes/silo/silo-4.10.2/silo-4.10.2.tar.gz && \
+    tar xzf silo-4.10.2.tar.gz && \
+    cd silo-4.10.2 && \
+    mkdir build && \
+    cd build && \
+    ../configure && \
     make -j$(nproc) && \
     make -j$(nproc) install && \
     true ) && \

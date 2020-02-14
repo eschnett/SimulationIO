@@ -9,7 +9,7 @@ steps:
     set -euxo pipefail
     mkdir build
     cd build
-    cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_MPI=OFF -DENABLE_RNPL=OFF -DENABLE_TILEDB=OFF -DCMAKE_PREFIX_PATH=/work/asdf-cxx-7.2.1 -DCMAKE_INSTALL_PREFIX=/work/simulationio ..
+    cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_MPI=OFF -DENABLE_RNPL=OFF -DENABLE_TILEDB=OFF ..
     make -j$(nproc)
   displayName: Build
 - script: |
