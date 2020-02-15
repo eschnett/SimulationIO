@@ -1,7 +1,7 @@
 # How to build this Docker image:
 #     docker build . --build-arg commit=<commit>
 
-FROM eschnett/simulationio
+FROM eschnett/simulationio-deps
 
 WORKDIR /work
 
