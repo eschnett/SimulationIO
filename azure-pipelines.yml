@@ -9,7 +9,7 @@ steps:
     set -euxo pipefail
     mkdir build
     cd build
-    cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_MPI=OFF -DENABLE_RNPL=OFF -DENABLE_TILEDB=OFF ..
+    cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_MPI=OFF -DENABLE_RNPL=OFF -DENABLE_TILEDB=OFF -DCMAKE_INSTALL_PREFIX="${HOME}" ..
     make -j$(nproc)
   displayName: Build
 - script: |
