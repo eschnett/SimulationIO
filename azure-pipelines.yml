@@ -22,3 +22,13 @@ steps:
     cd build
     make -j$(nproc) install
   displayName: Install
+
+# docker run -it eschnett/simulationio
+# git clone -b eschnett/silo https://github.com/eschnett/SimulationIO.git
+# cd SimulationIO
+# mkdir build
+# cd build
+# cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_MPI=OFF -DENABLE_RNPL=OFF -DENABLE_TILEDB=OFF ..
+# make -j$(nproc)
+# make -j$(nproc) test CTEST_OUTPUT_ON_FAILURE=1
+# make -j$(nproc) install
