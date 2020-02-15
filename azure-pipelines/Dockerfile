@@ -16,6 +16,7 @@ RUN apt-get update && \
         cmake \
         g++ \
         gfortran \
+        hdf5-tools \
         libbz2-dev \
         libgtest-dev \
         libhdf5-dev \
