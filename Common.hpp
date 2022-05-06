@@ -125,8 +125,8 @@ public:
     const_iterator() = default; // extension
     const_iterator(const const_iterator &impl) = default;
     const_iterator(const_iterator &&impl) = default; // extension
-    const_iterator operator=(const const_iterator &impl) = default;
-    const_iterator operator=(const_iterator &&impl) = default; // extension
+    const_iterator& operator=(const const_iterator &impl) = default;
+    const_iterator& operator=(const_iterator &&impl) = default; // extension
     void swap(const_iterator &iter) noexcept { std::swap(impl, iter.impl); }
     bool operator==(const const_iterator &iter) const {
       return impl == iter.impl;
