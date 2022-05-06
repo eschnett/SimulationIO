@@ -88,8 +88,8 @@ public:
     iterator() = default; // extension
     iterator(const iterator &impl) = default;
     iterator(iterator &&impl) = default; // extension
-    iterator operator=(const iterator &impl) = default;
-    iterator operator=(iterator &&impl) = default; // extension
+    iterator& operator=(const iterator &impl) = default;
+    iterator& operator=(iterator &&impl) = default; // extension
     void swap(iterator &iter) noexcept { std::swap(impl, iter.impl); }
     bool operator==(const iterator &iter) const { return impl == iter.impl; }
 
