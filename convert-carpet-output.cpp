@@ -656,7 +656,7 @@ int main(int argc, char **argv) {
                   if (bbox.at(2 * d + f)) {
                     auto &loc = level_domain.at(f).at(d);
                     const auto &box = discretizationblock->box();
-                    vector<hssize_t> vals = f == 0 ? box.lower() : box.upper();
+                    vector<hssize_t> vals(f == 0 ? box.lower() : box.upper());
                     const auto &val = vals.at(d);
                     assert(val != numeric_limits<hssize_t>::min());
                     if (loc == numeric_limits<hssize_t>::min())
@@ -732,7 +732,7 @@ int main(int argc, char **argv) {
                     discretefieldblock->createDiscreteFieldBlockComponent(
                         discretefieldblockcomponentname, tensorcomponent);
 
-                vector<hssize_t> count = discretizationblock->box().shape();
+                vector<hssize_t> count(discretizationblock->box().shape());
                 double data_origin = origin.at(direction);
                 vector<double> data_delta(manifold->dimension(), 0.0);
                 data_delta.at(direction) = delta.at(direction);
@@ -877,16 +877,16 @@ int main(int argc, char **argv) {
               [](const region_t &x, const region_t &y) { return x | y; },
               discretization->discretizationblocks());
           cout << "    region: " << region << "\n";
-          point_t lower_buffers = buffers.at(0);
-          point_t upper_buffers = buffers.at(1);
+          point_t lower_buffers(buffers.at(0));
+          point_t upper_buffers(buffers.at(1));
           auto max_buffers = max(maxval(lower_buffers), maxval(upper_buffers));
           assert(max_buffers >= 0);
           auto region_box = region.bounding_box();
-          vector<hssize_t> region_lower = region_box.lower();
-          vector<hssize_t> region_upper = region_box.upper();
+          vector<hssize_t> region_lower(region_box.lower());
+          vector<hssize_t> region_upper(region_box.upper());
           assert(domain.size() == 2);
-          vector<hssize_t> domain_lower = domain.at(0);
-          vector<hssize_t> domain_upper = domain.at(1);
+          vector<hssize_t> domain_lower(domain.at(0));
+          vector<hssize_t> domain_upper(domain.at(1));
           for (int d = 0; d < dim; ++d) {
             if (domain_lower.at(d) == numeric_limits<hssize_t>::min())
               domain_lower.at(d) = region_lower.at(d) - 4 * max_buffers;
