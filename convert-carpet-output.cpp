@@ -632,7 +632,7 @@ int main(int argc, char **argv) {
             assert(rank == dim);
             dataspace.getSimpleExtentDims((hsize_t *)(shape.data()));
             std::reverse(shape.begin(), shape.end());
-            discretizationblock->setBox(box_t(offset, point_t(offset) + shape));
+            discretizationblock->setBox(box_t(offset, point_t(offset) + point_t(shape)));
 
             if (active.valid()) {
               discretizationblock->setActive(active);
